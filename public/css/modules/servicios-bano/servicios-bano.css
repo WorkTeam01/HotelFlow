@@ -1,0 +1,185 @@
+/**
+ * Estilos específicos para el módulo de Servicios de Baño
+ * HotelFlow
+ */
+
+/* Estilos para tarjetas de servicios */
+.service-card.estado-iniciado {
+    border-left-color: #ffc107;
+}
+
+.service-card.estado-finalizado {
+    border-left-color: #28a745;
+}
+
+.service-card.estado-cancelado {
+    border-left-color: #dc3545;
+}
+
+/* Mejorar la visualización de los formularios */
+.form-group label {
+    font-weight: 600;
+    color: #555;
+}
+
+.required-field::after {
+    content: " *";
+    color: #dc3545;
+}
+
+/* Estilos para indicadores de estado */
+.badge-estado {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 50px;
+}
+
+.badge-iniciado {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.badge-finalizado {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.badge-cancelado {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Mejora visual para campos de moneda */
+.input-group-text {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+/* Estilos para botones de acción */
+.btn-finalizar {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.btn-finalizar:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.btn-cancelar-servicio {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.btn-cancelar-servicio:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* Estilos para la vista de detalle */
+.info-box-servicio {
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.info-box-servicio:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.info-box-number {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.timeline-servicio {
+    position: relative;
+    margin: 0 0 15px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.timeline-servicio>li {
+    position: relative;
+    margin-right: 10px;
+    margin-bottom: 15px;
+}
+
+.timeline-servicio>li>.timeline-item {
+    margin-left: 60px;
+    margin-right: 15px;
+    padding: 15px;
+    position: relative;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-servicio>li>.fa {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    line-height: 40px;
+    position: absolute;
+    color: #fff;
+    background-color: #17a2b8;
+    border-radius: 50%;
+    text-align: center;
+    left: 5px;
+    top: 0;
+}
+
+/* Iconos de estado para el timeline */
+.icon-estado-iniciado {
+    background-color: #ffc107 !important;
+}
+
+.icon-estado-finalizado {
+    background-color: #28a745 !important;
+}
+
+.icon-estado-cancelado {
+    background-color: #dc3545 !important;
+}
+
+/* Indicador de stock bajo */
+.stock-warning {
+    border-left: 4px solid #ffc107;
+    background-color: #fff8e1;
+}
+
+/* Campos de solo lectura */
+.form-control[readonly] {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+    opacity: 1;
+}
+
+/* Responsive ajustments */
+@media (max-width: 767.98px) {
+    .timeline-servicio>li>.timeline-item {
+        margin-left: 40px;
+    }
+
+    .timeline-servicio>li>.fa {
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        font-size: 14px;
+    }
+
+    .card-footer {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-footer .btn {
+        margin-bottom: 10px;
+    }
+}

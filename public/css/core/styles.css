@@ -1,0 +1,43 @@
+/* Estilos para tooltips en dispositivos táctiles */
+.tooltip-touch {
+    opacity: 0.95 !important;
+    max-width: 280px !important;
+    padding: 10px !important;
+    font-size: 14px !important;
+    z-index: 9999 !important;
+}
+
+.tooltip-touch .tooltip-inner {
+    padding: 10px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+    text-align: left !important;
+}
+
+/* Estilos para el botón de información */
+.info-btn {
+    display: inline-block;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 50%;
+    position: relative;
+    z-index: 2;
+}
+
+.info-btn i {
+    font-size: 16px;
+}
+
+/* Asegurar que el botón de info sea visible */
+a .info-btn {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
