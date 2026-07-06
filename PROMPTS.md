@@ -47,10 +47,13 @@ _______________
 - Respetar estructura existente: controllers/, models/, views/, public/js/modules/, public/css/modules/
 - Modelos con PDO + prepared statements y Conexion::getInstance()->getConnection()
 - Sesiones y auth segun views/layouts/session.php (requireLogin, requireRole, CSRF helpers)
-- CSRF obligatorio en formularios y endpoints POST: generateCSRFToken(), verifyCSRFToken(), regenerateCSRFToken()
+- CSRF obligatorio (no opcional) en formularios y endpoints POST/acciones GET destructivas: generateCSRFToken(), verifyCSRFToken(), regenerateCSRFToken()
+- Verificacion de permisos por modulo en cada endpoint (AuthorizationService::esAdministrador / puedeAccederModulo), ademas de requireLogin()
+- Nunca confiar en valores del cliente para estado o dinero: recalcular estado/totales desde la BD antes de persistir
 - Sanitizar y validar entradas siguiendo el patron del modulo de referencia
-- Uploads con ImagenService (services/ImagenService.php)
+- Uploads con ImagenService (services/ImagenService.php), validando el tipo real del archivo (contenido), no el MIME/nombre enviado por el cliente
 - Mantener mensajes de feedback via $_SESSION['mensaje'] y $_SESSION['icono']
+- No exponer mensajes de excepcion crudos al usuario; loguear y devolver mensaje generico
 - No agregar nuevas librerias ni cambiar arquitectura base sin justificacion explicita
 
 [Formato de salida]
@@ -266,5 +269,5 @@ Preparar el proyecto para publicacion open source:
 
 ---
 
-_Ultima actualizacion: 2026-07-02_
+_Ultima actualizacion: 2026-07-06_
 _Mantener sincronizado con CLAUDE.md cuando cambie arquitectura o flujo._

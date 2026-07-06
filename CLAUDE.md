@@ -94,6 +94,40 @@ El sistema de env personalizado en `config/env.php` soporta conversión de tipos
 - `empty` se convierte a cadena vacía
 - Usar `env('KEY', 'default')` para obtener valores
 
+## Seguridad — Patrones Obligatorios
+
+Tras una pasada de endurecimiento de seguridad en todo el código, todo endpoint o modelo nuevo debe seguir estos patrones:
+
+- **Autorización en cada endpoint AJAX/acción:** todo archivo `crear_*`, `actualizar_*`, `cambiar_estado_*`, `desactivar_*` y similares debe llamar a `requireLogin()` y verificar permisos explícitamente:
+  ```php
+  $idusuario = $_SESSION['usuario_id'];
+  $auth = new AuthorizationService();
+  if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'modulo')) {
+      // responder con error (JSON si es AJAX, redirect+mensaje si es vista)
+  }
+  ```
+  No asumir que `requireLogin()` sola es suficiente — la verificación de permisos por módulo es obligatoria.
+
+- **Permisos por cargo definidos por nombre, no por ID:** `AuthorizationService::permisosPorCargo()` es la única fuente de verdad (usada por `cargoTienePermiso`, `obtenerPermisosPorCargo` y `obtenerPermisosAgrupados`). Los cargos válidos son `Administrador`, `Recepcionista`, `Limpieza` (no `admin`/`recepcionista`/`vendedor` — esos nombres no existen en la BD). Los permisos se listan por su `nombre` en la tabla `permiso`, no por `idpermiso` hardcodeado.
+
+- **CSRF obligatorio, no opcional:** no usar `if (isset($_POST['csrf_token']))` como condición para verificar — el token debe verificarse siempre que el POST/GET provenga de una acción de escritura, tratando ausencia de token como inválido. Ver `verificarCSRFToken()` en `AuthController` y `verifyCSRFToken()`/`generateCSRFToken()` global. Acciones de anulación por GET (ej. `anular_venta.php`) también deben llevar `csrf_token` en la URL.
+
+- **Nunca confiar en valores del cliente para estado o dinero:**
+  - Estados (activo/inactivo, etc.) se recalculan a partir del valor actual en BD (`$this->modelo->getById($id)`), nunca a partir de un `estado_actual` recibido del formulario/JS.
+  - Totales de venta/compra (`totalventa`, `totalcompra`) se recalculan en el modelo a partir de precios y cantidades reales de la BD (`SELECT ... FOR UPDATE`), y se persisten con un `UPDATE` tras insertar los detalles — no se confía en el total enviado por el cliente.
+  - Al vender, se bloquea la fila del producto (`FOR UPDATE`) para verificar stock y tomar el precio real antes de insertar el detalle.
+  - Al anular una venta, se bloquea la fila de la venta (`FOR UPDATE`) antes de leer su estado, para evitar anulaciones concurrentes duplicadas.
+
+- **Validación de archivos subidos por contenido real, no por metadata del cliente:** `ImagenService` verifica el tipo real con `mime_content_type()` + `getimagesize()` (no el `type` MIME enviado por el navegador), y la extensión final se deriva del tipo de imagen detectado (`IMAGETYPE_*`), no del nombre de archivo del cliente.
+
+- **No filtrar mensajes de excepción al usuario:** en catches de controladores, loguear el detalle con `error_log()`/un helper `logError()` interno y devolver al usuario un mensaje genérico ("Ocurrió un error inesperado. Intente nuevamente."), nunca `$e->getMessage()` directamente en la respuesta.
+
+- **Escapar salida HTML dinámica:** usar `htmlspecialchars()` al imprimir valores que vienen de BD/usuario en vistas (ej. `$venta['metodopago']`).
+
+- **`date_default_timezone_set` y zona horaria:** `config/config.php` es la única fuente de verdad para `TIMEZONE` (con default `America/La_Paz` vía `env('TIMEZONE', 'America/La_Paz')`); `config/conexion.php` reutiliza `$config['app']['timezone']` sin duplicar el default.
+
+- **`switch` exhaustivos:** añadir siempre `default` en los `switch` sobre estados/tipos conocidos, aunque sea un no-op, para que el comportamiento sea explícito ante valores inesperados.
+
 ## Notas Importantes
 
 - Toda la interfaz está en Español
