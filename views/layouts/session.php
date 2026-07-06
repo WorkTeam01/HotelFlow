@@ -59,6 +59,11 @@ try {
     $app_name = $_ENV['APP_NAME'] ?? getenv('APP_NAME') ?: 'HotelFlow';
     $GLOBALS['APP_NAME'] = $app_name;
     $APP_NAME = $GLOBALS['APP_NAME'];
+
+    // Obtener versión de la aplicación desde .env
+    $app_version = $_ENV['APP_VERSION'] ?? getenv('APP_VERSION') ?: '1.0.1';
+    $GLOBALS['APP_VERSION'] = $app_version;
+    $APP_VERSION = $GLOBALS['APP_VERSION'];
 } catch (Exception $e) {
     die("Error al cargar la configuración: " . $e->getMessage() . ". Verifique que el archivo .env esté configurado correctamente.");
 }

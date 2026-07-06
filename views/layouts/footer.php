@@ -7,7 +7,7 @@
     <div class="float-right d-none d-sm-inline">
         <div class="text-muted">
             <small>
-                <i class="fas fa-tag"></i> Versión 1.0.0
+                <i class="fas fa-tag"></i> Versión <?= $APP_VERSION; ?>
             </small>
         </div>
     </div>
