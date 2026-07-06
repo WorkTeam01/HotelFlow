@@ -113,18 +113,7 @@ class AuthorizationService
      */
     private function cargoTienePermiso($cargo, $idpermiso)
     {
-        // Definir permisos por cargo
-        $permisos_por_cargo = [
-            'admin' => ['*'], // El admin tiene todos los permisos
-            'recepcionista' => [
-                1, // ID de permiso 'usuarios'
-                2  // ID de permiso 'perfil'
-            ],
-            'vendedor' => [
-                2  // ID de permiso 'perfil'
-            ]
-            // Añadir más cargos según sea necesario
-        ];
+        $permisos_por_cargo = self::permisosPorCargo();
 
         // Si el cargo no está definido, no tiene permisos
         if (!isset($permisos_por_cargo[$cargo])) {
@@ -132,12 +121,58 @@ class AuthorizationService
         }
 
         // Si el cargo tiene todos los permisos
-        if (in_array('*', $permisos_por_cargo[$cargo])) {
+        if ($permisos_por_cargo[$cargo] === '*') {
             return true;
         }
 
-        // Verificar si el permiso específico está en la lista
-        return in_array($idpermiso, $permisos_por_cargo[$cargo]);
+        // Obtener el nombre del permiso para compararlo por nombre
+        $query = "SELECT nombre FROM permiso WHERE idpermiso = :idpermiso AND estado = 1";
+        $stmt = $this->conexion->prepare($query);
+        $stmt->bindParam(':idpermiso', $idpermiso, PDO::PARAM_INT);
+        $stmt->execute();
+        $nombre_permiso = $stmt->fetchColumn();
+
+        if (!$nombre_permiso) {
+            return false;
+        }
+
+        return in_array($nombre_permiso, $permisos_por_cargo[$cargo]);
+    }
+
+    /**
+     * Definición central de permisos por cargo (usada por cargoTienePermiso
+     * y obtenerPermisosPorCargo). Las claves deben coincidir exactamente
+     * con los valores de `usuarios.cargo` en base de datos.
+     *
+     * @return array
+     */
+    private static function permisosPorCargo()
+    {
+        return [
+            'Administrador' => '*', // Todos los permisos
+            'Recepcionista' => [
+                'productos',
+                'categorias',
+                'recepcion',
+                'habitaciones',
+                'nueva_venta',
+                'ventas',
+                'nueva_compra',
+                'compras',
+                'personas',
+                'clientes',
+                'banos',
+                'servicios_bano',
+                'limpieza',
+                'equipajes',
+                'precios_equipaje',
+                'perfil'
+            ],
+            'Limpieza' => [
+                'limpieza',
+                'perfil'
+            ]
+        ];
     }
 
     /**
@@ -284,23 +319,13 @@ class AuthorizationService
      */
     private function obtenerPermisosPorCargo($cargo)
     {
-        // Similar a cargoTienePermiso, pero devuelve la lista completa de permisos
-        $permisos_por_cargo = [
-            'admin' => ['*'], // Todos los permisos
-            'recepcionista' => [
-                1, // ID de permiso 'usuarios'
-                2  // ID de permiso 'perfil'
-            ],
-            'vendedor' => [
-                2  // ID de permiso 'perfil'
-            ]
-        ];
+        $permisos_por_cargo = self::permisosPorCargo();
 
         if (!isset($permisos_por_cargo[$cargo])) {
             return [];
         }
 
-        if (in_array('*', $permisos_por_cargo[$cargo])) {
+        if ($permisos_por_cargo[$cargo] === '*') {
             // Si tiene todos los permisos, obtener la lista completa de la base de datos
             $query = "SELECT idpermiso, nombre FROM permiso WHERE estado = 1";
             $stmt = $this->conexion->prepare($query);
@@ -308,11 +333,12 @@ class AuthorizationService
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
-        // Obtener los detalles de los permisos por sus IDs
-        $ids = implode(',', $permisos_por_cargo[$cargo]);
-        $query = "SELECT idpermiso, nombre FROM permiso WHERE idpermiso IN ($ids) AND estado = 1";
+        // Obtener los detalles de los permisos por sus nombres
+        $nombres = $permisos_por_cargo[$cargo];
+        $placeholders = implode(',', array_fill(0, count($nombres), '?'));
+        $query = "SELECT idpermiso, nombre FROM permiso WHERE nombre IN ($placeholders) AND estado = 1";
         $stmt = $this->conexion->prepare($query);
-        $stmt->execute();
+        $stmt->execute($nombres);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -429,38 +455,19 @@ class AuthorizationService
     public function obtenerPermisosAgrupados()
     {
         try {
-            // Definir los permisos por cargo
-            $permisos_por_cargo = [
-                'Administrador' => [
-                    'descripcion' => 'Acceso total al sistema',
-                    'permisos' => '*' // Todos los permisos
-                ],
-                'Limpieza' => [
-                    'descripcion' => 'Acceso a asignación de limpieza y perfil',
-                    'permisos' => ['limpieza', 'perfil']
-                ],
-                'Recepcionista' => [
-                    'descripcion' => 'Acceso a módulos de recepción y servicios',
-                    'permisos' => [
-                        'productos',
-                        'categorias',
-                        'recepcion',
-                        'habitaciones',
-                        'nueva_venta',
-                        'ventas',
-                        'nueva_compra',
-                        'compras',
-                        'personas',
-                        'clientes',
-                        'banos',
-                        'servicios_bano',
-                        'limpieza',
-                        'equipajes',
-                        'precios_equipaje',
-                        'perfil'
-                    ]
-                ]
+            // Definir los permisos por cargo (fuente única: permisosPorCargo())
+            $descripciones = [
+                'Administrador' => 'Acceso total al sistema',
+                'Limpieza' => 'Acceso a asignación de limpieza y perfil',
+                'Recepcionista' => 'Acceso a módulos de recepción y servicios',
             ];
+            $permisos_por_cargo = [];
+            foreach (self::permisosPorCargo() as $cargo => $permisos) {
+                $permisos_por_cargo[$cargo] = [
+                    'descripcion' => $descripciones[$cargo] ?? '',
+                    'permisos' => $permisos
+                ];
+            }
 
             // Obtener todos los permisos disponibles
             $todos_permisos = $this->obtenerTodosLosPermisos();

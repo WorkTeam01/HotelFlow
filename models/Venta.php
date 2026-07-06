@@ -178,10 +178,26 @@ class Venta
             $idVenta = $this->conexion->lastInsertId();
 
             // Insertar los detalles de la venta
+            $totalCalculado = 0;
             foreach ($datos['detalles'] as $detalle) {
-                $queryDetalle = "INSERT INTO {$this->tablaDetalle} 
-                                (idventa, idproducto, cantidad, precioventa, descuento) 
-                                VALUES 
+                // Bloquear la fila del producto, verificar stock y tomar el precio real de la BD
+                // (no confiar en el precio enviado por el cliente)
+                $stmtStock = $this->conexion->prepare("SELECT stock, precioventa FROM productos WHERE idproducto = :id FOR UPDATE");
+                $stmtStock->bindParam(':id', $detalle['idproducto'], PDO::PARAM_INT);
+                $stmtStock->execute();
+                $productoActual = $stmtStock->fetch(PDO::FETCH_ASSOC);
+
+                if ($productoActual === false || $productoActual['stock'] < $detalle['cantidad']) {
+                    throw new PDOException("Stock insuficiente para el producto ID {$detalle['idproducto']}");
+                }
+
+                $precioReal = (float)$productoActual['precioventa'];
+                $descuento = (float)($detalle['descuento'] ?? 0.00);
+                $totalCalculado += ($precioReal * $detalle['cantidad']) - $descuento;
+
+                $queryDetalle = "INSERT INTO {$this->tablaDetalle}
+                                (idventa, idproducto, cantidad, precioventa, descuento)
+                                VALUES
                                 (:idventa, :idproducto, :cantidad, :precioventa, :descuento)";
 
                 $stmtDetalle = $this->conexion->prepare($queryDetalle);
@@ -189,8 +205,8 @@ class Venta
                 $stmtDetalle->bindParam(':idventa', $idVenta, PDO::PARAM_INT);
                 $stmtDetalle->bindParam(':idproducto', $detalle['idproducto'], PDO::PARAM_INT);
                 $stmtDetalle->bindParam(':cantidad', $detalle['cantidad'], PDO::PARAM_INT);
-                $stmtDetalle->bindParam(':precioventa', $detalle['precioventa'], PDO::PARAM_STR);
-                $this->bindOptionalParam($stmtDetalle, ':descuento', $detalle['descuento'] ?? 0.00, PDO::PARAM_STR);
+                $stmtDetalle->bindParam(':precioventa', $precioReal, PDO::PARAM_STR);
+                $this->bindOptionalParam($stmtDetalle, ':descuento', $descuento, PDO::PARAM_STR);
 
                 if (!$stmtDetalle->execute()) {
                     throw new PDOException("Error al crear el detalle de venta");
@@ -199,6 +215,13 @@ class Venta
                 // Actualizar el stock del producto (reducir)
                 $this->actualizarStockProducto($detalle['idproducto'], -$detalle['cantidad']);
             }
+
+            // Recalcular y persistir el total real de la venta a partir de los precios de la BD,
+            // no del total enviado por el cliente
+            $stmtTotal = $this->conexion->prepare("UPDATE {$this->tabla} SET totalventa = :total WHERE idventa = :id");
+            $stmtTotal->bindParam(':total', $totalCalculado, PDO::PARAM_STR);
+            $stmtTotal->bindParam(':id', $idVenta, PDO::PARAM_INT);
+            $stmtTotal->execute();
 
             $this->conexion->commit();
             return $idVenta;
@@ -241,11 +264,18 @@ class Venta
         try {
             $this->conexion->beginTransaction();
 
-            // Obtener los detalles de la venta
-            $venta = $this->getById($id);
-            if (!$venta || $venta['estado'] == 0) {
+            // Bloquear la fila de la venta para evitar anulaciones concurrentes duplicadas
+            $stmtLock = $this->conexion->prepare("SELECT estado FROM {$this->tabla} WHERE idventa = :id FOR UPDATE");
+            $stmtLock->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmtLock->execute();
+            $estadoActual = $stmtLock->fetchColumn();
+
+            if ($estadoActual === false || $estadoActual == 0) {
                 throw new PDOException("La venta no existe o ya está anulada");
             }
+
+            // Obtener los detalles de la venta
+            $venta = $this->getById($id);
 
             // Revertir el stock de cada producto
             foreach ($venta['detalles'] as $detalle) {

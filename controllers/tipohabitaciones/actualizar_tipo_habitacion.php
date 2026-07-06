@@ -2,6 +2,9 @@
 // Incluir el archivo de sesión para tener acceso a la variable $URL
 require_once __DIR__ . '/../../views/layouts/session.php';
 
+// Verificar si el usuario está autenticado
+requireLogin();
+
 // Incluir el controlador
 require_once __DIR__ . '/TipoHabitacionController.php';
 

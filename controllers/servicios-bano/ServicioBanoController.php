@@ -37,6 +37,17 @@ class ServicioBanoController
     }
 
     /**
+     * Registra en el log un error capturado, con contexto sobre dónde ocurrió
+     *
+     * @param string $contexto Descripción de la operación que falló
+     * @param Exception $e Excepción capturada
+     */
+    private function logError($contexto, $e)
+    {
+        error_log($contexto . ': ' . $e->getMessage());
+    }
+
+    /**
      * Muestra la lista de servicios de baños
      * 
      * @return array Lista de servicios de baños
@@ -214,9 +225,10 @@ class ServicioBanoController
                 ];
             }
         } catch (Exception $e) {
+            $this->logError('Error inesperado al crear servicio de baño', $e);
             return [
                 'success' => false,
-                'message' => 'Error inesperado: ' . $e->getMessage(),
+                'message' => 'Ocurrió un error inesperado. Intente nuevamente.',
                 'icon' => 'error',
                 'redirect' => 'create.php'
             ];
@@ -316,9 +328,10 @@ class ServicioBanoController
                 ];
             }
         } catch (Exception $e) {
+            $this->logError('Error inesperado al crear servicio de baño rápido', $e);
             return [
                 'success' => false,
-                'message' => 'Error inesperado: ' . $e->getMessage(),
+                'message' => 'Ocurrió un error inesperado. Intente nuevamente.',
                 'icon' => 'error'
             ];
         }
@@ -336,7 +349,7 @@ class ServicioBanoController
             // Usar el método incrementarStock del modelo Producto
             return $this->productoModelo->incrementarStock($idproducto, 1);
         } catch (Exception $e) {
-            error_log('Error al restaurar stock: ' . $e->getMessage());
+            $this->logError('Error al restaurar stock', $e);
             return false;
         }
     }
@@ -390,9 +403,10 @@ class ServicioBanoController
                 'stock_minimo' => $producto['stock_minimo'] ?? 0
             ];
         } catch (Exception $e) {
+            $this->logError('Error al verificar disponibilidad de servicio de baño', $e);
             return [
                 'disponible' => false,
-                'message' => 'Error al verificar disponibilidad: ' . $e->getMessage()
+                'message' => 'Error al verificar disponibilidad del servicio.'
             ];
         }
     }

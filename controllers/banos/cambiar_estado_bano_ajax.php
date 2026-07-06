@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../../views/layouts/session.php';
 require_once __DIR__ . '/BanoController.php';
 
+// Verificar si el usuario está autenticado
+requireLogin();
+
 // Verificar si es una solicitud AJAX
 if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
     http_response_code(403);

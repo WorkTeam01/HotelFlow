@@ -38,9 +38,10 @@ try {
     echo json_encode($resultado);
 } catch (Exception $e) {
     // Capturar cualquier excepción
+    error_log('Error en crear_servicio_rapido: ' . $e->getMessage());
     echo json_encode([
         'success' => false,
-        'message' => 'Error en el servidor: ' . $e->getMessage(),
+        'message' => 'Ocurrió un error en el servidor. Intente nuevamente.',
         'icon' => 'error'
     ]);
 }

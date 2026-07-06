@@ -169,10 +169,11 @@ class Compra
             $idCompra = $this->conexion->lastInsertId();
 
             // Insertar los detalles de la compra
+            $totalCalculado = 0;
             foreach ($datos['detalles'] as $detalle) {
-                $queryDetalle = "INSERT INTO {$this->tablaDetalle} 
-                                (idcompra, idproducto, cantidad, preciocompra) 
-                                VALUES 
+                $queryDetalle = "INSERT INTO {$this->tablaDetalle}
+                                (idcompra, idproducto, cantidad, preciocompra)
+                                VALUES
                                 (:idcompra, :idproducto, :cantidad, :preciocompra)";
 
                 $stmtDetalle = $this->conexion->prepare($queryDetalle);
@@ -186,9 +187,18 @@ class Compra
                     throw new PDOException("Error al crear el detalle de compra");
                 }
 
+                $totalCalculado += $detalle['preciocompra'] * $detalle['cantidad'];
+
                 // Actualizar el stock del producto
                 $this->actualizarStockProducto($detalle['idproducto'], $detalle['cantidad']);
             }
+
+            // Recalcular y persistir el total real a partir de los detalles insertados,
+            // en vez de confiar en el total enviado por el cliente
+            $stmtTotal = $this->conexion->prepare("UPDATE {$this->tabla} SET totalcompra = :total WHERE idcompra = :id");
+            $stmtTotal->bindParam(':total', $totalCalculado, PDO::PARAM_STR);
+            $stmtTotal->bindParam(':id', $idCompra, PDO::PARAM_INT);
+            $stmtTotal->execute();
 
             $this->conexion->commit();
             return $idCompra;

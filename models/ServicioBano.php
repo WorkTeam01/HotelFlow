@@ -102,7 +102,7 @@ class ServicioBano
             return $resultados;
         } catch (PDOException $e) {
             $this->lastError = $e->getMessage();
-            error_log("Error en getAll: " . $e->getMessage());
+            error_log("Error en ServicioBano::getAll: " . $e->getMessage());
             return [];
         }
     }

@@ -104,6 +104,8 @@ function numeroletras(float $numero): string
                 case 1: // Millones
                     $texto_grupo .= ((int)$grupo == 1) ? " MILLON" : " MILLONES";
                     break;
+                default: // Miles/unidades: sin sufijo
+                    break;
             }
 
             $resultado .= " " . $texto_grupo;

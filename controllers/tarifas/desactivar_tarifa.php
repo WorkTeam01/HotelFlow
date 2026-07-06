@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../../views/layouts/session.php';
 require_once __DIR__ . '/TarifaController.php';
 
+// Verificar si el usuario está autenticado
+requireLogin();
+
 // Instanciar el controlador de tarifas
 $controller = new TarifaController();
 

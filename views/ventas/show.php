@@ -104,7 +104,7 @@ include_once '../layouts/header.php';
                                         echo '<span class="badge badge-info">QR</span>';
                                         break;
                                     default:
-                                        echo '<span class="badge badge-secondary">' . $venta['metodopago'] . '</span>';
+                                        echo '<span class="badge badge-secondary">' . htmlspecialchars($venta['metodopago']) . '</span>';
                                 }
                                 ?>
                             </p>
@@ -263,7 +263,7 @@ include_once '../layouts/header.php';
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `<?= $URL; ?>controllers/ventas/anular_venta.php?id=${ventaId}&accion=anular`;
+                        window.location.href = `<?= $URL; ?>controllers/ventas/anular_venta.php?id=${ventaId}&accion=anular&csrf_token=<?= generateCSRFToken(); ?>`;
                     }
                 });
             });

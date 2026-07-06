@@ -13,7 +13,8 @@
 require_once __DIR__ . '/env.php';
 
 // Configurar zona horaria con valor predeterminado si no está definida
-$timezone = env('TIMEZONE');
+// Única fuente de verdad para la zona horaria de la app: config/conexion.php la reutiliza desde aquí.
+$timezone = env('TIMEZONE', 'America/La_Paz');
 date_default_timezone_set($timezone);
 
 return [

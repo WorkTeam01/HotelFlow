@@ -74,14 +74,13 @@ class AuthController
     {
         // Verificar si se envió el formulario
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Verificar token CSRF si está presente
-            if (isset($_POST['csrf_token'])) {
-                if (!$this->verificarCSRFToken($_POST['csrf_token'])) {
-                    $_SESSION['mensaje'] = 'Error de seguridad. Por favor, intente nuevamente.';
-                    $_SESSION['icono'] = 'error';
-                    header('Location: ' . $_SERVER['HTTP_REFERER']);
-                    exit;
-                }
+            // Verificar token CSRF (obligatorio)
+            $csrf_token = isset($_POST['csrf_token']) ? $_POST['csrf_token'] : '';
+            if (!$this->verificarCSRFToken($csrf_token)) {
+                $_SESSION['mensaje'] = 'Error de seguridad. Por favor, intente nuevamente.';
+                $_SESSION['icono'] = 'error';
+                header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '../../views/login/index.php'));
+                exit;
             }
 
             // Validar datos

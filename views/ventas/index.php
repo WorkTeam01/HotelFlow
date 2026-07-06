@@ -212,7 +212,7 @@ $estadisticas = $controller->getEstadisticas();
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `<?= $URL; ?>controllers/ventas/anular_venta.php?id=${ventaId}`;
+                        window.location.href = `<?= $URL; ?>controllers/ventas/anular_venta.php?id=${ventaId}&csrf_token=<?= generateCSRFToken(); ?>`;
                     }
                 });
             });

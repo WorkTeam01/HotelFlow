@@ -222,6 +222,9 @@ class BanoController
             case 'fuera_servicio':
                 $resultado = $this->modelo->marcarFueraServicio($id);
                 break;
+            default:
+                $resultado = false;
+                break;
         }
 
         if ($resultado) {

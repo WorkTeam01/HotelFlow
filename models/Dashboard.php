@@ -26,6 +26,17 @@ class Dashboard
     }
 
     /**
+     * Registra en el log un error capturado, con contexto sobre dónde ocurrió
+     *
+     * @param string $contexto Descripción de la operación que falló
+     * @param Exception $e Excepción capturada
+     */
+    private function logError($contexto, $e)
+    {
+        error_log($contexto . ': ' . $e->getMessage());
+    }
+
+    /**
      * Obtiene estadísticas generales para el dashboard
      * 
      * @return array Estadísticas generales
@@ -44,7 +55,7 @@ class Dashboard
 
             return $stats;
         } catch (PDOException $e) {
-            error_log('Error al obtener estadísticas generales: ' . $e->getMessage());
+            $this->logError('Error al obtener estadísticas generales', $e);
             return [];
         }
     }
@@ -88,7 +99,7 @@ class Dashboard
                 'ultimos' => $ultimos
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener estadísticas de usuarios: ' . $e->getMessage());
+            $this->logError('Error al obtener estadísticas de usuarios', $e);
             return [
                 'total' => 0,
                 'activos' => 0,
@@ -195,7 +206,7 @@ class Dashboard
                 'ultimos' => $ultimos
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener estadísticas de servicios de baño: ' . $e->getMessage());
+            $this->logError('Error al obtener estadísticas de servicios de baño', $e);
             return [
                 'total' => 0,
                 'total_hoy' => 0,
@@ -269,7 +280,7 @@ class Dashboard
                 'lista_por_vencer' => $lista_por_vencer
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener estadísticas de equipajes: ' . $e->getMessage());
+            $this->logError('Error al obtener estadísticas de equipajes', $e);
             return [
                 'total' => 0,
                 'activos' => 0,
@@ -326,7 +337,7 @@ class Dashboard
                 'lista_stock_bajo' => $lista_stock_bajo
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener estadísticas de productos: ' . $e->getMessage());
+            $this->logError('Error al obtener estadísticas de productos', $e);
             return [
                 'total' => 0,
                 'activos' => 0,
@@ -417,7 +428,7 @@ class Dashboard
                 'lista_disponibles' => $lista_disponibles
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener estadísticas de baños: ' . $e->getMessage());
+            $this->logError('Error al obtener estadísticas de baños', $e);
             return [
                 'total' => 0,
                 'disponibles' => 0,
@@ -466,7 +477,7 @@ class Dashboard
                 'ultimos' => $ultimos
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener estadísticas de personas: ' . $e->getMessage());
+            $this->logError('Error al obtener estadísticas de personas', $e);
             return [
                 'total' => 0,
                 'activos' => 0,
@@ -516,7 +527,7 @@ class Dashboard
                 $stmt->execute();
                 $servicios_bano[] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['cantidad'];
             } catch (PDOException $e) {
-                error_log("Error en consulta de servicios de baño: " . $e->getMessage());
+                $this->logError('Error en consulta de servicios de baño', $e);
                 $servicios_bano[] = 0;
             }
 
@@ -531,7 +542,7 @@ class Dashboard
                 $stmt->execute();
                 $equipajes[] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['cantidad'];
             } catch (PDOException $e) {
-                error_log("Error en consulta de equipajes: " . $e->getMessage());
+                $this->logError('Error en consulta de equipajes', $e);
                 $equipajes[] = 0;
             }
 
@@ -547,7 +558,7 @@ class Dashboard
                 $stmt->execute();
                 $ocupacion[] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['cantidad'];
             } catch (PDOException $e) {
-                error_log("Error en consulta de ocupación: " . $e->getMessage());
+                $this->logError('Error en consulta de ocupación', $e);
                 $ocupacion[] = 0;
             }
 
@@ -566,9 +577,8 @@ class Dashboard
                 $stmt->execute();
                 $ingreso_recepcion = floatval($stmt->fetch(PDO::FETCH_ASSOC)['total']);
                 $ingreso_dia += $ingreso_recepcion;
-                error_log("Ingresos recepción para $fecha: $ingreso_recepcion");
             } catch (PDOException $e) {
-                error_log("Error en consulta de ingresos de recepción: " . $e->getMessage());
+                $this->logError('Error en consulta de ingresos de recepción', $e);
             }
 
             try {
@@ -583,9 +593,8 @@ class Dashboard
                 $stmt->execute();
                 $ingreso_bano = floatval($stmt->fetch(PDO::FETCH_ASSOC)['total']);
                 $ingreso_dia += $ingreso_bano;
-                error_log("Ingresos baño para $fecha: $ingreso_bano");
             } catch (PDOException $e) {
-                error_log("Error en consulta de ingresos de servicios de baño: " . $e->getMessage());
+                $this->logError('Error en consulta de ingresos de servicios de baño', $e);
             }
 
             try {
@@ -599,9 +608,8 @@ class Dashboard
                 $stmt->execute();
                 $ingreso_equipaje = floatval($stmt->fetch(PDO::FETCH_ASSOC)['total']);
                 $ingreso_dia += $ingreso_equipaje;
-                error_log("Ingresos equipaje para $fecha: $ingreso_equipaje");
             } catch (PDOException $e) {
-                error_log("Error en consulta de ingresos de equipaje: " . $e->getMessage());
+                $this->logError('Error en consulta de ingresos de equipaje', $e);
             }
 
             try {
@@ -616,14 +624,12 @@ class Dashboard
                 $stmt->execute();
                 $ingreso_ventas = floatval($stmt->fetch(PDO::FETCH_ASSOC)['total']);
                 $ingreso_dia += $ingreso_ventas;
-                error_log("Ingresos ventas para $fecha: $ingreso_ventas");
             } catch (PDOException $e) {
-                error_log("Error en consulta de ingresos de ventas: " . $e->getMessage());
+                $this->logError('Error en consulta de ingresos de ventas', $e);
             }
 
             // Añadir el ingreso total del día al array
             $ingresos[] = $ingreso_dia;
-            error_log("Ingresos totales para $fecha: $ingreso_dia");
         }
 
         // Verificar si hay al menos algunos datos reales
@@ -729,7 +735,7 @@ class Dashboard
                 'estadisticas' => $estadisticas
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener asignaciones de limpieza: ' . $e->getMessage());
+            $this->logError('Error al obtener asignaciones de limpieza', $e);
             return [
                 'pendientes' => [],
                 'completadas' => [],
@@ -789,7 +795,7 @@ class Dashboard
                 'estadisticas' => $estadisticas
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener asignaciones de limpieza: ' . $e->getMessage());
+            $this->logError('Error al obtener asignaciones de limpieza', $e);
             return [
                 'todas' => [],
                 'estadisticas' => [
@@ -824,7 +830,7 @@ class Dashboard
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log('Error al obtener habitaciones con estado: ' . $e->getMessage());
+            $this->logError('Error al obtener habitaciones con estado', $e);
             return [];
         }
     }
@@ -893,7 +899,7 @@ class Dashboard
                 'ultimas_actualizaciones' => $ultimas_actualizaciones
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener estadísticas de habitaciones: ' . $e->getMessage());
+            $this->logError('Error al obtener estadísticas de habitaciones', $e);
             return [
                 'total' => 0,
                 'por_estado' => ['disponible' => 0, 'ocupada' => 0, 'limpieza' => 0, 'mantenimiento' => 0],
@@ -963,7 +969,7 @@ class Dashboard
                 'ingresos_mes' => floatval($ingresos)
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener estadísticas detalladas de baños: ' . $e->getMessage());
+            $this->logError('Error al obtener estadísticas detalladas de baños', $e);
             return [
                 'total' => 0,
                 'disponibles' => 0,
@@ -1038,7 +1044,7 @@ class Dashboard
                 ]
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener estadísticas detalladas de clientes: ' . $e->getMessage());
+            $this->logError('Error al obtener estadísticas detalladas de clientes', $e);
             return [
                 'total' => 0,
                 'activos' => 0,
@@ -1104,7 +1110,7 @@ class Dashboard
                 'total' => $total
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener datos para gráficos de ingresos: ' . $e->getMessage());
+            $this->logError('Error al obtener datos para gráficos de ingresos', $e);
             return [
                 'labels' => [],
                 'servicios_bano' => [],
@@ -1189,7 +1195,7 @@ class Dashboard
                 'fecha' => date('Y-m-d')
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener ingresos totales del día: ' . $e->getMessage());
+            $this->logError('Error al obtener ingresos totales del día', $e);
             return [
                 'total' => 0,
                 'desglose' => [
@@ -1262,7 +1268,7 @@ class Dashboard
                 'ultimas_pendientes' => $ultimas_pendientes
             ];
         } catch (PDOException $e) {
-            error_log('Error al obtener estadísticas de limpieza pendientes: ' . $e->getMessage());
+            $this->logError('Error al obtener estadísticas de limpieza pendientes', $e);
             return [
                 'total_pendientes' => 0,
                 'pendientes_hoy' => 0,

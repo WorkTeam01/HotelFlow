@@ -286,11 +286,18 @@ class UsuarioController
      */
     public function cambiarEstadoUsuario($id = null, $estado_actual = null)
     {
-        if ($id === null || $estado_actual === null) {
-            return ['success' => false, 'message' => 'ID de usuario o estado no válido', 'icon' => 'error'];
+        if ($id === null) {
+            return ['success' => false, 'message' => 'ID de usuario no válido', 'icon' => 'error'];
         }
 
-        $nuevo_estado = $estado_actual == 1 ? 0 : 1; // Cambia el estado
+        // Calcular el nuevo estado a partir del estado real en la base de datos,
+        // no del valor enviado por el cliente, que puede ser manipulado
+        $usuario = $this->modelo->getById($id);
+        if (!$usuario) {
+            return ['success' => false, 'message' => 'Usuario no encontrado', 'icon' => 'error'];
+        }
+
+        $nuevo_estado = $usuario['estado'] == 1 ? 0 : 1; // Cambia el estado
 
         if ($this->modelo->actualizarEstado($id, $nuevo_estado)) {
             $accion = $nuevo_estado == 1 ? 'activado' : 'desactivado';

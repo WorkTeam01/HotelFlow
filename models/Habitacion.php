@@ -470,6 +470,8 @@ class Habitacion
                     case 'limpieza':
                         $estadisticas['limpieza'] = $cantidad;
                         break;
+                    default:
+                        break;
                 }
             }
 

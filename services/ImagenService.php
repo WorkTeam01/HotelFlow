@@ -11,6 +11,11 @@
 class ImagenService
 {
     /**
+     * Tamaño máximo de archivo permitido en bytes (5MB)
+     */
+    private const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+
+    /**
      * Directorio de carga de imágenes
      * @var string
      */
@@ -26,7 +31,7 @@ class ImagenService
      * Tamaño máximo de archivo permitido (en bytes)
      * @var int
      */
-    private $max_size = 5242880; // 5MB
+    private $max_size = self::MAX_SIZE_BYTES;
 
     /**
      * Constructor de la clase
@@ -57,18 +62,36 @@ class ImagenService
             return false;
         }
 
-        // Verificar tipo de archivo
-        if (!in_array($imagen['type'], $this->allowed_types)) {
-            return false;
-        }
-
         // Verificar tamaño de archivo
         if ($imagen['size'] > $this->max_size) {
             return false;
         }
 
-        // Obtener información del archivo
-        $extension = pathinfo($imagen['name'], PATHINFO_EXTENSION);
+        // Verificar tipo real del archivo inspeccionando su contenido (no confiar en el MIME enviado por el cliente)
+        $tipo_real = mime_content_type($imagen['tmp_name']);
+        if (!in_array($tipo_real, $this->allowed_types)) {
+            return false;
+        }
+
+        // Verificar que el archivo sea una imagen válida y obtener su tipo real
+        $info_imagen = getimagesize($imagen['tmp_name']);
+        if ($info_imagen === false) {
+            return false;
+        }
+
+        $extensiones_permitidas = [
+            IMAGETYPE_JPEG => 'jpg',
+            IMAGETYPE_PNG => 'png',
+            IMAGETYPE_GIF => 'gif',
+            IMAGETYPE_WEBP => 'webp',
+        ];
+
+        if (!isset($extensiones_permitidas[$info_imagen[2]])) {
+            return false;
+        }
+
+        // Usar la extensión derivada del contenido real, no la del nombre enviado por el cliente
+        $extension = $extensiones_permitidas[$info_imagen[2]];
         $nombre_sin_extension = pathinfo($imagen['name'], PATHINFO_FILENAME);
 
         // Sanitizar nombre del archivo
@@ -188,6 +211,9 @@ class ImagenService
                 break;
             case IMAGETYPE_WEBP:
                 $resultado = imagewebp($imagen_redimensionada, $imagen_path, 90);
+                break;
+            default:
+                $resultado = false;
                 break;
         }
 

@@ -361,15 +361,10 @@ class RecepcionController
 
             // El cambio es la diferencia entre el dinero recibido y el monto pagado
             $datos['cambio'] = max(0, $dineroRecibido - $datos['montopagado']);
-
-            // Registrar información de depuración
-            error_log("Pago en efectivo: Monto total={$datos['montototal']}, Dinero recibido={$dineroRecibido}, Monto pagado={$datos['montopagado']}, Cambio={$datos['cambio']}");
         } else {
             // Para otros métodos de pago, el monto pagado es igual al monto total y no hay cambio
             $datos['montopagado'] = $datos['montototal'];
             $datos['cambio'] = null;
-
-            error_log("Pago con {$datos['metodopago']}: Monto total={$datos['montototal']}, Monto pagado={$datos['montopagado']}, Cambio=null");
         }
 
         return $datos;

@@ -67,8 +67,9 @@ class Conexion
 
             $this->connection = new PDO($dsn, $db_config['user'], $db_config['pass'], $options);
 
-            // Obtener zona horaria desde la configuración de la app
-            $timezone = isset($config['app']['timezone']) ? $config['app']['timezone'] : 'America/La_Paz';
+            // Obtener zona horaria desde la configuración de la app (config.php es la única fuente de verdad,
+            // con su propio valor por defecto 'America/La_Paz' si TIMEZONE no está definida en .env)
+            $timezone = $config['app']['timezone'];
 
             // Establecer la zona horaria de MariaDB basada en la configuración
             $timezone_offset = $this->getTimezoneOffset($timezone);

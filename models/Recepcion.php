@@ -261,6 +261,11 @@ class Recepcion
         try {
             $this->conexion->beginTransaction();
 
+            // Capturar el estado anterior antes de modificar, para poder comparar
+            // correctamente tras el UPDATE (getById() luego devolvería el nuevo estado)
+            $recepcion_anterior = $this->getById($id);
+            $estado_anterior = $recepcion_anterior ? $recepcion_anterior['estado'] : null;
+
             // Construir consulta de actualización dinámicamente
             $campos = [];
             $params = [':id' => $id];
@@ -290,10 +295,8 @@ class Recepcion
                         if (isset($datos[$campo]) && $datos['metodopago'] === 'Efectivo') {
                             $campos[] = $sql;
                             $params[':' . $campo] = (float)$datos[$campo];
-                            error_log("Actualizando campo cambio: " . (float)$datos[$campo]);
                         } else {
                             $campos[] = "cambio = NULL";
-                            error_log("Estableciendo cambio como NULL");
                         }
                     } else if ($campo === 'metodopago' && empty($datos[$campo])) {
                         $campos[] = "metodopago = NULL";
@@ -325,10 +328,6 @@ class Recepcion
                 }
             }
 
-            // Depuración de la consulta
-            error_log("Consulta SQL de actualización: " . $query);
-            error_log("Parámetros de actualización: " . print_r($params, true));
-
             $result = $stmt->execute();
 
             if (!$result) {
@@ -338,15 +337,15 @@ class Recepcion
             }
 
             // Actualizar estado de habitación si es necesario
-            if (isset($datos['estado'])) {
-                $recepcion = $this->getById($id);
+            if (isset($datos['estado']) && $recepcion_anterior) {
+                $idhabitacion = $recepcion_anterior['idhabitacion'];
 
-                if ($datos['estado'] === 'en_curso' && $recepcion['estado'] !== 'en_curso') {
+                if ($datos['estado'] === 'en_curso' && $estado_anterior !== 'en_curso') {
                     // Ocupar la habitación
-                    $query = "UPDATE habitaciones SET estado = 'ocupada' 
+                    $query = "UPDATE habitaciones SET estado = 'ocupada'
                           WHERE id_habitacion = :idhabitacion";
                     $stmt = $this->conexion->prepare($query);
-                    $stmt->bindParam(':idhabitacion', $recepcion['idhabitacion'], PDO::PARAM_INT);
+                    $stmt->bindParam(':idhabitacion', $idhabitacion, PDO::PARAM_INT);
                     $result = $stmt->execute();
 
                     if (!$result) {
@@ -354,12 +353,12 @@ class Recepcion
                         error_log("Error al actualizar el estado de la habitación: " . print_r($stmt->errorInfo(), true));
                         return false;
                     }
-                } else if ($datos['estado'] === 'finalizado' && $recepcion['estado'] !== 'finalizado') {
+                } else if ($datos['estado'] === 'finalizado' && $estado_anterior !== 'finalizado') {
                     // Pasar la habitación a limpieza
-                    $query = "UPDATE habitaciones SET estado = 'limpieza' 
+                    $query = "UPDATE habitaciones SET estado = 'limpieza'
                           WHERE id_habitacion = :idhabitacion";
                     $stmt = $this->conexion->prepare($query);
-                    $stmt->bindParam(':idhabitacion', $recepcion['idhabitacion'], PDO::PARAM_INT);
+                    $stmt->bindParam(':idhabitacion', $idhabitacion, PDO::PARAM_INT);
                     $result = $stmt->execute();
 
                     if (!$result) {
@@ -367,12 +366,12 @@ class Recepcion
                         error_log("Error al actualizar el estado de la habitación: " . print_r($stmt->errorInfo(), true));
                         return false;
                     }
-                } else if ($datos['estado'] === 'cancelado' && $recepcion['estado'] !== 'cancelado') {
+                } else if ($datos['estado'] === 'cancelado' && $estado_anterior !== 'cancelado') {
                     // Liberar la habitación
-                    $query = "UPDATE habitaciones SET estado = 'disponible' 
+                    $query = "UPDATE habitaciones SET estado = 'disponible'
                           WHERE id_habitacion = :idhabitacion";
                     $stmt = $this->conexion->prepare($query);
-                    $stmt->bindParam(':idhabitacion', $recepcion['idhabitacion'], PDO::PARAM_INT);
+                    $stmt->bindParam(':idhabitacion', $idhabitacion, PDO::PARAM_INT);
                     $result = $stmt->execute();
 
                     if (!$result) {
@@ -384,7 +383,6 @@ class Recepcion
             }
 
             $this->conexion->commit();
-            error_log("Recepción actualizada exitosamente: " . $id);
             return true;
         } catch (PDOException $e) {
             $this->conexion->rollBack();
@@ -743,6 +741,15 @@ class Recepcion
 
         if (empty($datos['fechasalida_prevista'])) {
             $errores[] = 'La fecha de salida prevista es obligatoria.';
+        } elseif (!empty($datos['fechaentrada'])) {
+            $entrada = strtotime($datos['fechaentrada']);
+            $salidaPrevista = strtotime($datos['fechasalida_prevista']);
+
+            if ($entrada === false || $salidaPrevista === false) {
+                $errores[] = 'El formato de las fechas no es válido.';
+            } elseif ($salidaPrevista <= $entrada) {
+                $errores[] = 'La fecha de salida prevista debe ser posterior a la fecha de entrada.';
+            }
         }
 
         // Validar montos
