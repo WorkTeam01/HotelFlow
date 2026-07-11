@@ -54,6 +54,7 @@ include_once '../layouts/header.php';
                     <!-- /.card-header -->
                     <!-- form start -->
                     <form action="<?= $URL; ?>controllers/productos/crear_producto.php" method="POST" enctype="multipart/form-data" id="formCrearProducto">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <!-- Instrucciones -->
                             <div class="callout callout-info mb-4">

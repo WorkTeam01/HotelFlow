@@ -373,7 +373,7 @@ sort($pisos_unicos);
                                                                 </a>
                                                             </div>
                                                             <div class="col-6">
-                                                                <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= $recepcion['idrecepcion']; ?>&nuevo_estado=finalizado"
+                                                                <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= $recepcion['idrecepcion']; ?>&nuevo_estado=finalizado&csrf_token=<?= generateCSRFToken(); ?>"
                                                                     class="btn btn-success btn-checkout"
                                                                     data-habitacion="<?= htmlspecialchars($recepcion['numero_habitacion']); ?>"
                                                                     data-cliente="<?= htmlspecialchars($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido_cliente']); ?>">

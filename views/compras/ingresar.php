@@ -55,6 +55,7 @@ include_once '../layouts/header.php';
                         <h3 class="card-title">Formulario de Compra</h3>
                     </div>
                     <form action="<?= $URL; ?>controllers/compras/ingresar_compra.php" method="POST" id="form-compra" novalidate>
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()); ?>">
                         <div class="card-body">
                             <div class="row">
                                 <!-- Usuario Responsable (no editable) -->

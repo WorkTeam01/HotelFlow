@@ -184,6 +184,7 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
                     <!-- /.card-header -->
                     <!-- form start -->
                     <form action="<?= $URL; ?>controllers/servicios-bano/crear_servicio.php" method="POST" id="formServicioBano">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <div class="row">
                                 <!-- Baño -->
@@ -287,9 +288,6 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
 
                                 <!-- Fecha y Hora (oculto, se llena automáticamente) -->
                                 <input type="hidden" name="fecha" value="<?= date('Y-m-d H:i:s'); ?>">
-
-                                <!-- Estado (oculto, valor por defecto = activo) -->
-                                <input type="hidden" name="estado" value="1">
                             </div>
                         </div>
                         <!-- /.card-body -->

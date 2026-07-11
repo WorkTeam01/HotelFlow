@@ -197,13 +197,20 @@ class TipoHabitacionController
      * @param int $estado_actual Estado actual del tipo (1 para activo, 0 para inactivo)
      * @return array Resultado de la operación
      */
-    public function cambiarEstado($id = null, $estado_actual = null)
+    public function cambiarEstado($id = null)
     {
-        if ($id === null || $estado_actual === null) {
-            return ['success' => false, 'message' => 'ID de tipo de habitación o estado no válido', 'icon' => 'error'];
+        if ($id === null) {
+            return ['success' => false, 'message' => 'ID de tipo de habitación no válido', 'icon' => 'error'];
         }
 
-        $nuevo_estado = $estado_actual == 1 ? 0 : 1; // Cambia el estado
+        // Calcular el nuevo estado a partir del estado real en la base de datos,
+        // no del valor enviado por el cliente, que puede ser manipulado
+        $tipo = $this->modelo->getById($id);
+        if (!$tipo) {
+            return ['success' => false, 'message' => 'Tipo de habitación no encontrado', 'icon' => 'error'];
+        }
+
+        $nuevo_estado = $tipo['estado'] == 1 ? 0 : 1; // Cambia el estado
 
         if ($this->modelo->actualizarEstado($id, $nuevo_estado)) {
             $accion = $nuevo_estado == 1 ? 'activado' : 'desactivado';

@@ -216,15 +216,20 @@ requireLogin();
                                     $contador = 1;
                                     foreach ($servicios as $servicio) :
                                         $estado = $servicio['estado'];
-                                        $clase_estado = '';
-                                        $texto_estado = '';
-
-                                        if ($estado == 1) {
-                                            $clase_estado = 'badge-success';
-                                            $texto_estado = 'Activo';
-                                        } else {
-                                            $clase_estado = 'badge-danger';
-                                            $texto_estado = 'Inactivo';
+                                        switch ($estado) {
+                                            case 'cancelado':
+                                                $clase_estado = 'badge-danger';
+                                                $texto_estado = 'Cancelado';
+                                                break;
+                                            case 'finalizado':
+                                                $clase_estado = 'badge-info';
+                                                $texto_estado = 'Finalizado';
+                                                break;
+                                            case 'iniciado':
+                                            default:
+                                                $clase_estado = 'badge-success';
+                                                $texto_estado = 'Iniciado';
+                                                break;
                                         }
                                     ?>
                                         <tr>
@@ -246,18 +251,20 @@ requireLogin();
                                                     <a href="<?= $URL; ?>views/servicios-bano/update.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-warning btn-sm">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <?php if ($servicio['estado'] == 1): ?>
+                                                    <?php if ($servicio['estado'] !== 'cancelado'): ?>
                                                         <button type="button" class="btn btn-danger btn-sm btn-cambiar-estado"
                                                             data-id="<?= $servicio['idservicio']; ?>"
                                                             data-estado="<?= $servicio['estado']; ?>"
-                                                            data-accion="0">
+                                                            data-accion="cancelado"
+                                                            title="Cancelar servicio">
                                                             <i class="fas fa-times"></i>
                                                         </button>
                                                     <?php else: ?>
                                                         <button type="button" class="btn btn-success btn-sm btn-cambiar-estado"
                                                             data-id="<?= $servicio['idservicio']; ?>"
                                                             data-estado="<?= $servicio['estado']; ?>"
-                                                            data-accion="1">
+                                                            data-accion="iniciado"
+                                                            title="Reactivar servicio">
                                                             <i class="fas fa-check"></i>
                                                         </button>
                                                     <?php endif; ?>

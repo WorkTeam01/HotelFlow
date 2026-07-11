@@ -162,6 +162,7 @@ $estadisticas = $controller->getEstadisticas();
                 </button>
             </div>
             <form id="formCategoria" method="post">
+                <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                 <div class="modal-body">
                     <input type="hidden" id="categoriaAction" name="action" value="create">
                     <input type="hidden" id="idCategoria" name="idcategoria" value="">

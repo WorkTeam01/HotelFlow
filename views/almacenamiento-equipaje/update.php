@@ -107,6 +107,7 @@ switch ($equipaje['estado']) {
                     </div>
                     <form id="formActualizarEquipaje" action="<?= $URL; ?>controllers/almacenamiento-equipaje/actualizar_equipaje.php" method="POST">
                         <input type="hidden" name="idalmacen" value="<?= $equipaje['idalmacen']; ?>">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <!-- Estado actual del equipaje -->
                             <div class="mb-3 text-center">

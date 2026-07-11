@@ -173,7 +173,7 @@ $productos = $controller->index();
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const baseUrl = '<?= $URL; ?>';
-                        window.location.href = `${baseUrl}controllers/productos/desactivar_producto.php?id=${productoId}&estado=${estadoActual}`;
+                        window.location.href = `${baseUrl}controllers/productos/desactivar_producto.php?id=${productoId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
                     }
                 });
             });

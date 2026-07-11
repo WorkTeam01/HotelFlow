@@ -607,7 +607,7 @@ include_once '../layouts/footer.php';
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Redirigir a la acción de cambio de estado
-                    window.location.href = `<?= $URL; ?>controllers/productos/desactivar_producto.php?id=${productoId}&estado=${estadoActual}`;
+                    window.location.href = `<?= $URL; ?>controllers/productos/desactivar_producto.php?id=${productoId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
                 }
             });
         });

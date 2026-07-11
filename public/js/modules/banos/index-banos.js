@@ -304,7 +304,8 @@ $(document).ready(function () {
                     dataType: 'json',
                     data: {
                         id: banoId,
-                        nuevo_estado: nuevoEstado
+                        nuevo_estado: nuevoEstado,
+                        csrf_token: CSRF_TOKEN
                     },
                     success: function (response) {
                         if (response.success) {

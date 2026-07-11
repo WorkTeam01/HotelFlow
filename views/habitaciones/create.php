@@ -65,6 +65,7 @@ $pisos = $datos['pisos'];
                     <!-- /.card-header -->
                     <!-- form start -->
                     <form method="post" action="<?= $URL; ?>controllers/habitaciones/crear_habitacion.php" id="formHabitacion">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">

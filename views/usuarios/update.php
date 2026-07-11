@@ -76,6 +76,7 @@ if (!$usuario) {
                     <!-- form start -->
                     <form action="<?= $URL; ?>controllers/usuarios/actualizar_usuario.php" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="idusuario" value="<?= $usuario['idusuario']; ?>">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <!-- Instrucciones -->
                             <div class="callout callout-warning mb-4">
@@ -757,7 +758,7 @@ if (!$usuario) {
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Redirigir a la acción de cambio de estado
-                    window.location.href = `<?= $URL; ?>controllers/usuarios/desactivar_usuario.php?id=${usuarioId}&estado=${estadoActual}`;
+                    window.location.href = `<?= $URL; ?>controllers/usuarios/desactivar_usuario.php?id=${usuarioId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
                 }
             });
         });

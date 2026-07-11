@@ -322,6 +322,7 @@ if (!$idhabitacion) {
                 <!-- Panel derecho: Formulario de reserva -->
                 <div class="col-md-8">
                     <form id="formCheckin" action="<?= $URL; ?>controllers/recepcion/guardar_checkin.php" method="POST" novalidate>
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()); ?>">
                         <input type="hidden" name="idhabitacion" value="<?= $habitacion['id_habitacion']; ?>">
 
                         <!-- Datos del cliente -->

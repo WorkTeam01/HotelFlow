@@ -75,6 +75,7 @@ include_once '../layouts/header.php';
                     <!-- form start -->
                     <form id="formTipoHabitacion" action="<?= $URL; ?>controllers/tipohabitaciones/actualizar_tipo_habitacion.php" method="POST" novalidate>
                         <input type="hidden" name="id_tipo" value="<?= $tipoHabitacion['id_tipo']; ?>">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <div class="row">
                                 <!-- Nombre -->

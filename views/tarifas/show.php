@@ -322,7 +322,7 @@ include_once '../layouts/header.php';
         }).then((result) => {
             if (result.isConfirmed) {
                 // Redireccionar a la URL de cambio de estado
-                window.location.href = `<?= $URL; ?>controllers/tarifas/desactivar_tarifa.php?id=${tarifaId}&estado=${estadoActual}`;
+                window.location.href = `<?= $URL; ?>controllers/tarifas/desactivar_tarifa.php?id=${tarifaId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
             }
         });
     }

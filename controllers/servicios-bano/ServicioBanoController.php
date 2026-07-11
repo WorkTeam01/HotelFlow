@@ -120,8 +120,9 @@ class ServicioBanoController
             'metodopago' => isset($post_data['metodopago']) ? $post_data['metodopago'] : 'Efectivo', // Valor por defecto
             'pagorecibido' => $pagorecibido,
             'cambio' => $cambio,
-            'fecha' => isset($post_data['fecha']) ? $post_data['fecha'] : date('Y-m-d H:i:s'),
-            'estado' => isset($post_data['estado']) ? (int)$post_data['estado'] : 1 // Por defecto activo
+            'fecha' => isset($post_data['fecha']) ? $post_data['fecha'] : date('Y-m-d H:i:s')
+            // Nota: 'estado' se maneja exclusivamente vía cambiarEstadoServicio(),
+            // nunca a partir de datos de creación/actualización del formulario.
         ];
 
         return $datos;
@@ -505,39 +506,40 @@ class ServicioBanoController
 
     /**
      * Cambia el estado de un servicio de baño
-     * 
+     *
+     * El estado actual SIEMPRE se recalcula desde la BD (nunca se confía en un
+     * valor recibido del cliente), y el nuevo estado se valida contra los
+     * valores reales del enum de la columna.
+     *
      * @param int $id ID del servicio de baño
-     * @param int $estado_actual Estado actual del servicio
-     * @param int $nuevo_estado Nuevo estado del servicio (1=Activo, 0=Inactivo)
+     * @param string $nuevo_estado Nuevo estado ('iniciado'|'finalizado'|'cancelado')
      * @return array Resultado de la operación
      */
-    public function cambiarEstadoServicio($id = null, $estado_actual = null, $nuevo_estado = null)
+    public function cambiarEstadoServicio($id = null, $nuevo_estado = null)
     {
-        if ($id === null || $estado_actual === null || $nuevo_estado === null) {
+        if ($id === null || $nuevo_estado === null) {
             return ['success' => false, 'message' => 'Datos no válidos para cambiar el estado del servicio', 'icon' => 'error'];
         }
 
-        if (!in_array($nuevo_estado, [0, 1, '0', '1'])) {
+        if (!in_array($nuevo_estado, ServicioBano::ESTADOS_VALIDOS, true)) {
             return ['success' => false, 'message' => 'Estado no válido', 'icon' => 'error'];
         }
 
-        // Verificar que el servicio existe
+        // Verificar que el servicio existe (estado actual recalculado desde BD)
         $servicio = $this->modelo->getById($id);
         if (!$servicio) {
             return ['success' => false, 'message' => 'Servicio de baño no encontrado', 'icon' => 'error'];
         }
 
-        // Verificar que el estado actual es correcto
-        if ($servicio['estado'] != $estado_actual) {
-            return ['success' => false, 'message' => 'El estado actual del servicio ha cambiado. Refresque la página.', 'icon' => 'warning'];
+        if ($servicio['estado'] === $nuevo_estado) {
+            return ['success' => false, 'message' => 'El servicio ya se encuentra en ese estado', 'icon' => 'warning'];
         }
 
         if ($this->modelo->actualizarEstado($id, $nuevo_estado)) {
             $mensajes = [
-                '1' => 'activado',
-                '0' => 'desactivado',
-                1 => 'activado',
-                0 => 'desactivado'
+                'iniciado' => 'reactivado',
+                'finalizado' => 'finalizado',
+                'cancelado' => 'cancelado'
             ];
 
             return [

@@ -81,6 +81,7 @@ include_once '../layouts/header.php';
                     <!-- form start -->
                     <form id="formTarifa" action="<?= $URL; ?>controllers/tarifas/actualizar_tarifa.php" method="POST" novalidate>
                         <input type="hidden" name="idtarifa" value="<?= $tarifa['idtarifa']; ?>">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <div class="row">
                                 <!-- Tipo de Habitación -->

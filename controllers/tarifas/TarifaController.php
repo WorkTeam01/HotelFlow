@@ -194,13 +194,20 @@ class TarifaController
      * @param int $estado_actual Estado actual de la tarifa (1 para activo, 0 para inactivo)
      * @return array Resultado de la operación
      */
-    public function cambiarEstadoTarifa($id = null, $estado_actual = null)
+    public function cambiarEstadoTarifa($id = null)
     {
-        if ($id === null || $estado_actual === null) {
-            return ['success' => false, 'message' => 'ID de tarifa o estado no válido', 'icon' => 'error'];
+        if ($id === null) {
+            return ['success' => false, 'message' => 'ID de tarifa no válido', 'icon' => 'error'];
         }
 
-        $nuevo_estado = $estado_actual == 1 ? 0 : 1; // Cambia el estado
+        // Calcular el nuevo estado a partir del estado real en la base de datos,
+        // no del valor enviado por el cliente, que puede ser manipulado
+        $tarifa = $this->modelo->getById($id);
+        if (!$tarifa) {
+            return ['success' => false, 'message' => 'Tarifa no encontrada', 'icon' => 'error'];
+        }
+
+        $nuevo_estado = $tarifa['estado'] == 1 ? 0 : 1; // Cambia el estado
 
         if ($this->modelo->actualizarEstado($id, $nuevo_estado)) {
             $accion = $nuevo_estado == 1 ? 'activada' : 'desactivada';

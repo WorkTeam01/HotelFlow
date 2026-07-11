@@ -199,17 +199,25 @@ class PisoController
 
         // Obtener datos
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        $estado_actual = isset($_POST['estado_actual']) ? (int)$_POST['estado_actual'] : null;
 
-        if (!$id || $estado_actual === null) {
+        if (!$id) {
             return [
                 'success' => false,
                 'message' => 'Datos inválidos para cambiar el estado del piso'
             ];
         }
 
-        // El nuevo estado es el opuesto al actual
-        $nuevo_estado = $estado_actual == 1 ? 0 : 1;
+        // Calcular el nuevo estado a partir del estado real en la base de datos,
+        // no del valor enviado por el cliente, que puede ser manipulado
+        $piso = $this->modelo->getById($id);
+        if (!$piso) {
+            return [
+                'success' => false,
+                'message' => 'Piso no encontrado'
+            ];
+        }
+
+        $nuevo_estado = $piso['estado'] == 1 ? 0 : 1;
 
         if ($this->modelo->cambiarEstado($id, $nuevo_estado)) {
             $mensaje = $nuevo_estado == 1 ? 'activado' : 'desactivado';

@@ -228,18 +228,22 @@ class ProductoController
 
     /**
      * Cambia el estado de un producto (activa/desactiva)
-     * 
+     *
      * @param int $id ID del producto
-     * @param int $estado_actual Estado actual del producto (1 para activo, 0 para inactivo)
      * @return array Resultado de la operación
      */
-    public function cambiarEstadoProducto($id = null, $estado_actual = null)
+    public function cambiarEstadoProducto($id = null)
     {
-        if ($id === null || $estado_actual === null) {
-            return ['success' => false, 'message' => 'ID de producto o estado no válido', 'icon' => 'error'];
+        if ($id === null) {
+            return ['success' => false, 'message' => 'ID de producto no válido', 'icon' => 'error'];
         }
 
-        $nuevo_estado = $estado_actual == 1 ? 0 : 1; // Cambia el estado
+        $producto = $this->modelo->getById($id);
+        if (!$producto) {
+            return ['success' => false, 'message' => 'Producto no encontrado', 'icon' => 'error'];
+        }
+
+        $nuevo_estado = $producto['estado'] == 1 ? 0 : 1; // Cambia el estado a partir del valor real en BD
 
         if ($this->modelo->actualizarEstado($id, $nuevo_estado)) {
             $accion = $nuevo_estado == 1 ? 'activado' : 'desactivado';

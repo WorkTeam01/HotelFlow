@@ -81,6 +81,7 @@ if (!$producto) {
                     <!-- form start -->
                     <form action="<?= $URL; ?>controllers/productos/actualizar_producto.php" method="POST" enctype="multipart/form-data" id="formEditarProducto">
                         <input type="hidden" name="idproducto" value="<?= $producto['idproducto']; ?>">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <!-- Instrucciones -->
                             <div class="callout callout-warning mb-4">
@@ -787,7 +788,7 @@ if (!$producto) {
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Redirigir a la acción de cambio de estado
-                    window.location.href = `<?= $URL; ?>controllers/productos/desactivar_producto.php?id=${productoId}&estado=${estadoActual}`;
+                    window.location.href = `<?= $URL; ?>controllers/productos/desactivar_producto.php?id=${productoId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
                 }
             });
         });

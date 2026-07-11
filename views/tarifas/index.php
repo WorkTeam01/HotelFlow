@@ -162,7 +162,7 @@ $tarifas = $controller->index();
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const baseUrl = '<?= $URL; ?>';
-                        window.location.href = `${baseUrl}controllers/tarifas/desactivar_tarifa.php?id=${tarifaId}&estado=${estadoActual}`;
+                        window.location.href = `${baseUrl}controllers/tarifas/desactivar_tarifa.php?id=${tarifaId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
                     }
                 });
             });

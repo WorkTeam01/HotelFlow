@@ -20,6 +20,14 @@ if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario
     exit;
 }
 
+// Verificar token CSRF
+if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+    $_SESSION['mensaje'] = 'Token de seguridad inválido. Recargue la página e intente nuevamente.';
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $URL . 'views/habitaciones/index.php');
+    exit;
+}
+
 // Instanciar el controlador
 $controller = new HabitacionController();
 

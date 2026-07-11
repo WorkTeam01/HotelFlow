@@ -196,18 +196,24 @@ class PersonaController
 
     /**
      * Cambia el estado de una persona (activa/desactiva)
-     * 
+     *
      * @param int $id ID de la persona
-     * @param int $estado_actual Estado actual de la persona (1 para activo, 0 para inactivo)
      * @return array Resultado de la operación
      */
-    public function cambiarEstado($id = null, $estado_actual = null)
+    public function cambiarEstado($id = null)
     {
-        if ($id === null || $estado_actual === null) {
-            return ['success' => false, 'message' => 'ID de persona o estado no válido', 'icon' => 'error'];
+        if ($id === null) {
+            return ['success' => false, 'message' => 'ID de persona no válido', 'icon' => 'error'];
         }
 
-        $nuevo_estado = $estado_actual == 1 ? 0 : 1; // Cambia el estado
+        // Calcular el nuevo estado a partir del estado real en la base de datos,
+        // no del valor enviado por el cliente, que puede ser manipulado
+        $persona = $this->modelo->getById($id);
+        if (!$persona) {
+            return ['success' => false, 'message' => 'Persona no encontrada', 'icon' => 'error'];
+        }
+
+        $nuevo_estado = $persona['estado'] == 1 ? 0 : 1; // Cambia el estado
 
         if ($this->modelo->actualizarEstado($id, $nuevo_estado)) {
             $accion = $nuevo_estado == 1 ? 'activada' : 'desactivada';

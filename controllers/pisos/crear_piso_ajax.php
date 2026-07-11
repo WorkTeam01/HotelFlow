@@ -23,6 +23,12 @@ if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario
     exit;
 }
 
+// Verificar token CSRF
+if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+    echo json_encode(['success' => false, 'message' => 'Token de seguridad inválido. Recargue la página e intente nuevamente.']);
+    exit;
+}
+
 // Instanciar el controlador
 $controller = new PisoController();
 

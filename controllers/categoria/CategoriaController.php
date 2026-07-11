@@ -184,14 +184,19 @@ class CategoriaController
         }
 
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        $estado_actual = isset($_POST['estado_actual']) ? (int)$_POST['estado_actual'] : null;
 
-        if (!$id || $estado_actual === null) {
+        if (!$id) {
             return ['success' => false, 'message' => 'Datos inválidos para cambiar el estado de la categoría'];
         }
 
-        // El nuevo estado es el opuesto al actual
-        $nuevo_estado = $estado_actual == 1 ? 0 : 1;
+        // Calcular el nuevo estado a partir del estado real en la base de datos,
+        // no del valor enviado por el cliente, que puede ser manipulado
+        $categoria = $this->modelo->getById($id);
+        if (!$categoria) {
+            return ['success' => false, 'message' => 'Categoría no encontrada'];
+        }
+
+        $nuevo_estado = $categoria['estado'] == 1 ? 0 : 1;
 
         if ($this->modelo->actualizarEstado($id, $nuevo_estado)) {
             $mensaje = $nuevo_estado == 1 ? 'activada' : 'desactivada';

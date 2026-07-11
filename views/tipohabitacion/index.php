@@ -155,7 +155,7 @@ $tiposHabitacion = $controller->index();
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const baseUrl = '<?= $URL; ?>';
-                        window.location.href = `${baseUrl}controllers/tipohabitaciones/desactivar_tipo_habitacion.php?id=${tipoId}&estado=${estadoActual}`;
+                        window.location.href = `${baseUrl}controllers/tipohabitaciones/desactivar_tipo_habitacion.php?id=${tipoId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
                     }
                 });
             });

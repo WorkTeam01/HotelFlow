@@ -85,6 +85,7 @@ include_once '../layouts/header.php';
                     <!-- form start -->
                     <form method="post" action="<?= $URL; ?>controllers/habitaciones/actualizar_habitacion.php" id="formHabitacion">
                         <input type="hidden" name="id_habitacion" value="<?= $habitacion['id_habitacion']; ?>">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">

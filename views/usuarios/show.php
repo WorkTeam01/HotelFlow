@@ -422,7 +422,7 @@ include_once '../layouts/footer.php';
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Redirigir a la acción de cambio de estado
-                    window.location.href = `<?= $URL; ?>controllers/usuarios/desactivar_usuario.php?id=${usuarioId}&estado=${estadoActual}`;
+                    window.location.href = `<?= $URL; ?>controllers/usuarios/desactivar_usuario.php?id=${usuarioId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
                 }
             });
         });

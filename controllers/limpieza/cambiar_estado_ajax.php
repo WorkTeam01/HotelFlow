@@ -32,15 +32,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Verificar permisos específicos para ciertos estados
+    // Verificar permisos para cambiar el estado
     $idusuario = $_SESSION['usuario_id'] ?? 0;
     $auth = new AuthorizationService();
 
-    // Verificar permiso para estados que requieren ser administrador
-    if ($estado === 'verificada' && !$auth->puedeAccederModulo($idusuario, 'limpieza')) {
+    if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'limpieza')) {
         echo json_encode([
             'success' => false,
-            'message' => 'Solo recepcionistas y administradores pueden verificar asignaciones'
+            'message' => 'No tiene permisos para realizar esta acción'
+        ]);
+        exit;
+    }
+
+    // Verificar token CSRF
+    if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Token de seguridad inválido. Recargue la página e intente nuevamente.'
         ]);
         exit;
     }

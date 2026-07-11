@@ -441,7 +441,7 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                         <ul class="nav flex-column">
                             <?php if ($recepcion['estado'] === 'reservado'): ?>
                                 <li class="nav-item">
-                                    <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= $recepcion['idrecepcion']; ?>&nuevo_estado=en_curso"
+                                    <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= $recepcion['idrecepcion']; ?>&nuevo_estado=en_curso&csrf_token=<?= generateCSRFToken(); ?>"
                                         class="nav-link text-primary"
                                         onclick="return confirm('¿Está seguro que desea realizar el check-in para esta reserva?');">
                                         <i class="fas fa-sign-in-alt mr-2"></i> Realizar Check-in
@@ -460,7 +460,7 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                                     </li>
                                 <?php else: ?>
                                     <li class="nav-item">
-                                        <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= $recepcion['idrecepcion']; ?>&nuevo_estado=finalizado"
+                                        <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= $recepcion['idrecepcion']; ?>&nuevo_estado=finalizado&csrf_token=<?= generateCSRFToken(); ?>"
                                             class="nav-link text-success"
                                             onclick="return confirm('¿Está seguro que desea realizar el check-out para esta recepción?');">
                                             <i class="fas fa-sign-out-alt mr-2"></i> Realizar Check-out
@@ -479,7 +479,7 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                                 </li>
 
                                 <li class="nav-item">
-                                    <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= $recepcion['idrecepcion']; ?>&nuevo_estado=cancelado"
+                                    <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= $recepcion['idrecepcion']; ?>&nuevo_estado=cancelado&csrf_token=<?= generateCSRFToken(); ?>"
                                         class="nav-link text-danger"
                                         onclick="return confirm('¿Está seguro que desea cancelar esta recepción?');">
                                         <i class="fas fa-times-circle mr-2"></i> Cancelar recepción

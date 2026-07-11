@@ -47,6 +47,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Verificar token CSRF
+if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Token de seguridad inválido. Recargue la página e intente nuevamente.']);
+        exit;
+    }
+    $_SESSION['mensaje'] = 'Token de seguridad inválido. Recargue la página e intente nuevamente.';
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $URL . 'views/habitaciones/index.php');
+    exit;
+}
+
 // Obtener datos
 $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 $estado = isset($_POST['estado']) ? trim($_POST['estado']) : '';

@@ -323,7 +323,7 @@ if (empty($tiempo_almacenado)) {
                             <div class="btn-group-vertical btn-block">
                                 <?php if ($equipaje['estado'] !== 'retirado'): ?>
                                     <button type="button" class="btn btn-success mb-2 btn-retirar cambiar-estado"
-                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=retirado"
+                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=retirado&csrf_token=<?= generateCSRFToken(); ?>"
                                         data-estado="retirado"
                                         data-icono="success">
                                         <i class="fas fa-check-circle"></i> Marcar como Retirado
@@ -331,7 +331,7 @@ if (empty($tiempo_almacenado)) {
                                 <?php endif; ?>
                                 <?php if ($equipaje['estado'] !== 'perdido'): ?>
                                     <button type="button" class="btn btn-danger mb-2 btn-marcar-perdido cambiar-estado"
-                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=perdido"
+                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=perdido&csrf_token=<?= generateCSRFToken(); ?>"
                                         data-estado="perdido"
                                         data-icono="error">
                                         <i class="fas fa-exclamation-triangle"></i> Marcar como Perdido
@@ -339,7 +339,7 @@ if (empty($tiempo_almacenado)) {
                                 <?php endif; ?>
                                 <?php if ($equipaje['estado'] !== 'dañado'): ?>
                                     <button type="button" class="btn btn-dark mb-2 cambiar-estado"
-                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=dañado"
+                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=dañado&csrf_token=<?= generateCSRFToken(); ?>"
                                         data-estado="dañado"
                                         data-icono="warning">
                                         <i class="fas fa-times-circle"></i> Marcar como Dañado

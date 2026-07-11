@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $.ajax({
             url: baseUrl + 'controllers/servicios-bano/crear_servicio_rapido.php',
             type: 'POST',
-            data: { idbano: idBano },
+            data: { idbano: idBano, csrf_token: CSRF_TOKEN },
             dataType: 'json',
             success: function (response) {
                 // Restaurar botón

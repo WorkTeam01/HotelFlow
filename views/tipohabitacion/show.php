@@ -243,7 +243,7 @@ include_once '../layouts/header.php';
         }).then((result) => {
             if (result.isConfirmed) {
                 // Redireccionar a la URL de cambio de estado
-                window.location.href = `<?= $URL; ?>controllers/tipohabitaciones/desactivar_tipo_habitacion.php?id=${tipoId}&estado=${estadoActual}`;
+                window.location.href = `<?= $URL; ?>controllers/tipohabitaciones/desactivar_tipo_habitacion.php?id=${tipoId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
             }
         });
     }

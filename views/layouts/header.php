@@ -27,6 +27,7 @@ global $URL;
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script>
         const APP_NAME = '<?= $APP_NAME; ?>';
+        const CSRF_TOKEN = '<?= generateCSRFToken(); ?>';
     </script>
     <title><?= $APP_NAME; ?></title>
 

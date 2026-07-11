@@ -165,7 +165,7 @@ $usuarios = $controller->index();
                 }).then((result) => {
                     if (result.isConfirmed) {
                         // Construir la URL para la acción
-                        window.location.href = `<?= $URL; ?>controllers/usuarios/desactivar_usuario.php?id=${usuarioId}&estado=${estadoActual}`;
+                        window.location.href = `<?= $URL; ?>controllers/usuarios/desactivar_usuario.php?id=${usuarioId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
                     }
                 });
             });

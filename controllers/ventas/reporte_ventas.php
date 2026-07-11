@@ -1,6 +1,21 @@
 <?php
 require_once __DIR__ . '/../../views/layouts/session.php';
 require_once __DIR__ . '/VentaController.php';
+require_once __DIR__ . '/../../services/AuthorizationService.php';
+
+// Verificar si el usuario está autenticado
+requireLogin();
+
+// Verificar permisos
+$idusuario_sesion = $_SESSION['usuario_id'];
+$auth = new AuthorizationService();
+
+if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($idusuario_sesion, 'ventas')) {
+    $_SESSION['mensaje'] = 'No tiene permisos para realizar esta acción.';
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $URL . 'views/ventas/index.php');
+    exit;
+}
 
 // Instanciar el controlador de ventas
 $controller = new VentaController();

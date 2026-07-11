@@ -75,6 +75,7 @@ include_once '../layouts/header.php';
                     <!-- form start -->
                     <form id="formCliente" action="<?= $URL; ?>controllers/personas/actualizar_persona.php" method="POST" novalidate>
                         <input type="hidden" name="idpersona" value="<?= $persona['idpersona']; ?>">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <div class="row">
                                 <!-- Nombre -->

@@ -66,6 +66,7 @@ $precios_equipaje = $datos['precios_equipaje'];
                         <h3 class="card-title"><i class="fas fa-edit"></i> Formulario de Registro de Equipaje</h3>
                     </div>
                     <form id="formRegistroEquipaje" action="<?= $URL; ?>controllers/almacenamiento-equipaje/crear_equipaje.php" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <div class="row">
                                 <!-- Cliente -->

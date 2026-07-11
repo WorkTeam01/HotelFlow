@@ -57,6 +57,7 @@ include_once '../layouts/header.php';
 
                     <!-- form start -->
                     <form id="formTarifa" action="<?= $URL; ?>controllers/tarifas/crear_tarifa.php" method="POST" novalidate>
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <div class="row">
                                 <!-- Tipo de Habitación -->

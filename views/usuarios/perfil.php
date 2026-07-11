@@ -104,6 +104,7 @@ if (!$usuario) {
                             <!-- Tab Actualizar Imagen -->
                             <div class="active tab-pane" id="actualizarImagen">
                                 <form action="<?= $URL; ?>controllers/usuarios/procesar_actualizar_imagen.php" method="POST" enctype="multipart/form-data">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()); ?>">
                                     <div class="row">
                                         <!-- Imagen -->
                                         <div class="col-md-6">
@@ -154,6 +155,7 @@ if (!$usuario) {
                             <!-- Tab Cambiar Contraseña -->
                             <div class="tab-pane" id="cambiarPassword">
                                 <form id="formCambiarPassword" action="javascript:void(0)">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()); ?>">
                                     <div class="alert alert-info">
                                         <i class="fas fa-info-circle"></i> Al cambiar su contraseña, se cerrará su sesión y deberá iniciar sesión nuevamente.
                                     </div>

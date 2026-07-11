@@ -272,7 +272,7 @@ $clientes = $datos_formulario['clientes'];
                                                                 <?php if ($estado_actual !== 'retirado'): ?>
                                                                     <a class="dropdown-item text-success cambiar-estado"
                                                                         href="#"
-                                                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=retirado"
+                                                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=retirado&csrf_token=<?= generateCSRFToken(); ?>"
                                                                         data-accion="Retirado"
                                                                         data-icono="success">
                                                                         <i class="fas fa-check-circle mr-2"></i> Marcar como Retirado
@@ -282,7 +282,7 @@ $clientes = $datos_formulario['clientes'];
                                                                 <?php if ($estado_actual !== 'perdido'): ?>
                                                                     <a class="dropdown-item text-danger cambiar-estado"
                                                                         href="#"
-                                                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=perdido"
+                                                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=perdido&csrf_token=<?= generateCSRFToken(); ?>"
                                                                         data-accion="Perdido"
                                                                         data-icono="error">
                                                                         <i class="fas fa-exclamation-triangle mr-2"></i> Marcar como Perdido
@@ -292,7 +292,7 @@ $clientes = $datos_formulario['clientes'];
                                                                 <?php if ($estado_actual !== 'dañado'): ?>
                                                                     <a class="dropdown-item text-warning cambiar-estado"
                                                                         href="#"
-                                                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=dañado"
+                                                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=dañado&csrf_token=<?= generateCSRFToken(); ?>"
                                                                         data-accion="Dañado"
                                                                         data-icono="warning">
                                                                         <i class="fas fa-times-circle mr-2"></i> Marcar como Dañado

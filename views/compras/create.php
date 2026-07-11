@@ -56,6 +56,7 @@ $productos = $productoController->index();
                         <h3 class="card-title">Formulario de Compra</h3>
                     </div>
                     <form action="<?= $URL; ?>controllers/compras/crear_compra.php" method="POST" id="form-compra" novalidate>
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <div class="row">
                                 <!-- Usuario Responsable (no editable) -->

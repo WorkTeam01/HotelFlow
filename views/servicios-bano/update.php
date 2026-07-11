@@ -48,17 +48,27 @@ $servicio = $datos['servicio'];
 $banos_disponibles = $datos['banos_disponibles'];
 $clientes = $datos['clientes'];
 
-// Determinar clases y estilos según el estado
+// Determinar clases y estilos según el estado real (enum: iniciado/finalizado/cancelado)
 $card_class = 'card-primary';
-$estado_texto = 'Activo';
 $estado_clase = 'badge-success';
 $estado_icono = 'fa-check-circle';
 
-if ($servicio['estado'] == 0) {
-    $card_class = 'card-danger';
-    $estado_texto = 'Inactivo';
-    $estado_clase = 'badge-danger';
-    $estado_icono = 'fa-times-circle';
+switch ($servicio['estado']) {
+    case 'cancelado':
+        $card_class = 'card-danger';
+        $estado_texto = 'Cancelado';
+        $estado_clase = 'badge-danger';
+        $estado_icono = 'fa-times-circle';
+        break;
+    case 'finalizado':
+        $estado_texto = 'Finalizado';
+        $estado_clase = 'badge-info';
+        $estado_icono = 'fa-flag-checkered';
+        break;
+    case 'iniciado':
+    default:
+        $estado_texto = 'Iniciado';
+        break;
 }
 ?>
 
@@ -93,6 +103,7 @@ if ($servicio['estado'] == 0) {
                     <!-- form start -->
                     <form action="<?= $URL; ?>controllers/servicios-bano/actualizar_servicio.php" method="POST" id="formEditarServicio">
                         <input type="hidden" name="idservicio" value="<?= $servicio['idservicio']; ?>">
+                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <!-- Estado actual del servicio -->
                             <div class="mb-3 text-center">
@@ -212,7 +223,7 @@ if ($servicio['estado'] == 0) {
 
                             <div class="row">
                                 <!-- Cambio (calculado automáticamente) -->
-                                <div class="col-md-6" id="cambio_display">
+                                <div class="col-md-12" id="cambio_display">
                                     <div class="form-group">
                                         <label for="cambio_display">Cambio</label>
                                         <div class="input-group">
@@ -225,18 +236,9 @@ if ($servicio['estado'] == 0) {
                                         <small class="form-text text-muted">Calculado automáticamente</small>
                                     </div>
                                 </div>
-
-                                <!-- Estado -->
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="estado">Estado del Servicio</label>
-                                        <select class="form-control select2" id="estado" name="estado">
-                                            <option value="1" <?= $servicio['estado'] == 1 ? 'selected' : ''; ?>>Activo</option>
-                                            <option value="0" <?= $servicio['estado'] == 0 ? 'selected' : ''; ?>>Inactivo</option>
-                                        </select>
-                                    </div>
-                                </div>
                             </div>
+                            <!-- El estado del servicio no se edita aquí: use el botón de acción
+                                 en el listado (Finalizar / Cancelar) para cambiarlo. -->
 
                             <!-- Información adicional (solo lectura) -->
                             <div class="row mt-3">

@@ -23,6 +23,16 @@ if (!$auth->puedeAccederModulo($idusuario, 'servicios_bano')) {
     exit;
 }
 
+// Verificar token CSRF
+if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Token de seguridad inválido. Recargue la página e intente nuevamente.',
+        'icon' => 'error'
+    ]);
+    exit;
+}
+
 // Procesar solicitud
 try {
     // Instanciar el controlador

@@ -186,10 +186,12 @@ class ServicioBano
     public function crear($datos)
     {
         try {
-            $query = "INSERT INTO {$this->tabla} (idbano, idusuario, idcliente, tipo_cliente, 
-                  total, metodopago, pagorecibido, cambio, fecha, estado) 
-                  VALUES (:idbano, :idusuario, :idcliente, :tipo_cliente, 
-                  :total, :metodopago, :pagorecibido, :cambio, :fecha, :estado)";
+            // El estado no se recibe de fuera: toda fila nueva nace 'iniciado' (valor por
+            // defecto de la columna). El estado se cambia únicamente vía actualizarEstado().
+            $query = "INSERT INTO {$this->tabla} (idbano, idusuario, idcliente, tipo_cliente,
+                  total, metodopago, pagorecibido, cambio, fecha)
+                  VALUES (:idbano, :idusuario, :idcliente, :tipo_cliente,
+                  :total, :metodopago, :pagorecibido, :cambio, :fecha)";
 
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':idbano', $datos['idbano'], PDO::PARAM_INT);
@@ -212,10 +214,6 @@ class ServicioBano
             $fecha = !empty($datos['fecha']) ? $datos['fecha'] : date('Y-m-d H:i:s');
             $stmt->bindParam(':fecha', $fecha, PDO::PARAM_STR);
 
-            // Estado por defecto es activo (1)
-            $estado = isset($datos['estado']) ? $datos['estado'] : 1;
-            $stmt->bindParam(':estado', $estado, PDO::PARAM_INT);
-
             return $stmt->execute();
         } catch (PDOException $e) {
             $this->lastError = $e->getMessage();
@@ -233,15 +231,17 @@ class ServicioBano
     public function actualizar($id, $datos)
     {
         try {
-            $query = "UPDATE {$this->tabla} SET 
+            // El estado NUNCA se toca aquí: la actualización de datos del servicio
+            // (baño, cliente, montos, etc.) está separada del cambio de estado, que
+            // se hace exclusivamente vía actualizarEstado().
+            $query = "UPDATE {$this->tabla} SET
                   idbano = :idbano,
-                  idcliente = :idcliente, 
-                  tipo_cliente = :tipo_cliente, 
-                  total = :total, 
+                  idcliente = :idcliente,
+                  tipo_cliente = :tipo_cliente,
+                  total = :total,
                   metodopago = :metodopago,
-                  pagorecibido = :pagorecibido, 
-                  cambio = :cambio, 
-                  estado = :estado 
+                  pagorecibido = :pagorecibido,
+                  cambio = :cambio
                   WHERE idservicio = :id";
 
             $stmt = $this->conexion->prepare($query);
@@ -259,7 +259,6 @@ class ServicioBano
             $stmt->bindParam(':metodopago', $datos['metodopago'], PDO::PARAM_STR);
             $stmt->bindParam(':pagorecibido', $datos['pagorecibido'], PDO::PARAM_STR);
             $stmt->bindParam(':cambio', $datos['cambio'], PDO::PARAM_STR);
-            $stmt->bindParam(':estado', $datos['estado'], PDO::PARAM_INT);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
             return $stmt->execute();
@@ -270,18 +269,28 @@ class ServicioBano
     }
 
     /**
+     * Estados válidos para un servicio de baño (columna enum en BD)
+     */
+    public const ESTADOS_VALIDOS = ['iniciado', 'finalizado', 'cancelado'];
+
+    /**
      * Actualiza el estado de un servicio de baño
-     * 
+     *
      * @param int $id ID del servicio de baño
-     * @param int $estado Nuevo estado (1=Activo, 0=Inactivo)
+     * @param string $estado Nuevo estado ('iniciado'|'finalizado'|'cancelado')
      * @return bool True si se actualizó correctamente, False en caso contrario
      */
     public function actualizarEstado($id, $estado)
     {
+        if (!in_array($estado, self::ESTADOS_VALIDOS, true)) {
+            $this->lastError = "Estado '$estado' no válido";
+            return false;
+        }
+
         try {
             $sql = "UPDATE {$this->tabla} SET estado = :estado WHERE idservicio = :id";
             $stmt = $this->conexion->prepare($sql);
-            $stmt->bindParam(':estado', $estado, PDO::PARAM_INT);
+            $stmt->bindParam(':estado', $estado, PDO::PARAM_STR);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -291,14 +300,14 @@ class ServicioBano
     }
 
     /**
-     * Desactiva un servicio de baño
-     * 
+     * Cancela un servicio de baño
+     *
      * @param int $id ID del servicio de baño
-     * @return bool True si se desactivó correctamente, False en caso contrario
+     * @return bool True si se canceló correctamente, False en caso contrario
      */
-    public function desactivarServicio($id)
+    public function cancelarServicio($id)
     {
-        return $this->actualizarEstado($id, 0);
+        return $this->actualizarEstado($id, 'cancelado');
     }
 
     /**
@@ -337,11 +346,6 @@ class ServicioBano
             if (!is_numeric($datos['pagorecibido']) || $datos['pagorecibido'] < 0) {
                 $errores[] = 'El pago recibido debe ser un número mayor o igual a cero';
             }
-        }
-
-        // Validar estado
-        if (isset($datos['estado']) && !in_array($datos['estado'], [0, 1, '0', '1'])) {
-            $errores[] = 'El estado del servicio no es válido';
         }
 
         return $errores;
@@ -387,22 +391,22 @@ class ServicioBano
             $stmt->execute();
             $estadisticas['total'] = $stmt->fetchColumn();
 
-            // Servicios activos de hoy
-            $query = "SELECT COUNT(*) FROM {$this->tabla} WHERE estado = 1 AND DATE(fecha) = :fecha_hoy";
+            // "Activos" = servicios vigentes (no cancelados): iniciado o finalizado
+            $query = "SELECT COUNT(*) FROM {$this->tabla} WHERE estado != 'cancelado' AND DATE(fecha) = :fecha_hoy";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
             $stmt->execute();
             $estadisticas['activos'] = $stmt->fetchColumn();
 
-            // Servicios inactivos de hoy
-            $query = "SELECT COUNT(*) FROM {$this->tabla} WHERE estado = 0 AND DATE(fecha) = :fecha_hoy";
+            // "Inactivos" = servicios cancelados
+            $query = "SELECT COUNT(*) FROM {$this->tabla} WHERE estado = 'cancelado' AND DATE(fecha) = :fecha_hoy";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
             $stmt->execute();
             $estadisticas['inactivos'] = $stmt->fetchColumn();
 
-            // Ingresos del día
-            $query = "SELECT SUM(total) FROM {$this->tabla} WHERE estado = 1 AND DATE(fecha) = :fecha_hoy";
+            // Ingresos del día: excluye los servicios cancelados
+            $query = "SELECT SUM(total) FROM {$this->tabla} WHERE estado != 'cancelado' AND DATE(fecha) = :fecha_hoy";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
             $stmt->execute();
@@ -453,8 +457,7 @@ class ServicioBano
                 'metodopago' => 'Efectivo',
                 'pagorecibido' => $precio,
                 'cambio' => 0,
-                'fecha' => date('Y-m-d H:i:s'),
-                'estado' => 1
+                'fecha' => date('Y-m-d H:i:s')
             ];
 
             // Crear el servicio

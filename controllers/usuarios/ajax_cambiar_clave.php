@@ -1,23 +1,24 @@
 <?php
-// Iniciar sesión si no está iniciada
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// Incluir el archivo de sesión para tener acceso a requireLogin()/verifyCSRFToken()
+require_once __DIR__ . '/../../views/layouts/session.php';
 
 // Incluir el controlador de perfil
 require_once __DIR__ . '/PerfilController.php';
 
+header('Content-Type: application/json');
+
 // Verificar que sea una solicitud POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Content-Type: application/json');
     echo json_encode(['success' => false, 'message' => 'Método no permitido', 'icon' => 'error']);
     exit;
 }
 
 // Verificar que el usuario esté autenticado
-if (!isset($_SESSION['usuario_id'])) {
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Usuario no autenticado', 'icon' => 'error']);
+requireLogin();
+
+// Verificar token CSRF
+if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+    echo json_encode(['success' => false, 'message' => 'Token de seguridad inválido. Recargue la página e intente nuevamente.', 'icon' => 'error']);
     exit;
 }
 
@@ -26,6 +27,5 @@ $controller = new PerfilController();
 $resultado = $controller->cambiarContrasena();
 
 // Devolver respuesta JSON
-header('Content-Type: application/json');
 echo json_encode($resultado);
 exit;

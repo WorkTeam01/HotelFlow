@@ -453,7 +453,8 @@ include_once '../layouts/footer.php';
                         dataType: 'json',
                         data: {
                             id: id,
-                            estado: nuevoEstado
+                            estado: nuevoEstado,
+                            csrf_token: CSRF_TOKEN
                         },
                         success: function(response) {
                             if (response.success) {

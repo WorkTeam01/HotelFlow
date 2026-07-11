@@ -121,6 +121,7 @@ switch ($recepcion['estado']) {
         </div>
 
         <form id="formEditarRecepcion" action="<?= $URL; ?>controllers/recepcion/actualizar_recepcion.php" method="POST" class="needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
             <!-- ID de la recepción -->
             <input type="hidden" name="idrecepcion" value="<?= $recepcion['idrecepcion']; ?>">
 

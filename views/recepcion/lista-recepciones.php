@@ -502,7 +502,7 @@ $recepciones_en_curso = $datos['recepciones_en_curso'] ?? [];
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `${baseUrl}controllers/recepcion/cambiar_estado.php?id=${id}&nuevo_estado=en_curso`;
+                    window.location.href = `${baseUrl}controllers/recepcion/cambiar_estado.php?id=${id}&nuevo_estado=en_curso&csrf_token=<?= generateCSRFToken(); ?>`;
                 }
             });
         });
@@ -522,7 +522,7 @@ $recepciones_en_curso = $datos['recepciones_en_curso'] ?? [];
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `${baseUrl}controllers/recepcion/cambiar_estado.php?id=${id}&nuevo_estado=finalizado`;
+                    window.location.href = `${baseUrl}controllers/recepcion/cambiar_estado.php?id=${id}&nuevo_estado=finalizado&csrf_token=<?= generateCSRFToken(); ?>`;
                 }
             });
         });
@@ -542,7 +542,7 @@ $recepciones_en_curso = $datos['recepciones_en_curso'] ?? [];
                 cancelButtonText: 'No cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `${baseUrl}controllers/recepcion/cambiar_estado.php?id=${id}&nuevo_estado=cancelado`;
+                    window.location.href = `${baseUrl}controllers/recepcion/cambiar_estado.php?id=${id}&nuevo_estado=cancelado&csrf_token=<?= generateCSRFToken(); ?>`;
                 }
             });
         });

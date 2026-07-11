@@ -4,11 +4,26 @@ require_once __DIR__ . '/../../views/layouts/session.php';
 
 // Incluir el controlador de Productos
 require_once __DIR__ . '/ProductoController.php';
+require_once __DIR__ . '/../../services/AuthorizationService.php';
 
 // Definir la variable global URL si no existe
 if (!isset($GLOBALS['URL'])) {
     $config = require_once __DIR__ . '/../../config/config.php';
     $GLOBALS['URL'] = $config['app']['url'];
+}
+
+// Verificar si el usuario está autenticado
+requireLogin();
+
+// Verificar permisos
+$idusuario_sesion = $_SESSION['usuario_id'];
+$auth = new AuthorizationService();
+
+if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($idusuario_sesion, 'productos')) {
+    $_SESSION['mensaje'] = 'No tiene permisos para realizar esta acción.';
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $GLOBALS['URL'] . 'views/productos/index.php');
+    exit;
 }
 
 // Instanciar el controlador de Productos
@@ -21,6 +36,14 @@ $accion = 'index'; // Acción por defecto
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Determinar si es creación o actualización
     $accion = isset($_POST['idproducto']) && !empty($_POST['idproducto']) ? 'update' : 'create';
+}
+
+// Verificar token CSRF en solicitudes POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token']))) {
+    $_SESSION['mensaje'] = 'Token de seguridad inválido. Recargue la página e intente nuevamente.';
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $GLOBALS['URL'] . 'views/productos/index.php');
+    exit;
 }
 
 // Procesar la acción correspondiente

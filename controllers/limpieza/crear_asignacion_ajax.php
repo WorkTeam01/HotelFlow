@@ -34,6 +34,12 @@ $controller = new AsignacionLimpiezaController();
 
 // Procesar la solicitud
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Verificar token CSRF
+    if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+        echo json_encode(['success' => false, 'message' => 'Token de seguridad inválido. Recargue la página e intente nuevamente.']);
+        exit;
+    }
+
     // Llamar al método del controlador
     $resultado = $controller->crearAjax();
 

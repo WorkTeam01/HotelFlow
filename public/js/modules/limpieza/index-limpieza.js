@@ -424,7 +424,8 @@ $(document).ready(function () {
                     'POST',
                     {
                         id: id,
-                        estado: estado
+                        estado: estado,
+                        csrf_token: CSRF_TOKEN
                     },
                     function (response) {
                         if (response.success) {

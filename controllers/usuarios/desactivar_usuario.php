@@ -1,9 +1,21 @@
 <?php
 require_once __DIR__ . '/../../views/layouts/session.php';
 require_once __DIR__ . '/UsuarioController.php';
+require_once __DIR__ . '/../../services/AuthorizationService.php';
 
 // Verificar si el usuario está autenticado
 requireLogin();
+
+// Verificar permisos
+$idusuario_sesion = $_SESSION['usuario_id'];
+$auth = new AuthorizationService();
+
+if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($idusuario_sesion, 'usuarios')) {
+    $_SESSION['mensaje'] = 'No tiene permisos para realizar esta acción.';
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $URL . 'views/usuarios/index.php');
+    exit;
+}
 
 // Instanciar el controlador
 $controller = new UsuarioController();
@@ -11,7 +23,7 @@ $controller = new UsuarioController();
 $id_usuario = null;
 $estado_actual = null;
 
-if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id']) && isset($_GET['estado'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id']) && isset($_GET['estado']) && isset($_GET['csrf_token']) && verifyCSRFToken($_GET['csrf_token'])) {
     $id_usuario = filter_var($_GET['id'], FILTER_VALIDATE_INT);
     $estado_actual = filter_var($_GET['estado'], FILTER_VALIDATE_INT);
 

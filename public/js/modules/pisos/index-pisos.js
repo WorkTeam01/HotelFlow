@@ -309,7 +309,8 @@ $(document).ready(function () {
                     dataType: 'json',
                     data: {
                         id: id,
-                        estado_actual: estadoActual
+                        estado_actual: estadoActual,
+                        csrf_token: CSRF_TOKEN
                     },
                     success: function (response) {
                         if (response.success) {

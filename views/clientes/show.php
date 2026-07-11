@@ -331,7 +331,7 @@ include_once '../layouts/header.php';
         }).then((result) => {
             if (result.isConfirmed) {
                 // Redireccionar a la URL de cambio de estado
-                window.location.href = `<?= $URL; ?>controllers/personas/desactivar_persona.php?id=${clienteId}&estado=${estadoActual}`;
+                window.location.href = `<?= $URL; ?>controllers/personas/desactivar_persona.php?id=${clienteId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
             }
         });
     }
