@@ -26,7 +26,7 @@ CREATE TABLE `almacenamiento_equipaje` (
   `idalmacen` int(11) NOT NULL,
   `idcliente` int(11) NOT NULL,
   `idusuario` int(11) NOT NULL,
-  `descripcion` text NOT NULL,
+  `descripcion` text DEFAULT NULL,
   `cantidad_piezas` int(11) DEFAULT 1,
   `codigo_ticket` varchar(20) DEFAULT NULL,
   `fechaentrada` datetime NOT NULL DEFAULT current_timestamp(),
@@ -83,6 +83,7 @@ CREATE TABLE `bano` (
   `idbano` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
   `ubicacion` varchar(100) NOT NULL,
+  `precio` decimal(10,2) NOT NULL DEFAULT 0.00,
   `estado` enum('disponible','mantenimiento','fuera_servicio') DEFAULT 'disponible',
   `fechacreacion` datetime DEFAULT current_timestamp(),
   `fechaactualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp()
