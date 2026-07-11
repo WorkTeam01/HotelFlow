@@ -29,6 +29,8 @@ chmod -R 755 libs/TCPDF-main/
 # Login por defecto: admin / admin123
 ```
 
+> **Nota:** `chmod 755` solo funciona si el usuario que ejecuta PHP (p. ej. `daemon` en XAMPP, `www-data` en Apache/Debian) es el propietario o pertenece al grupo propietario de `public/uploads/`. Si el directorio pertenece a tu usuario de desarrollo y el servidor web corre como otro usuario/grupo, las subidas fallarán en silencio (`move_uploaded_file` retorna false, `ImagenService::procesarImagen` responde "Error al procesar la imagen" aunque el archivo sea válido). Verifica con `ps aux | grep httpd` qué usuario corre Apache y ajusta el propietario/grupo de `public/uploads/` en consecuencia, o usa `chmod -R 777` solo en entornos de desarrollo local.
+
 **No se usa sistema de build, gestor de paquetes ni framework de testing.** Los archivos PHP usan require/include directamente.
 
 ## Arquitectura
