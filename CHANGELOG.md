@@ -5,6 +5,18 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.0.3] - 2026-07-20
+
+### Security
+
+- Rate-limiting de login por identificador (correo/documento) e IP, vía nueva tabla `intentos_login` y modelo `IntentoLogin` (ventana deslizante, fail-open ante error de BD). Umbrales configurables por `.env` (`LOGIN_RATE_LIMIT_VENTANA_MINUTOS`, `LOGIN_RATE_LIMIT_MAX_FALLOS_IDENTIFICADOR`, `LOGIN_RATE_LIMIT_MAX_FALLOS_IP`, `LOGIN_RATE_LIMIT_PURGA_HORAS`; defaults 15 min / 5 / 20 / 24h).
+- Verificación de token CSRF de login unificada: se eliminó la copia local `verificarCSRFToken()`/`generarCSRFToken()` de `AuthController` (comparaba con `!==`) en favor de las funciones globales `verifyCSRFToken()`/`generateCSRFToken()` de `views/layouts/session.php`, que comparan con `hash_equals()`.
+- `DEBUG` por defecto cambiado a `false` en `.env.example`.
+
+### Docs
+
+- `CLAUDE.md` documenta el patrón obligatorio de no filtrar `PDOException::getMessage()` a `$this->lastError` en modelos, y el nuevo flujo de rate-limiting de login.
+
 ## [1.0.2] - 2026-07-11
 
 ### Security
@@ -68,6 +80,7 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.0.3]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.2...1.0.3
 [1.0.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/WorkTeam01/HotelFlow/releases/tag/1.0.0

@@ -36,6 +36,7 @@ chmod -R 755 libs/TCPDF-main/
 ## Arquitectura
 
 ### Estructura MVC
+
 - **Modelos** (`/models/`): Operaciones de base de datos via PDO con prepared statements. Todos los modelos usan la conexión Singleton de `config/conexion.php`.
 - **Vistas** (`/views/`): Templates PHP. Layouts comunes en `views/layouts/` (header.php, footer.php, session.php).
 - **Controladores** (`/controllers/`): Un directorio por módulo. Cada módulo tiene su controlador principal más archivos `ajax_*.php` separados para operaciones AJAX.
@@ -43,11 +44,13 @@ chmod -R 755 libs/TCPDF-main/
 ### Patrones Clave
 
 **Conexión Singleton a Base de Datos:**
+
 ```php
 $this->conexion = Conexion::getInstance()->getConnection();
 ```
 
 **Endpoints AJAX:** Los controladores exponen archivos separados para operaciones asíncronas:
+
 - `crear_[entidad]_ajax.php` - Operaciones de creación
 - `actualizar_[entidad]_ajax.php` - Operaciones de actualización
 - `cambiar_estado_ajax.php` - Cambios de estado
@@ -55,16 +58,19 @@ $this->conexion = Conexion::getInstance()->getConnection();
 **Control de Acceso Basado en Roles:** Tres roles (Administrador, Recepcionista, Limpieza). Permisos verificados via `AuthorizationService.php`. El rol Administrador omite todas las verificaciones de permisos.
 
 ### Capa de Servicios (`/services/`)
+
 - `AuthorizationService.php` - Verificación de permisos y RBAC
 - `ImagenService.php` - Subida de imágenes, validación (límite 5MB), redimensionado con proporción
 - `literal.php` - Conversión de números a letras para moneda boliviana
 
 ### Punto de Entrada
+
 `index.php` actúa como front controller: carga sesión, verifica auth via `requireLogin()`, instancia controlador de dashboard según rol, incluye header/vista/footer.
 
 ## Organización de Módulos
 
 Cada módulo funcional sigue el mismo patrón:
+
 - Controlador: `controllers/[modulo]/[Modulo]Controller.php`
 - Modelo: `models/[Entidad].php`
 - Vistas: `views/[modulo]/` (index.php, create.php, update.php, show.php)
@@ -75,13 +81,14 @@ Cada módulo funcional sigue el mismo patrón:
 
 ## Base de Datos
 
-21 tablas usando InnoDB con codificación utf8mb4. Esquema en `database/db_hotel_flow.sql` (solo estructura y relaciones). Datos de ejemplo opcionales en `database/seed.sql`.
+22 tablas usando InnoDB con codificación utf8mb4. Esquema en `database/db_hotel_flow.sql` (solo estructura y relaciones). Datos de ejemplo opcionales en `database/seed.sql`.
 
-**Tablas principales:** usuarios, habitaciones, tipo_habitacion, pisos, persona, recepcion, productos, categoria, venta, detalleventa, compra, detallecompra, servicio_bano, almacenamiento_equipaje, asignaciones_limpieza, tarifas, permiso, permiso_usuario
+**Tablas principales:** usuarios, habitaciones, tipo_habitacion, pisos, persona, recepcion, productos, categoria, venta, detalleventa, compra, detallecompra, servicio_bano, almacenamiento_equipaje, asignaciones_limpieza, tarifas, permiso, permiso_usuario, intentos_login
 
 ## Assets del Frontend
 
 Todos los assets en `/public/`:
+
 - `css/lib/` - Bootstrap, AdminLTE, FontAwesome
 - `css/core/` - Estilos personalizados de la aplicación
 - `js/lib/` - jQuery, Bootstrap JS, DataTables, SweetAlert2, Select2
@@ -91,6 +98,7 @@ Todos los assets en `/public/`:
 ## Variables de Entorno
 
 El sistema de env personalizado en `config/env.php` soporta conversión de tipos:
+
 - `true`/`false` se convierten a booleano
 - `null` se convierte a null
 - `empty` se convierte a cadena vacía
@@ -101,6 +109,7 @@ El sistema de env personalizado en `config/env.php` soporta conversión de tipos
 Tras una pasada de endurecimiento de seguridad en todo el código, todo endpoint o modelo nuevo debe seguir estos patrones:
 
 - **Autorización en cada endpoint AJAX/acción:** todo archivo `crear_*`, `actualizar_*`, `cambiar_estado_*`, `desactivar_*` y similares debe llamar a `requireLogin()` y verificar permisos explícitamente:
+
   ```php
   $idusuario = $_SESSION['usuario_id'];
   $auth = new AuthorizationService();
@@ -108,11 +117,19 @@ Tras una pasada de endurecimiento de seguridad en todo el código, todo endpoint
       // responder con error (JSON si es AJAX, redirect+mensaje si es vista)
   }
   ```
+
   No asumir que `requireLogin()` sola es suficiente — la verificación de permisos por módulo es obligatoria.
 
 - **Permisos por cargo definidos por nombre, no por ID:** `AuthorizationService::permisosPorCargo()` es la única fuente de verdad (usada por `cargoTienePermiso`, `obtenerPermisosPorCargo` y `obtenerPermisosAgrupados`). Los cargos válidos son `Administrador`, `Recepcionista`, `Limpieza` (no `admin`/`recepcionista`/`vendedor` — esos nombres no existen en la BD). Los permisos se listan por su `nombre` en la tabla `permiso`, no por `idpermiso` hardcodeado.
 
-- **CSRF obligatorio, no opcional:** no usar `if (isset($_POST['csrf_token']))` como condición para verificar — el token debe verificarse siempre que el POST/GET provenga de una acción de escritura, tratando ausencia de token como inválido. Ver `verificarCSRFToken()` en `AuthController` y `verifyCSRFToken()`/`generateCSRFToken()` global. Acciones de anulación por GET (ej. `anular_venta.php`) también deben llevar `csrf_token` en la URL.
+- **CSRF obligatorio, no opcional:** no usar `if (isset($_POST['csrf_token']))` como condición para verificar — el token debe verificarse siempre que el POST/GET provenga de una acción de escritura, tratando ausencia de token como inválido. Usar siempre las funciones globales `verifyCSRFToken()`/`generateCSRFToken()`/`regenerateCSRFToken()` de `views/layouts/session.php` (comparación con `hash_equals()`) — no duplicar esta lógica en controladores. Acciones de anulación por GET (ej. `anular_venta.php`) también deben llevar `csrf_token` en la URL.
+
+- **Rate-limiting de login:** `AuthController::login()` usa `models/IntentoLogin.php` (tabla `intentos_login`, append-only, sin FK a `usuarios`) para bloquear por `identificador` (correo/documento, normalizado a lower/trim) e IP dentro de una ventana deslizante. El conteo es solo `INSERT` + `SELECT COUNT`, nunca un contador mutado in-place, por lo que no requiere `SELECT ... FOR UPDATE`. La verificación de bloqueo es **fail-open**: si la consulta de conteo falla por error de BD, no se bloquea el login (evita DoS por fallo de infraestructura), pero el error se loguea igual. Cada intento (éxito o fallo) se registra vía `registrar()`; `limpiarAntiguos()` purga filas antiguas y se invoca probabilísticamente (1/100) en cada request de login para evitar depender de un cron.
+  - Umbrales configurables vía `.env`, expuestos en `config/config.php` bajo la clave `login_rate_limit` (mismo patrón que `app.timezone` en `Conexion`: `config.php` es la única fuente de verdad, los modelos no llaman a `env()` directamente) y leídos en el constructor de `IntentoLogin` (no como `const`, para poder variar por entorno):
+    - `LOGIN_RATE_LIMIT_VENTANA_MINUTOS` (default `15`)
+    - `LOGIN_RATE_LIMIT_MAX_FALLOS_IDENTIFICADOR` (default `5`)
+    - `LOGIN_RATE_LIMIT_MAX_FALLOS_IP` (default `20`)
+    - `LOGIN_RATE_LIMIT_PURGA_HORAS` (default `24`)
 
 - **Nunca confiar en valores del cliente para estado o dinero:**
   - Estados (activo/inactivo, etc.) se recalculan a partir del valor actual en BD (`$this->modelo->getById($id)`), nunca a partir de un `estado_actual` recibido del formulario/JS.
@@ -122,7 +139,17 @@ Tras una pasada de endurecimiento de seguridad en todo el código, todo endpoint
 
 - **Validación de archivos subidos por contenido real, no por metadata del cliente:** `ImagenService` verifica el tipo real con `mime_content_type()` + `getimagesize()` (no el `type` MIME enviado por el navegador), y la extensión final se deriva del tipo de imagen detectado (`IMAGETYPE_*`), no del nombre de archivo del cliente.
 
-- **No filtrar mensajes de excepción al usuario:** en catches de controladores, loguear el detalle con `error_log()`/un helper `logError()` interno y devolver al usuario un mensaje genérico ("Ocurrió un error inesperado. Intente nuevamente."), nunca `$e->getMessage()` directamente en la respuesta.
+- **No filtrar mensajes de excepción al usuario:** en catches de controladores, loguear el detalle con `error_log()`/un helper `logError()` interno y devolver al usuario un mensaje genérico ("Ocurrió un error inesperado. Intente nuevamente."), nunca `$e->getMessage()` directamente en la respuesta. Esta regla también aplica a los modelos: en todo bloque `catch (PDOException $e)` de `/models/*.php`, `$this->lastError` **nunca** debe asignarse directamente desde `$e->getMessage()` ni desde `$stmt->errorInfo()` — hacerlo filtra nombres de tablas/columnas/constraints al cliente vía JSON, ya que los controladores concatenan `getLastError()` en la respuesta (`'message' => 'Error al crear... ' . $this->modelo->getLastError()`). Patrón correcto en cada catch:
+
+  ```php
+  } catch (PDOException $e) {
+      error_log('[' . static::class . '] ' . $e->getMessage());
+      $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+      return false; // o [] / null según el método
+  }
+  ```
+
+  Los mensajes de negocio ya genéricos y escritos a mano (ej. "Stock insuficiente...", "No se puede eliminar la habitación porque tiene registros relacionados.") sí pueden asignarse directamente a `$this->lastError` — no son fuga de información, describen una regla de negocio.
 
 - **Escapar salida HTML dinámica:** usar `htmlspecialchars()` al imprimir valores que vienen de BD/usuario en vistas (ej. `$venta['metodopago']`).
 
