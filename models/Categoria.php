@@ -89,7 +89,8 @@ class Categoria
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -109,7 +110,8 @@ class Categoria
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -140,7 +142,8 @@ class Categoria
 
             return $stmt->execute();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -176,7 +179,8 @@ class Categoria
 
             return $stmt->execute();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -197,7 +201,8 @@ class Categoria
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             return $stmt->execute();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -248,7 +253,8 @@ class Categoria
             $stmt->execute();
             return $stmt->fetchColumn() > 0;
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -292,7 +298,8 @@ class Categoria
         try {
             return $this->conexion->lastInsertId();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return 0;
         }
     }
@@ -326,7 +333,8 @@ class Categoria
 
             return $opciones;
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -360,7 +368,8 @@ class Categoria
                 'inactivas' => $inactivas
             ];
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [
                 'total' => 0,
                 'activas' => 0,

@@ -77,7 +77,8 @@ class Persona
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -96,7 +97,8 @@ class Persona
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -136,7 +138,8 @@ class Persona
 
             return $stmt->execute();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -184,7 +187,8 @@ class Persona
 
             return $stmt->execute();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -219,7 +223,8 @@ class Persona
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             return $stmt->execute();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -267,7 +272,8 @@ class Persona
             $stmt->execute();
             return $stmt->fetchColumn() > 0;
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -298,7 +304,8 @@ class Persona
             $stmt->execute();
             return $stmt->fetchColumn() > 0;
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -393,7 +400,8 @@ class Persona
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -407,7 +415,8 @@ class Persona
         try {
             return $this->conexion->lastInsertId();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return 0;
         }
     }

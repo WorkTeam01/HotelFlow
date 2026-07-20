@@ -83,7 +83,8 @@ class Bano
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -103,7 +104,8 @@ class Bano
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -128,7 +130,8 @@ class Bano
 
             return $stmt->execute();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -159,7 +162,8 @@ class Bano
 
             return $stmt->execute();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -180,7 +184,8 @@ class Bano
             $stmt->bindParam(':idbano', $id, PDO::PARAM_INT);
             return $stmt->execute();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -242,7 +247,8 @@ class Bano
             $stmt->execute();
             return $stmt->fetchColumn() > 0;
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -305,7 +311,8 @@ class Bano
         try {
             return $this->conexion->lastInsertId();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return 0;
         }
     }
@@ -351,7 +358,8 @@ class Bano
 
             return $estadisticas;
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [
                 'total' => 0,
                 'disponibles' => 0,

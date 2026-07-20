@@ -97,7 +97,8 @@ class AlmacenamientoEquipaje
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -130,7 +131,8 @@ class AlmacenamientoEquipaje
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -189,7 +191,8 @@ class AlmacenamientoEquipaje
                 return false;
             }
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -258,7 +261,8 @@ class AlmacenamientoEquipaje
 
             return $stmt->execute();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -293,7 +297,8 @@ class AlmacenamientoEquipaje
 
             return $stmt->execute();
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -443,7 +448,8 @@ class AlmacenamientoEquipaje
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -465,7 +471,8 @@ class AlmacenamientoEquipaje
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -524,7 +531,8 @@ class AlmacenamientoEquipaje
                 'ingresos_hoy' => $ingresosHoy
             ];
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [
                 'total_hoy' => 0,
                 'almacenados_hoy' => 0,
@@ -651,7 +659,8 @@ class AlmacenamientoEquipaje
 
             return $datos_recibo;
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             error_log('Error al obtener datos para recibo: ' . $e->getMessage());
             return false;
         }

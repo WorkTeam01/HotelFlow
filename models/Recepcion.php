@@ -66,7 +66,8 @@ class Recepcion
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -100,7 +101,8 @@ class Recepcion
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -137,7 +139,8 @@ class Recepcion
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -216,7 +219,8 @@ class Recepcion
 
             if (!$result) {
                 $this->conexion->rollBack();
-                $this->lastError = implode(" ", $stmt->errorInfo());
+                error_log('[' . static::class . '] ' . implode(" ", $stmt->errorInfo()));
+                $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
                 return false;
             }
 
@@ -234,7 +238,8 @@ class Recepcion
 
                 if (!$result) {
                     $this->conexion->rollBack();
-                    $this->lastError = implode(" ", $stmt->errorInfo());
+                    error_log('[' . static::class . '] ' . implode(" ", $stmt->errorInfo()));
+                    $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
                     return false;
                 }
             }
@@ -244,7 +249,8 @@ class Recepcion
             return $idrecepcion;
         } catch (PDOException $e) {
             $this->conexion->rollBack();
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -386,7 +392,8 @@ class Recepcion
             return true;
         } catch (PDOException $e) {
             $this->conexion->rollBack();
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             error_log("Excepción PDO en actualizar: " . $e->getMessage());
             return false;
         }
@@ -469,7 +476,8 @@ class Recepcion
             return true;
         } catch (PDOException $e) {
             $this->conexion->rollBack();
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
     }
@@ -492,7 +500,8 @@ class Recepcion
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -514,7 +523,8 @@ class Recepcion
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -536,7 +546,8 @@ class Recepcion
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
@@ -633,7 +644,8 @@ class Recepcion
                 'total_habitaciones' => $total_habitaciones
             ];
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [
                 'total' => 0,
                 'reservado' => 0,
@@ -668,7 +680,8 @@ class Recepcion
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->lastError = $e->getMessage();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return [];
         }
     }
