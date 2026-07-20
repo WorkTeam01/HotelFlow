@@ -10,11 +10,11 @@
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-4-7952B3?style=flat-square&logo=bootstrap&logoColor=white)](https://getbootstrap.com)
 [![License](https://img.shields.io/badge/Licencia-MIT-green?style=flat-square)](LICENSE)
 
-[Características](#-características) •
-[Instalación](#-instalación) •
-[Arquitectura](#-arquitectura) •
-[Módulos](#-módulos) •
-[Contribución](#-contribución) •
+[Características](#características) •
+[Instalación](#instalación) •
+[Arquitectura](#arquitectura) •
+[Módulos](#módulos) •
+[Contribución](#contribución) •
 [Changelog](CHANGELOG.md)
 
 </div>
