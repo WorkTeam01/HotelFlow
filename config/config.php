@@ -30,5 +30,11 @@ return [
         'name' => 'Sistema de Alojamiento',
         'url' => env('APP_URL'),
         'debug' => env('DEBUG')
+    ],
+    'login_rate_limit' => [
+        'ventana_minutos' => (int) env('LOGIN_RATE_LIMIT_VENTANA_MINUTOS', 15),
+        'max_fallos_identificador' => (int) env('LOGIN_RATE_LIMIT_MAX_FALLOS_IDENTIFICADOR', 5),
+        'max_fallos_ip' => (int) env('LOGIN_RATE_LIMIT_MAX_FALLOS_IP', 20),
+        'purga_horas' => (int) env('LOGIN_RATE_LIMIT_PURGA_HORAS', 24)
     ]
 ];

@@ -2,9 +2,9 @@
 
 /**
  * Controlador de Autenticación
- *
+ * 
  * Gestiona las operaciones relacionadas con la autenticación de usuarios
- *
+ * 
  * @author Sistema de Alojamiento
  * @version 1.2
  */
@@ -17,6 +17,12 @@ class AuthController
     private $modelo;
 
     /**
+     * Modelo de IntentoLogin
+     * @var IntentoLogin
+     */
+    private $intentoLogin;
+
+    /**
      * Constructor de la clase
      */
     public function __construct()
@@ -24,6 +30,10 @@ class AuthController
         // Incluir el modelo de Usuario
         require_once __DIR__ . '/../../models/Usuario.php';
         $this->modelo = new Usuario();
+
+        // Incluir el modelo de IntentoLogin (rate-limiting de login)
+        require_once __DIR__ . '/../../models/IntentoLogin.php';
+        $this->intentoLogin = new IntentoLogin();
 
         // Incluir funciones globales de sesión y CSRF (generateCSRFToken/verifyCSRFToken/regenerateCSRFToken)
         require_once __DIR__ . '/../../views/layouts/session.php';
@@ -43,6 +53,11 @@ class AuthController
      */
     public function login()
     {
+        // Purga probabilística de intentos antiguos (evita necesidad de cron)
+        if (random_int(1, 100) === 1) {
+            $this->intentoLogin->limpiarAntiguos();
+        }
+
         // Verificar si se envió el formulario
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Verificar token CSRF (obligatorio)
@@ -76,6 +91,17 @@ class AuthController
                 exit;
             }
 
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+            // Rate-limiting: verificar bloqueo por intentos fallidos (identificador y/o IP)
+            // antes de revelar si el identificador existe en el sistema.
+            if ($this->intentoLogin->estaBloqueado($identifier, $ip)) {
+                $_SESSION['mensaje'] = 'Demasiados intentos fallidos. Intente nuevamente en unos minutos.';
+                $_SESSION['icono'] = 'warning';
+                header('Location: ' . $_SERVER['HTTP_REFERER']);
+                exit;
+            }
+
             // Determinar si el identificador es un correo o un número de documento
             $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
 
@@ -89,6 +115,7 @@ class AuthController
                 if ($usuario_existe) {
                     $usuario_id = $this->modelo->obtenerIdPorCorreo($identifier);
                 } else {
+                    $this->intentoLogin->registrar($identifier, $ip, false);
                     $_SESSION['mensaje'] = 'El correo electrónico no está registrado en el sistema';
                     $_SESSION['icono'] = 'error';
                     header('Location: ' . $_SERVER['HTTP_REFERER']);
@@ -100,6 +127,7 @@ class AuthController
                 if ($usuario_existe) {
                     $usuario_id = $this->modelo->obtenerIdPorNumDocumento($identifier);
                 } else {
+                    $this->intentoLogin->registrar($identifier, $ip, false);
                     $_SESSION['mensaje'] = 'El número de documento no está registrado en el sistema';
                     $_SESSION['icono'] = 'error';
                     header('Location: ' . $_SERVER['HTTP_REFERER']);
@@ -111,6 +139,7 @@ class AuthController
             $estado_usuario = $this->modelo->obtenerEstadoPorId($usuario_id);
 
             if ($estado_usuario === 0) {
+                $this->intentoLogin->registrar($identifier, $ip, false);
                 $_SESSION['mensaje'] = 'Su cuenta está desactivada. Contacte al administrador.';
                 $_SESSION['icono'] = 'warning';
                 header('Location: ' . $_SERVER['HTTP_REFERER']);
@@ -125,6 +154,9 @@ class AuthController
             }
 
             if ($usuario) {
+                // Registrar intento exitoso (corta la racha de fallos)
+                $this->intentoLogin->registrar($identifier, $ip, true);
+
                 // Iniciar sesión
                 $this->iniciarSesion($usuario);
 
@@ -134,6 +166,7 @@ class AuthController
                 header('Location: ../../');
             } else {
                 // Credenciales incorrectas (la contraseña es incorrecta)
+                $this->intentoLogin->registrar($identifier, $ip, false);
                 $_SESSION['mensaje'] = 'La contraseña ingresada es incorrecta';
                 $_SESSION['icono'] = 'error';
                 header('Location: ' . $_SERVER['HTTP_REFERER']);
@@ -147,7 +180,7 @@ class AuthController
 
     /**
      * Inicia la sesión del usuario
-     *
+     * 
      * @param array $usuario Datos del usuario
      */
     private function iniciarSesion($usuario)
@@ -203,7 +236,7 @@ class AuthController
 
     /**
      * Verifica si la sesión es válida (para uso en middleware)
-     *
+     * 
      * @return bool True si la sesión es válida, False en caso contrario
      */
     public function verificarSesion()

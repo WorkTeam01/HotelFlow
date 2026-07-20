@@ -159,4 +159,11 @@ INSERT INTO `servicio_bano` (`idbano`, `idusuario`, `idcliente`, `tipo_cliente`,
 INSERT INTO `almacenamiento_equipaje` (`idcliente`, `idusuario`, `descripcion`, `cantidad_piezas`, `codigo_ticket`, `fechaentrada`, `idpequipaje`, `monto`, `estado`) VALUES
 (2, 2, 'Maleta mediana azul', 1, CONCAT('EQ-', DATE_FORMAT(NOW(), '%Y%m%d'), '-01'), NOW(), 2, 8.00, 'almacenado');
 
+-- --------------------------------------------------------
+-- intentos_login
+-- --------------------------------------------------------
+-- Sin datos de ejemplo: la tabla es append-only y se llena en tiempo real
+-- con cada intento de login (exitoso o fallido). No afecta las credenciales
+-- admin/admin123 ni el resto del seed.
+
 COMMIT;

@@ -173,6 +173,20 @@ CREATE TABLE `habitaciones` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `intentos_login`
+--
+
+CREATE TABLE `intentos_login` (
+  `id` bigint(20) NOT NULL,
+  `identificador` varchar(100) NOT NULL,
+  `ip` varchar(45) NOT NULL,
+  `exitoso` tinyint(1) NOT NULL DEFAULT 0,
+  `intento_en` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `pagos`
 --
 
@@ -509,6 +523,14 @@ ALTER TABLE `habitaciones`
   ADD KEY `id_tipo` (`id_tipo`);
 
 --
+-- Indices de la tabla `intentos_login`
+--
+ALTER TABLE `intentos_login`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_identificador_tiempo` (`identificador`, `intento_en`),
+  ADD KEY `idx_ip_tiempo` (`ip`, `intento_en`);
+
+--
 -- Indices de la tabla `pagos`
 --
 ALTER TABLE `pagos`
@@ -658,6 +680,12 @@ ALTER TABLE `detalleventa`
 --
 ALTER TABLE `habitaciones`
   MODIFY `id_habitacion` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `intentos_login`
+--
+ALTER TABLE `intentos_login`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos`
