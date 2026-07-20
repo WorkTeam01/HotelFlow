@@ -2,9 +2,9 @@
 
 /**
  * Controlador de Autenticación
- * 
+ *
  * Gestiona las operaciones relacionadas con la autenticación de usuarios
- * 
+ *
  * @author Sistema de Alojamiento
  * @version 1.2
  */
@@ -25,10 +25,8 @@ class AuthController
         require_once __DIR__ . '/../../models/Usuario.php';
         $this->modelo = new Usuario();
 
-        // Iniciar sesión si no está iniciada
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
+        // Incluir funciones globales de sesión y CSRF (generateCSRFToken/verifyCSRFToken/regenerateCSRFToken)
+        require_once __DIR__ . '/../../views/layouts/session.php';
     }
 
     /**
@@ -41,33 +39,6 @@ class AuthController
     }
 
     /**
-     * Genera un token CSRF para proteger formularios
-     * 
-     * @return string Token CSRF
-     */
-    public function generarCSRFToken()
-    {
-        if (!isset($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        }
-        return $_SESSION['csrf_token'];
-    }
-
-    /**
-     * Verifica si el token CSRF es válido
-     * 
-     * @param string $token Token CSRF a verificar
-     * @return bool True si es válido, False en caso contrario
-     */
-    public function verificarCSRFToken($token)
-    {
-        if (!isset($_SESSION['csrf_token']) || $token !== $_SESSION['csrf_token']) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * Procesa el formulario de login
      */
     public function login()
@@ -76,7 +47,7 @@ class AuthController
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Verificar token CSRF (obligatorio)
             $csrf_token = isset($_POST['csrf_token']) ? $_POST['csrf_token'] : '';
-            if (!$this->verificarCSRFToken($csrf_token)) {
+            if (!verifyCSRFToken($csrf_token)) {
                 $_SESSION['mensaje'] = 'Error de seguridad. Por favor, intente nuevamente.';
                 $_SESSION['icono'] = 'error';
                 header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '../../views/login/index.php'));
@@ -176,7 +147,7 @@ class AuthController
 
     /**
      * Inicia la sesión del usuario
-     * 
+     *
      * @param array $usuario Datos del usuario
      */
     private function iniciarSesion($usuario)
@@ -232,7 +203,7 @@ class AuthController
 
     /**
      * Verifica si la sesión es válida (para uso en middleware)
-     * 
+     *
      * @return bool True si la sesión es válida, False en caso contrario
      */
     public function verificarSesion()
