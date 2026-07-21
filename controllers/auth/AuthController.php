@@ -116,7 +116,7 @@ class AuthController
                     $usuario_id = $this->modelo->obtenerIdPorCorreo($identifier);
                 } else {
                     $this->intentoLogin->registrar($identifier, $ip, false);
-                    $_SESSION['mensaje'] = 'El correo electrónico no está registrado en el sistema';
+                    $_SESSION['mensaje'] = 'Credenciales incorrectas';
                     $_SESSION['icono'] = 'error';
                     header('Location: ' . $_SERVER['HTTP_REFERER']);
                     exit;
@@ -128,7 +128,7 @@ class AuthController
                     $usuario_id = $this->modelo->obtenerIdPorNumDocumento($identifier);
                 } else {
                     $this->intentoLogin->registrar($identifier, $ip, false);
-                    $_SESSION['mensaje'] = 'El número de documento no está registrado en el sistema';
+                    $_SESSION['mensaje'] = 'Credenciales incorrectas';
                     $_SESSION['icono'] = 'error';
                     header('Location: ' . $_SERVER['HTTP_REFERER']);
                     exit;
@@ -140,8 +140,8 @@ class AuthController
 
             if ($estado_usuario === 0) {
                 $this->intentoLogin->registrar($identifier, $ip, false);
-                $_SESSION['mensaje'] = 'Su cuenta está desactivada. Contacte al administrador.';
-                $_SESSION['icono'] = 'warning';
+                $_SESSION['mensaje'] = 'Credenciales incorrectas';
+                $_SESSION['icono'] = 'error';
                 header('Location: ' . $_SERVER['HTTP_REFERER']);
                 exit;
             }
@@ -167,7 +167,7 @@ class AuthController
             } else {
                 // Credenciales incorrectas (la contraseña es incorrecta)
                 $this->intentoLogin->registrar($identifier, $ip, false);
-                $_SESSION['mensaje'] = 'La contraseña ingresada es incorrecta';
+                $_SESSION['mensaje'] = 'Credenciales incorrectas';
                 $_SESSION['icono'] = 'error';
                 header('Location: ' . $_SERVER['HTTP_REFERER']);
             }
