@@ -36,7 +36,6 @@
 
 .card-outline.card-primary {
     border-top: 3px solid #007bff;
-    border-radius: 10px;
     overflow: hidden;
 }
 
@@ -77,10 +76,32 @@
     padding: 0 15px;
 }
 
-/* Efecto hover en el botón de mostrar/ocultar contraseña */
+/* Botón de mostrar/ocultar contraseña (reset de <button> + target táctil accesible) */
+.password-toggle {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 15px;
+    margin: 0;
+    font: inherit;
+}
+
 .password-toggle:hover {
     background-color: #e9ecef;
     cursor: pointer;
+}
+
+.password-toggle:focus {
+    outline: 2px solid #80bdff;
+    outline-offset: -2px;
+    z-index: 3;
 }
 
 /* Botones */
@@ -109,8 +130,7 @@
 .login-footer {
     margin-top: 20px;
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.7);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    color: #495057;
 }
 
 /* Animación de entrada */

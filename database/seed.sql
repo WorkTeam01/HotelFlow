@@ -15,16 +15,26 @@ START TRANSACTION;
 -- Permisos
 -- --------------------------------------------------------
 INSERT INTO `permiso` (`nombre`) VALUES
-('gestionar_habitaciones'),
-('gestionar_recepcion'),
-('gestionar_ventas'),
-('gestionar_compras'),
-('gestionar_productos'),
-('gestionar_usuarios'),
-('gestionar_limpieza'),
-('gestionar_servicios_bano'),
-('gestionar_almacenamiento_equipaje'),
-('gestionar_tarifas');
+('habitaciones'),
+('recepcion'),
+('ventas'),
+('compras'),
+('productos'),
+('usuarios'),
+('limpieza'),
+('servicios_bano'),
+('equipajes'),
+('tarifas'),
+('perfil'),
+('categorias'),
+('clientes'),
+('personas'),
+('banos'),
+('precios_equipaje'),
+('nueva_venta'),
+('nueva_compra'),
+('pisos'),
+('tipohabitaciones');
 
 -- --------------------------------------------------------
 -- Usuarios (uno por rol, para poder probar los tres flujos)

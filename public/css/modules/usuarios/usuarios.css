@@ -1,0 +1,158 @@
+/**
+ * usuarios.css - Estilos específicos para el módulo de usuarios
+ * HotelFlow
+ */
+
+:root {
+    /*
+     * adminlte.min.css define dos bloques :root con distinto --info/--primary
+     * (tema claro/oscuro) que pisan la cascada según orden de carga; para no
+     * depender de cuál gana, este módulo fija sus propios valores una sola vez.
+     */
+    --usuarios-brand-blue: #3c8dbc;
+    --usuarios-info: #17a2b8;
+    --usuarios-info-hover: #138496;
+    --usuarios-border-muted: #dee2e6;
+    /* #6c757d (Bootstrap .text-muted) da ~4.69:1 sobre blanco, al límite de AA;
+       se usa un gris más oscuro aquí para tener margen cómodo (~8.2:1) */
+    --usuarios-text-muted: #495057;
+}
+
+/* Avatar de perfil (show.php, update.php) */
+.usuario-avatar-perfil {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border: 3px solid var(--usuarios-brand-blue);
+}
+
+/* Miniatura de imagen actual/nueva en formularios de creación/edición */
+.usuario-avatar-thumb {
+    max-width: 100px;
+    max-height: 100px;
+}
+
+/* Vista previa de imagen nueva antes de subir */
+.usuario-avatar-preview {
+    max-width: 150px;
+    max-height: 150px;
+}
+
+.usuario-avatar-preview-sm {
+    max-width: 200px;
+    max-height: 200px;
+}
+
+/* Avatar pequeño en la tarjeta de perfil (perfil.php) */
+.usuario-avatar-mini {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+}
+
+/* Color info para el texto de las pestañas no activas (show.php) */
+#detail-tabs .nav-link:not(.active) {
+    color: var(--usuarios-info);
+}
+
+#detail-tabs .nav-link:not(.active):hover {
+    color: var(--usuarios-info-hover);
+}
+
+/* Guía rápida en formato timeline (col-md-4 de create.php/update.php) */
+.usuario-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.usuario-timeline-item {
+    position: relative;
+    display: flex;
+    gap: .75rem;
+    padding-bottom: 1.25rem;
+    padding-left: .125rem;
+}
+
+.usuario-timeline-item::before {
+    content: '';
+    position: absolute;
+    top: 2.25rem;
+    left: 1.05rem;
+    bottom: 0;
+    width: 2px;
+    background: var(--usuarios-border-muted);
+}
+
+.usuario-timeline-item-last::before {
+    display: none;
+}
+
+.usuario-timeline-icon {
+    flex: 0 0 auto;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: .8rem;
+    z-index: 1;
+}
+
+/* bg-warning (#ffc107) no cumple 3:1 con ícono blanco; oscurecer el ícono en ese caso */
+.usuario-timeline-icon.bg-warning {
+    color: #1f1300;
+}
+
+.usuario-timeline-content h6 {
+    margin-bottom: .2rem;
+    font-weight: 600;
+}
+
+.usuario-timeline-content p {
+    margin-bottom: .35rem;
+    font-size: .875rem;
+    color: var(--usuarios-text-muted);
+}
+
+/* La guía queda visualmente pegada al alto de la primera tarjeta del formulario */
+.usuario-guia-card {
+    position: sticky;
+    top: 1rem;
+}
+
+@media (max-width: 767.98px) {
+    .usuario-guia-card {
+        position: static;
+    }
+}
+
+/*
+ * Botones de acción de la tabla (ver/editar/cambiar-estado): en desktop
+ * btn-sm (~31px) es correcto junto al puntero fino, pero en puntero táctil
+ * queda por debajo del mínimo de 44x44px y sin separación entre botones.
+ */
+@media (pointer: coarse) {
+    #tablaUsuarios .btn-group > .btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    #tablaUsuarios .btn-group > .btn + .btn {
+        margin-left: 2px;
+    }
+}
+
+/*
+ * adminlte.min.css redefine .btn-outline-secondary:focus con
+ * "box-shadow: 0 0 0 0" (anillo de foco con spread 0, invisible). Los
+ * botones .password-toggle del módulo quedan sin indicador de foco por
+ * teclado; se restaura aquí con el mismo patrón que login.css.
+ */
+.password-toggle:focus {
+    outline: 2px solid #80bdff;
+    outline-offset: -2px;
+    z-index: 3;
+}

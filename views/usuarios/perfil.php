@@ -24,6 +24,8 @@ if (!isset($idusuario_session)) {
 }
 
 // Incluir el encabezado
+$module_styles = ['usuarios/usuarios'];
+$skip_datatables = true; // Esta vista no usa tabla; evita cargar DataTables/pdfmake/vfs_fonts (~2.8MB)
 include_once '../layouts/header.php';
 
 // Instanciar el controlador y obtener los datos del usuario
@@ -49,7 +51,7 @@ if (!$usuario) {
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
                     <li class="breadcrumb-item active">Perfil de Usuario</li>
                 </ol>
             </div>
@@ -67,10 +69,9 @@ if (!$usuario) {
                 <div class="card card-primary card-outline">
                     <div class="card-body box-profile">
                         <div class="text-center">
-                            <img class="profile-user-img img-fluid img-circle"
+                            <img class="profile-user-img img-fluid img-circle usuario-avatar-mini"
                                 src="<?= $URL . 'public/uploads/usuarios/' . (!empty($usuario['imagen']) && file_exists(__DIR__ . '/../../public/uploads/usuarios/' . $usuario['imagen']) ? htmlspecialchars($usuario['imagen']) : 'user_default.jpg'); ?>"
-                                alt="User profile picture"
-                                style="width: 100px; height: 100px; object-fit: cover;">
+                                alt="User profile picture">
                         </div>
                         <h3 class="profile-username text-center"><?= htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellidop']); ?></h3>
                         <p class="text-muted text-center"><?= htmlspecialchars($usuario['cargo'] ?? 'N/A'); ?></p>
@@ -126,10 +127,10 @@ if (!$usuario) {
                                                 <label>Imagen Actual</label><br>
                                                 <?php if (isset($usuario['imagen']) && !empty($usuario['imagen'])): ?>
                                                     <img src="<?= $URL; ?>public/uploads/usuarios/<?= htmlspecialchars($usuario['imagen']); ?>"
-                                                        alt="Imagen de perfil" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                                                        alt="Imagen de perfil" class="img-thumbnail usuario-avatar-preview">
                                                 <?php else: ?>
                                                     <img src="<?= $URL; ?>public/uploads/usuarios/user_default.jpg"
-                                                        alt="Imagen por defecto" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                                                        alt="Imagen por defecto" class="img-thumbnail usuario-avatar-preview">
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -140,7 +141,7 @@ if (!$usuario) {
                                         <div class="col-md-12">
                                             <div class="form-group">
                                                 <label>Vista Previa Nueva Imagen:</label><br>
-                                                <img id="preview-image" src="#" alt="Vista previa" class="img-thumbnail" style="max-width: 150px; max-height: 150px;">
+                                                <img id="preview-image" src="#" alt="Vista previa" class="img-thumbnail usuario-avatar-preview">
                                             </div>
                                         </div>
                                     </div>
@@ -163,19 +164,40 @@ if (!$usuario) {
                                     <div class="form-group row">
                                         <label for="clave_actual" class="col-sm-4 col-form-label">Contraseña Actual <span class="text-danger">*</span></label>
                                         <div class="col-sm-8">
-                                            <input type="password" class="form-control" id="clave_actual" name="clave_actual" placeholder="Contraseña Actual" required>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="clave_actual" name="clave_actual" placeholder="Contraseña Actual" required>
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#clave_actual" aria-label="Mostrar contraseña" aria-pressed="false">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="form-group row">
                                         <label for="nueva_clave" class="col-sm-4 col-form-label">Nueva Contraseña <span class="text-danger">*</span></label>
                                         <div class="col-sm-8">
-                                            <input type="password" class="form-control" id="nueva_clave" name="nueva_clave" placeholder="Nueva Contraseña" required minlength="6">
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="nueva_clave" name="nueva_clave" placeholder="Nueva Contraseña" required minlength="6">
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#nueva_clave" aria-label="Mostrar contraseña" aria-pressed="false">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="form-group row">
                                         <label for="confirmar_nueva_clave" class="col-sm-4 col-form-label">Confirmar Nueva Contraseña <span class="text-danger">*</span></label>
                                         <div class="col-sm-8">
-                                            <input type="password" class="form-control" id="confirmar_nueva_clave" name="confirmar_nueva_clave" placeholder="Confirmar Nueva Contraseña" required minlength="6">
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="confirmar_nueva_clave" name="confirmar_nueva_clave" placeholder="Confirmar Nueva Contraseña" required minlength="6">
+                                                <div class="input-group-append">
+                                                    <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#confirmar_nueva_clave" aria-label="Mostrar contraseña" aria-pressed="false">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="form-group row">
@@ -197,9 +219,5 @@ if (!$usuario) {
 include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
-
-<script>
-    baseUrl = "<?= $URL; ?>";
-</script>
 
 <script src="<?= $URL; ?>public/js/modules/usuarios/perfil-usuario.js"></script>

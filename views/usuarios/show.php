@@ -15,6 +15,8 @@ if (!($authService->puedeAccederModulo($idusuario, 'usuarios')) && !($authServic
 }
 
 // Incluir el encabezado
+$module_styles = ['usuarios/usuarios'];
+$skip_datatables = true; // Esta vista no usa tabla; evita cargar DataTables/pdfmake/vfs_fonts (~2.8MB)
 include_once '../layouts/header.php';
 
 // Verificar si se proporcionó un ID
@@ -39,27 +41,12 @@ if (!$usuario) {
 }
 ?>
 
-<style>
-    /* Color info para el texto de las pestañas no activas */
-    #detail-tabs .nav-link:not(.active) {
-        color: #17a2b8;
-        /* Color info */
-    }
-
-    /* Opcional: Color info más intenso al pasar el mouse por pestañas no activas */
-    #detail-tabs .nav-link:not(.active):hover {
-        color: #138496;
-        /* Un tono más oscuro de info */
-    }
-</style>
-
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-sm-6">
-                <h1><i class="fas fa-user-circle mr-2"></i> Detalle de Usuario</h1>
-                <p class="text-muted">Información completa del usuario seleccionado</p>
+                <h1>Detalle de Usuario</h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
@@ -83,17 +70,17 @@ if (!$usuario) {
                     <div class="card-body box-profile">
                         <div class="text-center position-relative mb-4">
                             <?php if (isset($usuario['imagen']) && !empty($usuario['imagen'])): ?>
-                                <img class="profile-user-img img-fluid img-circle"
+                                <img class="profile-user-img img-fluid img-circle usuario-avatar-perfil"
                                     src="<?= $URL; ?>public/uploads/usuarios/<?= htmlspecialchars($usuario['imagen']); ?>"
-                                    alt="Imagen de perfil" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #3c8dbc;">
+                                    alt="Imagen de perfil">
                             <?php else: ?>
-                                <img class="profile-user-img img-fluid img-circle"
+                                <img class="profile-user-img img-fluid img-circle usuario-avatar-perfil"
                                     src="<?= $URL; ?>public/uploads/usuarios/user_default.jpg"
-                                    alt="Imagen de perfil" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #3c8dbc;">
+                                    alt="Imagen de perfil">
                             <?php endif; ?>
 
                             <!-- Indicador de estado sobre la imagen -->
-                            <span class="position-absolute badge <?= $usuario['estado'] == 1 ? 'badge-success' : 'badge-danger'; ?>"
+                            <span id="avatarEstadoBadge" class="position-absolute badge <?= $usuario['estado'] == 1 ? 'badge-success' : 'badge-danger'; ?>"
                                 style="top: 0; right: 50%; transform: translateX(60px);">
                                 <i class="fas <?= $usuario['estado'] == 1 ? 'fa-check' : 'fa-times'; ?>"></i>
                             </span>
@@ -137,15 +124,6 @@ if (!$usuario) {
                                 </span>
                             </li>
                         </ul>
-
-                        <div class="d-flex justify-content-between">
-                            <a href="<?= $URL; ?>views/usuarios/update.php?id=<?= $usuario['idusuario']; ?>" class="btn btn-warning">
-                                <i class="fas fa-edit"></i> Editar
-                            </a>
-                            <a href="<?= $URL; ?>views/usuarios/index.php" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Volver
-                            </a>
-                        </div>
                     </div>
                 </div>
 
@@ -154,11 +132,22 @@ if (!$usuario) {
                     <div class="card-header">
                         <h3 class="card-title"><i class="fas fa-cogs mr-2"></i>Acciones</h3>
                     </div>
-                    <div class="card-body">
-                        <button type="button" class="btn btn-block <?= $usuario['estado'] == 1 ? 'btn-danger' : 'btn-success'; ?>" id="btnCambiarEstado">
-                            <i class="fas <?= $usuario['estado'] == 1 ? 'fa-user-slash' : 'fa-user-check'; ?> mr-2"></i>
-                            <?= $usuario['estado'] == 1 ? 'Desactivar Usuario' : 'Activar Usuario'; ?>
-                        </button>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <a href="<?= $URL; ?>views/usuarios/update.php?id=<?= $usuario['idusuario']; ?>" class="list-group-item list-group-item-action">
+                                <i class="fas fa-edit mr-2 text-warning"></i> Editar usuario
+                            </a>
+                            <a href="#" id="btnCambiarEstado" class="list-group-item list-group-item-action"
+                                data-id="<?= $usuario['idusuario']; ?>"
+                                data-estado="<?= $usuario['estado']; ?>"
+                                data-nombre="<?= htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellidop']); ?>">
+                                <i class="fas <?= $usuario['estado'] == 1 ? 'fa-user-slash text-danger' : 'fa-user-check text-success'; ?> mr-2"></i>
+                                <span id="btnCambiarEstadoTexto"><?= $usuario['estado'] == 1 ? 'Desactivar usuario' : 'Activar usuario'; ?></span>
+                            </a>
+                            <a href="<?= $URL; ?>views/usuarios/index.php" class="list-group-item list-group-item-action">
+                                <i class="fas fa-list mr-2 text-primary"></i> Volver a la lista de usuarios
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -166,7 +155,7 @@ if (!$usuario) {
             <!-- Columna de información detallada -->
             <div class="col-md-8">
                 <!-- Información personal -->
-                <div class="card card-info card-outline card-tabs">
+                <div class="card card-info card-outline card-outline-tabs">
                     <div class="card-header p-0 border-bottom-0">
                         <ul class="nav nav-tabs" id="detail-tabs" role="tablist">
                             <li class="nav-item">
@@ -315,13 +304,13 @@ if (!$usuario) {
 
                                     <!-- Estado del Usuario -->
                                     <div>
-                                        <i class="fas <?= $usuario['estado'] == 1 ? 'fa-check-circle bg-success' : 'fa-times-circle bg-danger'; ?>"></i>
+                                        <i id="timelineEstadoIcono" class="fas <?= $usuario['estado'] == 1 ? 'fa-check-circle bg-success' : 'fa-times-circle bg-danger'; ?>"></i>
                                         <div class="timeline-item">
                                             <h3 class="timeline-header"><strong>Estado de la Cuenta</strong></h3>
                                             <div class="timeline-body">
                                                 El usuario se encuentra actualmente
-                                                <span class="badge <?= $usuario['estado'] == 1 ? 'badge-success' : 'badge-danger'; ?>">
-                                                    <?= $usuario['estado'] == 1 ? 'ACTIVO' : 'INACTIVO'; ?>
+                                                <span id="timelineEstadoBadge" class="badge <?= $usuario['estado'] == 1 ? 'badge-success' : 'badge-danger'; ?>">
+                                                    <?= $usuario['estado'] == 1 ? 'Activo' : 'Inactivo'; ?>
                                                 </span>
                                             </div>
                                         </div>
@@ -371,60 +360,9 @@ if (!$usuario) {
     </div>
 </section>
 
+<script src="<?= $URL; ?>public/js/modules/usuarios/show-usuario.js"></script>
+
 <?php
 include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
-
-<script>
-    // Inicializar plugins cuando el documento esté listo
-    $(document).ready(function() {
-        // Activar tooltips
-        $('[data-toggle="tooltip"]').tooltip();
-
-        // Guardar la pestaña activa en el almacenamiento local
-        $('a[data-toggle="pill"]').on('shown.bs.tab', function(e) {
-            localStorage.setItem('lastUserDetailTab', $(e.target).attr('id'));
-        });
-
-        // Restaurar la pestaña activa del almacenamiento local
-        var lastTab = localStorage.getItem('lastUserDetailTab');
-        if (lastTab) {
-            $('#' + lastTab).tab('show');
-        }
-
-        // Cambiar el estado del usuario con SweetAlert2
-        $('#btnCambiarEstado').on('click', function() {
-            const usuarioId = <?= $usuario['idusuario']; ?>;
-            const estadoActual = <?= $usuario['estado']; ?>;
-            const nombreUsuario = "<?= htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellidop']); ?>";
-
-            const tituloAlerta = estadoActual == 1 ?
-                `¿Desactivar a ${nombreUsuario}?` :
-                `¿Activar a ${nombreUsuario}?`;
-
-            const textoAlerta = estadoActual == 1 ?
-                'El usuario no podrá acceder al sistema hasta que sea activado nuevamente.' :
-                'El usuario podrá acceder nuevamente al sistema.';
-
-            const confirmButtonText = estadoActual == 1 ? 'Sí, desactivar' : 'Sí, activar';
-            const cancelButtonText = 'Cancelar';
-
-            Swal.fire({
-                title: tituloAlerta,
-                text: textoAlerta,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: estadoActual == 1 ? '#d33' : '#3085d6',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: confirmButtonText,
-                cancelButtonText: cancelButtonText
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Redirigir a la acción de cambio de estado
-                    window.location.href = `<?= $URL; ?>controllers/usuarios/desactivar_usuario.php?id=${usuarioId}&estado=${estadoActual}&csrf_token=<?= generateCSRFToken(); ?>`;
-                }
-            });
-        });
-    });
-</script>

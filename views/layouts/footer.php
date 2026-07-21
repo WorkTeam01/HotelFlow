@@ -29,20 +29,28 @@
 <script src="<?= $URL; ?>public/js/lib/adminlte/adminlte.min.js"></script>
 <!-- Select2 -->
 <script src="<?= $URL; ?>public/js/plugins/select2/select2.min.js"></script>
-<!-- DataTables y sus extensiones -->
-<script src="<?= $URL; ?>public/js/plugins/datatables/jquery.dataTables.min.js"></script>
-<script src="<?= $URL; ?>public/js/plugins/datatables/dataTables.bootstrap4.min.js"></script>
-<script src="<?= $URL; ?>public/js/plugins/datatables/dataTables.responsive.min.js"></script>
-<script src="<?= $URL; ?>public/js/plugins/datatables/responsive.bootstrap4.min.js"></script>
-<script src="<?= $URL; ?>public/js/plugins/datatables/dataTables.buttons.min.js"></script>
-<script src="<?= $URL; ?>public/js/plugins/datatables/buttons.bootstrap4.min.js"></script>
-<!-- Utilidades para DataTables -->
-<script src="<?php echo $URL; ?>public/js/plugins/utils/jszip.min.js"></script>
-<script src="<?php echo $URL; ?>public/js/plugins/utils/pdfmake.min.js"></script>
-<script src="<?php echo $URL; ?>public/js/plugins/utils/vfs_fonts.js"></script>
-<script src="<?php echo $URL; ?>public/js/plugins/datatables/buttons.html5.min.js"></script>
-<script src="<?php echo $URL; ?>public/js/plugins/datatables/buttons.print.min.js"></script>
-<script src="<?php echo $URL; ?>public/js/plugins/datatables/buttons.colVis.min.js"></script>
+<?php
+// $skip_datatables: opt-out para vistas sin tabla (evita cargar ~2.8MB de
+// DataTables + pdfmake/vfs_fonts/jszip que no usan). Por defecto se cargan,
+// para no romper ninguna vista existente que no declare la variable.
+$cargar_datatables = !(isset($skip_datatables) && $skip_datatables === true);
+?>
+<?php if ($cargar_datatables): ?>
+    <!-- DataTables y sus extensiones -->
+    <script src="<?= $URL; ?>public/js/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="<?= $URL; ?>public/js/plugins/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="<?= $URL; ?>public/js/plugins/datatables/dataTables.responsive.min.js"></script>
+    <script src="<?= $URL; ?>public/js/plugins/datatables/responsive.bootstrap4.min.js"></script>
+    <script src="<?= $URL; ?>public/js/plugins/datatables/dataTables.buttons.min.js"></script>
+    <script src="<?= $URL; ?>public/js/plugins/datatables/buttons.bootstrap4.min.js"></script>
+    <!-- Utilidades para DataTables -->
+    <script src="<?php echo $URL; ?>public/js/plugins/utils/jszip.min.js"></script>
+    <script src="<?php echo $URL; ?>public/js/plugins/utils/pdfmake.min.js"></script>
+    <script src="<?php echo $URL; ?>public/js/plugins/utils/vfs_fonts.js"></script>
+    <script src="<?php echo $URL; ?>public/js/plugins/datatables/buttons.html5.min.js"></script>
+    <script src="<?php echo $URL; ?>public/js/plugins/datatables/buttons.print.min.js"></script>
+    <script src="<?php echo $URL; ?>public/js/plugins/datatables/buttons.colVis.min.js"></script>
+<?php endif; ?>
 <!-- Scripts principales de la aplicación -->
 <script src="<?php echo $URL; ?>public/js/core/common-utils.js"></script>
 <!-- Scripts específicos por módulo -->

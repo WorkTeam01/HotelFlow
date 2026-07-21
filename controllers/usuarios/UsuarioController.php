@@ -301,7 +301,7 @@ class UsuarioController
 
         if ($this->modelo->actualizarEstado($id, $nuevo_estado)) {
             $accion = $nuevo_estado == 1 ? 'activado' : 'desactivado';
-            return ['success' => true, 'message' => "Usuario $accion correctamente", 'icon' => 'success'];
+            return ['success' => true, 'message' => "Usuario $accion correctamente", 'icon' => 'success', 'nuevo_estado' => $nuevo_estado];
         } else {
             return ['success' => false, 'message' => 'Error al cambiar el estado del usuario: ' . $this->modelo->getLastError(), 'icon' => 'error'];
         }

@@ -64,23 +64,12 @@ $(document).ready(function () {
         }
     });
 
-    // Mostrar/ocultar contraseña
-    $('#showPassword').on('mousedown', function () {
-        $('#clave').attr('type', 'text');
-        $(this).find('i').removeClass('fa-eye').addClass('fa-eye-slash');
-    }).on('mouseup mouseleave', function () {
-        $('#clave').attr('type', 'password');
-        $(this).find('i').removeClass('fa-eye-slash').addClass('fa-eye');
-    });
+    // Nota: mostrar/ocultar contraseña (.password-toggle) se maneja de forma
+    // centralizada en common-utils.js.
 
-    // Botones para seleccionar/deseleccionar todos los permisos
-    $('#selectAllPermissions').click(function () {
-        $('.permiso-checkbox').prop('checked', true);
-    });
-
-    $('#deselectAllPermissions').click(function () {
-        $('.permiso-checkbox').prop('checked', false);
-    });
+    // Nota: la selección/deselección de permisos por cargo y los botones
+    // "Seleccionar/Deseleccionar Todos" se manejan en permisos.js, que se
+    // carga junto a este script (evita handlers duplicados/conflictivos).
 
     // Validación de número de documento según tipo
     $('#tipodocumento').on('change', function () {
@@ -103,7 +92,7 @@ $(document).ready(function () {
                 numDocInput.attr('placeholder', 'Ingrese 11 dígitos');
                 docHelp.text('El RUC debe contener 11 dígitos numéricos');
                 break;
-            case 'Pasaporte':
+            case 'PASAPORTE':
                 numDocInput.attr('maxlength', '12');
                 numDocInput.removeAttr('pattern');
                 numDocInput.attr('placeholder', 'Ingrese el número de pasaporte');

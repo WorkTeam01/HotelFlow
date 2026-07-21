@@ -52,21 +52,24 @@ require_once __DIR__ . '/../../config/config.php';
                     <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
 
                     <div class="input-group mb-3">
-                        <input type="text" name="identifier" class="form-control" placeholder="Email o Número de documento"
+                        <label for="identifier-field" class="sr-only">Email o número de documento</label>
+                        <input type="text" name="identifier" id="identifier-field" class="form-control" placeholder="Email o Número de documento"
                             autocomplete="username">
                         <div class="input-group-append">
                             <div class="input-group-text">
-                                <span class="fas fa-user"></span>
+                                <span class="fas fa-user" aria-hidden="true"></span>
                             </div>
                         </div>
                     </div>
                     <div class="input-group mb-3">
+                        <label for="password-field" class="sr-only">Contraseña</label>
                         <input type="password" name="clave" id="password-field" class="form-control" placeholder="Contraseña"
                             autocomplete="current-password">
                         <div class="input-group-append">
-                            <div class="input-group-text password-toggle" title="Mostrar/Ocultar contraseña">
-                                <span class="fas fa-eye-slash toggle-password" id="toggle-password"></span>
-                            </div>
+                            <button type="button" class="input-group-text password-toggle" data-target="#password-field"
+                                title="Mostrar contraseña" aria-label="Mostrar contraseña" aria-pressed="false">
+                                <span class="fas fa-eye toggle-password-icon" aria-hidden="true"></span>
+                            </button>
                         </div>
                     </div>
                     <div class="row">
@@ -81,7 +84,7 @@ require_once __DIR__ . '/../../config/config.php';
         </div>
 
         <div class="login-footer text-center mt-3">
-            <p class="text-muted">&copy; <?= date('Y'); ?> <?= $APP_NAME; ?>. Todos los derechos reservados.</p>
+            <p>&copy; <?= date('Y'); ?> <?= $APP_NAME; ?>. Todos los derechos reservados.</p>
         </div>
     </div>
 
@@ -91,6 +94,8 @@ require_once __DIR__ . '/../../config/config.php';
     <script src="<?= $URL; ?>public/js/lib/bootstrap/bootstrap.bundle.min.js"></script>
     <!-- AdminLTE App -->
     <script src="<?= $URL; ?>public/js/lib/adminlte/adminlte.min.js"></script>
+    <!-- Utilidades comunes (incluye el toggle centralizado de mostrar/ocultar contraseña) -->
+    <script src="<?= $URL; ?>public/js/core/common-utils.js"></script>
 
     <!-- Custom login script -->
     <script>
@@ -108,20 +113,8 @@ require_once __DIR__ . '/../../config/config.php';
                 }
             });
 
-            // Toggle password visibility
-            $('#toggle-password').click(function() {
-                const passwordField = $('#password-field');
-                const passwordFieldType = passwordField.attr('type');
-
-                // Toggle password visibility
-                if (passwordFieldType === 'password') {
-                    passwordField.attr('type', 'text');
-                    $(this).removeClass('fa-eye-slash').addClass('fa-eye');
-                } else {
-                    passwordField.attr('type', 'password');
-                    $(this).removeClass('fa-eye').addClass('fa-eye-slash');
-                }
-            });
+            // Nota: mostrar/ocultar contraseña (.password-toggle) se maneja de
+            // forma centralizada en common-utils.js.
 
             // Add subtle animation to login box
             $('.login-box').addClass('login-animation');

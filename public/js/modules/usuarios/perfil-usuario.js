@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btnCambiarPassword.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
 
         // Realizar solicitud AJAX
-        fetch(`${baseUrl}controllers/usuarios/ajax_cambiar_clave.php`, {
+        fetch(`${BASE_URL}controllers/usuarios/ajax_cambiar_clave.php`, {
             method: 'POST',
             body: formData
         })
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }).then((result) => {
                         if (result.isConfirmed) {
                             // Redirigir al logout
-                            window.location.href = `${baseUrl}controllers/auth/logout.php`;
+                            window.location.href = `${BASE_URL}controllers/auth/logout.php`;
                         }
                     });
                 } else {

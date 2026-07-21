@@ -242,3 +242,37 @@ function ajaxRequest(url, method = 'GET', data = {}, successCallback, errorCallb
         }
     });
 }
+
+/**
+ * Toggle centralizado de mostrar/ocultar contraseña.
+ * Se activa por delegación de eventos, por lo que no requiere inicialización:
+ * basta con incluir el markup en cualquier página que cargue este archivo.
+ *
+ * Markup esperado:
+ * <div class="input-group">
+ *   <input type="password" id="clave" ...>
+ *   <div class="input-group-append">
+ *     <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#clave" aria-label="Mostrar contraseña" aria-pressed="false">
+ *       <i class="fas fa-eye"></i>
+ *     </button>
+ *   </div>
+ * </div>
+ */
+$(document).on('click', '.password-toggle', function () {
+    const $boton = $(this);
+    const $input = $($boton.data('target'));
+
+    if (!$input.length) {
+        return;
+    }
+
+    const mostrando = $input.attr('type') === 'text';
+
+    $input.attr('type', mostrando ? 'password' : 'text');
+    $boton.find('i, span').toggleClass('fa-eye fa-eye-slash');
+    $boton.attr({
+        'aria-label': mostrando ? 'Mostrar contraseña' : 'Ocultar contraseña',
+        'aria-pressed': mostrando ? 'false' : 'true',
+        title: mostrando ? 'Mostrar contraseña' : 'Ocultar contraseña'
+    });
+});

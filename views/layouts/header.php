@@ -28,6 +28,7 @@ global $URL;
     <script>
         const APP_NAME = '<?= $APP_NAME; ?>';
         const CSRF_TOKEN = '<?= generateCSRFToken(); ?>';
+        const BASE_URL = '<?= $URL; ?>';
     </script>
     <title><?= $APP_NAME; ?></title>
 
