@@ -46,6 +46,7 @@ if (!$tarifa) {
 $module_scripts = ['tarifas/update-tarifa'];
 $module_styles = ['tarifas/tarifas-styles'];
 
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 ?>
 

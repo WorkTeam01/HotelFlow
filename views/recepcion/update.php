@@ -55,6 +55,7 @@ if ($recepcion['estado'] === 'finalizado' || $recepcion['estado'] === 'cancelado
 }
 
 // Incluir el encabezado después de verificar permisos
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 // Determinar clase y etiqueta según el estado

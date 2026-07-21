@@ -17,6 +17,7 @@ if (!($authService->puedeAccederModulo($idusuario, 'clientes'))) {
 $module_scripts = ['clientes/create-persona'];
 $module_styles = ['clientes/cliente-styles'];
 
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 ?>
 

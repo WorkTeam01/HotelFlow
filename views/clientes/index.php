@@ -15,6 +15,8 @@ if (!($authService->puedeAccederModulo($idusuario, 'clientes'))) {
     exit;
 }
 
+$skip_select2 = true;
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 $controller = new PersonaController();

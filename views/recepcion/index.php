@@ -7,6 +7,9 @@ require_once __DIR__ . '/../layouts/session.php';
 $module_styles = ['recepciones/index-recepciones'];
 $module_scripts = ['recepciones/index-recepciones'];
 
+// Panel de tarjetas por piso, sin tabla: no necesita DataTables
+$skip_datatables = true;
+
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
@@ -19,6 +22,8 @@ if (!($authService->puedeAccederModulo($idusuario, 'recepcion'))) {
 }
 
 // Incluir el encabezado después de verificar permisos
+$skip_select2 = true;
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 // Instanciar el controlador

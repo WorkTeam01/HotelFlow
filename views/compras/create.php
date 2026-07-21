@@ -22,6 +22,7 @@ if (!isset($_SESSION['usuario_nombre'])) {
 }
 
 // Incluir encabezado
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 $productoController = new ProductoController();

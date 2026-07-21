@@ -23,6 +23,7 @@ $module_scripts = ['tarifas/create-tarifa'];
 $module_styles = ['tarifas/tarifas-styles'];
 
 // Incluir el encabezado
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 ?>
 

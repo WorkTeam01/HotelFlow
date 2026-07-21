@@ -18,6 +18,8 @@ if (!($auth->puedeAccederModulo($idusuario, 'recepcion'))) {
 }
 
 // Incluir el encabezado
+$skip_select2 = true;
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 // Instanciar controlador

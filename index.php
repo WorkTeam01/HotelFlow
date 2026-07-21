@@ -32,11 +32,15 @@ if ($rol == 'Administrador') {
     $module_scripts = ['dashboard/dashboard-admin'];
 } elseif ($rol == 'Recepcionista') {
     $stats = $dashboardController->getEstadisticasRecepcionista();
+    $skip_chartjs = true;
 } elseif ($rol == 'Limpieza') {
     $stats = $dashboardController->getEstadisticasLimpieza($currentUser['id']);
+    $skip_chartjs = true;
 } else {
     $stats = $dashboardController->getEstadisticasBasicas();
+    $skip_chartjs = true;
 }
+$skip_select2 = true;
 
 // Incluir el header
 include 'views/layouts/header.php';

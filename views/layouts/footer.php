@@ -27,8 +27,10 @@
 <script src="<?= $URL; ?>public/js/lib/bootstrap/bootstrap.bundle.min.js"></script>
 <!-- AdminLTE App -->
 <script src="<?= $URL; ?>public/js/lib/adminlte/adminlte.min.js"></script>
-<!-- Select2 -->
-<script src="<?= $URL; ?>public/js/plugins/select2/select2.min.js"></script>
+<?php if ($cargar_select2 ?? !(isset($skip_select2) && $skip_select2 === true)): ?>
+    <!-- Select2 -->
+    <script src="<?= $URL; ?>public/js/plugins/select2/select2.min.js"></script>
+<?php endif; ?>
 <?php
 // $skip_datatables: opt-out para vistas sin tabla (evita cargar ~2.8MB de
 // DataTables + pdfmake/vfs_fonts/jszip que no usan). Por defecto se cargan,

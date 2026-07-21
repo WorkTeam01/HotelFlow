@@ -19,6 +19,7 @@ $categoriaController = new CategoriaController();
 $categorias = $categoriaController->index();
 
 // Incluir el encabezado
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 ?>
 

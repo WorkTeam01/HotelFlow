@@ -15,6 +15,8 @@ if (!($authService->tieneAccesoCritico($idusuario, 'compras'))) {
 }
 
 // Incluir el encabezado
+$skip_select2 = true;
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 // Verificar si se proporcionó un ID

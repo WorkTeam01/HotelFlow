@@ -15,6 +15,7 @@ if (!$authService->tieneAccesoModulo($idusuario, 'nueva_venta')) {
     exit;
 }
 
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 // Obtener datos necesarios

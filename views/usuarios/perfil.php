@@ -26,6 +26,8 @@ if (!isset($idusuario_session)) {
 // Incluir el encabezado
 $module_styles = ['usuarios/usuarios'];
 $skip_datatables = true; // Esta vista no usa tabla; evita cargar DataTables/pdfmake/vfs_fonts (~2.8MB)
+$skip_select2 = true;
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 // Instanciar el controlador y obtener los datos del usuario

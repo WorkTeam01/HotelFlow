@@ -18,6 +18,7 @@ $module_scripts = ['tipohabitacion/create-tipo-habitacion'];
 $module_styles = ['tipohabitacion/tipo-habitacion-styles'];
 
 // Incluir el encabezado
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 ?>
 

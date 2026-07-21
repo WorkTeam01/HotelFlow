@@ -42,6 +42,8 @@ if (!$recepcion) {
 }
 
 // Incluir el encabezado después de verificar permisos
+$skip_select2 = true;
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 // Determinar clase CSS según el estado

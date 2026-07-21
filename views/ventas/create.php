@@ -15,6 +15,7 @@ if (!($authService->tieneAccesoCritico($idusuario, 'ventas'))) {
     exit;
 }
 
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 // Obtener datos necesarios

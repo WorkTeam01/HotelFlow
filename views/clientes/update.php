@@ -40,6 +40,7 @@ if (!$persona) {
 $module_scripts = ['clientes/update-persona'];
 $module_styles = ['clientes/cliente-styles'];
 
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 ?>
 

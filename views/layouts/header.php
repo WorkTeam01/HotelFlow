@@ -45,21 +45,36 @@ global $URL;
     <!-- Font Awesome Webfonts -->
     <link rel="stylesheet" href="<?= $URL; ?>public/css/core/webfonts.css">
     <link rel="icon" type="image/png" href="<?= $URL; ?>public/img/hotel.png">
-    <!-- Datatables -->
-    <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/datatables/datatables.min.css">
-    <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/datatables/dataTables.bootstrap4.min.css">
-    <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/datatables/responsive.bootstrap4.min.css">
-    <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/datatables/buttons.bootstrap4.min.css">
-    <!-- Select2 -->
-    <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/select2/select2.min.css">
-    <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/select2/select2-bootstrap4.min.css">
+    <?php
+    // $skip_datatables: opt-out para vistas sin tabla (ver mismo condicional en footer.php).
+    $cargar_datatables = !(isset($skip_datatables) && $skip_datatables === true);
+    ?>
+    <?php if ($cargar_datatables): ?>
+        <!-- Datatables -->
+        <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/datatables/datatables.min.css">
+        <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/datatables/dataTables.bootstrap4.min.css">
+        <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/datatables/responsive.bootstrap4.min.css">
+        <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/datatables/buttons.bootstrap4.min.css">
+    <?php endif; ?>
+    <?php
+    // $skip_select2 / $skip_chartjs: opt-out para vistas que no usan estas librerías.
+    $cargar_select2 = !(isset($skip_select2) && $skip_select2 === true);
+    $cargar_chartjs = !(isset($skip_chartjs) && $skip_chartjs === true);
+    ?>
+    <?php if ($cargar_select2): ?>
+        <!-- Select2 -->
+        <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/select2/select2.min.css">
+        <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/select2/select2-bootstrap4.min.css">
+    <?php endif; ?>
     <!-- Sweetalert2 -->
     <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/sweetalert2/sweetalert2.min.css">
     <script src="<?= $URL; ?>public/js/plugins/sweetalert2/sweetalert2.min.js"></script>
     <!-- jQuery -->
     <script src="<?= $URL; ?>public/js/lib/jquery/jquery.min.js"></script>
-    <!-- ChartJS -->
-    <script src="<?= $URL; ?>public/js/plugins/chart/Chart.js"></script>
+    <?php if ($cargar_chartjs): ?>
+        <!-- ChartJS -->
+        <script src="<?= $URL; ?>public/js/plugins/chart/Chart.js"></script>
+    <?php endif; ?>
 
     <!-- Estilos específicos por módulo -->
     <?php if (isset($module_styles) && is_array($module_styles)): ?>

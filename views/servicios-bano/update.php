@@ -30,6 +30,7 @@ if (!($auth->puedeAccederModulo($idusuario, 'servicios_bano'))) {
 $module_styles = ['servicios-bano/servicios-bano'];
 
 // Incluir el encabezado
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 // Instanciar el controlador y obtener los datos del servicio

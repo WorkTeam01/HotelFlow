@@ -25,6 +25,7 @@ $productoController = new ProductoController();
 $productos = $productoController->index();
 
 // Incluir encabezado
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 ?>
 

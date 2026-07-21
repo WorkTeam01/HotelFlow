@@ -50,6 +50,7 @@ $tipos_habitacion = $datos['tipos_habitacion'];
 $pisos = $datos['pisos'];
 
 // Incluir el encabezado después de verificar permisos
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 ?>
 

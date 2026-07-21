@@ -1,4 +1,6 @@
 <?php
+$skip_select2 = true;
+$skip_chartjs = true;
 include_once __DIR__ . '/../layouts/header.php';
 
 $total_periodo = 0;

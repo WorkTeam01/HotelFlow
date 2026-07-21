@@ -16,6 +16,7 @@ if (!($authService->puedeAccederModulo($idusuario, 'productos'))) {
 }
 
 // Incluir el encabezado
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 // Verificar si se proporcionó un ID

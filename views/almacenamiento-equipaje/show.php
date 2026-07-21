@@ -18,6 +18,8 @@ if (!($authService->puedeAccederModulo($idusuario, 'equipajes'))) {
 $module_styles = ['almacenamiento-equipaje/almacenamiento-equipaje'];
 
 // Incluir el encabezado
+$skip_select2 = true;
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 // Verificar si se proporcionó un ID

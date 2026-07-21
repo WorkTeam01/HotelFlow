@@ -18,6 +18,7 @@ if (!$auth->puedeAccederModulo($idusuario, 'precios_equipaje')) {
 }
 
 // Incluir el encabezado después de verificar permisos
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 $controller = new PrecioEquipajeController();

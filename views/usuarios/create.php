@@ -16,6 +16,7 @@ if (!$authService->puedeAccederModulo($idusuario, 'usuarios') && !$authService->
 // Incluir el encabezado
 $module_styles = ['usuarios/usuarios'];
 $skip_datatables = true; // Esta vista no usa tabla; evita cargar DataTables/pdfmake/vfs_fonts (~2.8MB)
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 ?>
 

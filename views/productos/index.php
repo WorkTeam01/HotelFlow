@@ -16,6 +16,8 @@ if (!($authService->puedeAccederModulo($idusuario, 'productos'))) {
 }
 
 // Incluir el encabezado DESPUÉS de verificar permisos
+$skip_select2 = true;
+$skip_chartjs = true;
 include_once '../layouts/header.php';
 
 $controller = new ProductoController();
