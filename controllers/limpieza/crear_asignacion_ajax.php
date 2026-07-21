@@ -16,9 +16,7 @@ if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQ
 $idusuario = $_SESSION['usuario_id'] ?? 0;
 $auth = new AuthorizationService();
 
-// Este es un ejemplo, adapta la verificación según tus permisos específicos
-// Podrías necesitar crear un permiso específico para asignaciones de limpieza
-if (!$auth->puedeAccederModulo($idusuario, 'limpieza')) {
+if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'limpieza')) {
     echo json_encode([
         'success' => false,
         'message' => 'No tiene permisos para crear asignaciones de limpieza'

@@ -401,8 +401,8 @@ class AlmacenamientoEquipajeController
 
             return $datos;
         } catch (Exception $e) {
-            $this->agregarError('Error al obtener datos del equipaje: ' . $e->getMessage());
             error_log('Error en getDatosParaRecibo: ' . $e->getMessage());
+            $this->agregarError('Ocurrió un error inesperado. Intente nuevamente.');
             return false;
         }
     }

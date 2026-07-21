@@ -297,6 +297,9 @@ class RecepcionController
                 case 'cancelado':
                     $mensaje = 'Recepción cancelada correctamente';
                     break;
+                default:
+                    $mensaje = 'Estado actualizado correctamente';
+                    break;
             }
 
             return [

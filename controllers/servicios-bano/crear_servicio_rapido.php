@@ -14,7 +14,7 @@ header('Content-Type: application/json');
 $idusuario = $_SESSION['usuario_id'] ?? 0;
 $auth = new AuthorizationService();
 
-if (!$auth->puedeAccederModulo($idusuario, 'servicios_bano')) {
+if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'servicios_bano')) {
     echo json_encode([
         'success' => false,
         'message' => 'No tiene permisos para crear servicios de baños',
