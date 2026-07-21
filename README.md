@@ -140,7 +140,7 @@ icacls "public\uploads" /grant Everyone:F /T
 http://localhost/HotelFlow/
 ```
 
-**Credenciales por defecto:** `admin` / `admin123`
+**Credenciales por defecto:** `admin@hotelflow.local` / `admin123` (el campo de login pide correo o número de documento, no un nombre de usuario)
 
 > **Importante:** Cambiar las credenciales inmediatamente después del primer acceso.
 

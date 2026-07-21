@@ -61,7 +61,7 @@ try {
     $APP_NAME = $GLOBALS['APP_NAME'];
 
     // Obtener versión de la aplicación desde .env
-    $app_version = $_ENV['APP_VERSION'] ?? getenv('APP_VERSION') ?: '1.0.3';
+    $app_version = $_ENV['APP_VERSION'] ?? getenv('APP_VERSION') ?: '1.0.4';
     $GLOBALS['APP_VERSION'] = $app_version;
     $APP_VERSION = $GLOBALS['APP_VERSION'];
 } catch (Exception $e) {

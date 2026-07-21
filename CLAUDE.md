@@ -26,7 +26,7 @@ cp .env.example .env
 chmod -R 755 public/uploads/
 chmod -R 755 libs/TCPDF-main/
 
-# Login por defecto: admin / admin123
+# Login por defecto: admin@hotelflow.local / admin123 (el campo de login pide correo o número de documento, no username)
 ```
 
 > **Nota:** `chmod 755` solo funciona si el usuario que ejecuta PHP (p. ej. `daemon` en XAMPP, `www-data` en Apache/Debian) es el propietario o pertenece al grupo propietario de `public/uploads/`. Si el directorio pertenece a tu usuario de desarrollo y el servidor web corre como otro usuario/grupo, las subidas fallarán en silencio (`move_uploaded_file` retorna false, `ImagenService::procesarImagen` responde "Error al procesar la imagen" aunque el archivo sea válido). Verifica con `ps aux | grep httpd` qué usuario corre Apache y ajusta el propietario/grupo de `public/uploads/` en consecuencia, o usa `chmod -R 777` solo en entornos de desarrollo local.
@@ -95,6 +95,16 @@ Todos los assets en `/public/`:
 - `js/core/common-utils.js` - Utilidades compartidas
 - `uploads/` - Archivos subidos por usuarios (subdirectorios: habitaciones, productos, personas, usuarios)
 
+**Opt-out de librerías pesadas por vista (`views/layouts/header.php` + `footer.php`):** DataTables, Select2 y ChartJS se cargan por defecto en toda vista (para no romper nada existente), pero cada vista puede declarar, **antes de incluir `header.php`**, una variable booleana para omitir la librería que no usa:
+
+```php
+$skip_datatables = true; // vista sin <table>/DataTable()
+$skip_select2 = true;    // vista sin class="select2" ni .select2()
+$skip_chartjs = true;    // vista sin gráficos Chart.js
+```
+
+`header.php` calcula `$cargar_datatables`/`$cargar_select2`/`$cargar_chartjs` (CSS + JS del `<head>`) y `footer.php` reutiliza esas mismas variables para el JS del final del documento — el CSS y el JS de una librería siempre se cargan/omiten juntos, nunca por separado. Antes de agregar un `$skip_*` nuevo a una vista, verificar (grep) que ningún JS de módulo que esa vista incluya use la librería, incluyendo JS reusado entre create/update. Actualmente `$skip_chartjs` solo se omite en `index.php` (dashboard) cuando el rol no es Administrador — es el único lugar que usa Chart.js (`dashboard-admin.js`).
+
 ## Variables de Entorno
 
 El sistema de env personalizado en `config/env.php` soporta conversión de tipos:
@@ -155,7 +165,11 @@ Tras una pasada de endurecimiento de seguridad en todo el código, todo endpoint
 
 - **`date_default_timezone_set` y zona horaria:** `config/config.php` es la única fuente de verdad para `TIMEZONE` (con default `America/La_Paz` vía `env('TIMEZONE', 'America/La_Paz')`); `config/conexion.php` reutiliza `$config['app']['timezone']` sin duplicar el default.
 
-- **`switch` exhaustivos:** añadir siempre `default` en los `switch` sobre estados/tipos conocidos, aunque sea un no-op, para que el comportamiento sea explícito ante valores inesperados.
+- **`switch` exhaustivos:** añadir siempre `default` en los `switch` sobre estados/tipos conocidos, aunque sea un no-op, para que el comportamiento sea explícito ante valores inesperados. (Se encontró y corrigió un caso sin `default` en `RecepcionController::cambiarEstado()` — protegido por un `in_array` previo, pero incumplía la regla igual.)
+
+- **La regla de "nunca filtrar `getMessage()`" también aplica a arreglos de errores acumulados, no solo a la última excepción:** un controlador puede agregar un error genérico a un arreglo (`agregarError()`/`$this->errores[]`) y aun así filtrar información si en algún punto ese arreglo se llena con `$e->getMessage()` crudo y luego una vista lo concatena y lo muestra (p. ej. con `die()`). Se encontró este patrón en `AlmacenamientoEquipajeController::getDatosParaRecibo()` → `views/almacenamiento-equipaje/recibo.php`. Al añadir un mensaje a un arreglo de errores que después se muestra al usuario, tratarlo con el mismo cuidado que un `$this->lastError`: nunca crudo desde `$e->getMessage()`.
+
+- **Verificación de autorización explícita, no solo por composición interna:** todo endpoint debe escribir literalmente `!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'modulo')`, incluso si `puedeAccederModulo()` ya contempla administrador internamente (vía `tienePermisoNombre`). Omitir el `esAdministrador()` explícito no es un agujero de seguridad hoy, pero rompe la convención documentada y dificulta auditar el código a futuro sin releer la implementación interna de `AuthorizationService`. Se corrigieron tres endpoints que solo verificaban `puedeAccederModulo()` (`controllers/limpieza/crear_asignacion_ajax.php`, `controllers/limpieza/actualizar_asignacion_ajax.php`, `controllers/servicios-bano/crear_servicio_rapido.php`).
 
 ## Notas Importantes
 

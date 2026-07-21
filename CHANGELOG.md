@@ -5,6 +5,31 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.0.4] - 2026-07-21
+
+### Security
+
+- Endpoints de asignaciones de limpieza y creación rápida de servicios de baño ahora verifican explícitamente `esAdministrador() || puedeAccederModulo()` en vez de depender solo de `puedeAccederModulo()` (no era explotable, pero rompía la convención documentada de autorización).
+- Mensajes de error de login unificados a "Credenciales incorrectas" para correo/documento no registrado, cuenta desactivada y contraseña incorrecta — evita que un atacante pueda enumerar cuentas existentes por el mensaje de error devuelto.
+- `AlmacenamientoEquipajeController::getDatosParaRecibo()` ya no filtra `PDOException::getMessage()` al usuario a través del arreglo de errores que consume `views/almacenamiento-equipaje/recibo.php` — el detalle sigue yendo a `error_log()`.
+
+### Fixed
+
+- `switch` sin `default` en `RecepcionController::cambiarEstado()`.
+- Anchors rotos del menú de navegación en el README.
+
+### Added
+
+- Módulo de usuarios: toggle de estado (activo/inactivo) por AJAX, con CSRF y verificación de permisos.
+- Componente de mostrar/ocultar contraseña centralizado y reutilizable en formularios (login, crear/actualizar usuario).
+- Convención `$skip_datatables` / `$skip_select2` / `$skip_chartjs`: cada vista puede optar por no cargar DataTables, Select2 o ChartJS cuando no los usa, evitando bajar librerías innecesarias (antes se cargaban siempre en `header.php`/`footer.php` para toda vista). Extendida del módulo de usuarios a todas las vistas del sistema.
+- Globals `BASE_URL`/`CSRF_TOKEN` expuestos a JS de módulo sin duplicar lógica por vista.
+
+### Docs
+
+- `CLAUDE.md` documenta la convención `$skip_datatables`/`$skip_select2`/`$skip_chartjs`, y las reglas de autorización explícita y de no filtrar errores acumulados en arreglos.
+- Credenciales de acceso por defecto corregidas en README/CLAUDE.md: el campo de login pide correo o número de documento (`admin@hotelflow.local`), no un nombre de usuario (`admin`).
+
 ## [1.0.3] - 2026-07-20
 
 ### Security
