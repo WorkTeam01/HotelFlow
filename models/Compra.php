@@ -245,11 +245,18 @@ class Compra
         try {
             $this->conexion->beginTransaction();
 
-            // Obtener los detalles de la compra
-            $compra = $this->getById($id);
-            if (!$compra || $compra['estado'] == 'cancelada') {
+            // Bloquear la fila de la compra para evitar cancelaciones concurrentes duplicadas
+            $stmtLock = $this->conexion->prepare("SELECT estado FROM {$this->tabla} WHERE idcompra = :id FOR UPDATE");
+            $stmtLock->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmtLock->execute();
+            $estadoActual = $stmtLock->fetchColumn();
+
+            if ($estadoActual === false || $estadoActual == 'cancelada') {
                 throw new PDOException("La compra no existe o ya está cancelada");
             }
+
+            // Obtener los detalles de la compra
+            $compra = $this->getById($id);
 
             // Revertir el stock de cada producto
             foreach ($compra['detalles'] as $detalle) {
@@ -287,7 +294,8 @@ class Compra
             $stmt->bindParam(':id', $idProducto, PDO::PARAM_INT);
             return $stmt->execute();
         } catch (PDOException $e) {
-            throw new PDOException("Error al actualizar el stock del producto: " . $e->getMessage());
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            throw new PDOException("Error al actualizar el stock del producto");
         }
     }
 
@@ -399,6 +407,8 @@ class Compra
                 }
                 if (empty($detalle['preciocompra'])) {
                     $errores[] = "Todos los productos deben tener un precio de compra";
+                } elseif ($detalle['preciocompra'] < 0) {
+                    $errores[] = "El precio de compra no puede ser negativo";
                 }
             }
         }

@@ -349,26 +349,24 @@ class RecepcionController
             $datos['metodopago'] = null;
         }
 
-        // Para pagos en efectivo, calcular el cambio
+        // Para pagos en efectivo, se necesita el dinero físico recibido para que el modelo
+        // recalcule el cambio a partir del monto total real (tomado de la tarifa en BD, no del cliente)
         if ($datos['metodopago'] === 'Efectivo') {
-            // Determinar cuánto dinero entregó el cliente (dinero físico recibido)
             $dineroRecibido = 0;
             if (isset($post_data['pago_recibido']) && !empty($post_data['pago_recibido'])) {
                 $dineroRecibido = (float)$post_data['pago_recibido'];
             } elseif (isset($post_data['monto_recibido']) && !empty($post_data['monto_recibido'])) {
                 $dineroRecibido = (float)$post_data['monto_recibido'];
             }
-
-            // El monto pagado es lo que se le cobra al cliente (igual al monto total)
-            $datos['montopagado'] = $datos['montototal'];
-
-            // El cambio es la diferencia entre el dinero recibido y el monto pagado
-            $datos['cambio'] = max(0, $dineroRecibido - $datos['montopagado']);
+            $datos['dinero_recibido'] = $dineroRecibido;
         } else {
-            // Para otros métodos de pago, el monto pagado es igual al monto total y no hay cambio
-            $datos['montopagado'] = $datos['montototal'];
-            $datos['cambio'] = null;
+            $datos['dinero_recibido'] = null;
         }
+
+        // montopagado, cambio y montototal se recalculan en el modelo a partir de la tarifa
+        // real en BD; los valores aquí son solo un fallback si el modelo no los recalculara.
+        $datos['montopagado'] = $datos['montototal'];
+        $datos['cambio'] = null;
 
         return $datos;
     }

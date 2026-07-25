@@ -171,6 +171,37 @@ class Recepcion
                 return false;
             }
 
+            // Recalcular montototal a partir del precio real de la tarifa en BD,
+            // nunca confiar en el montototal enviado por el cliente
+            $stmtTarifa = $this->conexion->prepare("SELECT precio FROM tarifas WHERE idtarifa = :idtarifa AND estado = 1 FOR UPDATE");
+            $stmtTarifa->bindParam(':idtarifa', $datos['idtarifa'], PDO::PARAM_INT);
+            $stmtTarifa->execute();
+            $tarifa = $stmtTarifa->fetch(PDO::FETCH_ASSOC);
+
+            if (!$tarifa) {
+                $this->conexion->rollBack();
+                $this->lastError = "La tarifa seleccionada no es válida";
+                return false;
+            }
+
+            $datos['montototal'] = (float)$tarifa['precio'];
+            $datos['montopagado'] = $datos['montototal'];
+
+            // El cambio se recalcula a partir del dinero recibido real y el monto total real
+            if (($datos['metodopago'] ?? null) === 'Efectivo') {
+                $dineroRecibido = (float)($datos['dinero_recibido'] ?? 0);
+                $datos['cambio'] = max(0, $dineroRecibido - $datos['montototal']);
+            } else {
+                $datos['cambio'] = null;
+            }
+
+            // El estado inicial de una recepción nueva solo puede ser 'reservado' (pendiente de
+            // check-in) o 'en_curso' (check-in inmediato) — nunca 'finalizado'/'cancelado' desde
+            // el cliente; las transiciones posteriores van por el endpoint cambiarEstado()
+            if (!in_array($datos['estado'] ?? null, ['reservado', 'en_curso'], true)) {
+                $datos['estado'] = 'en_curso';
+            }
+
             // Crear la recepción
             $query = "INSERT INTO {$this->tabla} (
           idcliente, idhabitacion, idtarifa, idusuario,

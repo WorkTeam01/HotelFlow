@@ -410,7 +410,6 @@ class Producto
         } catch (PDOException $e) {
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            error_log("Error en getByNombre: " . $e->getMessage());
             return false;
         }
     }
@@ -424,11 +423,24 @@ class Producto
      */
     public function reducirStock($idproducto, $cantidad = 1)
     {
+        $transaccionPropia = !$this->conexion->inTransaction();
+
         try {
-            // Primero obtener el producto actual
-            $producto = $this->getById($idproducto);
+            if ($transaccionPropia) {
+                $this->conexion->beginTransaction();
+            }
+
+            // Bloquear la fila del producto para evitar condiciones de carrera
+            // (dos requests concurrentes leyendo el mismo stock antes de actualizarlo)
+            $stmtLock = $this->conexion->prepare("SELECT stock, stock_minimo FROM {$this->tabla} WHERE idproducto = :idproducto FOR UPDATE");
+            $stmtLock->bindParam(':idproducto', $idproducto, PDO::PARAM_INT);
+            $stmtLock->execute();
+            $producto = $stmtLock->fetch(PDO::FETCH_ASSOC);
 
             if (!$producto) {
+                if ($transaccionPropia) {
+                    $this->conexion->rollBack();
+                }
                 $this->lastError = "Producto no encontrado";
                 return false;
             }
@@ -438,6 +450,9 @@ class Producto
 
             // Verificar que hay stock suficiente
             if ($stockActual < $cantidad) {
+                if ($transaccionPropia) {
+                    $this->conexion->rollBack();
+                }
                 $this->lastError = "Stock insuficiente. Disponible: {$stockActual}, Requerido: {$cantidad}";
                 return false;
             }
@@ -445,7 +460,7 @@ class Producto
             // Reducir el stock
             $nuevoStock = $stockActual - $cantidad;
 
-            $query = "UPDATE {$this->tabla} SET 
+            $query = "UPDATE {$this->tabla} SET
                       stock = :nuevo_stock,
                       fechaactualizacion = NOW()
                       WHERE idproducto = :idproducto";
@@ -455,6 +470,10 @@ class Producto
             $stmt->bindParam(':idproducto', $idproducto, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
+                if ($transaccionPropia) {
+                    $this->conexion->commit();
+                }
+
                 // Verificar si el stock está por debajo del mínimo
                 $alertaStockBajo = ($nuevoStock <= $stockMinimo);
 
@@ -466,13 +485,18 @@ class Producto
                     'stock_minimo' => $stockMinimo
                 ];
             } else {
+                if ($transaccionPropia) {
+                    $this->conexion->rollBack();
+                }
                 $this->lastError = "Error al actualizar el stock";
                 return false;
             }
         } catch (PDOException $e) {
+            if ($transaccionPropia && $this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            error_log("Error en reducirStock: " . $e->getMessage());
             return false;
         }
     }
@@ -500,7 +524,6 @@ class Producto
         } catch (PDOException $e) {
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            error_log("Error en incrementarStock: " . $e->getMessage());
             return false;
         }
     }
@@ -536,9 +559,10 @@ class Producto
                 'mensaje' => $tieneStock ? 'Stock suficiente' : "Stock insuficiente. Disponible: {$stockActual}, Requerido: {$cantidadRequerida}"
             ];
         } catch (Exception $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
             return [
                 'tiene_stock' => false,
-                'mensaje' => 'Error al verificar stock: ' . $e->getMessage(),
+                'mensaje' => 'Ocurrió un error inesperado. Intente nuevamente.',
                 'stock_actual' => 0
             ];
         }
@@ -709,7 +733,6 @@ class Producto
         } catch (PDOException $e) {
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            error_log("Error en getByCodigo: " . $e->getMessage());
             return false;
         }
     }

@@ -4,9 +4,6 @@
  * Modelo Venta
  * 
  * Gestiona las operaciones relacionadas con las ventas en la base de datos
- * 
- * @author Sistema de Alojamiento
- * @version 1.0
  */
 
 require_once __DIR__ . '/../config/conexion.php';
@@ -219,9 +216,17 @@ class Venta
             }
 
             // Recalcular y persistir el total real de la venta a partir de los precios de la BD,
-            // no del total enviado por el cliente
-            $stmtTotal = $this->conexion->prepare("UPDATE {$this->tabla} SET totalventa = :total WHERE idventa = :id");
+            // no del total enviado por el cliente. El cambio también se recalcula a partir del
+            // pago recibido y el total real, no del cambio enviado por el cliente.
+            $pagoRecibido = (float)$datos['pagorecibido'];
+            if ($pagoRecibido < $totalCalculado) {
+                throw new PDOException("El pago recibido no cubre el total de la venta");
+            }
+            $cambioCalculado = $pagoRecibido - $totalCalculado;
+
+            $stmtTotal = $this->conexion->prepare("UPDATE {$this->tabla} SET totalventa = :total, cambio = :cambio WHERE idventa = :id");
             $stmtTotal->bindParam(':total', $totalCalculado, PDO::PARAM_STR);
+            $stmtTotal->bindParam(':cambio', $cambioCalculado, PDO::PARAM_STR);
             $stmtTotal->bindParam(':id', $idVenta, PDO::PARAM_INT);
             $stmtTotal->execute();
 
@@ -317,7 +322,8 @@ class Venta
             $stmt->bindParam(':id', $idProducto, PDO::PARAM_INT);
             return $stmt->execute();
         } catch (PDOException $e) {
-            throw new PDOException("Error al actualizar el stock del producto: " . $e->getMessage());
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            throw new PDOException("Error al actualizar el stock del producto");
         }
     }
 
@@ -476,8 +482,10 @@ class Venta
             $errores[] = "El método de pago no es válido";
         }
 
-        // Validar que el pago recibido cubra el total
-        if ($datos['pagorecibido'] < ($datos['totalventa'] - ($datos['cambio'] ?? 0))) {
+        // Validar que el pago recibido cubra el total. El total real se recalcula en crear()
+        // a partir de los precios de la BD; esta validación previa solo filtra el caso obvio
+        // en el que el pago no cubre el total tal como fue enviado por el cliente.
+        if ($datos['pagorecibido'] < $datos['totalventa']) {
             $errores[] = "El pago recibido no cubre el total de la venta";
         }
 
