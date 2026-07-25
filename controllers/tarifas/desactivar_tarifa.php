@@ -23,29 +23,38 @@ $controller = new TarifaController();
 $id_tarifa = null;
 
 // Validar método GET y parámetros
-if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id']) && isset($_GET['csrf_token']) && verifyCSRFToken($_GET['csrf_token'])) {
-    // Filtrar y validar los parámetros
-    $id_tarifa = filter_var($_GET['id'], FILTER_VALIDATE_INT);
-
-    // Verificar si los parámetros son válidos
-    if ($id_tarifa === false) {
-        $_SESSION['mensaje'] = 'Datos inválidos para cambiar el estado de la tarifa.';
-        $_SESSION['icono'] = 'error';
-        header('Location: ' . $URL . 'views/tarifas/index.php');
-        exit;
-    }
-
-    // Cambiar el estado de la tarifa
-    $resultado = $controller->cambiarEstadoTarifa($id_tarifa);
-    
-    // Guardar mensaje en sesión
-    $_SESSION['mensaje'] = $resultado['message'];
-    $_SESSION['icono'] = $resultado['icon'];
-} else {
-    // Acceso no permitido
+if ($_SERVER['REQUEST_METHOD'] != 'GET' || !isset($_GET['id'])) {
     $_SESSION['mensaje'] = 'Acción no permitida.';
     $_SESSION['icono'] = 'warning';
+    header('Location: ' . $URL . 'views/tarifas/index.php');
+    exit;
 }
+
+// Verificar token CSRF (rechazar si falta o es inválido)
+if (!isset($_GET['csrf_token']) || !verifyCSRFToken($_GET['csrf_token'])) {
+    $_SESSION['mensaje'] = 'Token de seguridad inválido o expirado.';
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $URL . 'views/tarifas/index.php');
+    exit;
+}
+
+// Filtrar y validar los parámetros
+$id_tarifa = filter_var($_GET['id'], FILTER_VALIDATE_INT);
+
+// Verificar si los parámetros son válidos
+if ($id_tarifa === false) {
+    $_SESSION['mensaje'] = 'Datos inválidos para cambiar el estado de la tarifa.';
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $URL . 'views/tarifas/index.php');
+    exit;
+}
+
+// Cambiar el estado de la tarifa
+$resultado = $controller->cambiarEstadoTarifa($id_tarifa);
+
+// Guardar mensaje en sesión
+$_SESSION['mensaje'] = $resultado['message'];
+$_SESSION['icono'] = $resultado['icon'];
 
 // Redirigir al listado de tarifas
 header('Location: ' . $URL . 'views/tarifas/index.php');

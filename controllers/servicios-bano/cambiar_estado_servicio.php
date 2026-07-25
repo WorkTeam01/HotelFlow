@@ -23,24 +23,33 @@ $controller = new ServicioBanoController();
 $id_servicio = null;
 $nuevo_estado = null;
 
-if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id']) && isset($_GET['nuevo_estado']) && isset($_GET['csrf_token']) && verifyCSRFToken($_GET['csrf_token'])) {
-    $id_servicio = filter_var($_GET['id'], FILTER_VALIDATE_INT);
-    $nuevo_estado = filter_var($_GET['nuevo_estado'], FILTER_SANITIZE_STRING);
-
-    if ($id_servicio === false || $nuevo_estado === '') {
-        $_SESSION['mensaje'] = 'Datos inválidos para cambiar el estado del servicio.';
-        $_SESSION['icono'] = 'error';
-        header('Location: ' . $URL . 'views/servicios-bano/index.php');
-        exit;
-    }
-
-    $resultado = $controller->cambiarEstadoServicio($id_servicio, $nuevo_estado);
-    $_SESSION['mensaje'] = $resultado['message'];
-    $_SESSION['icono'] = $resultado['icon'];
-} else {
+if ($_SERVER['REQUEST_METHOD'] != 'GET' || !isset($_GET['id']) || !isset($_GET['nuevo_estado'])) {
     $_SESSION['mensaje'] = 'Acción no permitida.';
     $_SESSION['icono'] = 'warning';
+    header('Location: ' . $URL . 'views/servicios-bano/index.php');
+    exit;
 }
+
+if (!isset($_GET['csrf_token']) || !verifyCSRFToken($_GET['csrf_token'])) {
+    $_SESSION['mensaje'] = 'Token de seguridad inválido o expirado.';
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $URL . 'views/servicios-bano/index.php');
+    exit;
+}
+
+$id_servicio = filter_var($_GET['id'], FILTER_VALIDATE_INT);
+$nuevo_estado = filter_var($_GET['nuevo_estado'], FILTER_SANITIZE_STRING);
+
+if ($id_servicio === false || $nuevo_estado === '') {
+    $_SESSION['mensaje'] = 'Datos inválidos para cambiar el estado del servicio.';
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $URL . 'views/servicios-bano/index.php');
+    exit;
+}
+
+$resultado = $controller->cambiarEstadoServicio($id_servicio, $nuevo_estado);
+$_SESSION['mensaje'] = $resultado['message'];
+$_SESSION['icono'] = $resultado['icon'];
 
 header('Location: ' . $URL . 'views/servicios-bano/index.php');
 exit;
