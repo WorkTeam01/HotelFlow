@@ -33,6 +33,13 @@ class Usuario
     private $lastError = '';
 
     /**
+     * Hash dummy usado para igualar el tiempo de password_verify() cuando el usuario
+     * no existe, evitando enumeración de usuarios por timing en el login.
+     * @var string
+     */
+    private const HASH_DUMMY = '$2y$10$abcdefghijklmnopqrstuuOeIrPNwr0zYQK5qJZ0YQK5qJZ0YQK5q';
+
+    /**
      * Constructor de la clase
      */
     public function __construct()
@@ -78,7 +85,9 @@ class Usuario
     public function getAll()
     {
         try {
-            $query = "SELECT * FROM {$this->tabla} ORDER BY idusuario DESC";
+            $query = "SELECT idusuario, nombre, apellidop, apellidom, tipodocumento, numdocumento,
+                      direccion, telefono, correo, cargo, imagen, estado
+                      FROM {$this->tabla} ORDER BY idusuario DESC";
             $stmt = $this->conexion->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -98,7 +107,9 @@ class Usuario
     public function getById($id)
     {
         try {
-            $query = "SELECT * FROM {$this->tabla} WHERE idusuario = :id";
+            $query = "SELECT idusuario, nombre, apellidop, apellidom, tipodocumento, numdocumento,
+                      direccion, telefono, correo, cargo, imagen, estado
+                      FROM {$this->tabla} WHERE idusuario = :id";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
@@ -467,7 +478,13 @@ class Usuario
 
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($usuario && password_verify($clave, $usuario['clave'])) {
+            // Siempre invocar password_verify(), aun si el usuario no existe, comparando
+            // contra un hash dummy para igualar el tiempo de respuesta y evitar enumeración
+            // de usuarios por timing.
+            $hash_para_verificar = $usuario['clave'] ?? self::HASH_DUMMY;
+            $credencial_valida = password_verify($clave, $hash_para_verificar);
+
+            if ($usuario && $credencial_valida) {
                 return $usuario;
             }
 
@@ -496,7 +513,11 @@ class Usuario
 
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($usuario && password_verify($clave, $usuario['clave'])) {
+            // Ver comentario en loginPorCorreo() sobre por qué siempre se invoca password_verify().
+            $hash_para_verificar = $usuario['clave'] ?? self::HASH_DUMMY;
+            $credencial_valida = password_verify($clave, $hash_para_verificar);
+
+            if ($usuario && $credencial_valida) {
                 return $usuario;
             }
 

@@ -82,9 +82,11 @@ class Conexion
                 error_log("Advertencia: No se pudo establecer correctamente la zona horaria de MariaDB. Solicitada: {$timezone_offset}, Actual: {$set_tz}");
             }
         } catch (Exception $e) {
-            die("Error de configuración: " . $e->getMessage());
+            error_log('[Conexion] ' . $e->getMessage());
+            die("Error de configuración. Contacte al administrador del sistema.");
         } catch (PDOException $e) {
-            die("Error de conexión a la base de datos: " . $e->getMessage());
+            error_log('[Conexion] ' . $e->getMessage());
+            die("Error de conexión a la base de datos. Contacte al administrador del sistema.");
         }
     }
 

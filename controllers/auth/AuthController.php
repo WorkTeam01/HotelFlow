@@ -105,48 +105,12 @@ class AuthController
             // Determinar si el identificador es un correo o un número de documento
             $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
 
-            // Verificar si el usuario existe (por correo o número de documento)
-            $usuario_existe = false;
-            $usuario_id = null;
-
-            if ($isEmail) {
-                // Es un correo electrónico
-                $usuario_existe = $this->modelo->existeCorreo($identifier);
-                if ($usuario_existe) {
-                    $usuario_id = $this->modelo->obtenerIdPorCorreo($identifier);
-                } else {
-                    $this->intentoLogin->registrar($identifier, $ip, false);
-                    $_SESSION['mensaje'] = 'Credenciales incorrectas';
-                    $_SESSION['icono'] = 'error';
-                    header('Location: ' . $_SERVER['HTTP_REFERER']);
-                    exit;
-                }
-            } else {
-                // Es un número de documento
-                $usuario_existe = $this->modelo->existeNumDocumento($identifier);
-                if ($usuario_existe) {
-                    $usuario_id = $this->modelo->obtenerIdPorNumDocumento($identifier);
-                } else {
-                    $this->intentoLogin->registrar($identifier, $ip, false);
-                    $_SESSION['mensaje'] = 'Credenciales incorrectas';
-                    $_SESSION['icono'] = 'error';
-                    header('Location: ' . $_SERVER['HTTP_REFERER']);
-                    exit;
-                }
-            }
-
-            // Verificar si el usuario está activo
-            $estado_usuario = $this->modelo->obtenerEstadoPorId($usuario_id);
-
-            if ($estado_usuario === 0) {
-                $this->intentoLogin->registrar($identifier, $ip, false);
-                $_SESSION['mensaje'] = 'Credenciales incorrectas';
-                $_SESSION['icono'] = 'error';
-                header('Location: ' . $_SERVER['HTTP_REFERER']);
-                exit;
-            }
-
-            // Verificar credenciales completas (identificador y contraseña)
+            // Verificar credenciales completas (identificador y contraseña). No se comprueba
+            // la existencia del usuario por separado antes de esto: hacerlo permitiría a un
+            // atacante distinguir "usuario no existe" de "contraseña incorrecta" por el tiempo
+            // de respuesta (se saltaría password_verify() para identificadores inexistentes).
+            // loginPorCorreo/loginPorNumDocumento siempre invocan password_verify() contra un
+            // hash (real o dummy) para que el tiempo de respuesta no filtre esa información.
             if ($isEmail) {
                 $usuario = $this->modelo->loginPorCorreo($identifier, $clave);
             } else {
