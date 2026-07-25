@@ -251,26 +251,20 @@ global $URL;
                             </li>
                         <?php endif; ?>
 
-                        <!-- Inventario y Ventas -->
+                        <!-- Productos -->
                         <?php if (
                             $authService->puedeAccederModulo($idusuariosesion, 'productos') ||
-                            $authService->puedeAccederModulo($idusuariosesion, 'categorias') ||
-                            $authService->puedeAccederModulo($idusuariosesion, 'nueva_venta') ||
-                            $authService->puedeAccederModulo($idusuariosesion, 'ventas') ||
-                            $authService->puedeAccederModulo($idusuariosesion, 'compras') ||
-                            $authService->puedeAccederModulo($idusuariosesion, 'nueva_compra') ||
-                            $authService->puedeAccederModulo($idusuariosesion, 'clientes')
+                            $authService->puedeAccederModulo($idusuariosesion, 'categorias')
                         ) : ?>
                             <li class="nav-item">
                                 <a href="#" class="nav-link">
-                                    <i class="nav-icon fas fa-store"></i>
+                                    <i class="nav-icon fas fa-box-open"></i>
                                     <p>
-                                        Inventario y Ventas
+                                        Productos
                                         <i class="right fas fa-angle-left"></i>
                                     </p>
                                 </a>
                                 <ul class="nav nav-treeview">
-                                    <!-- Productos -->
                                     <?php if ($authService->puedeAccederModulo($idusuariosesion, 'productos')) : ?>
                                         <li class="nav-item">
                                             <a href="<?= $URL; ?>views/productos" class="nav-link">
@@ -287,11 +281,28 @@ global $URL;
                                             </a>
                                         </li>
                                     <?php endif; ?>
+                                </ul>
+                            </li>
+                        <?php endif; ?>
 
-                                    <!-- Ventas -->
-                                    <?php if ($authService->puedeAccederModulo($idusuariosesion, 'nueva_venta')) : ?>
+                        <!-- Ventas -->
+                        <?php if (
+                            $authService->esAdministrador($idusuariosesion) ||
+                            $authService->puedeAccederModulo($idusuariosesion, 'ventas') ||
+                            $authService->puedeAccederModulo($idusuariosesion, 'clientes')
+                        ) : ?>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-cash-register"></i>
+                                    <p>
+                                        Ventas
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <?php if ($authService->esAdministrador($idusuariosesion) || $authService->puedeAccederModulo($idusuariosesion, 'ventas')) : ?>
                                         <li class="nav-item">
-                                            <a href="<?= $URL; ?>views/ventas/nueva.php" class="nav-link">
+                                            <a href="<?= $URL; ?>views/ventas/create.php" class="nav-link">
                                                 <i class="fas fa-cash-register nav-icon"></i>
                                                 <p>Nueva venta</p>
                                             </a>
@@ -311,8 +322,6 @@ global $URL;
                                             </a>
                                         </li>
                                     <?php endif; ?>
-
-                                    <!-- Clientes -->
                                     <?php if ($authService->puedeAccederModulo($idusuariosesion, 'clientes')) : ?>
                                         <li class="nav-item">
                                             <a href="<?= $URL; ?>views/clientes" class="nav-link">
@@ -321,23 +330,37 @@ global $URL;
                                             </a>
                                         </li>
                                     <?php endif; ?>
+                                </ul>
+                            </li>
+                        <?php endif; ?>
 
-                                    <!-- Compras -->
+                        <!-- Compras -->
+                        <?php if (
+                            $authService->esAdministrador($idusuariosesion) ||
+                            $authService->puedeAccederModulo($idusuariosesion, 'compras')
+                        ) : ?>
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-truck-loading"></i>
+                                    <p>
+                                        Compras
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <?php if ($authService->esAdministrador($idusuariosesion) || $authService->puedeAccederModulo($idusuariosesion, 'compras')) : ?>
+                                        <li class="nav-item">
+                                            <a href="<?= $URL; ?>views/compras/create.php" class="nav-link">
+                                                <i class="fas fa-shopping-cart nav-icon"></i>
+                                                <p>Nueva compra</p>
+                                            </a>
+                                        </li>
+                                    <?php endif; ?>
                                     <?php if ($authService->puedeAccederModulo($idusuariosesion, 'compras')) : ?>
                                         <li class="nav-item">
                                             <a href="<?= $URL; ?>views/compras" class="nav-link">
                                                 <i class="fas fa-truck-loading nav-icon"></i>
                                                 <p>Compras e ingresos</p>
-                                            </a>
-                                        </li>
-                                    <?php endif; ?>
-
-                                    <!-- Nueva Compra -->
-                                    <?php if ($authService->puedeAccederModulo($idusuariosesion, 'nueva_compra')) : ?>
-                                        <li class="nav-item">
-                                            <a href="<?= $URL; ?>views/compras/ingresar.php" class="nav-link">
-                                                <i class="fas fa-shopping-cart nav-icon"></i>
-                                                <p>Nueva compra</p>
                                             </a>
                                         </li>
                                     <?php endif; ?>
