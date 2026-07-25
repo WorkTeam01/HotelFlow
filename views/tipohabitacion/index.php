@@ -8,7 +8,7 @@ $idusuario = $_SESSION['usuario_id'] ?? '';
 $authService = new AuthorizationService();
 
 // Verificar permisos para el módulo de tipos de habitación
-if (!$authService->tieneAccesoCritico($idusuario, 'tipos_habitacion')) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'tipos_habitacion')) {
     $_SESSION['mensaje'] = 'No tiene permisos de administrador.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL);
