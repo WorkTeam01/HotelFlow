@@ -5,6 +5,42 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.1.0] - 2026-07-25
+
+Auditoría de seguridad y calidad de todo el proyecto (OWASP Top 10 + patrones documentados en CLAUDE.md), en tres fases (P1/P2/P3) más una re-auditoría final y pruebas manuales end-to-end.
+
+### Security
+
+- Patrón de autorización explícito (`esAdministrador() || puedeAccederModulo()`) extendido a las vistas de tarifas, tipohabitacion, ventas y compras (antes solo se aplicaba en controladores AJAX; las vistas usaban el método `tieneAccesoCritico()`, que exige admin AND permiso en vez de admin OR permiso), y a `controllers/limpieza/obtener_habitaciones_ajax.php`.
+- Scoping por usuario: un no-administrador en ventas/compras ahora solo ve sus propios registros en `index.php`, y `show.php` rechaza el acceso a registros ajenos (protección IDOR) en vez de mostrarlos por ID.
+- Eliminados los flujos de creación duplicados `views/ventas/nueva.php`/`controllers/ventas/nueva_venta.php` y `views/compras/ingresar.php`/`controllers/compras/ingresar_compra.php` (casi idénticos a `create.php`); el aislamiento por rol que buscaban ahora lo da el scoping de índice/detalle en vez de una vista de creación separada.
+- Condición de carrera cerrada en `Producto::reducirStock()` (ahora bloquea la fila con `SELECT ... FOR UPDATE`) y en `Compra::cancelar()` (mismo patrón que `Venta::anular()`).
+- `Recepcion::crear()` recalcula `montototal` en el servidor a partir de la tarifa real en BD (con `FOR UPDATE`) en vez de confiar en el total enviado por el cliente; el estado inicial se restringe a `reservado`/`en_curso`.
+- `Venta::crear()` recalcula `cambio` a partir del pago recibido y el total real, en vez de confiar en el valor enviado por el cliente; `Venta::validarDatos()` ya no deja que un `cambio` manipulado enmascare un pago insuficiente.
+- `Compra::validarDatos()` rechaza `preciocompra` negativo.
+- Eliminada la fuga de `PDOException::getMessage()` al cliente en `Venta::actualizarStockProducto()`, `Producto::verificarStock()` y `config/conexion.php` (ahora loguean con `error_log()` y devuelven/mueren con mensaje genérico).
+- `Usuario::getAll()`/`getById()` ya no exponen el hash de contraseña (`SELECT *` reemplazado por columnas explícitas).
+- Cerrado el side-channel de timing en el login: cuando el identificador no existe, ahora se ejecuta igual `password_verify()` contra un hash dummy, evitando enumeración de usuarios por tiempo de respuesta.
+- Cookies de sesión endurecidas (`HttpOnly`, `SameSite=Lax`, `Secure` cuando hay HTTPS) vía `session_set_cookie_params()` antes de `session_start()`.
+- CSRF cambiado de "aceptar si el token es válido" a "rechazar si es inválido o falta" en `desactivar_tarifa.php`, `desactivar_tipo_habitacion.php` y `cambiar_estado_servicio.php`, con mensaje de error explícito.
+- `DEBUG` de `.env` ahora controla `display_errors`/`error_reporting` vía `config/config.php`.
+- Eliminados `prueba_lector.php` y `prueba_producto_db.php`: archivos de desarrollo en la raíz del proyecto sin `requireLogin()` ni CSRF, que exponían precios/stock de productos y filtraban `getMessage()` crudo en JSON.
+
+### Fixed
+
+- `switch` sin `default` en el listado de ventas (`views/ventas/index.php`).
+- Regresión introducida durante la corrección de IDOR: `views/compras/show.php` incluía `header.php` (que ya emite HTML) antes de la validación de propiedad del registro, causando "headers already sent" en vez de redirigir cuando un no-administrador intentaba ver una compra ajena.
+- `views/compras/create.php` definía localmente `.d-none { display: none !important; }`, clase sin uso real en esa vista que chocaba con la utilidad homónima de Bootstrap y ocultaba permanentemente el texto "Sistema de Gestión" del navbar en esa página.
+
+### Changed
+
+- Sidebar reorganizado: el grupo "Inventario y Ventas" (8 enlaces) se dividió en tres grupos más pequeños y temáticos — **Productos**, **Ventas** y **Compras**.
+- Comentarios boilerplate `@author`/`@version` eliminados de `VentaController.php`, `Venta.php`, `UsuarioController.php` y `DashboardController.php`.
+
+### Docs
+
+- `CLAUDE.md`: documentado el patrón de scoping por usuario + protección IDOR para módulos con dueño; la regla de ordenar validaciones (incluyendo `header('Location: ...')`) antes de `include header.php`; la advertencia de no redefinir clases utilitarias de Bootstrap en `<style>` de página; y el criterio de tamaño para los grupos del sidebar.
+
 ## [1.0.4] - 2026-07-21
 
 ### Security
@@ -105,6 +141,8 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.1.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.4...1.1.0
+[1.0.4]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.3...1.0.4
 [1.0.3]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.2...1.0.3
 [1.0.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.0...1.0.1
