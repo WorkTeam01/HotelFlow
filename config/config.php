@@ -17,6 +17,11 @@ require_once __DIR__ . '/env.php';
 $timezone = env('TIMEZONE', 'America/La_Paz');
 date_default_timezone_set($timezone);
 
+// Mostrar errores de PHP solo si DEBUG está activo (nunca en producción)
+$debug = env('DEBUG', false);
+ini_set('display_errors', $debug ? '1' : '0');
+error_reporting($debug ? E_ALL : E_ALL & ~E_DEPRECATED & ~E_NOTICE);
+
 return [
     'database' => [
         'host' => env('DB_HOST'),

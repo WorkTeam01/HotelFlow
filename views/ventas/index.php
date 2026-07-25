@@ -8,7 +8,7 @@ $idusuario = $_SESSION['usuario_id'] ?? '';
 $authService = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
-if (!($authService->tieneAccesoCritico($idusuario, 'ventas'))) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'ventas')) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL);
@@ -21,7 +21,8 @@ $skip_chartjs = true;
 include_once '../layouts/header.php';
 
 $controller = new VentaController();
-$ventas = $controller->index();
+$esAdmin = $authService->esAdministrador($idusuario);
+$ventas = $esAdmin ? $controller->index() : $controller->obtenerPorUsuario($idusuario);
 $estadisticas = $controller->getEstadisticas();
 ?>
 
@@ -141,6 +142,10 @@ $estadisticas = $controller->getEstadisticas();
                                                 $clase_badge = 'badge-secondary';
                                                 $texto_metodo = 'Otro';
                                                 break;
+                                            default:
+                                                $clase_badge = 'badge-secondary';
+                                                $texto_metodo = htmlspecialchars($metodo_pago);
+                                                break;
                                         }
 
                                         // Estado de la venta
@@ -167,7 +172,7 @@ $estadisticas = $controller->getEstadisticas();
                                                         <i class="fas fa-eye"></i>
                                                     </a>
 
-                                                    <?php if ($venta['estado'] == 1) : ?>
+                                                    <?php if ($venta['estado'] == 1 && $esAdmin) : ?>
                                                         <button type="button" class="btn btn-danger btn-sm btn-anular-venta"
                                                             data-id="<?= $venta['idventa']; ?>"
                                                             data-titulo="VENT-<?= str_pad($venta['idventa'], 6, '0', STR_PAD_LEFT); ?>">
