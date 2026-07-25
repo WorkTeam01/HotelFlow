@@ -7,17 +7,12 @@ $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
-if (!($authService->tieneAccesoCritico($idusuario, 'compras'))) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'compras')) {
     $_SESSION['mensaje'] = 'No tiene permisos de administrador.';
     $_SESSION['icono'] = 'error';
     header('Location: index.php');
     exit;
 }
-
-// Incluir el encabezado
-$skip_select2 = true;
-$skip_chartjs = true;
-include_once '../layouts/header.php';
 
 // Verificar si se proporcionó un ID
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -40,6 +35,18 @@ if (!$compra) {
     header('Location: index.php');
     exit;
 }
+
+if (!$authService->esAdministrador($idusuario) && $compra['idusuario'] != $idusuario) {
+    $_SESSION['mensaje'] = 'No tiene permisos para ver esta compra.';
+    $_SESSION['icono'] = 'error';
+    header('Location: index.php');
+    exit;
+}
+
+// Incluir el encabezado
+$skip_select2 = true;
+$skip_chartjs = true;
+include_once '../layouts/header.php';
 
 // Determinar clase CSS según estado
 switch ($compra['estado']) {
@@ -119,7 +126,7 @@ switch ($compra['estado']) {
                         </ul>
 
                         <div class="d-flex justify-content-between">
-                            <?php if ($compra['estado'] == 'pendiente'): ?>
+                            <?php if ($compra['estado'] == 'pendiente' && $authService->esAdministrador($idusuario)): ?>
                                 <button class="btn btn-success btn-completar" data-id="<?= $compra['idcompra']; ?>">
                                     <i class="fas fa-check"></i> Completar
                                 </button>

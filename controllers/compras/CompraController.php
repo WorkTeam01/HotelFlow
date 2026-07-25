@@ -119,32 +119,6 @@ class CompraController
             return ['success' => false, 'message' => 'Error al registrar la compra: ' . $this->modelo->getLastError(), 'icon' => 'error', 'redirect' => 'create.php'];
         }
     }
-    public function guardarr()
-    {
-        // Verificar si se envió el formulario
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            return ['success' => false, 'message' => 'Acceso no permitido.', 'icon' => 'warning', 'redirect' => 'ingresar.php'];
-        }
-
-        // Preparar datos de la compra
-        $datos = $this->modelo->sanitizarDatos($this->prepararDatosCompra($_POST));
-
-        // Validar datos en el modelo
-        $errores = $this->modelo->validarDatos($datos);
-
-        if (!empty($errores)) {
-            return ['success' => false, 'message' => $errores[0], 'icon' => 'error', 'redirect' => 'ingresar.php'];
-        }
-
-        // Guardar compra usando el modelo
-        $idCompra = $this->modelo->crear($datos);
-        
-        if ($idCompra) {
-            return ['success' => true, 'message' => 'Compra registrada correctamente', 'icon' => 'success', 'redirect' => 'ingresar.php'];
-        } else {
-            return ['success' => false, 'message' => 'Error al registrar la compra: ' . $this->modelo->getLastError(), 'icon' => 'error', 'redirect' => 'ingresar.php'];
-        }
-    }
     /**
      * Muestra los detalles de una compra
      * 

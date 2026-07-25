@@ -242,7 +242,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <a href="<?= $URL; ?>views/compras/ingresar.php?producto=<?= $producto['idproducto'] ?>"
+                                            <a href="<?= $URL; ?>views/compras/create.php?producto=<?= $producto['idproducto'] ?>"
                                                 class="btn btn-xs btn-primary">
                                                 <i class="fas fa-plus"></i> Comprar
                                             </a>
@@ -262,7 +262,7 @@
                         </a>
                     </div>
                     <div class="col-12 col-sm-auto">
-                        <a href="<?= $URL; ?>views/compras/ingresar.php" class="btn btn-sm btn-primary w-100">
+                        <a href="<?= $URL; ?>views/compras/create.php" class="btn btn-sm btn-primary w-100">
                             <i class="fas fa-shopping-cart mr-1"></i> Nueva Compra
                         </a>
                     </div>

@@ -10,8 +10,8 @@ requireLogin();
 $idusuario_sesion = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
-if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($idusuario_sesion, 'compras')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para realizar esta acción.';
+if (!$auth->esAdministrador($idusuario_sesion)) {
+    $_SESSION['mensaje'] = 'Solo un administrador puede completar o cancelar una compra.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . 'views/compras/index.php');
     exit;

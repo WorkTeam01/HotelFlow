@@ -4,9 +4,6 @@
  * Controlador de Ventas
  * 
  * Gestiona las operaciones relacionadas con las ventas
- * 
- * @author Sistema de Alojamiento
- * @version 1.0
  */
 
 class VentaController
@@ -124,35 +121,6 @@ class VentaController
             return ['success' => true, 'message' => 'Venta registrada correctamente', 'icon' => 'success', 'redirect' => 'index.php'];
         } else {
             return ['success' => false, 'message' => 'Error al registrar la venta: ' . $this->modelo->getLastError(), 'icon' => 'error', 'redirect' => 'create.php'];
-        }
-    }
-    /**
-     * Procesa el formulario para guardar una nueva venta
-     */
-    public function guardara()
-    {
-        // Verificar si se envió el formulario
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            return ['success' => false, 'message' => 'Acceso no permitido.', 'icon' => 'warning', 'redirect' => 'nueva.php'];
-        }
-
-        // Preparar datos de la venta
-        $datos = $this->modelo->sanitizarDatos($this->prepararDatosVenta($_POST));
-
-        // Validar datos en el modelo
-        $errores = $this->modelo->validarDatos($datos);
-
-        if (!empty($errores)) {
-            return ['success' => false, 'message' => $errores[0], 'icon' => 'error', 'redirect' => 'nueva.php'];
-        }
-
-        // Guardar venta usando el modelo
-        $idVenta = $this->modelo->crear($datos);
-
-        if ($idVenta) {
-            return ['success' => true, 'message' => 'Venta registrada correctamente', 'icon' => 'success', 'redirect' => 'nueva.php'];
-        } else {
-            return ['success' => false, 'message' => 'Error al registrar la venta: ' . $this->modelo->getLastError(), 'icon' => 'error', 'redirect' => 'nueva.php'];
         }
     }
 

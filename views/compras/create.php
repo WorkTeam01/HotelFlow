@@ -8,7 +8,7 @@ $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar permisos
-if (!($authService->tieneAccesoCritico($idusuario, 'compras'))) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'compras')) {
     $_SESSION['mensaje'] = 'No tiene permisos de administrador.';
     $_SESSION['icono'] = 'error';
     header('Location: index.php');
@@ -179,10 +179,6 @@ $productos = $productoController->index();
 <!-- /.content -->
 
 <style>
-    .d-none {
-        display: none !important;
-    }
-
     .is-invalid {
         border-color: #dc3545;
     }

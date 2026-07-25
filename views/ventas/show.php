@@ -13,7 +13,7 @@ $idusuario = $_SESSION['usuario_id'] ?? '';
 $authService = new AuthorizationService();
 
 // Verificar permisos
-if (!($authService->tieneAccesoCritico($idusuario, 'ventas'))) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'ventas')) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . 'views/ventas/index.php');
@@ -35,6 +35,13 @@ $venta = $controller->ver($id);
 
 if (!$venta) {
     $_SESSION['mensaje'] = 'Venta no encontrada';
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $URL . 'views/ventas/index.php');
+    exit;
+}
+
+if (!$authService->esAdministrador($idusuario) && $venta['idusuario'] != $idusuario) {
+    $_SESSION['mensaje'] = 'No tiene permisos para ver esta venta.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . 'views/ventas/index.php');
     exit;
@@ -145,7 +152,7 @@ include_once '../layouts/header.php';
                                 <i class="fas fa-arrow-left"></i> Volver
                             </a>
 
-                            <?php if ($venta['estado'] == 1) : ?>
+                            <?php if ($venta['estado'] == 1 && $authService->esAdministrador($idusuario)) : ?>
                                 <button type="button" class="btn btn-danger btn-anular-venta"
                                     data-id="<?= $venta['idventa']; ?>"
                                     data-nombre="Venta #<?= str_pad($venta['idventa'], 6, '0', STR_PAD_LEFT); ?>">

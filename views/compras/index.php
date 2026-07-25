@@ -8,7 +8,7 @@ $idusuario = $_SESSION['usuario_id'] ?? '';
 $authService = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
-if (!($authService->tieneAccesoCritico($idusuario, 'compras'))) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'compras')) {
     $_SESSION['mensaje'] = 'No tiene permisos de administrador.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL);
@@ -21,7 +21,8 @@ $skip_chartjs = true;
 include_once '../layouts/header.php';
 
 $controller = new CompraController();
-$compras = $controller->index();
+$esAdmin = $authService->esAdministrador($idusuario);
+$compras = $esAdmin ? $controller->index() : $controller->obtenerPorUsuario($idusuario);
 ?>
 
 <!-- Content Header (Page header) -->
@@ -114,7 +115,7 @@ $compras = $controller->index();
                                                         <i class="fas fa-eye"></i>
                                                     </a>
 
-                                                    <?php if ($estado_actual == 'pendiente'): ?>
+                                                    <?php if ($estado_actual == 'pendiente' && $esAdmin): ?>
                                                         <button type="button" class="btn btn-success btn-sm btn-cambiar-estado"
                                                             data-id="<?= $compra['idcompra']; ?>"
                                                             data-accion="completar"
