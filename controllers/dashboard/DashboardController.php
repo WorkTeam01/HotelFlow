@@ -5,8 +5,6 @@
  * 
  * Gestiona la obtención de datos para el dashboard
  * 
- * @author Sistema de Alojamiento
- * @version 1.0
  */
 class DashboardController
 {

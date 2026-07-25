@@ -5,8 +5,6 @@
  * 
  * Gestiona las operaciones relacionadas con los usuarios
  * 
- * @author Sistema de Alojamiento
- * @version 1.1
  */
 
 // Incluir el servicio de imágenes
