@@ -16,6 +16,7 @@ if (!($authService->puedeAccederModulo($idusuario, 'usuarios')) && !($authServic
 
 // Incluir el encabezado
 $module_styles = ['usuarios/usuarios'];
+$module_scripts = ['usuarios/show-usuario'];
 $skip_datatables = true; // Esta vista no usa tabla; evita cargar DataTables/pdfmake/vfs_fonts (~2.8MB)
 $skip_select2 = true;
 $skip_chartjs = true;
@@ -126,6 +127,15 @@ if (!$usuario) {
                                 </span>
                             </li>
                         </ul>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="<?= $URL; ?>views/usuarios/update.php?id=<?= $usuario['idusuario']; ?>" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="<?= $URL; ?>views/usuarios/index.php" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -136,18 +146,12 @@ if (!$usuario) {
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
-                            <a href="<?= $URL; ?>views/usuarios/update.php?id=<?= $usuario['idusuario']; ?>" class="list-group-item list-group-item-action">
-                                <i class="fas fa-edit mr-2 text-warning"></i> Editar usuario
-                            </a>
                             <a href="#" id="btnCambiarEstado" class="list-group-item list-group-item-action"
                                 data-id="<?= $usuario['idusuario']; ?>"
                                 data-estado="<?= $usuario['estado']; ?>"
                                 data-nombre="<?= htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellidop']); ?>">
                                 <i class="fas <?= $usuario['estado'] == 1 ? 'fa-user-slash text-danger' : 'fa-user-check text-success'; ?> mr-2"></i>
                                 <span id="btnCambiarEstadoTexto"><?= $usuario['estado'] == 1 ? 'Desactivar usuario' : 'Activar usuario'; ?></span>
-                            </a>
-                            <a href="<?= $URL; ?>views/usuarios/index.php" class="list-group-item list-group-item-action">
-                                <i class="fas fa-list mr-2 text-primary"></i> Volver a la lista de usuarios
                             </a>
                         </div>
                     </div>
@@ -361,8 +365,6 @@ if (!$usuario) {
         </div>
     </div>
 </section>
-
-<script src="<?= $URL; ?>public/js/modules/usuarios/show-usuario.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

@@ -86,7 +86,7 @@ class Usuario
     {
         try {
             $query = "SELECT idusuario, nombre, apellidop, apellidom, tipodocumento, numdocumento,
-                      direccion, telefono, correo, cargo, imagen, estado
+                      direccion, telefono, correo, cargo, imagen, estado, fechacreacion, fechaactualizacion
                       FROM {$this->tabla} ORDER BY idusuario DESC";
             $stmt = $this->conexion->prepare($query);
             $stmt->execute();
@@ -108,7 +108,7 @@ class Usuario
     {
         try {
             $query = "SELECT idusuario, nombre, apellidop, apellidom, tipodocumento, numdocumento,
-                      direccion, telefono, correo, cargo, imagen, estado
+                      direccion, telefono, correo, cargo, imagen, estado, fechacreacion, fechaactualizacion
                       FROM {$this->tabla} WHERE idusuario = :id";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
