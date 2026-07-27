@@ -5,6 +5,26 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.1.2] - 2026-07-27
+
+Segunda pasada de limpieza de JS inline (sin excepción para constantes únicas), rediseño del login, y mapa de habitaciones por piso en el dashboard de administrador.
+
+### Changed
+
+- Eliminados los últimos 5 `<script>` inline que se habían dejado como "excepción aceptable" por declarar una sola constante (`compras/create.php`, `servicios-bano/create.php`, `productos/update.php`, `productos/show.php`, `productos/buscar_codigo.php`). El dato ahora se expone vía atributo `data-*` en el `<form>` o en el elemento disparador de la acción (`.cambiar-estado-link`, `#btnCambiarEstado`) y el JS lo lee con `dataset`/`JSON.parse` en vez de una constante global. CLAUDE.md actualizado: ya no existe ninguna excepción para JS inline en vistas con el layout compartido.
+- Rediseño visual y de accesibilidad de `views/login/login.php`: nuevo logo SVG (`public/img/hotel-logo.svg`, reemplaza `hotel.png` como favicon en `views/layouts/header.php`), fondo claro acorde a AdminLTE, paleta de colores centralizada en variables CSS (`--login-color-*`), validación de formulario con `aria-invalid`/`aria-describedby` en vez de solo la clase `is-invalid`, y eliminada la validación de longitud mínima de contraseña en el cliente (la valida el servidor).
+- Dashboard de administrador: nuevo "Mapa de Habitaciones" agrupado por piso (`DashboardController::ordenarHabitacionesPorPisoYNumero()` y `agruparHabitacionesPorPiso()`, expuestos como `habitaciones_por_piso` en `$stats`); el bloque `dashboardData` que antes se inyectaba vía `<script>` ahora se sirve como `data-dashboard` en `<div id="dashboard-admin-root">`.
+- Botones `data-card-widget="collapse"` de AdminLTE ganan `aria-label="Contraer/expandir panel"` en las vistas de dashboard para lectores de pantalla.
+
+### Fixed
+
+- `views/layouts/mensajes.php`: el toast de `$_SESSION['mensaje']`/`icono` interpolaba el mensaje directamente dentro de un string JS entre comillas dobles (`title: "<?php echo $respuesta; ?>"`); un mensaje de negocio con comillas (ej. `Producto "Rollo de papel" no configurado`, devuelto por `ServicioBanoController::validarDisponibilidadServicio()`) rompía el `<script>` con `SyntaxError: missing } after property list`, dejando la página sin JS funcional. Se cambió a `json_encode()` para ambos valores (`icon`/`title`), consistente con el resto del proyecto. Encontrado navegando `servicios-bano/create.php` con el producto "Rollo de papel" no configurado.
+- `public/js/modules/servicios-bano/create-servicios-bano.js`: accedía a `formServicioBano.dataset` sin comprobar que el formulario existiera; en la rama "Servicio No Disponible" de `servicios-bano/create.php` (sin `<form>`) esto lanzaba `TypeError: formServicioBano is null` y abortaba el script. Se agregó una verificación temprana (`if (!formServicioBano) return;`) — regresión introducida en el cambio de `data-*` de esta misma versión.
+
+### Docs
+
+- CLAUDE.md: reescrita la sección "No dejar JS inline en las vistas" para eliminar la excepción de "constante única" documentada en 1.1.1 y dejar constancia de que no queda ninguna excepción vigente.
+
 ## [1.1.1] - 2026-07-27
 
 Refactorización de JavaScript inline hacia módulos externos (`public/js/modules/`) en todas las vistas restantes, junto con una corrección de arquitectura MVC en el flujo de recepción (check-in).
@@ -161,6 +181,8 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.1.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.1...1.1.2
+[1.1.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.4...1.1.0
 [1.0.4]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.3...1.0.4
 [1.0.3]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.2...1.0.3
