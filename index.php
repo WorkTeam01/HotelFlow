@@ -33,9 +33,13 @@ if ($rol == 'Administrador') {
 } elseif ($rol == 'Recepcionista') {
     $stats = $dashboardController->getEstadisticasRecepcionista();
     $skip_chartjs = true;
+    $module_styles = ['dashboard/dashboard-recepcionista'];
+    $module_scripts = ['dashboard/dashboard-recepcionista'];
 } elseif ($rol == 'Limpieza') {
     $stats = $dashboardController->getEstadisticasLimpieza($currentUser['id']);
     $skip_chartjs = true;
+    $module_styles = ['dashboard/dashboard-limpieza'];
+    $module_scripts = ['dashboard/dashboard-limpieza'];
 } else {
     $stats = $dashboardController->getEstadisticasBasicas();
     $skip_chartjs = true;

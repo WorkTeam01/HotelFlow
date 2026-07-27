@@ -183,19 +183,8 @@ class Dashboard
 
                 // Agregar un tipo de servicio predeterminado (ya que no tenemos esa tabla)
                 $servicio['tipo_servicio'] = 'Baño completo';
-
-                // Asegurar que existe el campo id_bano
-                if (!isset($servicio['id_bano']) && isset($servicio['numero_bano'])) {
-                    // Consultar el ID del baño por su nombre
-                    $stmt = $this->conexion->prepare("
-                        SELECT idbano FROM bano WHERE nombre = :nombre LIMIT 1
-                    ");
-                    $stmt->bindParam(':nombre', $servicio['numero_bano']);
-                    $stmt->execute();
-                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                    $servicio['id_bano'] = $result ? $result['idbano'] : null;
-                }
             }
+            unset($servicio);
 
             return [
                 'total' => $total,
@@ -499,138 +488,182 @@ class Dashboard
 
         // Fecha actual
         $hoy = date('Y-m-d');
+        $fecha_inicio = date('Y-m-d', strtotime('-6 days', strtotime($hoy)));
 
         $labels = [];
         $fechas_completas = [];
-        $servicios_bano = [];
-        $equipajes = [];
-        $ocupacion = [];
-        $ingresos = [];
+        $fechas_rango = [];
 
-        // Generar fechas para los últimos días
+        // Generar fechas y etiquetas para los últimos días
         for ($i = 6; $i >= 0; $i--) {
             $fecha = date('Y-m-d', strtotime("-$i days", strtotime($hoy)));
             $dia_semana = date('w', strtotime($fecha));
 
-            // Guardar etiqueta y fecha completa
             $labels[] = $nombres_dias_cortos[$dia_semana];
             $fechas_completas[] = date('d/m/Y', strtotime($fecha));
-
-            try {
-                // Servicios de baño por día
-                $stmt = $this->conexion->prepare("
-                SELECT COUNT(*) as cantidad
-                FROM servicio_bano
-                WHERE DATE(fecha) = :fecha
-            ");
-                $stmt->bindParam(':fecha', $fecha);
-                $stmt->execute();
-                $servicios_bano[] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['cantidad'];
-            } catch (PDOException $e) {
-                $this->logError('Error en consulta de servicios de baño', $e);
-                $servicios_bano[] = 0;
-            }
-
-            try {
-                // Equipajes registrados por día
-                $stmt = $this->conexion->prepare("
-                SELECT COUNT(*) as cantidad
-                FROM almacenamiento_equipaje
-                WHERE DATE(fechaentrada) = :fecha
-            ");
-                $stmt->bindParam(':fecha', $fecha);
-                $stmt->execute();
-                $equipajes[] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['cantidad'];
-            } catch (PDOException $e) {
-                $this->logError('Error en consulta de equipajes', $e);
-                $equipajes[] = 0;
-            }
-
-            try {
-                // Ocupación de habitaciones por día
-                $stmt = $this->conexion->prepare("
-                SELECT COUNT(*) as cantidad
-                FROM recepcion
-                WHERE :fecha BETWEEN DATE(fechaentrada) AND DATE(COALESCE(fechasalida, fechasalida_prevista))
-                AND estado IN ('en_curso', 'reservado')
-            ");
-                $stmt->bindParam(':fecha', $fecha);
-                $stmt->execute();
-                $ocupacion[] = (int)$stmt->fetch(PDO::FETCH_ASSOC)['cantidad'];
-            } catch (PDOException $e) {
-                $this->logError('Error en consulta de ocupación', $e);
-                $ocupacion[] = 0;
-            }
-
-            // Cálculo de ingresos totales por día (todas las fuentes)
-            $ingreso_dia = 0;
-
-            try {
-                // 1. Ingresos de recepción
-                $stmt = $this->conexion->prepare("
-                SELECT COALESCE(SUM(montototal), 0) as total
-                FROM recepcion
-                WHERE DATE(fechacreacion) = :fecha 
-                AND estado IN ('en_curso', 'finalizado')
-            ");
-                $stmt->bindParam(':fecha', $fecha);
-                $stmt->execute();
-                $ingreso_recepcion = floatval($stmt->fetch(PDO::FETCH_ASSOC)['total']);
-                $ingreso_dia += $ingreso_recepcion;
-            } catch (PDOException $e) {
-                $this->logError('Error en consulta de ingresos de recepción', $e);
-            }
-
-            try {
-                // 2. Ingresos de servicios de baño
-                $stmt = $this->conexion->prepare("
-                SELECT COALESCE(SUM(total), 0) as total
-                FROM servicio_bano
-                WHERE DATE(fecha) = :fecha 
-                AND estado = 'finalizado'
-            ");
-                $stmt->bindParam(':fecha', $fecha);
-                $stmt->execute();
-                $ingreso_bano = floatval($stmt->fetch(PDO::FETCH_ASSOC)['total']);
-                $ingreso_dia += $ingreso_bano;
-            } catch (PDOException $e) {
-                $this->logError('Error en consulta de ingresos de servicios de baño', $e);
-            }
-
-            try {
-                // 3. Ingresos de almacenamiento de equipaje
-                $stmt = $this->conexion->prepare("
-                SELECT COALESCE(SUM(monto), 0) as total
-                FROM almacenamiento_equipaje
-                WHERE DATE(fechaentrada) = :fecha
-            ");
-                $stmt->bindParam(':fecha', $fecha);
-                $stmt->execute();
-                $ingreso_equipaje = floatval($stmt->fetch(PDO::FETCH_ASSOC)['total']);
-                $ingreso_dia += $ingreso_equipaje;
-            } catch (PDOException $e) {
-                $this->logError('Error en consulta de ingresos de equipaje', $e);
-            }
-
-            try {
-                // 4. Ingresos de ventas
-                $stmt = $this->conexion->prepare("
-                SELECT COALESCE(SUM(totalventa), 0) as total
-                FROM venta
-                WHERE DATE(fechaventa) = :fecha
-                AND estado = 1
-            ");
-                $stmt->bindParam(':fecha', $fecha);
-                $stmt->execute();
-                $ingreso_ventas = floatval($stmt->fetch(PDO::FETCH_ASSOC)['total']);
-                $ingreso_dia += $ingreso_ventas;
-            } catch (PDOException $e) {
-                $this->logError('Error en consulta de ingresos de ventas', $e);
-            }
-
-            // Añadir el ingreso total del día al array
-            $ingresos[] = $ingreso_dia;
+            $fechas_rango[] = $fecha;
         }
+
+        // Inicializar cada serie en 0 para todas las fechas del rango
+        $servicios_bano = array_fill_keys($fechas_rango, 0);
+        $equipajes = array_fill_keys($fechas_rango, 0);
+        $ocupacion = array_fill_keys($fechas_rango, 0);
+        $ingresos = array_fill_keys($fechas_rango, 0.0);
+
+        try {
+            // Servicios de baño por día (una sola consulta agrupada)
+            $stmt = $this->conexion->prepare("
+                SELECT DATE(fecha) as dia, COUNT(*) as cantidad
+                FROM servicio_bano
+                WHERE DATE(fecha) BETWEEN :fecha_inicio AND :fecha_fin
+                GROUP BY DATE(fecha)
+            ");
+            $stmt->bindParam(':fecha_inicio', $fecha_inicio);
+            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+                if (isset($servicios_bano[$fila['dia']])) {
+                    $servicios_bano[$fila['dia']] = (int)$fila['cantidad'];
+                }
+            }
+        } catch (PDOException $e) {
+            $this->logError('Error en consulta de servicios de baño', $e);
+        }
+
+        try {
+            // Equipajes registrados por día
+            $stmt = $this->conexion->prepare("
+                SELECT DATE(fechaentrada) as dia, COUNT(*) as cantidad
+                FROM almacenamiento_equipaje
+                WHERE DATE(fechaentrada) BETWEEN :fecha_inicio AND :fecha_fin
+                GROUP BY DATE(fechaentrada)
+            ");
+            $stmt->bindParam(':fecha_inicio', $fecha_inicio);
+            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+                if (isset($equipajes[$fila['dia']])) {
+                    $equipajes[$fila['dia']] = (int)$fila['cantidad'];
+                }
+            }
+        } catch (PDOException $e) {
+            $this->logError('Error en consulta de equipajes', $e);
+        }
+
+        try {
+            // Ocupación de habitaciones por día: se calcula día a día en PHP
+            // porque cada fecha del rango se compara contra un intervalo
+            // (fechaentrada..fechasalida) por fila, no agrupable con GROUP BY.
+            $stmt = $this->conexion->prepare("
+                SELECT DATE(fechaentrada) as entrada,
+                       DATE(COALESCE(fechasalida, fechasalida_prevista)) as salida
+                FROM recepcion
+                WHERE estado IN ('en_curso', 'reservado')
+                AND DATE(fechaentrada) <= :fecha_fin
+                AND DATE(COALESCE(fechasalida, fechasalida_prevista)) >= :fecha_inicio
+            ");
+            $stmt->bindParam(':fecha_inicio', $fecha_inicio);
+            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+                foreach ($fechas_rango as $fecha) {
+                    if ($fecha >= $fila['entrada'] && $fecha <= $fila['salida']) {
+                        $ocupacion[$fecha]++;
+                    }
+                }
+            }
+        } catch (PDOException $e) {
+            $this->logError('Error en consulta de ocupación', $e);
+        }
+
+        try {
+            // 1. Ingresos de recepción por día
+            $stmt = $this->conexion->prepare("
+                SELECT DATE(fechacreacion) as dia, COALESCE(SUM(montototal), 0) as total
+                FROM recepcion
+                WHERE DATE(fechacreacion) BETWEEN :fecha_inicio AND :fecha_fin
+                AND estado IN ('en_curso', 'finalizado')
+                GROUP BY DATE(fechacreacion)
+            ");
+            $stmt->bindParam(':fecha_inicio', $fecha_inicio);
+            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+                if (isset($ingresos[$fila['dia']])) {
+                    $ingresos[$fila['dia']] += floatval($fila['total']);
+                }
+            }
+        } catch (PDOException $e) {
+            $this->logError('Error en consulta de ingresos de recepción', $e);
+        }
+
+        try {
+            // 2. Ingresos de servicios de baño por día
+            $stmt = $this->conexion->prepare("
+                SELECT DATE(fecha) as dia, COALESCE(SUM(total), 0) as total
+                FROM servicio_bano
+                WHERE DATE(fecha) BETWEEN :fecha_inicio AND :fecha_fin
+                AND estado = 'finalizado'
+                GROUP BY DATE(fecha)
+            ");
+            $stmt->bindParam(':fecha_inicio', $fecha_inicio);
+            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+                if (isset($ingresos[$fila['dia']])) {
+                    $ingresos[$fila['dia']] += floatval($fila['total']);
+                }
+            }
+        } catch (PDOException $e) {
+            $this->logError('Error en consulta de ingresos de servicios de baño', $e);
+        }
+
+        try {
+            // 3. Ingresos de almacenamiento de equipaje por día
+            $stmt = $this->conexion->prepare("
+                SELECT DATE(fechaentrada) as dia, COALESCE(SUM(monto), 0) as total
+                FROM almacenamiento_equipaje
+                WHERE DATE(fechaentrada) BETWEEN :fecha_inicio AND :fecha_fin
+                GROUP BY DATE(fechaentrada)
+            ");
+            $stmt->bindParam(':fecha_inicio', $fecha_inicio);
+            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+                if (isset($ingresos[$fila['dia']])) {
+                    $ingresos[$fila['dia']] += floatval($fila['total']);
+                }
+            }
+        } catch (PDOException $e) {
+            $this->logError('Error en consulta de ingresos de equipaje', $e);
+        }
+
+        try {
+            // 4. Ingresos de ventas por día
+            $stmt = $this->conexion->prepare("
+                SELECT DATE(fechaventa) as dia, COALESCE(SUM(totalventa), 0) as total
+                FROM venta
+                WHERE DATE(fechaventa) BETWEEN :fecha_inicio AND :fecha_fin
+                AND estado = 1
+                GROUP BY DATE(fechaventa)
+            ");
+            $stmt->bindParam(':fecha_inicio', $fecha_inicio);
+            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+                if (isset($ingresos[$fila['dia']])) {
+                    $ingresos[$fila['dia']] += floatval($fila['total']);
+                }
+            }
+        } catch (PDOException $e) {
+            $this->logError('Error en consulta de ingresos de ventas', $e);
+        }
+
+        // Reordenar las series por fecha (los arrays asociativos ya siguen $fechas_rango)
+        $servicios_bano = array_values($servicios_bano);
+        $equipajes = array_values($equipajes);
+        $ocupacion = array_values($ocupacion);
+        $ingresos = array_values($ingresos);
 
         // Verificar si hay al menos algunos datos reales
         $hay_datos = false;
@@ -850,17 +883,16 @@ class Dashboard
 
             // Habitaciones por estado
             $estados = ['disponible', 'ocupada', 'limpieza', 'mantenimiento'];
-            $por_estado = [];
+            $por_estado = array_fill_keys($estados, 0);
 
-            foreach ($estados as $estado) {
-                $stmt = $this->conexion->prepare("
-                SELECT COUNT(*) as cantidad 
-                FROM habitaciones 
-                WHERE estado = :estado
+            $stmt = $this->conexion->prepare("
+                SELECT estado, COUNT(*) as cantidad
+                FROM habitaciones
+                GROUP BY estado
             ");
-                $stmt->bindParam(':estado', $estado);
-                $stmt->execute();
-                $por_estado[$estado] = $stmt->fetch(PDO::FETCH_ASSOC)['cantidad'];
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+                $por_estado[$fila['estado']] = $fila['cantidad'];
             }
 
             // Ocupación actual
@@ -925,17 +957,16 @@ class Dashboard
 
             // Baños por estado
             $estados = ['disponible', 'ocupada', 'mantenimiento', 'fuera_servicio', 'limpieza'];
-            $por_estado = [];
+            $por_estado = array_fill_keys($estados, 0);
 
-            foreach ($estados as $estado) {
-                $stmt = $this->conexion->prepare("
-                SELECT COUNT(*) as cantidad 
-                FROM bano 
-                WHERE estado = :estado
+            $stmt = $this->conexion->prepare("
+                SELECT estado, COUNT(*) as cantidad
+                FROM bano
+                GROUP BY estado
             ");
-                $stmt->bindParam(':estado', $estado);
-                $stmt->execute();
-                $por_estado[$estado] = $stmt->fetch(PDO::FETCH_ASSOC)['cantidad'];
+            $stmt->execute();
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+                $por_estado[$fila['estado']] = $fila['cantidad'];
             }
 
             // Todos los baños con su estado

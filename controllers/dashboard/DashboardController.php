@@ -67,8 +67,11 @@ class DashboardController
         // Datos para gráficos de actividad
         $stats['graficos'] = $this->modelo->getDatosGraficos();
 
-        // Obtener todas las habitaciones con su estado
-        $stats['lista_habitaciones'] = $this->modelo->getHabitacionesConEstado();
+        // Obtener todas las habitaciones con su estado, ordenadas por piso y número
+        $stats['lista_habitaciones'] = self::ordenarHabitacionesPorPisoYNumero(
+            $this->modelo->getHabitacionesConEstado()
+        );
+        $stats['habitaciones_por_piso'] = self::agruparHabitacionesPorPiso($stats['lista_habitaciones']);
 
         // Reemplazamos el método individual por uno que trae todos los ingresos
         $stats['ingresos_totales'] = $this->modelo->getIngresosTotalesHoy();
@@ -150,5 +153,57 @@ class DashboardController
         $stats['productos'] = $this->modelo->getEstadisticasProductos();
 
         return $stats;
+    }
+
+    /**
+     * Ordena una lista de habitaciones por piso y, dentro de cada piso, por número
+     *
+     * @param array $habitaciones Lista de habitaciones (con 'idpiso' y 'numero')
+     * @return array Lista ordenada
+     */
+    public static function ordenarHabitacionesPorPisoYNumero($habitaciones)
+    {
+        usort($habitaciones, function ($a, $b) {
+            if ($a['idpiso'] != $b['idpiso']) {
+                return $a['idpiso'] - $b['idpiso'];
+            }
+
+            $numA = preg_replace('/[^0-9]/', '', $a['numero']);
+            $numB = preg_replace('/[^0-9]/', '', $b['numero']);
+
+            if (is_numeric($numA) && is_numeric($numB)) {
+                return intval($numA) - intval($numB);
+            }
+
+            return strcmp($a['numero'], $b['numero']);
+        });
+
+        return $habitaciones;
+    }
+
+    /**
+     * Agrupa una lista de habitaciones por piso
+     *
+     * @param array $habitaciones Lista de habitaciones (con 'idpiso' y 'piso_nombre')
+     * @return array Habitaciones agrupadas por idpiso
+     */
+    public static function agruparHabitacionesPorPiso($habitaciones)
+    {
+        $habitaciones_por_piso = [];
+
+        foreach ($habitaciones as $habitacion) {
+            $piso_id = $habitacion['idpiso'];
+
+            if (!isset($habitaciones_por_piso[$piso_id])) {
+                $habitaciones_por_piso[$piso_id] = [
+                    'nombre' => $habitacion['piso_nombre'],
+                    'habitaciones' => []
+                ];
+            }
+
+            $habitaciones_por_piso[$piso_id]['habitaciones'][] = $habitacion;
+        }
+
+        return $habitaciones_por_piso;
     }
 }

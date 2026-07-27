@@ -1,5 +1,33 @@
 <!-- Dashboard Principal del Administrador - Actualizado según requerimientos -->
 
+<?php
+$dashboard_data = [
+    'habEstadisticas' => [
+        'total' => $stats['habitaciones']['ocupacion']['total'] ?? 0,
+        'disponibles' => $stats['habitaciones']['por_estado']['disponible'] ?? 0,
+        'ocupadas' => $stats['habitaciones']['por_estado']['ocupada'] ?? 0,
+        'mantenimiento' => $stats['habitaciones']['por_estado']['mantenimiento'] ?? 0,
+        'limpieza' => $stats['habitaciones']['por_estado']['limpieza'] ?? 0,
+    ],
+    'graficos' => [
+        'labels' => !empty($stats['graficos']['labels']) ? $stats['graficos']['labels'] : ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+        'fechasCompletas' => !empty($stats['graficos']['fechas_completas']) ? $stats['graficos']['fechas_completas'] : ['24/06/2025', '25/06/2025', '26/06/2025', '27/06/2025', '28/06/2025', '29/06/2025', '30/06/2025'],
+        'serviciosBano' => !empty($stats['graficos']['servicios_bano']) ? $stats['graficos']['servicios_bano'] : [5, 7, 3, 8, 6, 9, 5],
+        'equipajes' => !empty($stats['graficos']['equipajes']) ? $stats['graficos']['equipajes'] : [2, 3, 1, 5, 2, 6, 3],
+        'ocupacion' => !empty($stats['graficos']['ocupacion']) ? $stats['graficos']['ocupacion'] : [8, 10, 12, 9, 15, 18, 14],
+        'ingresos' => !empty($stats['graficos']['ingresos']) ? $stats['graficos']['ingresos'] : [1000, 1500, 800, 1200, 2000, 2500, 1800],
+        'banos' => [
+            'disponibles' => $stats['banos']['disponibles'] ?? 5,
+            'mantenimiento' => $stats['banos']['mantenimiento'] ?? 2,
+            'fuera_servicio' => $stats['banos']['fuera_servicio'] ?? 1,
+        ],
+    ],
+    'habitaciones' => $stats['lista_habitaciones'] ?? [],
+    'habitacionesPorPiso' => $stats['habitaciones_por_piso'] ?? [],
+];
+?>
+<div id="dashboard-admin-root" data-module="dashboard-admin" data-dashboard="<?= htmlspecialchars(json_encode($dashboard_data), ENT_QUOTES) ?>"></div>
+
 <!-- Resumen de Estadísticas Generales -->
 <div class="row">
     <div class="col-lg-3 col-md-6 col-12">
@@ -91,7 +119,7 @@
                         <button type="button" class="btn btn-outline-danger metrica-btn" data-metrica="ingresos">Ingresos</button>
                     </div>
                     <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer/expandir panel">
                             <i class="fas fa-minus"></i>
                         </button>
                     </div>
@@ -119,7 +147,7 @@
             <div class="card-header border-0">
                 <h3 class="card-title">Métricas Clave</h3>
                 <div class="card-tools">
-                    <button type="button" class="btn btn-sm btn-tool" data-card-widget="collapse">
+                    <button type="button" class="btn btn-sm btn-tool" data-card-widget="collapse" aria-label="Contraer/expandir panel">
                         <i class="fas fa-minus"></i>
                     </button>
                 </div>
@@ -171,7 +199,7 @@
             <div class="card-header border-0">
                 <h3 class="card-title">Estado de Baños</h3>
                 <div class="card-tools">
-                    <button type="button" class="btn btn-sm btn-tool" data-card-widget="collapse">
+                    <button type="button" class="btn btn-sm btn-tool" data-card-widget="collapse" aria-label="Contraer/expandir panel">
                         <i class="fas fa-minus"></i>
                     </button>
                 </div>
@@ -197,7 +225,7 @@
                     Productos con Stock Bajo
                 </h3>
                 <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer/expandir panel">
                         <i class="fas fa-minus"></i>
                     </button>
                 </div>
@@ -280,7 +308,7 @@
                     Servicios de Baño Recientes
                 </h3>
                 <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer/expandir panel">
                         <i class="fas fa-minus"></i>
                     </button>
                 </div>
@@ -373,7 +401,7 @@
                     Estado de Habitaciones
                 </h3>
                 <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer/expandir panel">
                         <i class="fas fa-minus"></i>
                     </button>
                 </div>
@@ -473,7 +501,7 @@
                     Acciones Rápidas
                 </h3>
                 <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer/expandir panel">
                         <i class="fas fa-minus"></i>
                     </button>
                 </div>
@@ -498,7 +526,7 @@
                         </div>
                         <span class="badge badge-warning badge-pill"><i class="fas fa-arrow-right"></i></span>
                     </a>
-                    <a href="<?= $URL; ?>views/personas/create.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <a href="<?= $URL; ?>views/clientes/create.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                         <div>
                             <i class="fas fa-user-plus text-primary mr-2"></i> Nuevo Cliente
                         </div>
@@ -522,7 +550,7 @@
                     Equipo de Trabajo
                 </h3>
                 <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer/expandir panel">
                         <i class="fas fa-minus"></i>
                     </button>
                 </div>
@@ -540,7 +568,7 @@
                                 <li class="list-group-item">
                                     <div class="d-flex align-items-center">
                                         <img src="<?= $URL; ?>public/uploads/usuarios/<?= $usuario['imagen'] ?? 'user_default.jpg' ?>"
-                                            alt="User Image" class="img-circle mr-3"
+                                            alt="Foto de <?= htmlspecialchars($usuario['nombre']) ?>" class="img-circle mr-3"
                                             style="width: 40px; height: 40px; object-fit: cover;">
                                         <div>
                                             <div class="font-weight-bold"><?= htmlspecialchars($usuario['nombre']) ?></div>
@@ -560,7 +588,7 @@
                             <?php foreach (array_slice($stats['usuarios']['ultimos'], 0, 8) as $usuario): ?>
                                 <li>
                                     <img src="<?= $URL; ?>public/uploads/usuarios/<?= $usuario['imagen'] ?? 'user_default.jpg' ?>"
-                                        alt="User Image" class="img-circle elevation-1"
+                                        alt="Foto de <?= htmlspecialchars($usuario['nombre']) ?>" class="img-circle elevation-1"
                                         style="width: 60px; height: 60px; object-fit: cover;">
                                     <a class="users-list-name" href="<?= $URL; ?>views/usuarios/show.php?id=<?= $usuario['idusuario'] ?>">
                                         <?= htmlspecialchars($usuario['nombre']) ?>
@@ -588,74 +616,3 @@
         </div>
     </div>
 </div>
-
-<!-- Datos para JavaScript -->
-<script>
-    // Variables globales para el dashboard
-    var dashboardData = {
-        habEstadisticas: {
-            total: <?= $stats['habitaciones']['ocupacion']['total'] ?? 0 ?>,
-            disponibles: <?= $stats['habitaciones']['por_estado']['disponible'] ?? 0 ?>,
-            ocupadas: <?= $stats['habitaciones']['por_estado']['ocupada'] ?? 0 ?>,
-            mantenimiento: <?= $stats['habitaciones']['por_estado']['mantenimiento'] ?? 0 ?>,
-            limpieza: <?= $stats['habitaciones']['por_estado']['limpieza'] ?? 0 ?>
-        },
-        // Datos para gráficos - Usar datos de prueba si los reales están vacíos
-        graficos: {
-            labels: <?= !empty($stats['graficos']['labels']) ? json_encode($stats['graficos']['labels']) : '["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]' ?>,
-            fechasCompletas: <?= !empty($stats['graficos']['fechas_completas']) ? json_encode($stats['graficos']['fechas_completas']) : '["24/06/2025", "25/06/2025", "26/06/2025", "27/06/2025", "28/06/2025", "29/06/2025", "30/06/2025"]' ?>,
-            serviciosBano: <?= !empty($stats['graficos']['servicios_bano']) ? json_encode($stats['graficos']['servicios_bano']) : '[5, 7, 3, 8, 6, 9, 5]' ?>,
-            equipajes: <?= !empty($stats['graficos']['equipajes']) ? json_encode($stats['graficos']['equipajes']) : '[2, 3, 1, 5, 2, 6, 3]' ?>,
-            ocupacion: <?= !empty($stats['graficos']['ocupacion']) ? json_encode($stats['graficos']['ocupacion']) : '[8, 10, 12, 9, 15, 18, 14]' ?>,
-            ingresos: <?= !empty($stats['graficos']['ingresos']) ? json_encode($stats['graficos']['ingresos']) : '[1000, 1500, 800, 1200, 2000, 2500, 1800]' ?>,
-            // Agregar datos para el gráfico de baños
-            banos: {
-                disponibles: <?= $stats['banos']['disponibles'] ?? 5 ?>,
-                mantenimiento: <?= $stats['banos']['mantenimiento'] ?? 2 ?>,
-                fuera_servicio: <?= $stats['banos']['fuera_servicio'] ?? 1 ?>
-            }
-        }
-    };
-
-    <?php
-    // Ordenar habitaciones por piso y luego por número
-    usort($stats['lista_habitaciones'], function ($a, $b) {
-        // Primero ordenar por piso
-        if ($a['idpiso'] != $b['idpiso']) {
-            return $a['idpiso'] - $b['idpiso'];
-        }
-
-        // Si son del mismo piso, ordenar por número de habitación
-        // Extraer números para comparación numérica
-        $numA = preg_replace('/[^0-9]/', '', $a['numero']);
-        $numB = preg_replace('/[^0-9]/', '', $b['numero']);
-
-        if (is_numeric($numA) && is_numeric($numB)) {
-            return intval($numA) - intval($numB);
-        }
-
-        // Si no son números o hay un problema, ordenar como texto
-        return strcmp($a['numero'], $b['numero']);
-    });
-
-    // Agrupar habitaciones por piso
-    $habitaciones_por_piso = [];
-    foreach ($stats['lista_habitaciones'] as $habitacion) {
-        $piso_id = $habitacion['idpiso'];
-        $piso_nombre = $habitacion['piso_nombre'];
-
-        if (!isset($habitaciones_por_piso[$piso_id])) {
-            $habitaciones_por_piso[$piso_id] = [
-                'nombre' => $piso_nombre,
-                'habitaciones' => []
-            ];
-        }
-
-        $habitaciones_por_piso[$piso_id]['habitaciones'][] = $habitacion;
-    }
-    ?>
-
-    // Datos de habitaciones para JavaScript
-    dashboardData.habitaciones = <?= json_encode($stats['lista_habitaciones'] ?? []) ?>;
-    dashboardData.habitacionesPorPiso = <?= json_encode($habitaciones_por_piso ?? []) ?>;
-</script>

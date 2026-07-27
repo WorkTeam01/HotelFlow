@@ -9,6 +9,8 @@
 let actividadChart;
 let metricaActual = 'servicios_equipajes';
 
+const dashboardData = JSON.parse(document.getElementById('dashboard-admin-root').dataset.dashboard);
+
 $(document).ready(function () {
     // Al final de la función
     initializeHabitacionTooltips();
