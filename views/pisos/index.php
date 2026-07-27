@@ -24,6 +24,7 @@ if (!$auth->esAdministrador($idusuario)) {
 
 // Incluir el encabezado después de verificar permisos
 $skip_chartjs = true;
+$module_scripts = ['pisos/index-pisos'];
 include_once '../layouts/header.php';
 
 $controller = new PisoController();
@@ -222,5 +223,3 @@ include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
 
-<!-- Script para la gestión de pisos -->
-<script src="<?= $URL; ?>public/js/modules/pisos/index-pisos.js"></script>

@@ -20,6 +20,7 @@ $categorias = $categoriaController->index();
 
 // Incluir el encabezado
 $skip_chartjs = true;
+$module_scripts = ['productos/create-producto'];
 include_once '../layouts/header.php';
 ?>
 
@@ -516,8 +517,6 @@ include_once '../layouts/header.php';
     </div>
 </section>
 <!-- /.content -->
-
-<script src="<?= $URL; ?>public/js/modules/productos/create-producto.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

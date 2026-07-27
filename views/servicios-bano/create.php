@@ -20,6 +20,7 @@ if (!($auth->puedeAccederModulo($idusuario, 'servicios_bano'))) {
 
 // Agregar los estilos específicos para este módulo
 $module_styles = ['servicios-bano/servicios-bano'];
+$module_scripts = ['servicios-bano/create-servicios-bano'];
 
 // Incluir el encabezado
 $skip_chartjs = true;
@@ -174,7 +175,7 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
                     </div>
                     <!-- /.card-header -->
                     <!-- form start -->
-                    <form action="<?= $URL; ?>controllers/servicios-bano/crear_servicio.php" method="POST" id="formServicioBano">
+                    <form action="<?= $URL; ?>controllers/servicios-bano/crear_servicio.php" method="POST" id="formServicioBano"<?= isset($stockBajoActual) ? ' data-stock-bajo="' . (int)$stockBajoActual . '"' : '' ?>>
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <div class="row">
@@ -377,13 +378,6 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
     <!-- /.container-fluid -->
 </section>
 <!-- /.content -->
-
-<?php if (isset($stockBajoActual)) : ?>
-<script>
-    window.stockBajoActual = <?= (int)$stockBajoActual; ?>;
-</script>
-<?php endif; ?>
-<script src="<?= $URL; ?>public/js/modules/servicios-bano/create-servicios-bano.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

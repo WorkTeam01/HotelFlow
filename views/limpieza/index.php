@@ -24,6 +24,7 @@ if (!($auth->puedeAccederModulo($idusuario, 'limpieza'))) {
 
 // Incluir el encabezado después de verificar permisos
 $skip_chartjs = true;
+$module_scripts = ['limpieza/index-limpieza'];
 include_once '../layouts/header.php';
 
 // En el controlador que carga la vista index.php
@@ -343,8 +344,6 @@ $estadisticas = $controller->getEstadisticas();
         </div>
     </div>
 </div>
-
-<script src="<?= $URL; ?>public/js/modules/limpieza/index-limpieza.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

@@ -28,6 +28,7 @@ if (!($auth->puedeAccederModulo($idusuario, 'servicios_bano'))) {
 // Incluir el encabezado
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['servicios-bano/show-servicios-bano'];
 include_once '../layouts/header.php';
 
 // Instanciar el controlador y obtener los datos del servicio
@@ -225,8 +226,6 @@ if ($servicio['estado'] == 1) {
         </div>
     </div>
 </section>
-
-<script src="<?= $URL; ?>public/js/modules/servicios-bano/show-servicios-bano.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

@@ -53,7 +53,7 @@
                     <div class="input-group input-group-sm" style="width: 250px;">
                         <input type="text" id="buscarHabitacionPendiente" class="form-control float-right" placeholder="Buscar habitación">
                         <div class="input-group-append">
-                            <button type="submit" class="btn btn-default">
+                            <button type="button" class="btn btn-default">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
@@ -65,7 +65,23 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h4 class="mb-0">Hoy</h4>
-                        <p class="text-muted mb-0"><?= date('d F Y') ?></p>
+                        <?php
+                        $meses_es = [
+                            1 => 'enero',
+                            'febrero',
+                            'marzo',
+                            'abril',
+                            'mayo',
+                            'junio',
+                            'julio',
+                            'agosto',
+                            'septiembre',
+                            'octubre',
+                            'noviembre',
+                            'diciembre'
+                        ];
+                        ?>
+                        <p class="text-muted mb-0"><?= date('d') . ' ' . $meses_es[(int)date('n')] . ' ' . date('Y') ?></p>
                     </div>
                     <div>
                         <div class="btn-group">
@@ -169,7 +185,7 @@
                     <div class="input-group input-group-sm" style="width: 250px;">
                         <input type="text" id="buscarHabitacionCompletada" class="form-control float-right" placeholder="Buscar habitación">
                         <div class="input-group-append">
-                            <button type="submit" class="btn btn-default">
+                            <button type="button" class="btn btn-default">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
@@ -229,38 +245,3 @@
         </div>
     </div>
 </div>
-
-<!-- Script para filtrado y cambio de estado -->
-<script src="<?= $URL; ?>public/js/modules/dashboard/dashboard-limpieza.js"></script>
-
-<!-- Estilos adicionales para las tarjetas de habitación -->
-<style>
-    .habitacion-card-pendiente .card,
-    .habitacion-card-completada .card {
-        transition: all 0.3s ease;
-        border: 1px solid #ddd;
-    }
-
-    .habitacion-card-pendiente .card:hover,
-    .habitacion-card-completada .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .badge {
-        padding: 8px 12px;
-        font-size: 0.85rem;
-    }
-
-    .bg-warning {
-        color: #212529;
-    }
-
-    .btn-group .btn {
-        box-shadow: none !important;
-    }
-
-    .filtro-estado-pendiente.active {
-        font-weight: bold;
-    }
-</style>

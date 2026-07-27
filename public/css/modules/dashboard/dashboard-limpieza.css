@@ -1,0 +1,28 @@
+.habitacion-card-pendiente .card,
+.habitacion-card-completada .card {
+    transition: all 0.3s ease;
+    border: 1px solid #ddd;
+}
+
+.habitacion-card-pendiente .card:hover,
+.habitacion-card-completada .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.badge {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+
+.bg-warning {
+    color: #212529;
+}
+
+.btn-group .btn {
+    box-shadow: none !important;
+}
+
+.filtro-estado-pendiente.active {
+    font-weight: bold;
+}

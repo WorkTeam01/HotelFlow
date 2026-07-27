@@ -28,6 +28,7 @@ if (!($auth->puedeAccederModulo($idusuario, 'servicios_bano'))) {
 
 // Agregar los estilos específicos para este módulo
 $module_styles = ['servicios-bano/servicios-bano'];
+$module_scripts = ['servicios-bano/update-servicios-bano'];
 
 // Incluir el encabezado
 $skip_chartjs = true;
@@ -366,8 +367,6 @@ switch ($servicio['estado']) {
     <!-- /.container-fluid -->
 </section>
 <!-- /.content -->
-
-<script src="<?= $URL; ?>public/js/modules/servicios-bano/update-servicios-bano.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

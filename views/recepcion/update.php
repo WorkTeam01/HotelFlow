@@ -546,62 +546,6 @@ switch ($recepcion['estado']) {
         </form>
     </div>
 </section>
-
-<style>
-    /* Animación de entrada para las tarjetas */
-    @keyframes cardFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .card-animation {
-        animation: cardFadeIn 0.4s ease-out forwards;
-    }
-
-    /* Estilo para la tarjeta activa cuando se hace hover */
-    .card:hover {
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        transition: box-shadow 0.3s ease;
-    }
-
-    /* Estilos para los info-boxes */
-    #cliente-info,
-    #habitacion-info,
-    #tarifa-info {
-        padding: 8px;
-        border-radius: 4px;
-        background-color: #f8f9fa;
-        border-left: 3px solid #007bff;
-    }
-
-    /* Mejorar visibilidad de los campos requeridos */
-    .form-group label span.text-danger {
-        font-weight: bold;
-        margin-left: 4px;
-    }
-
-    /* Estilos para el resumen en panel lateral */
-    .list-group-item {
-        border-left: none;
-        border-right: none;
-    }
-
-    .list-group-item:first-child {
-        border-top: none;
-    }
-
-    .list-group-item:last-child {
-        border-bottom: none;
-    }
-</style>
-
 <?php
 include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';

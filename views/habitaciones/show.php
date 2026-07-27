@@ -52,6 +52,8 @@ $historial_limpieza = $controller->getHistorialLimpieza($id);
 // Incluir el encabezado después de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_styles = ['habitaciones/show-habitaciones'];
+$module_scripts = ['habitaciones/show-habitaciones'];
 include_once '../layouts/header.php';
 
 // Determinar el color según el estado
@@ -79,20 +81,6 @@ switch ($habitacion['estado']) {
         $icono_estado = 'info-circle';
 }
 ?>
-
-<style>
-    /* Color info para el texto de las pestañas no activas */
-    #habitacionTabs .nav-link:not(.active) {
-        color: #17a2b8;
-        /* Color info */
-    }
-
-    /* Opcional: Color info más intenso al pasar el mouse por pestañas no activas */
-    #habitacionTabs .nav-link:not(.active):hover {
-        color: #138496;
-        /* Un tono más oscuro de info */
-    }
-</style>
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
@@ -399,4 +387,3 @@ include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
 
-<script src="<?= $URL; ?>public/js/modules/habitaciones/show-habitaciones.js"></script>

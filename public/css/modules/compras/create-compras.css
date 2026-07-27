@@ -1,0 +1,21 @@
+/**
+ * Estilos específicos para el formulario de creación de compras
+ * HotelFlow
+ */
+
+.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 80%;
+    color: #dc3545;
+}
+
+input[readonly] {
+    background-color: #e9ecef;
+    opacity: 1;
+}

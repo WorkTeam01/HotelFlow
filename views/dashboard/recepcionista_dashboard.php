@@ -25,7 +25,7 @@
     </div>
 
     <div class="col-lg-3 col-md-6 col-12">
-        <div class="small-box bg-warning text-white">
+        <div class="small-box bg-warning">
             <div class="inner">
                 <h3><?= $stats['asignaciones']['estadisticas']['pendientes'] ?? 0 ?></h3>
                 <p>Limpiezas Pendientes</p>
@@ -60,7 +60,7 @@
                     Baños Disponibles
                 </h3>
                 <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer/expandir panel">
                         <i class="fas fa-minus"></i>
                     </button>
                 </div>
@@ -163,7 +163,7 @@
                     Asignaciones de Limpieza
                 </h3>
                 <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer/expandir panel">
                         <i class="fas fa-minus"></i>
                     </button>
                 </div>
@@ -228,8 +228,8 @@
                                         </td>
                                         <td>
                                             <div class="btn-group">
-                                                <a href="<?= $URL; ?>views/asignaciones-limpieza/show.php?id=<?= $asignacion['idasignacion']; ?>"
-                                                    class="btn btn-info btn-sm" data-toggle="tooltip" title="Ver detalles">
+                                                <a href="<?= $URL; ?>views/limpieza/index.php"
+                                                    class="btn btn-info btn-sm" data-toggle="tooltip" title="Ver detalles" aria-label="Ver detalles">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <?php if ($estado == 'completada'): ?>
@@ -237,7 +237,8 @@
                                                         data-id="<?= $asignacion['idasignacion']; ?>"
                                                         data-estado="verificada"
                                                         data-toggle="tooltip"
-                                                        title="Verificar limpieza">
+                                                        title="Verificar limpieza"
+                                                        aria-label="Verificar limpieza">
                                                         <i class="fas fa-clipboard-check"></i>
                                                     </button>
                                                 <?php endif; ?>
@@ -253,7 +254,7 @@
                 </div>
             </div>
             <div class="card-footer text-center">
-                <a href="<?= $URL; ?>views/asignaciones-limpieza/create.php" class="btn btn-warning">
+                <a href="<?= $URL; ?>views/limpieza/index.php" class="btn btn-warning">
                     <i class="fas fa-plus-circle mr-1"></i> Nueva Asignación
                 </a>
             </div>
@@ -274,7 +275,7 @@
                     <div class="input-group input-group-sm" style="width: 250px;">
                         <input type="text" id="buscarHabitacion" class="form-control float-right" placeholder="Buscar habitación">
                         <div class="input-group-append">
-                            <button type="submit" class="btn btn-default">
+                            <button type="button" class="btn btn-default">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
@@ -455,34 +456,3 @@
         </div>
     </div>
 </div>
-
-<!-- Script para el panel de habitaciones -->
-<script src="<?= $URL; ?>public/js/modules/dashboard/dashboard-recepcionista.js"></script>
-
-<!-- Estilos adicionales para tarjetas de habitación -->
-<style>
-    .habitacion-item .card {
-        transition: all 0.3s ease;
-        border: 1px solid #ddd;
-    }
-
-    .habitacion-item .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .bano-item .card {
-        transition: all 0.3s ease;
-        border: 1px solid #ddd;
-    }
-
-    .bano-item .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .badge {
-        padding: 5px 8px;
-        font-size: 0.8rem;
-    }
-</style>

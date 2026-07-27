@@ -15,6 +15,7 @@ if (!$authService->puedeAccederModulo($idusuario, 'usuarios') && !$authService->
 
 // Incluir el encabezado
 $module_styles = ['usuarios/usuarios'];
+$module_scripts = ['usuarios/create-usuario', 'usuarios/permisos'];
 $skip_datatables = true; // Esta vista no usa tabla; evita cargar DataTables/pdfmake/vfs_fonts (~2.8MB)
 $skip_chartjs = true;
 include_once '../layouts/header.php';
@@ -461,9 +462,7 @@ include_once '../layouts/header.php';
 <!-- /.content -->
 
 <!-- Script para validaciones y vista previa -->
-<script src="<?= $URL; ?>public/js/modules/usuarios/create-usuario.js"></script>
 <!-- Script para manejo de permisos -->
-<script src="<?= $URL; ?>public/js/modules/usuarios/permisos.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

@@ -19,6 +19,7 @@ if (!$auth->puedeAccederModulo($idusuario, 'precios_equipaje')) {
 
 // Incluir el encabezado después de verificar permisos
 $skip_chartjs = true;
+$module_scripts = ['precios-equipaje/index-precios'];
 include_once '../layouts/header.php';
 
 $controller = new PrecioEquipajeController();
@@ -224,7 +225,6 @@ $estadisticas = $controller->getEstadisticas();
 </div>
 
 <!-- Script para la gestión de precios de equipaje -->
-<script src="<?= $URL; ?>public/js/modules/precios-equipaje/index-precios.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

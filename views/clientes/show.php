@@ -38,6 +38,7 @@ if (!$persona) {
 
 // Definir scripts y estilos específicos para este módulo
 $module_styles = ['clientes/cliente-styles'];
+$module_scripts = ['clientes/show-persona'];
 
 $skip_select2 = true;
 $skip_chartjs = true;
@@ -306,8 +307,6 @@ include_once '../layouts/header.php';
         </div>
     </div>
 </section>
-
-<script src="<?= $URL; ?>public/js/modules/clientes/show-persona.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

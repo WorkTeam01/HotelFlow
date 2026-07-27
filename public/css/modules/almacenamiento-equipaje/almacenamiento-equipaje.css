@@ -187,3 +187,120 @@
     border-left: 3px solid #17a2b8;
     margin-bottom: 15px;
 }
+/* Timeline de AdminLTE mejorado (vista de detalle) */
+.timeline {
+    position: relative;
+    margin: 0 0 30px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.timeline:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #ddd;
+    left: 31px;
+    margin: 0;
+    border-radius: 2px;
+}
+
+.timeline>div {
+    position: relative;
+    margin-right: 10px;
+    margin-bottom: 15px;
+}
+
+.time-label {
+    margin-bottom: 15px;
+}
+
+.time-label>span {
+    font-weight: 600;
+    padding: 5px 10px;
+    display: inline-block;
+    background-color: #fff;
+    border-radius: 4px;
+    color: white;
+}
+
+.timeline>div>.timeline-item {
+    -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    margin-top: 0;
+    background-color: #fff;
+    color: #444;
+    margin-left: 60px;
+    margin-right: 0;
+    padding: 0;
+    position: relative;
+}
+
+.timeline>div>.timeline-item>.time {
+    float: right;
+    padding: 10px;
+    font-size: 12px;
+    color: #999;
+}
+
+.timeline>div>.timeline-item>.timeline-header {
+    margin: 0;
+    color: #555;
+    border-bottom: 1px solid #f4f4f4;
+    padding: 10px;
+    font-size: 16px;
+    line-height: 1.1;
+}
+
+.timeline>div>.timeline-item>.timeline-body,
+.timeline>div>.timeline-item>.timeline-footer {
+    padding: 10px;
+}
+
+.timeline>div>.timeline-item>.timeline-footer {
+    border-top: 1px solid #f4f4f4;
+    background-color: #f8f9fa;
+    font-size: 12px;
+    color: #777;
+}
+
+.timeline>div>i {
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+    line-height: 30px;
+    position: absolute;
+    color: #fff;
+    background-color: #007bff;
+    border-radius: 50%;
+    text-align: center;
+    left: 18px;
+    top: 0;
+}
+
+/* Colores para estados */
+.bg-blue {
+    background-color: #007bff !important;
+}
+
+.bg-yellow {
+    background-color: #ffc107 !important;
+}
+
+/* Responsive */
+@media (max-width: 767.98px) {
+    .timeline>div>.timeline-item {
+        margin-left: 45px;
+    }
+
+    .timeline>div>i {
+        left: 10px;
+    }
+
+    .timeline:before {
+        left: 24px;
+    }
+}

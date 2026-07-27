@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const formEscaner = document.getElementById('form-escaner');
+    const busquedaActual = JSON.parse(formEscaner.dataset.busqueda);
+
     // Mantener el foco en el campo de código
     const codigoInput = document.getElementById('codigo');
     codigoInput.focus();
@@ -7,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
     codigoInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            document.getElementById('form-escaner').submit();
+            formEscaner.submit();
         }
     });
 
@@ -25,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Añadir búsqueda actual al historial (dato inyectado por la vista según el POST recibido)
-    if (typeof busquedaActual !== 'undefined' && busquedaActual !== null) {
+    if (busquedaActual !== null) {
         const nuevaBusqueda = {
             codigo: busquedaActual.codigo,
             encontrado: busquedaActual.encontrado,

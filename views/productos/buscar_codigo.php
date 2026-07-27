@@ -19,6 +19,7 @@ if (!($authService->puedeAccederModulo($idusuario, 'productos'))) {
 // Incluir el encabezado DESPUÉS de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['productos/buscar-codigo'];
 include_once '../layouts/header.php';
 
 $controller = new ProductoController();
@@ -27,9 +28,15 @@ $controller = new ProductoController();
 $producto = null;
 
 // Verificar si se escaneó un código
+$busquedaActual = null;
 if (isset($_POST['codigo']) && !empty($_POST['codigo'])) {
     $codigo = trim($_POST['codigo']);
     $producto = $controller->buscarPorCodigo($codigo);
+    $busquedaActual = [
+        'codigo' => $codigo,
+        'encontrado' => (bool)$producto,
+        'nombre' => $producto ? $producto['nombre'] : null,
+    ];
 }
 ?>
 
@@ -68,7 +75,8 @@ if (isset($_POST['codigo']) && !empty($_POST['codigo'])) {
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-8 mx-auto">
-                                <form method="post" action="" id="form-escaner">
+                                <form method="post" action="" id="form-escaner"
+                                    data-busqueda="<?= htmlspecialchars(json_encode($busquedaActual), ENT_QUOTES) ?>">
                                     <div class="form-group">
                                         <label for="codigo"><i class="fas fa-barcode"></i> Código del Producto:</label>
                                         <div class="input-group input-group-lg">
@@ -197,19 +205,6 @@ if (isset($_POST['codigo']) && !empty($_POST['codigo'])) {
         </div>
     </div>
 </section>
-
-<script>
-    <?php if (isset($_POST['codigo']) && !empty($_POST['codigo'])) : ?>
-        const busquedaActual = {
-            codigo: "<?= htmlspecialchars($_POST['codigo'], ENT_QUOTES); ?>",
-            encontrado: <?= $producto ? 'true' : 'false'; ?>,
-            nombre: <?= $producto ? '"' . htmlspecialchars($producto['nombre'], ENT_QUOTES) . '"' : 'null'; ?>
-        };
-    <?php else : ?>
-        const busquedaActual = null;
-    <?php endif; ?>
-</script>
-<script src="<?= $URL; ?>public/js/modules/productos/buscar-codigo.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

@@ -18,6 +18,7 @@ if (!($auth->puedeAccederModulo($idusuario, 'servicios_bano'))) {
 // Incluir el encabezado
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['servicios-bano/index-servicios-bano', 'servicios-bano/servicio-bano-rapido'];
 include_once '../layouts/header.php';
 
 $controller = new ServicioBanoController();
@@ -289,9 +290,6 @@ requireLogin();
     <!-- /.container-fluid -->
 </section>
 <!-- /.content -->
-
-<script src="<?= $URL; ?>public/js/modules/servicios-bano/index-servicios-bano.js"></script>
-<script src="<?= $URL; ?>public/js/modules/servicios-bano/servicio-bano-rapido.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

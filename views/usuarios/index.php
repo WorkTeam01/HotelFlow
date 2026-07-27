@@ -18,6 +18,7 @@ if (!($authService->puedeAccederModulo($idusuario, 'usuarios')) && !($authServic
 // Incluir el encabezado DESPUÉS de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['usuarios/index-usuarios'];
 include_once '../layouts/header.php';
 
 $controller = new UsuarioController();
@@ -138,8 +139,6 @@ $usuarios = $controller->index();
     <!-- /.container-fluid -->
 </section>
 <!-- /.content -->
-
-<script src="<?= $URL; ?>public/js/modules/usuarios/index-usuarios.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

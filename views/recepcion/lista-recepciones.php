@@ -20,6 +20,7 @@ if (!($auth->puedeAccederModulo($idusuario, 'recepcion'))) {
 // Incluir el encabezado
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['recepciones/lista-recepciones'];
 include_once '../layouts/header.php';
 
 // Instanciar controlador
@@ -324,8 +325,6 @@ $recepciones_en_curso = $datos['recepciones_en_curso'] ?? [];
         </div>
     </div>
 </section>
-
-<script src="<?= $URL; ?>public/js/modules/recepciones/lista-recepciones.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

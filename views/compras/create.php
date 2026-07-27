@@ -23,6 +23,8 @@ if (!isset($_SESSION['usuario_nombre'])) {
 
 // Incluir encabezado
 $skip_chartjs = true;
+$module_styles = ['compras/create-compras'];
+$module_scripts = ['compras/create-compras'];
 include_once '../layouts/header.php';
 
 $productoController = new ProductoController();
@@ -56,7 +58,8 @@ $productos = $productoController->index();
                     <div class="card-header">
                         <h3 class="card-title">Formulario de Compra</h3>
                     </div>
-                    <form action="<?= $URL; ?>controllers/compras/crear_compra.php" method="POST" id="form-compra" novalidate>
+                    <form action="<?= $URL; ?>controllers/compras/crear_compra.php" method="POST" id="form-compra" novalidate
+                        data-productos="<?= htmlspecialchars(json_encode($productos), ENT_QUOTES) ?>">
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <div class="card-body">
                             <div class="row">
@@ -177,31 +180,6 @@ $productos = $productoController->index();
     <!-- /.container-fluid -->
 </section>
 <!-- /.content -->
-
-<style>
-    .is-invalid {
-        border-color: #dc3545;
-    }
-
-    .invalid-feedback {
-        display: none;
-        width: 100%;
-        margin-top: 0.25rem;
-        font-size: 80%;
-        color: #dc3545;
-    }
-
-    input[readonly] {
-        background-color: #e9ecef;
-        opacity: 1;
-    }
-</style>
-
-<script>
-    // Datos de productos disponibles inyectados desde PHP para la búsqueda por código
-    const productosDisponibles = <?= json_encode($productos); ?>;
-</script>
-<script src="<?= $URL; ?>public/js/modules/compras/create-compras.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

@@ -18,6 +18,7 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
 // Incluir el encabezado DESPUÉS de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['tarifas/index-tarifas'];
 include_once '../layouts/header.php';
 
 $controller = new TarifaController();
@@ -134,8 +135,6 @@ $tarifas = $controller->index();
     <!-- /.container-fluid -->
 </section>
 <!-- /.content -->
-
-<script src="<?= $URL; ?>public/js/modules/tarifas/index-tarifas.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

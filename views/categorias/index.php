@@ -22,6 +22,7 @@ if (!($auth->puedeAccederModulo($idusuario, 'categorias'))) {
 // Incluir el encabezado después de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['categorias/index-categorias'];
 include_once '../layouts/header.php';
 
 $controller = new CategoriaController();
@@ -204,5 +205,3 @@ include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
 
-<!-- Script para la gestión de categorías -->
-<script src="<?= $URL; ?>public/js/modules/categorias/index-categorias.js"></script>

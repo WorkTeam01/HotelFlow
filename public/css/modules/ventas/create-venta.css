@@ -1,0 +1,54 @@
+/**
+ * Estilos específicos para el formulario de creación de ventas
+ * HotelFlow
+ */
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+.invalid-feedback {
+    display: none;
+    color: #dc3545;
+    font-size: 0.8em;
+}
+
+.is-invalid~.invalid-feedback,
+.is-invalid+.invalid-feedback {
+    display: block;
+}
+
+[style*="display: none"] {
+    visibility: hidden;
+    position: absolute;
+    pointer-events: none;
+}
+
+/* Estilos para el buscador de clientes */
+#sugerencias-clientes {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+#sugerencias-clientes button {
+    text-align: left;
+    border: none;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+#sugerencias-clientes button:hover {
+    background-color: #f8f9fa;
+}
+
+#info-cliente-seleccionado {
+    background-color: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid #dee2e6;
+}

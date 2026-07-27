@@ -24,6 +24,7 @@ if (!($auth->puedeAccederModulo($idusuario, 'habitaciones'))) {
 
 // Incluir el encabezado después de verificar permisos
 $skip_chartjs = true;
+$module_scripts = ['habitaciones/index-habitaciones'];
 include_once '../layouts/header.php';
 
 $controller = new HabitacionController();
@@ -382,5 +383,3 @@ include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
 
-<!-- Script para la gestión de habitaciones -->
-<script src="<?= $URL; ?>public/js/modules/habitaciones/index-habitaciones.js"></script>

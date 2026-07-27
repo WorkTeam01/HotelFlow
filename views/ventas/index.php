@@ -18,6 +18,7 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
 // Incluir el encabezado DESPUÉS de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['ventas/index-ventas'];
 include_once '../layouts/header.php';
 
 $controller = new VentaController();
@@ -204,4 +205,3 @@ include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
 
-<script src="<?= $URL; ?>public/js/modules/ventas/index-ventas.js"></script>

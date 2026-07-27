@@ -38,6 +38,7 @@ if (!$tipoHabitacion) {
 
 // Definir scripts y estilos específicos para este módulo
 $module_styles = ['tipohabitacion/tipo-habitacion-styles'];
+$module_scripts = ['tipohabitacion/show-tipo-habitacion'];
 
 $skip_select2 = true;
 $skip_chartjs = true;
@@ -218,8 +219,6 @@ include_once '../layouts/header.php';
         </div>
     </div>
 </section>
-
-<script src="<?= $URL; ?>public/js/modules/tipohabitacion/show-tipo-habitacion.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

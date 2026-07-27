@@ -18,6 +18,7 @@ if (!($authService->puedeAccederModulo($idusuario, 'productos'))) {
 // Incluir el encabezado DESPUÉS de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['productos/index-productos'];
 include_once '../layouts/header.php';
 
 $controller = new ProductoController();
@@ -145,8 +146,6 @@ $productos = $controller->index();
     <!-- /.container-fluid -->
 </section>
 <!-- /.content -->
-
-<script src="<?= $URL; ?>public/js/modules/productos/index-productos.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

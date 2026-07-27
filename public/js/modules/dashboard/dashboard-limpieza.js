@@ -83,7 +83,8 @@ $(document).ready(function() {
                     dataType: 'json',
                     data: {
                         id: id,
-                        estado: estado
+                        estado: estado,
+                        csrf_token: CSRF_TOKEN
                     },
                     success: function(response) {
                         if (response.success) {

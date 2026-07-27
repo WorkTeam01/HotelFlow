@@ -24,6 +24,7 @@ if (!($auth->puedeAccederModulo($idusuario, 'habitaciones'))) {
 
 // Incluir el encabezado después de verificar permisos
 $skip_chartjs = true;
+$module_scripts = ['habitaciones/create-habitaciones'];
 include_once '../layouts/header.php';
 
 // Instanciar el controlador
@@ -106,7 +107,6 @@ $pisos = $datos['pisos'];
                                         </select>
                                     </div>
                                 </div>
-
 
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -242,4 +242,3 @@ include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
 
-<script src="<?= $URL; ?>public/js/modules/habitaciones/create-habitaciones.js"></script>

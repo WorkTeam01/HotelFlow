@@ -24,6 +24,7 @@ if (!$auth->puedeAccederModulo($idusuario, 'banos')) {
 
 // Incluir el encabezado después de verificar permisos
 $skip_chartjs = true;
+$module_scripts = ['banos/index-banos'];
 include_once '../layouts/header.php';
 
 $controller = new BanoController();
@@ -268,4 +269,3 @@ include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
 
-<script src="<?= $URL; ?>public/js/modules/banos/index-banos.js"></script>

@@ -17,6 +17,7 @@ if (!($authService->puedeAccederModulo($idusuario, 'productos'))) {
 
 // Incluir el encabezado
 $skip_chartjs = true;
+$module_scripts = ['productos/update-productos'];
 include_once '../layouts/header.php';
 
 // Verificar si se proporcionó un ID
@@ -591,7 +592,10 @@ if (!$producto) {
                             <a href="<?= $URL; ?>views/productos/show.php?id=<?= $producto['idproducto']; ?>" class="list-group-item list-group-item-action">
                                 <i class="fas fa-eye mr-2 text-info"></i> Ver detalles del producto
                             </a>
-                            <a href="#" class="list-group-item list-group-item-action cambiar-estado-link">
+                            <a href="#" class="list-group-item list-group-item-action cambiar-estado-link"
+                                data-id="<?= (int)$producto['idproducto']; ?>"
+                                data-estado="<?= (int)$producto['estado']; ?>"
+                                data-nombre="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>">
                                 <?php if ($producto['estado'] == 1): ?>
                                     <i class="fas fa-ban mr-2 text-danger"></i> Desactivar producto
                                 <?php else: ?>
@@ -608,16 +612,6 @@ if (!$producto) {
         </div>
     </div>
 </section>
-
-<script>
-    // Datos del producto necesarios para el cambio de estado
-    const productoActual = {
-        id: <?= (int)$producto['idproducto']; ?>,
-        estado: <?= (int)$producto['estado']; ?>,
-        nombre: "<?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>"
-    };
-</script>
-<script src="<?= $URL; ?>public/js/modules/productos/update-productos.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

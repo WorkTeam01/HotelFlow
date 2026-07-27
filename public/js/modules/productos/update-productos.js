@@ -149,9 +149,9 @@ $(document).ready(function () {
     $('.cambiar-estado-link').on('click', function (e) {
         e.preventDefault();
 
-        const productoId = productoActual.id;
-        const estadoActual = productoActual.estado;
-        const nombreProducto = productoActual.nombre;
+        const productoId = this.dataset.id;
+        const estadoActual = parseInt(this.dataset.estado, 10);
+        const nombreProducto = this.dataset.nombre;
 
         const tituloAlerta = estadoActual == 1 ?
             `¿Desactivar producto "${nombreProducto}"?` :

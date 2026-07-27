@@ -17,6 +17,7 @@ if (!($authService->puedeAccederModulo($idusuario, 'clientes'))) {
 
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['clientes/index-personas'];
 include_once '../layouts/header.php';
 
 $controller = new PersonaController();
@@ -131,8 +132,6 @@ $personas = $controller->index();
     <!-- /.container-fluid -->
 </section>
 <!-- /.content -->
-
-<script src="<?= $URL; ?>public/js/modules/clientes/index-personas.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

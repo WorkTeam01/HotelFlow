@@ -16,6 +16,8 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
 }
 
 $skip_chartjs = true;
+$module_styles = ['ventas/create-venta'];
+$module_scripts = ['ventas/create-venta'];
 include_once '../layouts/header.php';
 
 // Obtener datos necesarios
@@ -51,7 +53,11 @@ $clientes = $personaController->index();
                     <div class="card-header">
                         <h3 class="card-title">Formulario de Venta</h3>
                     </div>
-                    <form action="<?= $URL; ?>controllers/ventas/crear_venta.php" method="POST" id="form-venta" novalidate>
+                    <form action="<?= $URL; ?>controllers/ventas/crear_venta.php" method="POST" id="form-venta" novalidate
+                        data-productos="<?= htmlspecialchars(json_encode(array_filter($productos, function ($p) {
+                                                return $p['estado'] == 1 && $p['stock'] > 0;
+                                            })), ENT_QUOTES) ?>"
+                        data-clientes="<?= htmlspecialchars(json_encode($clientes), ENT_QUOTES) ?>">
                         <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
                         <input type="hidden" name="idusuario" value="<?= $_SESSION['usuario_id'] ?>">
                         <input type="hidden" name="totalventa" id="totalventa-hidden" value="0">
@@ -234,74 +240,6 @@ $clientes = $personaController->index();
         </div>
     </div>
 </section>
-
-<!-- Scripts para el formulario de ventas -->
-<script>
-    // Estas variables son necesarias para el archivo JS
-    // Exportamos los datos desde PHP a variables JavaScript globales
-    const productosDisponibles = <?= json_encode(array_filter($productos, function ($p) {
-                                        return $p['estado'] == 1 && $p['stock'] > 0;
-                                    })) ?>;
-
-    const clientesDisponibles = <?= json_encode($clientes) ?>;
-
-    // Variables de configuración y URLs
-    const baseUrl = '<?= $URL ?>'; // URL base de la aplicación
-</script>
-
-<script src="<?= $URL; ?>public/js/modules/ventas/create-venta.js"></script>
-
-<style>
-    .text-danger {
-        color: #dc3545 !important;
-    }
-
-    .is-invalid {
-        border-color: #dc3545 !important;
-    }
-
-    .invalid-feedback {
-        display: none;
-        color: #dc3545;
-        font-size: 0.8em;
-    }
-
-    .is-invalid~.invalid-feedback,
-    .is-invalid+.invalid-feedback {
-        display: block;
-    }
-
-    [style*="display: none"] {
-        visibility: hidden;
-        position: absolute;
-        pointer-events: none;
-    }
-
-    /* Estilos para el buscador de clientes */
-    #sugerencias-clientes {
-        border: 1px solid #ced4da;
-        border-radius: 0.25rem;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    }
-
-    #sugerencias-clientes button {
-        text-align: left;
-        border: none;
-        border-bottom: 1px solid #eee;
-        cursor: pointer;
-    }
-
-    #sugerencias-clientes button:hover {
-        background-color: #f8f9fa;
-    }
-
-    #info-cliente-seleccionado {
-        background-color: #f8f9fa;
-        padding: 0.5rem;
-        border-radius: 0.25rem;
-        border: 1px solid #dee2e6;
-    }
-</style>
 
 <?php
 include_once '../layouts/mensajes.php';

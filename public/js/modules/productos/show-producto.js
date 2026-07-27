@@ -15,9 +15,9 @@ $(document).ready(function () {
 
     // Cambiar el estado del producto con SweetAlert2
     $('#btnCambiarEstado').on('click', function () {
-        const productoId = productoActual.id;
-        const estadoActual = productoActual.estado;
-        const nombreProducto = productoActual.nombre;
+        const productoId = this.dataset.id;
+        const estadoActual = parseInt(this.dataset.estado, 10);
+        const nombreProducto = this.dataset.nombre;
 
         const tituloAlerta = estadoActual == 1 ?
             `¿Desactivar producto "${nombreProducto}"?` :

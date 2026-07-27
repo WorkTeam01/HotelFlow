@@ -1,0 +1,16 @@
+/**
+ * Estilos específicos para la vista de detalle de producto
+ * HotelFlow
+ */
+
+/* Color info para el texto de las pestañas no activas */
+#detail-tabs .nav-link:not(.active) {
+    color: #17a2b8;
+    /* Color info */
+}
+
+/* Opcional: Color info más intenso al pasar el mouse por pestañas no activas */
+#detail-tabs .nav-link:not(.active):hover {
+    color: #138496;
+    /* Un tono más oscuro de info */
+}

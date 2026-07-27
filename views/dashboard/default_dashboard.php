@@ -63,8 +63,8 @@
                             <span class="info-box-icon bg-success"><i class="fas fa-user"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">Usuario Actual</span>
-                                <span class="info-box-number"><?= $_SESSION['usuario_nombre'] ?></span>
-                                <span class="text-muted">Rol: <?= $_SESSION['usuario_cargo'] ?></span>
+                                <span class="info-box-number"><?= htmlspecialchars($_SESSION['usuario_nombre']) ?></span>
+                                <span class="text-muted">Rol: <?= htmlspecialchars($_SESSION['usuario_cargo']) ?></span>
                             </div>
                         </div>
 

@@ -1,10 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const formServicioBano = document.getElementById('formServicioBano');
+    if (!formServicioBano) {
+        return;
+    }
+
     // Mostrar aviso de stock bajo si la vista inyectó el dato
-    if (typeof stockBajoActual !== 'undefined') {
+    if (formServicioBano.dataset.stockBajo !== undefined) {
         Swal.fire({
             icon: 'warning',
             title: 'Stock Bajo',
-            text: 'El stock de papel higiénico está bajo (' + stockBajoActual + ' unidades). Considere reponer pronto.',
+            text: 'El stock de papel higiénico está bajo (' + formServicioBano.dataset.stockBajo + ' unidades). Considere reponer pronto.',
             showConfirmButton: true,
             confirmButtonText: 'Entendido'
         });

@@ -17,6 +17,7 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
 
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['tipohabitacion/index_tipohabitaciones'];
 include_once '../layouts/header.php';
 
 $controller = new TipoHabitacionController();
@@ -127,8 +128,6 @@ $tiposHabitacion = $controller->index();
     <!-- /.container-fluid -->
 </section>
 <!-- /.content -->
-
-<script src="<?= $URL; ?>public/js/modules/tipohabitacion/index_tipohabitaciones.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

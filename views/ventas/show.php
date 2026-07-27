@@ -49,6 +49,7 @@ if (!$authService->esAdministrador($idusuario) && $venta['idusuario'] != $idusua
 
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['ventas/show-venta'];
 include_once '../layouts/header.php';
 ?>
 
@@ -250,8 +251,6 @@ include_once '../layouts/header.php';
         </div>
     </div>
 </section>
-
-<script src="<?= $URL; ?>public/js/modules/ventas/show-venta.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

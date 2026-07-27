@@ -16,6 +16,7 @@ if (!($authService->puedeAccederModulo($idusuario, 'equipajes'))) {
 
 // Incluir el encabezado después de verificar permisos
 $skip_chartjs = true;
+$module_scripts = ['almacenamiento-equipaje/index-equipajes'];
 include_once '../layouts/header.php';
 
 $controller = new AlmacenamientoEquipajeController();
@@ -315,8 +316,6 @@ $clientes = $datos_formulario['clientes'];
         </div>
     </div>
 </section>
-
-<script src="<?= $URL; ?>public/js/modules/almacenamiento-equipaje/index-equipajes.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

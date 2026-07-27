@@ -51,6 +51,7 @@ $pisos = $datos['pisos'];
 
 // Incluir el encabezado después de verificar permisos
 $skip_chartjs = true;
+$module_scripts = ['habitaciones/update-habitaciones'];
 include_once '../layouts/header.php';
 ?>
 
@@ -306,4 +307,3 @@ include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
 
-<script src="<?= $URL; ?>public/js/modules/habitaciones/update-habitaciones.js"></script>

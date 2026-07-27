@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const formCompra = document.getElementById('form-compra');
+    const productosDisponibles = JSON.parse(formCompra.dataset.productos);
+
     // Inicializar Select2
     initializeSelect2();
 

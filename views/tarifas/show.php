@@ -38,6 +38,7 @@ if (!$tarifa) {
 
 // Definir scripts y estilos específicos para este módulo
 $module_styles = ['tarifas/tarifas-styles'];
+$module_scripts = ['tarifas/show-tarifas'];
 
 $skip_select2 = true;
 $skip_chartjs = true;
@@ -297,8 +298,6 @@ include_once '../layouts/header.php';
         </div>
     </div>
 </section>
-
-<script src="<?= $URL; ?>public/js/modules/tarifas/show-tarifas.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

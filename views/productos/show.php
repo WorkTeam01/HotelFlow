@@ -17,6 +17,8 @@ if (!($authService->puedeAccederModulo($idusuario, 'productos'))) {
 // Incluir el encabezado
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_styles = ['productos/show-producto'];
+$module_scripts = ['productos/show-producto'];
 include_once '../layouts/header.php';
 // Verificar si se proporcionó un ID
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -40,20 +42,6 @@ if (!$producto) {
     exit;
 }
 ?>
-
-<style>
-    /* Color info para el texto de las pestañas no activas */
-    #detail-tabs .nav-link:not(.active) {
-        color: #17a2b8;
-        /* Color info */
-    }
-
-    /* Opcional: Color info más intenso al pasar el mouse por pestañas no activas */
-    #detail-tabs .nav-link:not(.active):hover {
-        color: #138496;
-        /* Un tono más oscuro de info */
-    }
-</style>
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
@@ -163,7 +151,10 @@ if (!$producto) {
                         <h3 class="card-title"><i class="fas fa-cogs mr-2"></i>Acciones</h3>
                     </div>
                     <div class="card-body">
-                        <button type="button" class="btn btn-block <?= $producto['estado'] == 1 ? 'btn-danger' : 'btn-success'; ?>" id="btnCambiarEstado">
+                        <button type="button" class="btn btn-block <?= $producto['estado'] == 1 ? 'btn-danger' : 'btn-success'; ?>" id="btnCambiarEstado"
+                            data-id="<?= (int)$producto['idproducto']; ?>"
+                            data-estado="<?= (int)$producto['estado']; ?>"
+                            data-nombre="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>">
                             <i class="fas <?= $producto['estado'] == 1 ? 'fa-ban' : 'fa-check'; ?> mr-2"></i>
                             <?= $producto['estado'] == 1 ? 'Desactivar Producto' : 'Activar Producto'; ?>
                         </button>
@@ -562,13 +553,3 @@ if (!$producto) {
 include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
-
-<script>
-    // Datos del producto necesarios para el cambio de estado
-    const productoActual = {
-        id: <?= (int)$producto['idproducto']; ?>,
-        estado: <?= (int)$producto['estado']; ?>,
-        nombre: "<?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>"
-    };
-</script>
-<script src="<?= $URL; ?>public/js/modules/productos/show-producto.js"></script>

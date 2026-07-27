@@ -8,6 +8,10 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
+    const formVenta = document.getElementById('form-venta');
+    const productosDisponibles = JSON.parse(formVenta.dataset.productos);
+    const clientesDisponibles = JSON.parse(formVenta.dataset.clientes);
+
     // Referencias a elementos del DOM
     const metodoPagoSelect = document.getElementById('metodopago');
     const pagoRecibidoContainer = document.getElementById('pago-recibido-container');

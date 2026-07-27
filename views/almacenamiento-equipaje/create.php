@@ -16,6 +16,7 @@ if (!($authService->puedeAccederModulo($idusuario, 'equipajes'))) {
 
 // Agregar los estilos específicos para este módulo
 $module_styles = ['almacenamiento-equipaje/almacenamiento-equipaje'];
+$module_scripts = ['almacenamiento-equipaje/create-equipaje'];
 
 // Incluir el encabezado
 $skip_chartjs = true;
@@ -378,8 +379,6 @@ $precios_equipaje = $datos['precios_equipaje'];
         </div>
     </div>
 </section>
-
-<script src="<?= $URL; ?>public/js/modules/almacenamiento-equipaje/create-equipaje.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';

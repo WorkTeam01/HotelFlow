@@ -46,6 +46,7 @@ if (!$authService->esAdministrador($idusuario) && $compra['idusuario'] != $idusu
 // Incluir el encabezado
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_scripts = ['compras/show-compras'];
 include_once '../layouts/header.php';
 
 // Determinar clase CSS según estado
@@ -197,8 +198,6 @@ switch ($compra['estado']) {
         </div>
     </div>
 </section>
-
-<script src="<?= $URL; ?>public/js/modules/compras/show-compras.js"></script>
 
 <?php
 include_once '../layouts/mensajes.php';
