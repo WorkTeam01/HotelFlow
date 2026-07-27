@@ -223,10 +223,6 @@ $estadisticas = $controller->getEstadisticas();
     </div>
 </div>
 
-<script>
-    var baseUrl = "<?= $URL; ?>";
-</script>
-
 <!-- Script para la gestión de precios de equipaje -->
 <script src="<?= $URL; ?>public/js/modules/precios-equipaje/index-precios.js"></script>
 

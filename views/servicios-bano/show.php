@@ -226,10 +226,6 @@ if ($servicio['estado'] == 1) {
     </div>
 </section>
 
-<script>
-    // Construir la URL para la acción
-    const baseUrl = '<?= $URL; ?>';
-</script>
 <script src="<?= $URL; ?>public/js/modules/servicios-bano/show-servicios-bano.js"></script>
 
 <?php

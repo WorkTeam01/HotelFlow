@@ -382,16 +382,5 @@ include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
 
-<script>
-    var baseUrl = "<?= $URL; ?>";
-</script>
-
 <!-- Script para la gestión de habitaciones -->
 <script src="<?= $URL; ?>public/js/modules/habitaciones/index-habitaciones.js"></script>
-
-<script>
-    $(document).ready(function() {
-        // Inicializar Select2
-        initializeSelect2();
-    });
-</script>

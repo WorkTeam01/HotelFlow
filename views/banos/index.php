@@ -268,8 +268,4 @@ include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
 
-<script>
-    var baseUrl = "<?= $URL; ?>";
-</script>
-
 <script src="<?= $URL; ?>public/js/modules/banos/index-banos.js"></script>

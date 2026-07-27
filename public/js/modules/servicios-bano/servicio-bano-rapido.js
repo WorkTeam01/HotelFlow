@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     function registrarServicioRapido(idBano, boton) {
         $.ajax({
-            url: baseUrl + 'controllers/servicios-bano/crear_servicio_rapido.php',
+            url: BASE_URL + 'controllers/servicios-bano/crear_servicio_rapido.php',
             type: 'POST',
             data: { idbano: idBano, csrf_token: CSRF_TOKEN },
             dataType: 'json',

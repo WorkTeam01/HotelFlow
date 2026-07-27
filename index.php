@@ -41,6 +41,7 @@ if ($rol == 'Administrador') {
     $skip_chartjs = true;
 }
 $skip_select2 = true;
+$skip_datatables = true;
 
 // Incluir el header
 include 'views/layouts/header.php';
@@ -82,9 +83,6 @@ include 'views/layouts/header.php';
 
 <!-- Script para inicializar componentes JS -->
 <script>
-    // Base URL para AJAX
-    const baseUrl = '<?= $URL; ?>';
-
     $(document).ready(function() {
         // Inicializar tooltips
         initializeTooltips();

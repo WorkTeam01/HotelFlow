@@ -157,3 +157,35 @@ $(document).ready(function () {
         }
     }).buttons().container().appendTo('#tablaTiposHabitacion_wrapper .col-md-6:eq(0)');
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const botonesCambiarEstado = document.querySelectorAll('.btn-cambiar-estado');
+
+    botonesCambiarEstado.forEach(boton => {
+        boton.addEventListener('click', function() {
+            const tipoId = this.dataset.id;
+            const estadoActual = this.dataset.estado;
+            const nombreTipo = this.dataset.nombre;
+
+            const tituloAlerta = estadoActual == 1 ? `¿Desactivar ${nombreTipo}?` : `¿Activar ${nombreTipo}?`;
+            const textoAlerta = estadoActual == 1 ? 'Este tipo de habitación no estará disponible para asignación.' : 'El tipo de habitación estará disponible nuevamente.';
+            const confirmButtonText = estadoActual == 1 ? 'Sí, desactivar' : 'Sí, activar';
+            const cancelButtonText = 'Cancelar';
+
+            Swal.fire({
+                title: tituloAlerta,
+                text: textoAlerta,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: estadoActual == 1 ? '#d33' : '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: cancelButtonText
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `${BASE_URL}controllers/tipohabitaciones/desactivar_tipo_habitacion.php?id=${tipoId}&estado=${estadoActual}&csrf_token=${CSRF_TOKEN}`;
+                }
+            });
+        });
+    });
+});

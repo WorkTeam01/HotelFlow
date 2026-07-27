@@ -539,16 +539,6 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
     </div>
 </section>
 
-<script>
-    $(document).ready(function() {
-        // Inicializar tooltips
-        $('[data-toggle="tooltip"]').tooltip();
-
-        // Animación de las tarjetas al cargar la página
-        $('.card').addClass('card-animation');
-    });
-</script>
-
 <?php
 include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';

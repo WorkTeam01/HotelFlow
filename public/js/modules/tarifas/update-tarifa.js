@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     cancelButtonText: 'No, permanecer'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = '<?= $URL; ?>views/tarifas/index.php';
+                        window.location.href = `${BASE_URL}views/tarifas/index.php`;
                     }
                 });
             }

@@ -36,49 +36,9 @@ $recepciones_en_curso = $datos['recepciones_en_curso'];
 $habitaciones_mantenimiento = $datos['habitaciones_mantenimiento'];
 $estadisticas = $datos['estadisticas'];
 
-// Función para agrupar habitaciones por piso y ordenar
-function agruparHabitacionesPorPiso($habitaciones)
-{
-    $pisos = [];
-
-    foreach ($habitaciones as $habitacion) {
-        $piso = $habitacion['piso_nombre'] ?? 'Sin piso';
-        if (!isset($pisos[$piso])) {
-            $pisos[$piso] = [];
-        }
-        $pisos[$piso][] = $habitacion;
-    }
-
-    // Ordenar habitaciones dentro de cada piso
-    foreach ($pisos as $nombrePiso => &$habitacionesPiso) {
-        usort($habitacionesPiso, function ($a, $b) {
-            // Priorizar habitaciones privadas (individual) primero
-            $tipoA = $a['tipo_nombre'] ?? '';
-            $tipoB = $b['tipo_nombre'] ?? '';
-
-            $esPrivadaA = stripos($tipoA, 'individual') !== false || stripos($tipoA, 'privada') !== false;
-            $esPrivadaB = stripos($tipoB, 'individual') !== false || stripos($tipoB, 'privada') !== false;
-
-            if ($esPrivadaA && !$esPrivadaB) return -1;
-            if (!$esPrivadaA && $esPrivadaB) return 1;
-
-            // Ordenar por número de habitación
-            $numeroA = $a['numero'] ?? '0';
-            $numeroB = $b['numero'] ?? '0';
-
-            return strnatcmp($numeroA, $numeroB);
-        });
-    }
-
-    // Ordenar pisos alfabéticamente
-    ksort($pisos);
-
-    return $pisos;
-}
-
 // Agrupar las habitaciones por pisos para cada sección
-$habitaciones_disponibles_por_piso = agruparHabitacionesPorPiso($habitaciones_disponibles);
-$habitaciones_mantenimiento_por_piso = agruparHabitacionesPorPiso($habitaciones_mantenimiento);
+$habitaciones_disponibles_por_piso = RecepcionController::agruparHabitacionesPorPiso($habitaciones_disponibles);
+$habitaciones_mantenimiento_por_piso = RecepcionController::agruparHabitacionesPorPiso($habitaciones_mantenimiento);
 
 // Agrupar recepciones en curso por piso
 $recepciones_por_piso_ocupadas = [];

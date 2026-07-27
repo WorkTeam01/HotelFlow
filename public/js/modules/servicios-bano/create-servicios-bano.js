@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Mostrar aviso de stock bajo si la vista inyectó el dato
+    if (typeof stockBajoActual !== 'undefined') {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Stock Bajo',
+            text: 'El stock de papel higiénico está bajo (' + stockBajoActual + ' unidades). Considere reponer pronto.',
+            showConfirmButton: true,
+            confirmButtonText: 'Entendido'
+        });
+    }
+
     // Inicializar Select2
     initializeSelect2();
 

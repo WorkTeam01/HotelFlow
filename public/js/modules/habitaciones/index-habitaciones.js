@@ -6,6 +6,9 @@ $(document).ready(function () {
     // Inicializar tooltips
     $('[data-toggle="tooltip"]').tooltip();
 
+    // Inicializar Select2
+    initializeSelect2();
+
     // Inicializar DataTable
     const tabla = $("#tablaHabitaciones").DataTable({
         "responsive": true,
@@ -302,7 +305,7 @@ $(document).ready(function () {
 
                 // Enviar solicitud AJAX
                 $.ajax({
-                    url: `${baseUrl}controllers/habitaciones/cambiar_estado.php`,
+                    url: `${BASE_URL}controllers/habitaciones/cambiar_estado.php`,
                     type: 'POST',
                     dataType: 'json',
                     data: {

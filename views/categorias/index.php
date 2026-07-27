@@ -204,9 +204,5 @@ include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
 
-<script>
-    var baseUrl = "<?= $URL; ?>";
-</script>
-
 <!-- Script para la gestión de categorías -->
 <script src="<?= $URL; ?>public/js/modules/categorias/index-categorias.js"></script>

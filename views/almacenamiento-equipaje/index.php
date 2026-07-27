@@ -316,10 +316,6 @@ $clientes = $datos_formulario['clientes'];
     </div>
 </section>
 
-<script>
-    var baseUrl = "<?= $URL; ?>";
-</script>
-
 <script src="<?= $URL; ?>public/js/modules/almacenamiento-equipaje/index-equipajes.js"></script>
 
 <?php

@@ -344,10 +344,6 @@ $estadisticas = $controller->getEstadisticas();
     </div>
 </div>
 
-<script>
-    // Construir la URL para la acción
-    const baseUrl = '<?= $URL; ?>';
-</script>
 <script src="<?= $URL; ?>public/js/modules/limpieza/index-limpieza.js"></script>
 
 <?php

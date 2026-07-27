@@ -156,3 +156,35 @@ $(document).ready(function () {
         }
     }).buttons().container().appendTo('#tablaPersonas_wrapper .col-md-6:eq(0)');
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const botonesCambiarEstado = document.querySelectorAll('.btn-cambiar-estado');
+
+    botonesCambiarEstado.forEach(boton => {
+        boton.addEventListener('click', function() {
+            const personaId = this.dataset.id;
+            const estadoActual = this.dataset.estado;
+            const nombrePersona = this.dataset.nombre;
+
+            const tituloAlerta = estadoActual == 1 ? `¿Desactivar a ${nombrePersona}?` : `¿Activar a ${nombrePersona}?`;
+            const textoAlerta = estadoActual == 1 ? 'El cliente no podrá realizar reservas.' : 'El cliente podrá realizar reservas nuevamente.';
+            const confirmButtonText = estadoActual == 1 ? 'Sí, desactivar' : 'Sí, activar';
+            const cancelButtonText = 'Cancelar';
+
+            Swal.fire({
+                title: tituloAlerta,
+                text: textoAlerta,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: estadoActual == 1 ? '#d33' : '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: cancelButtonText
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `${BASE_URL}controllers/personas/desactivar_persona.php?id=${personaId}&estado=${estadoActual}&csrf_token=${CSRF_TOKEN}`;
+                }
+            });
+        });
+    });
+});

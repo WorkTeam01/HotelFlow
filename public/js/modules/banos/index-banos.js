@@ -218,11 +218,11 @@ $(document).ready(function () {
         let url, loadingMsg, successBtn;
 
         if (action === 'create') {
-            url = baseUrl + 'controllers/banos/crear_bano_ajax.php';
+            url = BASE_URL + 'controllers/banos/crear_bano_ajax.php';
             loadingMsg = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
             successBtn = '<i class="fas fa-check"></i> Guardar Baño';
         } else {
-            url = baseUrl + 'controllers/banos/actualizar_bano_ajax.php';
+            url = BASE_URL + 'controllers/banos/actualizar_bano_ajax.php';
             loadingMsg = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
             successBtn = '<i class="fas fa-save"></i> Actualizar';
         }
@@ -299,7 +299,7 @@ $(document).ready(function () {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: baseUrl + 'controllers/banos/cambiar_estado_bano_ajax.php',
+                    url: BASE_URL + 'controllers/banos/cambiar_estado_bano_ajax.php',
                     type: 'POST',
                     dataType: 'json',
                     data: {

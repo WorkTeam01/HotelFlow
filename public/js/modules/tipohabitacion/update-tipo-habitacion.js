@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     cancelButtonText: 'No, permanecer'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = '<?= $URL; ?>views/tipohabitacion/index.php';
+                        window.location.href = `${BASE_URL}views/tipohabitacion/index.php`;
                     }
                 });
             }

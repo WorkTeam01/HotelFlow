@@ -197,7 +197,7 @@ $(document).ready(function () {
 
         // Cargar habitaciones disponibles para nueva asignación
         $.ajax({
-            url: `${baseUrl}controllers/limpieza/obtener_habitaciones_ajax.php`,
+            url: `${BASE_URL}controllers/limpieza/obtener_habitaciones_ajax.php`,
             type: 'POST',
             dataType: 'json',
             headers: {
@@ -280,7 +280,7 @@ $(document).ready(function () {
 
         // Cargar habitaciones disponibles incluyendo la habitación actual
         $.ajax({
-            url: `${baseUrl}controllers/limpieza/obtener_habitaciones_ajax.php`,
+            url: `${BASE_URL}controllers/limpieza/obtener_habitaciones_ajax.php`,
             type: 'POST',
             dataType: 'json',
             headers: {
@@ -348,11 +348,11 @@ $(document).ready(function () {
         let url, loadingMsg, successBtn;
 
         if (action === 'create') {
-            url = `${baseUrl}controllers/limpieza/crear_asignacion_ajax.php`;
+            url = `${BASE_URL}controllers/limpieza/crear_asignacion_ajax.php`;
             loadingMsg = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
             successBtn = '<i class="fas fa-save"></i> Guardar';
         } else {
-            url = `${baseUrl}controllers/limpieza/actualizar_asignacion_ajax.php`;
+            url = `${BASE_URL}controllers/limpieza/actualizar_asignacion_ajax.php`;
             loadingMsg = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
             successBtn = '<i class="fas fa-save"></i> Actualizar';
         }
@@ -420,7 +420,7 @@ $(document).ready(function () {
         }).then((result) => {
             if (result.isConfirmed) {
                 ajaxRequest(
-                    `${baseUrl}controllers/limpieza/cambiar_estado_ajax.php`,
+                    `${BASE_URL}controllers/limpieza/cambiar_estado_ajax.php`,
                     'POST',
                     {
                         id: id,
@@ -456,7 +456,7 @@ $(document).ready(function () {
         }).then((result) => {
             if (result.isConfirmed) {
                 ajaxRequest(
-                    `${baseUrl}controllers/limpieza/eliminar_asignacion_ajax.php`,
+                    `${BASE_URL}controllers/limpieza/eliminar_asignacion_ajax.php`,
                     'POST',
                     { id: id },
                     function (response) {

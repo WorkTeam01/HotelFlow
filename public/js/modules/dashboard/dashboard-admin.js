@@ -454,7 +454,7 @@ function renderizarMapaHabitaciones() {
             // Crear elemento de habitación
             const habElement = $(`
                 <div class="habitacion-item m-1" data-estado="${habitacion.estado}" data-piso="${habitacion.idpiso}">
-                    <a href="${baseUrl}views/habitaciones/show.php?id=${habitacion.id_habitacion}"
+                    <a href="${BASE_URL}views/habitaciones/show.php?id=${habitacion.id_habitacion}"
                        class="btn btn-${clase} position-relative" 
                        style="width: 70px; height: 70px;"
                        data-toggle="tooltip" title="${capitalizeFirstLetter(habitacion.estado)} - ${habitacion.tipo_habitacion}">

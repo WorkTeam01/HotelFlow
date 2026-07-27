@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (typeof Swal === 'undefined') {
             console.error('SweetAlert2 no está disponible');
             if (confirm(textoAlerta)) {
-                window.location.href = `${baseUrl}controllers/servicios-bano/cambiar_estado_servicio.php?id=${id}&nuevo_estado=${accion}&csrf_token=${CSRF_TOKEN}`;
+                window.location.href = `${BASE_URL}controllers/servicios-bano/cambiar_estado_servicio.php?id=${id}&nuevo_estado=${accion}&csrf_token=${CSRF_TOKEN}`;
             }
             return;
         }
@@ -198,14 +198,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     allowOutsideClick: false
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = `${baseUrl}controllers/servicios-bano/cambiar_estado_servicio.php?id=${id}&nuevo_estado=${accion}&csrf_token=${CSRF_TOKEN}`;
+                        window.location.href = `${BASE_URL}controllers/servicios-bano/cambiar_estado_servicio.php?id=${id}&nuevo_estado=${accion}&csrf_token=${CSRF_TOKEN}`;
                     }
                 });
             } catch (error) {
                 console.error('Error al mostrar SweetAlert:', error);
                 // Fallback al diálogo nativo en caso de error
                 if (confirm(textoAlerta)) {
-                    window.location.href = `${baseUrl}controllers/servicios-bano/cambiar_estado_servicio.php?id=${id}&nuevo_estado=${accion}&csrf_token=${CSRF_TOKEN}`;
+                    window.location.href = `${BASE_URL}controllers/servicios-bano/cambiar_estado_servicio.php?id=${id}&nuevo_estado=${accion}&csrf_token=${CSRF_TOKEN}`;
                 }
             }
         }, 100);

@@ -661,9 +661,31 @@ window.RecepcionModule.Create = (function ($) {
     }
 
     /**
+     * Aplica al <body> las clases de módulo/paso según el data-step
+     * definido en el contenedor [data-module="recepcion-create"] de la vista.
+     */
+    function applyBodyStepClasses() {
+        var $container = $('[data-module="recepcion-create"]');
+        if (!$container.length) {
+            return;
+        }
+
+        $('body').addClass('module-recepcion-create');
+
+        var step = $container.data('step');
+        if (step === 'select-room') {
+            $('body').addClass('step-select-room');
+        } else if (step === 'create-checkin') {
+            $('body').addClass('step-create-checkin');
+        }
+    }
+
+    /**
      * Inicializar el módulo
      */
     function init() {
+        applyBodyStepClasses();
+
         // Solo inicializar si estamos en la página de create
         if (!$('body').hasClass('module-recepcion-create')) {
             return;

@@ -236,11 +236,11 @@ $(document).ready(function () {
         let url, loadingMsg, successBtn;
 
         if (action === 'create') {
-            url = `${baseUrl}controllers/pisos/crear_piso_ajax.php`;
+            url = `${BASE_URL}controllers/pisos/crear_piso_ajax.php`;
             loadingMsg = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
             successBtn = '<i class="fas fa-save"></i> Guardar';
         } else {
-            url = `${baseUrl}controllers/pisos/actualizar_piso_ajax.php`;
+            url = `${BASE_URL}controllers/pisos/actualizar_piso_ajax.php`;
             loadingMsg = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
             successBtn = '<i class="fas fa-save"></i> Actualizar';
         }
@@ -304,7 +304,7 @@ $(document).ready(function () {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `${baseUrl}controllers/pisos/cambiar_estado_ajax.php`,
+                    url: `${BASE_URL}controllers/pisos/cambiar_estado_ajax.php`,
                     type: 'POST',
                     dataType: 'json',
                     data: {

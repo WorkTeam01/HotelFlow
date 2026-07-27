@@ -290,10 +290,6 @@ requireLogin();
 </section>
 <!-- /.content -->
 
-<script>
-    // Construir la URL para la acción
-    const baseUrl = '<?= $URL; ?>';
-</script>
 <script src="<?= $URL; ?>public/js/modules/servicios-bano/index-servicios-bano.js"></script>
 <script src="<?= $URL; ?>public/js/modules/servicios-bano/servicio-bano-rapido.js"></script>
 

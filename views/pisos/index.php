@@ -29,6 +29,7 @@ include_once '../layouts/header.php';
 $controller = new PisoController();
 $pisos = $controller->index();
 $estadisticas = $controller->getEstadisticas();
+$conteoHabitacionesPorPiso = $controller->obtenerConteoHabitacionesPorPiso();
 ?>
 
 <!-- Content Header (Page header) -->
@@ -129,11 +130,7 @@ $estadisticas = $controller->getEstadisticas();
                                         $texto_estado = $estado_actual == 1 ? 'Activo' : 'Inactivo';
 
                                         // Contar habitaciones para este piso
-                                        $idpiso = $piso['idpiso'];
-                                        $queryHabs = "SELECT COUNT(*) FROM habitaciones WHERE idpiso = $idpiso";
-                                        $stmtHabs = Conexion::getInstance()->getConnection()->prepare($queryHabs);
-                                        $stmtHabs->execute();
-                                        $num_habitaciones = $stmtHabs->fetchColumn();
+                                        $num_habitaciones = $conteoHabitacionesPorPiso[$piso['idpiso']] ?? 0;
                                     ?>
                                         <tr>
                                             <td class="text-center"><?= $contador++; ?></td>
@@ -224,10 +221,6 @@ $estadisticas = $controller->getEstadisticas();
 include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
-
-<script>
-    var baseUrl = "<?= $URL; ?>";
-</script>
 
 <!-- Script para la gestión de pisos -->
 <script src="<?= $URL; ?>public/js/modules/pisos/index-pisos.js"></script>

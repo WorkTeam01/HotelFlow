@@ -128,17 +128,7 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
     $stockMinimo = $disponibilidad['stock_minimo'];
 
     if ($stockActual <= $stockMinimo && $stockMinimo > 0) {
-        echo '<script>
-            document.addEventListener("DOMContentLoaded", function() {
-                Swal.fire({
-                    icon: "warning",
-                    title: "Stock Bajo",
-                    text: "El stock de papel higiénico está bajo (' . $stockActual . ' unidades). Considere reponer pronto.",
-                    showConfirmButton: true,
-                    confirmButtonText: "Entendido"
-                });
-            });
-        </script>';
+        $stockBajoActual = $stockActual;
     }
 }
 ?>
@@ -388,6 +378,11 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
 </section>
 <!-- /.content -->
 
+<?php if (isset($stockBajoActual)) : ?>
+<script>
+    window.stockBajoActual = <?= (int)$stockBajoActual; ?>;
+</script>
+<?php endif; ?>
 <script src="<?= $URL; ?>public/js/modules/servicios-bano/create-servicios-bano.js"></script>
 
 <?php

@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 cancelButtonText: 'No, volver'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `${baseUrl}controllers/servicios-bano/cambiar_estado_servicio.php?id=${servicioId}&estado_actual=${estadoActual}&nuevo_estado=${accion}`;
+                    window.location.href = `${BASE_URL}controllers/servicios-bano/cambiar_estado_servicio.php?id=${servicioId}&estado_actual=${estadoActual}&nuevo_estado=${accion}`;
                 }
             });
         });

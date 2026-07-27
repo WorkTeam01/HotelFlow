@@ -232,11 +232,11 @@ $(document).ready(function () {
         let url, loadingMsg, successBtn;
 
         if (action === 'create') {
-            url = `${baseUrl}controllers/categoria/crear_categoria_ajax.php`;
+            url = `${BASE_URL}controllers/categoria/crear_categoria_ajax.php`;
             loadingMsg = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
             successBtn = '<i class="fas fa-save"></i> Guardar';
         } else {
-            url = `${baseUrl}controllers/categoria/actualizar_categoria_ajax.php`;
+            url = `${BASE_URL}controllers/categoria/actualizar_categoria_ajax.php`;
             loadingMsg = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
             successBtn = '<i class="fas fa-save"></i> Actualizar';
         }
@@ -300,7 +300,7 @@ $(document).ready(function () {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `${baseUrl}controllers/categoria/desactivar_categoria_ajax.php`,
+                    url: `${BASE_URL}controllers/categoria/desactivar_categoria_ajax.php`,
                     type: 'POST',
                     dataType: 'json',
                     data: {

@@ -199,34 +199,6 @@ $estadisticas = $controller->getEstadisticas();
 </section>
 <!-- /.content -->
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const botonesAnular = document.querySelectorAll('.btn-anular-venta');
-
-        botonesAnular.forEach(boton => {
-            boton.addEventListener('click', function() {
-                const ventaId = this.dataset.id;
-                const tituloVenta = this.dataset.titulo;
-
-                Swal.fire({
-                    title: `¿Anular venta ${tituloVenta}?`,
-                    text: 'La venta será anulada y el stock de productos será revertido.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dc3545',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Sí, anular',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = `<?= $URL; ?>controllers/ventas/anular_venta.php?id=${ventaId}&csrf_token=<?= generateCSRFToken(); ?>`;
-                    }
-                });
-            });
-        });
-    });
-</script>
-
 <?php
 include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';

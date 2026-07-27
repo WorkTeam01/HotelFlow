@@ -193,3 +193,35 @@ $(document).ready(function () {
         "order": [[0, 'asc']] // Ordenar por la primera columna (Nro)
     }).buttons().container().appendTo('#tablaTarifas_wrapper .col-md-6:eq(0)');
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const botonesCambiarEstado = document.querySelectorAll('.btn-cambiar-estado');
+
+    botonesCambiarEstado.forEach(boton => {
+        boton.addEventListener('click', function() {
+            const tarifaId = this.dataset.id;
+            const estadoActual = this.dataset.estado;
+            const nombreTarifa = this.dataset.nombre;
+
+            const tituloAlerta = estadoActual == 1 ? `¿Desactivar ${nombreTarifa}?` : `¿Activar ${nombreTarifa}?`;
+            const textoAlerta = estadoActual == 1 ? 'La tarifa no estará disponible para asignación.' : 'La tarifa estará disponible para asignación.';
+            const confirmButtonText = estadoActual == 1 ? 'Sí, desactivar' : 'Sí, activar';
+            const cancelButtonText = 'Cancelar';
+
+            Swal.fire({
+                title: tituloAlerta,
+                text: textoAlerta,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: estadoActual == 1 ? '#d33' : '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: cancelButtonText
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `${BASE_URL}controllers/tarifas/desactivar_tarifa.php?id=${tarifaId}&estado=${estadoActual}&csrf_token=${CSRF_TOKEN}`;
+                }
+            });
+        });
+    });
+});

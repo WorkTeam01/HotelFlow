@@ -152,53 +152,6 @@ $compras = $esAdmin ? $controller->index() : $controller->obtenerPorUsuario($idu
 
 <script src="<?= $URL; ?>public/js/modules/compras/index-compras.js"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const botonesCambiarEstado = document.querySelectorAll('.btn-cambiar-estado');
-
-        botonesCambiarEstado.forEach(boton => {
-            boton.addEventListener('click', function() {
-                const compraId = this.getAttribute('data-id');
-                const accion = this.getAttribute('data-accion');
-                const tituloCompra = this.getAttribute('data-titulo');
-
-                let tituloAlerta, textoAlerta, confirmButtonText, confirmButtonColor;
-
-                if (accion === 'completar') {
-                    tituloAlerta = `¿Marcar compra ${tituloCompra} como completada?`;
-                    textoAlerta = 'La compra se marcará como finalizada y no podrá ser modificada.';
-                    confirmButtonText = 'Sí, completar';
-                    confirmButtonColor = '#28a745';
-                } else if (accion === 'cancelar') {
-                    tituloAlerta = `¿Cancelar compra ${tituloCompra}?`;
-                    textoAlerta = 'La compra será cancelada y el stock de productos será revertido.';
-                    confirmButtonText = 'Sí, cancelar';
-                    confirmButtonColor = '#dc3545';
-                }
-
-                Swal.fire({
-                    title: tituloAlerta,
-                    text: textoAlerta,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: confirmButtonColor,
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: confirmButtonText,
-                    cancelButtonText: 'Cancelar',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const baseUrl = '<?= $URL; ?>';
-                        // Agregamos un parámetro adicional para evitar caché
-                        window.location.href = `${baseUrl}controllers/compras/cambiar_estado_compra.php?id=${compraId}&accion=${accion}&t=${Date.now()}&csrf_token=<?= generateCSRFToken(); ?>`;
-                    }
-                });
-            });
-        });
-    });
-</script>
-
 <?php
 include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
