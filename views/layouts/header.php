@@ -44,7 +44,7 @@ global $URL;
     <link rel="stylesheet" href="<?= $URL; ?>public/css/core/styles.css">
     <!-- Font Awesome Webfonts -->
     <link rel="stylesheet" href="<?= $URL; ?>public/css/core/webfonts.css">
-    <link rel="icon" type="image/png" href="<?= $URL; ?>public/img/hotel.png">
+    <link rel="icon" type="image/svg+xml" href="<?= $URL; ?>public/img/hotel-logo.svg">
     <?php
     // $skip_datatables: opt-out para vistas sin tabla (ver mismo condicional en footer.php).
     $cargar_datatables = !(isset($skip_datatables) && $skip_datatables === true);

@@ -1,11 +1,34 @@
 /* Estilos personalizados para la página de login */
 
-/* Fondo con gradiente y textura para un tema de alojamiento */
+:root {
+    --login-color-primary: #007bff;
+    --login-color-primary-hover: #0069d9;
+    --login-color-primary-active: #0062cc;
+    --login-color-primary-deep: #0b2a4a;
+    --login-color-primary-mid: #0f3d73;
+    --login-color-bg: #f4f6f9;
+    --login-color-ink: #2c3e50;
+    --login-color-muted: #6c757d;
+    --login-color-footer: #495057;
+    --login-color-border: #ced4da;
+    --login-color-surface-alt: #f8f9fa;
+    --login-color-surface-hover: #e9ecef;
+    --login-color-focus-ring: #80bdff;
+    --login-color-danger: #dc3545;
+    --login-color-success: #28a745;
+    --login-color-warning: #ffc107;
+    --login-color-info: #17a2b8;
+}
+
+/* Fondo claro (AdminLTE default) */
 .login-page {
     height: 100vh;
     overflow: hidden;
     position: relative;
-    background-blend-mode: overlay;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--login-color-bg);
 }
 
 /* Contenedor principal */
@@ -22,9 +45,10 @@
     text-align: center;
 }
 
-.brand-image {
-    max-width: 70px;
-    max-height: 70px;
+.login-logo img {
+    width: 100px;
+    height: 100px;
+    max-width: 100%;
 }
 
 /* Tarjeta de login */
@@ -35,23 +59,23 @@
 }
 
 .card-outline.card-primary {
-    border-top: 3px solid #007bff;
+    border-top: 3px solid var(--login-color-primary);
     overflow: hidden;
 }
 
 .card-header {
-    background-color: #f8f9fa;
+    background-color: var(--login-color-surface-alt);
     padding: 15px;
 }
 
 .card-header h1 {
     margin: 0;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--login-color-ink);
 }
 
 .login-box-msg {
-    color: #6c757d;
+    color: var(--login-color-muted);
     font-size: 0.95rem;
     margin-bottom: 20px;
 }
@@ -66,13 +90,13 @@
 }
 
 .form-control:focus {
-    border-color: #80bdff;
+    border-color: var(--login-color-focus-ring);
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 .input-group-text {
-    background-color: #f8f9fa;
-    border-color: #ced4da;
+    background-color: var(--login-color-surface-alt);
+    border-color: var(--login-color-border);
     padding: 0 15px;
 }
 
@@ -80,8 +104,8 @@
 .password-toggle {
     -webkit-appearance: none;
     appearance: none;
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
+    background-color: var(--login-color-surface-alt);
+    border: 1px solid var(--login-color-border);
     box-shadow: none;
     display: flex;
     align-items: center;
@@ -94,20 +118,20 @@
 }
 
 .password-toggle:hover {
-    background-color: #e9ecef;
+    background-color: var(--login-color-surface-hover);
     cursor: pointer;
 }
 
 .password-toggle:focus {
-    outline: 2px solid #80bdff;
+    outline: 2px solid var(--login-color-focus-ring);
     outline-offset: -2px;
     z-index: 3;
 }
 
 /* Botones */
 .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
+    background-color: var(--login-color-primary);
+    border-color: var(--login-color-primary);
     transition: all 0.3s ease;
     padding: 10px 20px;
     font-size: 1rem;
@@ -115,8 +139,8 @@
 }
 
 .btn-primary:hover {
-    background-color: #0069d9;
-    border-color: #0062cc;
+    background-color: var(--login-color-primary-hover);
+    border-color: var(--login-color-primary-active);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 105, 217, 0.4);
 }
@@ -130,7 +154,7 @@
 .login-footer {
     margin-top: 20px;
     font-size: 0.9rem;
-    color: #495057;
+    color: var(--login-color-footer);
 }
 
 /* Animación de entrada */
@@ -147,12 +171,20 @@
 }
 
 .login-animation {
-    animation: fadeInUp 0.6s ease-out forwards;
+    animation: fadeInUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login-animation {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
 }
 
 /* Mensajes de error y validación */
 .is-invalid {
-    border-color: #dc3545 !important;
+    border-color: var(--login-color-danger) !important;
     padding-right: calc(1.5em + 0.75rem);
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
@@ -161,7 +193,7 @@
 }
 
 .is-valid {
-    border-color: #28a745 !important;
+    border-color: var(--login-color-success) !important;
     padding-right: calc(1.5em + 0.75rem);
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
@@ -172,22 +204,15 @@
 .invalid-feedback {
     display: block;
     width: 100%;
-    margin-top: .25rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
     font-size: 80%;
-    color: #dc3545;
+    color: var(--login-color-danger);
 }
 
-/* Elementos decorativos para un tema de alojamiento */
-.login-page::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    opacity: 0.05;
-    z-index: 1;
+.invalid-feedback:empty {
+    display: none;
+    margin-bottom: 0;
 }
 
 /* Responsive adjustments */
@@ -197,14 +222,9 @@
         width: 90%;
     }
 
-    .brand-image-container {
-        width: 80px;
-        height: 80px;
-    }
-
-    .brand-image {
-        max-width: 55px;
-        max-height: 55px;
+    .login-logo img {
+        width: 72px;
+        height: 72px;
     }
 
     .card-header h1 {
@@ -225,23 +245,23 @@
 
 /* Colores personalizados para los Toast */
 .swal2-icon.swal2-success {
-    color: #28a745;
-    border-color: #28a745;
+    color: var(--login-color-success);
+    border-color: var(--login-color-success);
 }
 
 .swal2-icon.swal2-error {
-    color: #dc3545;
-    border-color: #dc3545;
+    color: var(--login-color-danger);
+    border-color: var(--login-color-danger);
 }
 
 .swal2-icon.swal2-warning {
-    color: #ffc107;
-    border-color: #ffc107;
+    color: var(--login-color-warning);
+    border-color: var(--login-color-warning);
 }
 
 .swal2-icon.swal2-info {
-    color: #17a2b8;
-    border-color: #17a2b8;
+    color: var(--login-color-info);
+    border-color: var(--login-color-info);
 }
 
 /* Animación para el toast */

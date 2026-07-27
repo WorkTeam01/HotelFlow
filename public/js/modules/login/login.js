@@ -18,48 +18,51 @@ $(document).ready(function() {
     // Add subtle animation to login box
     $('.login-box').addClass('login-animation');
 
+    // Marca un campo como inválido y asocia el mensaje de error via aria-describedby
+    function marcarInvalido($input, mensaje) {
+        $input.addClass('is-invalid').attr('aria-invalid', 'true');
+        $('#' + $input.attr('aria-describedby')).text(mensaje);
+    }
+
+    function limpiarInvalido($input) {
+        $input.removeClass('is-invalid').removeAttr('aria-invalid');
+        $('#' + $input.attr('aria-describedby')).text('');
+    }
+
     // Form submission with validation
     $('#login-form').on('submit', function(e) {
         e.preventDefault(); // Prevent default form submission
 
-        const identifier = $('input[name="identifier"]').val().trim();
-        const password = $('input[name="clave"]').val().trim();
+        const $identifier = $('input[name="identifier"]');
+        const $password = $('input[name="clave"]');
+        const identifier = $identifier.val().trim();
+        const password = $password.val().trim();
         let isValid = true;
 
         // Validar que los campos no estén vacíos
         if (!identifier) {
-            $('input[name="identifier"]').addClass('is-invalid');
+            marcarInvalido($identifier, 'Ingrese su email o número de documento');
             isValid = false;
         } else {
-            $('input[name="identifier"]').removeClass('is-invalid');
+            limpiarInvalido($identifier);
         }
 
         if (!password) {
-            $('input[name="clave"]').addClass('is-invalid');
+            marcarInvalido($password, 'Ingrese su contraseña');
             isValid = false;
         } else {
-            $('input[name="clave"]').removeClass('is-invalid');
+            limpiarInvalido($password);
         }
 
         if (!isValid) {
             Toast.fire({
                 icon: 'error',
-                title: 'Por favor complete todos los campos'
+                title: 'Por favor revise los campos marcados'
             });
             return;
         }
 
-        // Validar la longitud de la contraseña
-        if (password.length < 6) {
-            $('input[name="clave"]').addClass('is-invalid');
-            Toast.fire({
-                icon: 'error',
-                title: 'La contraseña debe tener al menos 6 caracteres'
-            });
-            return;
-        }
-
-        // Show loading state
+        // Show loading state and submit immediately
         Swal.fire({
             toast: true,
             position: 'top-end',
@@ -71,14 +74,11 @@ $(document).ready(function() {
             }
         });
 
-        // Submit the form after small delay to show loading
-        setTimeout(() => {
-            this.submit();
-        }, 1000);
+        this.submit();
     });
 
-    // Remove invalid class on input
+    // Remove invalid state on input
     $('input').on('input', function() {
-        $(this).removeClass('is-invalid');
+        limpiarInvalido($(this));
     });
 });
