@@ -33,56 +33,13 @@ $datos = $controller->crear($idhabitacion);
 $clientes = $datos['clientes'];
 $tarifas = $datos['tarifas'];
 $habitacion = $datos['habitacion'];
-
-// Si no hay habitación seleccionada, obtener todas las disponibles para mostrar
-$habitaciones_disponibles = [];
-if (!$idhabitacion) {
-    require_once __DIR__ . '/../../models/Recepcion.php';
-    $recepcionModel = new Recepcion();
-    $habitaciones_disponibles = $recepcionModel->getHabitacionesDisponibles();
-
-    // Agrupar por pisos como en el index
-    function agruparHabitacionesPorPiso($habitaciones)
-    {
-        $pisos = [];
-        foreach ($habitaciones as $habitacion) {
-            $piso = $habitacion['piso_nombre'] ?? 'Sin piso';
-            if (!isset($pisos[$piso])) {
-                $pisos[$piso] = [];
-            }
-            $pisos[$piso][] = $habitacion;
-        }
-
-        // Ordenar habitaciones dentro de cada piso
-        foreach ($pisos as $nombrePiso => &$habitacionesPiso) {
-            usort($habitacionesPiso, function ($a, $b) {
-                return strnatcmp($a['numero'] ?? '0', $b['numero'] ?? '0');
-            });
-        }
-
-        ksort($pisos);
-        return $pisos;
-    }
-
-    $habitaciones_por_piso = agruparHabitacionesPorPiso($habitaciones_disponibles);
-
-    // Obtener pisos únicos para filtros
-    $pisos_unicos = array_keys($habitaciones_por_piso);
-}
+$habitaciones_disponibles = $datos['habitaciones_disponibles'];
+$habitaciones_por_piso = $datos['habitaciones_por_piso'];
+$pisos_unicos = $datos['pisos_unicos'];
 ?>
 
-<!-- Agregar clases específicas al body -->
-<script>
-    document.body.classList.add('module-recepcion-create');
-    <?php if (!$idhabitacion): ?>
-        document.body.classList.add('step-select-room');
-    <?php else: ?>
-        document.body.classList.add('step-create-checkin');
-    <?php endif; ?>
-</script>
-
 <!-- Content Header (Page header) -->
-<section class="content-header">
+<section class="content-header" data-module="recepcion-create" data-step="<?= !$idhabitacion ? 'select-room' : 'create-checkin'; ?>">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">

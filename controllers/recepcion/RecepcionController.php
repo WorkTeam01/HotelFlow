@@ -78,18 +78,78 @@ class RecepcionController
 
         // Si hay una habitación preseleccionada, obtener sus detalles
         $habitacion = null;
+        $habitaciones_disponibles = [];
+        $habitaciones_por_piso = [];
+        $pisos_unicos = [];
+
         if ($idhabitacion) {
             // Obtener detalles de la habitación específica
             require_once __DIR__ . '/../../controllers/habitaciones/HabitacionController.php';
             $habController = new HabitacionController();
             $habitacion = $habController->getById($idhabitacion);
+        } else {
+            // Sin habitación preseleccionada: obtener todas las disponibles agrupadas por piso
+            $habitaciones_disponibles = $this->modelo->getHabitacionesDisponibles();
+            $habitaciones_por_piso = self::agruparHabitacionesPorPiso($habitaciones_disponibles);
+            $pisos_unicos = array_keys($habitaciones_por_piso);
         }
 
         return [
             'clientes' => $clientes,
             'tarifas' => $tarifas,
-            'habitacion' => $habitacion
+            'habitacion' => $habitacion,
+            'habitaciones_disponibles' => $habitaciones_disponibles,
+            'habitaciones_por_piso' => $habitaciones_por_piso,
+            'pisos_unicos' => $pisos_unicos
         ];
+    }
+
+    /**
+     * Agrupa una lista de habitaciones por piso y las ordena
+     * (habitaciones privadas/individuales primero, luego por número natural;
+     * los pisos se ordenan alfabéticamente)
+     *
+     * @param array $habitaciones Lista de habitaciones
+     * @return array Mapa [nombre_piso => habitaciones[]]
+     */
+    public static function agruparHabitacionesPorPiso($habitaciones)
+    {
+        $pisos = [];
+
+        foreach ($habitaciones as $habitacion) {
+            $piso = $habitacion['piso_nombre'] ?? 'Sin piso';
+            if (!isset($pisos[$piso])) {
+                $pisos[$piso] = [];
+            }
+            $pisos[$piso][] = $habitacion;
+        }
+
+        // Ordenar habitaciones dentro de cada piso
+        foreach ($pisos as $nombrePiso => &$habitacionesPiso) {
+            usort($habitacionesPiso, function ($a, $b) {
+                // Priorizar habitaciones privadas (individual) primero
+                $tipoA = $a['tipo_nombre'] ?? '';
+                $tipoB = $b['tipo_nombre'] ?? '';
+
+                $esPrivadaA = stripos($tipoA, 'individual') !== false || stripos($tipoA, 'privada') !== false;
+                $esPrivadaB = stripos($tipoB, 'individual') !== false || stripos($tipoB, 'privada') !== false;
+
+                if ($esPrivadaA && !$esPrivadaB) return -1;
+                if (!$esPrivadaA && $esPrivadaB) return 1;
+
+                // Ordenar por número de habitación
+                $numeroA = $a['numero'] ?? '0';
+                $numeroB = $b['numero'] ?? '0';
+
+                return strnatcmp($numeroA, $numeroB);
+            });
+        }
+        unset($habitacionesPiso);
+
+        // Ordenar pisos alfabéticamente
+        ksort($pisos);
+
+        return $pisos;
     }
 
     /**

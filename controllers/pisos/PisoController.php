@@ -37,6 +37,16 @@ class PisoController
     }
 
     /**
+     * Obtiene el número de habitaciones por piso
+     *
+     * @return array Mapa [idpiso => numero_habitaciones]
+     */
+    public function obtenerConteoHabitacionesPorPiso()
+    {
+        return $this->modelo->contarHabitacionesPorPiso();
+    }
+
+    /**
      * Obtiene un piso por su ID
      * 
      * @param int $id ID del piso

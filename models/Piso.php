@@ -314,6 +314,30 @@ class Piso
     }
 
     /**
+     * Obtiene el número de habitaciones por piso
+     *
+     * @return array Mapa [idpiso => numero_habitaciones]
+     */
+    public function contarHabitacionesPorPiso()
+    {
+        try {
+            $query = "SELECT idpiso, COUNT(*) as num_habitaciones FROM habitaciones GROUP BY idpiso";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->execute();
+
+            $conteo = [];
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+                $conteo[$fila['idpiso']] = (int)$fila['num_habitaciones'];
+            }
+            return $conteo;
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
      * Verifica si existe un piso con el mismo nombre
      * 
      * @param string $nombre Nombre del piso
