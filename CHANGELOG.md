@@ -5,6 +5,26 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.1.1] - 2026-07-27
+
+Refactorización de JavaScript inline hacia módulos externos (`public/js/modules/`) en todas las vistas restantes, junto con una corrección de arquitectura MVC en el flujo de recepción (check-in).
+
+### Changed
+
+- Eliminado el JS inline embebido en `<script>` de 25+ vistas (`habitaciones`, `productos`, `compras`, `ventas`, `tarifas`, `tipohabitacion`, `clientes`, `recepcion`, `dashboard` de limpieza/recepcionista, `login`, `buscar_codigo`, etc.) y trasladado a archivos dedicados en `public/js/modules/[modulo]/`, siguiendo la convención ya usada en el resto del proyecto (`js/modules/[modulo]/[vista]-[modulo].js`).
+- Las vistas ahora exponen los datos que el JS necesita vía atributos `data-*` en el HTML (ej. `data-module="recepcion-create"`, `data-step="select-room"`) en vez de `<script>` con lógica de negocio y interpolación PHP mezclada; los módulos JS leen esos atributos con `dataset`.
+- Nuevos módulos JS creados: `clientes/show-persona.js`, `compras/create-compras.js`, `compras/show-compras.js`, `dashboard/dashboard-limpieza.js`, `dashboard/dashboard-recepcionista.js`, `habitaciones/create-habitaciones.js`, `habitaciones/show-habitaciones.js`, `habitaciones/update-habitaciones.js`, `login/*`, `productos/buscar-codigo.js`, `productos/show-producto.js`, `recepciones/lista-recepciones.js`, `recepciones/show-recepcion.js`, `recepciones/update-recepcion.js`, `tarifas/show-tarifas.js`, `tipohabitacion/show-tipo-habitacion.js`, `ventas/show-venta.js`.
+- `index.php` ahora declara `$skip_datatables = true` (el dashboard no usa `<table>`/`DataTable()`); ya declaraba `$skip_select2`.
+
+### Fixed
+
+- **Bug de arquitectura MVC**: `views/recepcion/create.php` definía y ejecutaba una función PHP (`agruparHabitacionesPorPiso()`) y la consulta de habitaciones disponibles directamente en la vista, en vez de en el controlador/modelo — violación del patrón MVC del proyecto. Se trasladó la lógica a `RecepcionController::crear()` (que ahora también devuelve `habitaciones_disponibles`, `habitaciones_por_piso` y `pisos_unicos`) y al nuevo método estático `RecepcionController::agruparHabitacionesPorPiso()`, que además prioriza habitaciones privadas/individuales al ordenar.
+- `models/Piso.php` gana `contarHabitacionesPorPiso()` (conteo de habitaciones agrupado por `idpiso`, con manejo de error estándar sin filtrar `getMessage()`), expuesto vía `PisoController::obtenerConteoHabitacionesPorPiso()`.
+
+### Docs
+
+- Documentada en CLAUDE.md la convención de exponer datos a JS externo vía `data-*` en el HTML en vez de `<script>` inline con PHP embebido.
+
 ## [1.1.0] - 2026-07-25
 
 Auditoría de seguridad y calidad de todo el proyecto (OWASP Top 10 + patrones documentados en CLAUDE.md), en tres fases (P1/P2/P3) más una re-auditoría final y pruebas manuales end-to-end.
