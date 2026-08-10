@@ -85,17 +85,6 @@ include 'views/layouts/header.php';
     </div>
 </section>
 
-<!-- Script para inicializar componentes JS -->
-<script>
-    $(document).ready(function() {
-        // Inicializar tooltips
-        initializeTooltips();
-
-        // Inicializar Select2 en elementos select
-        initializeSelect2();
-    });
-</script>
-
 <?php
 include 'views/layouts/mensajes.php';
 include 'views/layouts/footer.php';

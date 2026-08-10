@@ -56,9 +56,6 @@ $dashboard_data = [
                 <span class="info-box-number">
                     <?= $stats['limpieza_pendientes']['total_pendientes'] ?? 0 ?>
                 </span>
-                <div class="progress">
-                    <div class="progress-bar" style="width: 100%"></div>
-                </div>
                 <span class="progress-description">
                     <i class="fas fa-clock"></i>
                     <?= $stats['limpieza_pendientes']['pendientes_hoy'] ?? 0 ?> para hoy
@@ -75,9 +72,6 @@ $dashboard_data = [
                 <span class="info-box-number">
                     <?= $stats['personas']['total'] ?? 0 ?>
                 </span>
-                <div class="progress">
-                    <div class="progress-bar" style="width: 100%"></div>
-                </div>
                 <span class="progress-description">
                     <?= $stats['personas']['nuevos_mes'] ?? 0 ?> nuevos este mes
                 </span>
@@ -93,9 +87,6 @@ $dashboard_data = [
                 <span class="info-box-number">
                     <?= number_format($stats['ingresos_totales']['total'] ?? 0, 2) ?> Bs.
                 </span>
-                <div class="progress">
-                    <div class="progress-bar" style="width: 100%"></div>
-                </div>
                 <span class="progress-description">
                     <i class="fas fa-chart-line"></i> Todos los servicios
                 </span>
