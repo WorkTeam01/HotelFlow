@@ -5,6 +5,26 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.1.3] - 2026-08-10
+
+Auditoría de UX/accesibilidad del módulo Dashboard (administrador, recepcionista, limpieza) vía `/impeccable audit`, 13/20 → 19/20.
+
+### Fixed
+
+- **Integridad de datos**: los gráficos del dashboard de administrador (servicios de baño, equipajes, ocupación, ingresos y estado de baños) sustituían silenciosamente datos inventados (ej. `[5,7,3,8,6,9,5]`) cuando las estadísticas reales venían vacías, indistinguibles para un administrador de datos reales. `administrador_dashboard.php` y `dashboard-admin.js` ahora usan ceros honestos como fallback, y el gráfico de estado de baños muestra un mensaje explícito ("No hay datos de baños disponibles.") en vez de una dona con datos ficticios.
+- `RecepcionistaController`/`limpieza_dashboard.php`/`recepcionista_dashboard.php`: agregado `default:` a 4 bloques `switch($estado)` que incumplían la convención de "switch exhaustivo" ya documentada en CLAUDE.md.
+- Accesibilidad: agregado `<label class="sr-only">`/`aria-label` a los 4 buscadores sin etiqueta de los dashboards de recepcionista y limpieza; agregado `aria-pressed` (sincronizado por JS) a todos los grupos de botones de filtro/métrica de los 3 dashboards por rol.
+
+### Changed
+
+- Eliminada la función `ajustarVistaResponsiva()` (~115 líneas) de `dashboard-admin.js`, que reescribía estilos inline vía jQuery `.css()` en competencia con los media queries CSS existentes. El único comportamiento no duplicado (tamaño de las celdas del mapa de habitaciones por breakpoint) se trasladó a `dashboard-admin.css`; de paso se corrigió un selector `.d-flex.justify-content-between.align-items-center` sin ámbito que afectaba encabezados no relacionados en móvil — ahora escapado a `.habitaciones-mapa`.
+- Eliminado el último `<script>` inline del proyecto, en `index.php` (llamaba a `initializeTooltips()`/`initializeSelect2()`, ambas redundantes: ningún dashboard usa Select2 y el de recepcionista ya se auto-inicializa los tooltips).
+- Eliminadas 3 barras de progreso decorativas ancladas en `width: 100%` (Limpiezas Pendientes, Clientes Registrados, Ingresos Totales del dashboard de administrador) que sugerían una métrica real inexistente; se conservaron las 2 legítimas (ocupación %, stock bajo %).
+
+### Docs
+
+- Memoria de proyecto: auditoría de dashboard cerrada (19/20); el hueco de Theming (3/4) se confirma intencional — el proyecto entero usa AdminLTE en modo claro sin sistema de dark mode, no es un defecto propio del dashboard.
+
 ## [1.1.2] - 2026-07-27
 
 Segunda pasada de limpieza de JS inline (sin excepción para constantes únicas), rediseño del login, y mapa de habitaciones por piso en el dashboard de administrador.
