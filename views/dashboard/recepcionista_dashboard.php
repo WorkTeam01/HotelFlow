@@ -115,6 +115,11 @@
                                     $texto_estado = 'Mantenimiento';
                                     $icono_estado = 'fa-tools';
                                     break;
+                                default:
+                                    $clase_estado = 'bg-secondary';
+                                    $texto_estado = 'Desconocido';
+                                    $icono_estado = 'fa-question-circle';
+                                    break;
                             }
                         ?>
                             <div class="col-lg-6 col-md-12 mb-3 bano-item" data-estado="<?= $estado ?>" data-numero="<?= $bano['numero'] ?>">
@@ -213,6 +218,10 @@
                                         case 'verificada':
                                             $clase_estado = 'badge-secondary';
                                             $texto_estado = 'Verificada';
+                                            break;
+                                        default:
+                                            $clase_estado = 'badge-secondary';
+                                            $texto_estado = 'Desconocido';
                                             break;
                                     }
                                 ?>
@@ -330,6 +339,11 @@
                                     $clase_estado = 'bg-secondary';
                                     $texto_estado = 'Mantenimiento';
                                     $icono_estado = 'fa-tools';
+                                    break;
+                                default:
+                                    $clase_estado = 'bg-secondary';
+                                    $texto_estado = 'Desconocido';
+                                    $icono_estado = 'fa-question-circle';
                                     break;
                             }
                         ?>

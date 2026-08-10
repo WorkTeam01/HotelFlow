@@ -127,6 +127,11 @@
                                     $texto_estado = 'En Progreso';
                                     $icono_estado = 'fa-sync-alt fa-spin';
                                     break;
+                                default:
+                                    $clase_estado = 'bg-secondary';
+                                    $texto_estado = 'Desconocido';
+                                    $icono_estado = 'fa-question-circle';
+                                    break;
                             }
                             ?>
                             <div class="col-md-3 col-sm-6 mb-4 habitacion-card-pendiente" data-estado="<?= $estado ?>" data-numero="<?= $asignacion['numero_habitacion'] ?>">
