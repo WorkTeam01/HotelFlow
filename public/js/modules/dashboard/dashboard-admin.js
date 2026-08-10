@@ -53,14 +53,14 @@ function inicializarGraficoActividad() {
     const hoy = new Date();
     const nombresDias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-    // Datos por defecto basados en los últimos 7 días
+    // Datos por defecto basados en los últimos 7 días (fechas reales, series en cero si no hay datos)
     const datosPorDefecto = {
         labels: [],
         fechasCompletas: [],
-        serviciosBano: [5, 7, 3, 8, 6, 9, 5],
-        equipajes: [2, 3, 1, 5, 2, 6, 3],
-        ocupacion: [8, 10, 12, 9, 15, 18, 14],
-        ingresos: [1000, 1500, 800, 1200, 2000, 2500, 1800]
+        serviciosBano: new Array(7).fill(0),
+        equipajes: new Array(7).fill(0),
+        ocupacion: new Array(7).fill(0),
+        ingresos: new Array(7).fill(0)
     };
 
     // Generar etiquetas y fechas completas por defecto
@@ -294,64 +294,19 @@ function inicializarGraficoEstadoBanos() {
 
     const ctxChart = ctx.getContext('2d');
 
-    // Comprobar si dashboardData.graficos.banos existe
-    if (!dashboardData.graficos || !dashboardData.graficos.banos) {
-        // Usar datos de ejemplo si no hay datos reales
-        const datosEjemplo = {
-            disponibles: 5,
-            mantenimiento: 2,
-            fuera_servicio: 1
-        };
+    // Datos de estado de baños (si no llegan del backend, se muestran en cero, nunca con valores de ejemplo)
+    const banosData = (dashboardData.graficos && dashboardData.graficos.banos) || {};
+    const disponibles = banosData.disponibles || 0;
+    const mantenimiento = banosData.mantenimiento || 0;
+    const fuera_servicio = banosData.fuera_servicio || 0;
 
-        // Crear gráfico con datos de ejemplo
-        new Chart(ctxChart, {
-            type: 'doughnut',
-            data: {
-                labels: ['Disponibles', 'Mantenimiento', 'Fuera de Servicio'],
-                datasets: [{
-                    data: [datosEjemplo.disponibles, datosEjemplo.mantenimiento, datosEjemplo.fuera_servicio],
-                    backgroundColor: [
-                        '#28a745', // Verde - Disponibles
-                        '#6c757d', // Gris - Mantenimiento
-                        '#343a40'  // Negro - Fuera de servicio
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 12,
-                            padding: 15
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                const label = context.label || '';
-                                const value = context.parsed || 0;
-                                const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
-                                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                return label + ': ' + value + ' (' + percentage + '%)';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
+    if (disponibles === 0 && mantenimiento === 0 && fuera_servicio === 0) {
+        const mensaje = document.createElement('p');
+        mensaje.className = 'text-muted text-center mb-0 sin-datos-banos';
+        mensaje.textContent = 'No hay datos de baños disponibles.';
+        ctx.closest('.card-body').appendChild(mensaje);
         return;
     }
-
-    // Datos de estado de baños
-    const disponibles = dashboardData.graficos.banos.disponibles || 0;
-    const mantenimiento = dashboardData.graficos.banos.mantenimiento || 0;
-    const fuera_servicio = dashboardData.graficos.banos.fuera_servicio || 0;
 
     // Crear gráfico
     new Chart(ctxChart, {
