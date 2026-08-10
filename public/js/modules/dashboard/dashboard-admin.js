@@ -183,8 +183,8 @@ function inicializarGraficoActividad() {
     // Configurar eventos de los botones para cambiar de métrica
     $('.metrica-btn').on('click', function () {
         // Actualizar botón activo
-        $('.metrica-btn').removeClass('active');
-        $(this).addClass('active');
+        $('.metrica-btn').removeClass('active').attr('aria-pressed', 'false');
+        $(this).addClass('active').attr('aria-pressed', 'true');
 
         // Obtener métrica seleccionada
         metricaActual = $(this).data('metrica');
@@ -444,8 +444,8 @@ function renderizarMapaHabitaciones() {
 function initializarFiltroHabitaciones() {
     $('.habitaciones-mapa .btn-group button').on('click', function () {
         // Actualizar botón activo
-        $(this).siblings().removeClass('active');
-        $(this).addClass('active');
+        $(this).siblings().removeClass('active').attr('aria-pressed', 'false');
+        $(this).addClass('active').attr('aria-pressed', 'true');
 
         const filtro = $(this).data('filter');
 

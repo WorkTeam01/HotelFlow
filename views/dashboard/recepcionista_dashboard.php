@@ -69,7 +69,8 @@
                 <!-- Filtro para baños -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="input-group input-group-sm" style="max-width: 200px;">
-                        <input type="text" id="buscarBano" class="form-control" placeholder="Buscar baño">
+                        <label for="buscarBano" class="sr-only">Buscar baño</label>
+                        <input type="text" id="buscarBano" class="form-control" placeholder="Buscar baño" aria-label="Buscar baño">
                         <div class="input-group-append">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
@@ -282,7 +283,8 @@
                 </h3>
                 <div class="card-tools">
                     <div class="input-group input-group-sm" style="width: 250px;">
-                        <input type="text" id="buscarHabitacion" class="form-control float-right" placeholder="Buscar habitación">
+                        <label for="buscarHabitacion" class="sr-only">Buscar habitación</label>
+                        <input type="text" id="buscarHabitacion" class="form-control float-right" placeholder="Buscar habitación" aria-label="Buscar habitación">
                         <div class="input-group-append">
                             <button type="button" class="btn btn-default">
                                 <i class="fas fa-search"></i>
@@ -295,11 +297,11 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="mb-0">Estado de las habitaciones</h5>
                     <div class="btn-group">
-                        <button type="button" class="btn btn-outline-primary filtro-habitacion active" data-estado="todos">Todos</button>
-                        <button type="button" class="btn btn-outline-success filtro-habitacion" data-estado="disponible">Disponible</button>
-                        <button type="button" class="btn btn-outline-warning filtro-habitacion" data-estado="limpieza">Limpieza</button>
-                        <button type="button" class="btn btn-outline-danger filtro-habitacion" data-estado="ocupada">Ocupada</button>
-                        <button type="button" class="btn btn-outline-secondary filtro-habitacion" data-estado="mantenimiento">Mantenimiento</button>
+                        <button type="button" class="btn btn-outline-primary filtro-habitacion active" data-estado="todos" aria-pressed="true">Todos</button>
+                        <button type="button" class="btn btn-outline-success filtro-habitacion" data-estado="disponible" aria-pressed="false">Disponible</button>
+                        <button type="button" class="btn btn-outline-warning filtro-habitacion" data-estado="limpieza" aria-pressed="false">Limpieza</button>
+                        <button type="button" class="btn btn-outline-danger filtro-habitacion" data-estado="ocupada" aria-pressed="false">Ocupada</button>
+                        <button type="button" class="btn btn-outline-secondary filtro-habitacion" data-estado="mantenimiento" aria-pressed="false">Mantenimiento</button>
                     </div>
                 </div>
 

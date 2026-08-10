@@ -51,7 +51,8 @@
                 </h3>
                 <div class="card-tools">
                     <div class="input-group input-group-sm" style="width: 250px;">
-                        <input type="text" id="buscarHabitacionPendiente" class="form-control float-right" placeholder="Buscar habitación">
+                        <label for="buscarHabitacionPendiente" class="sr-only">Buscar habitación pendiente</label>
+                        <input type="text" id="buscarHabitacionPendiente" class="form-control float-right" placeholder="Buscar habitación" aria-label="Buscar habitación pendiente">
                         <div class="input-group-append">
                             <button type="button" class="btn btn-default">
                                 <i class="fas fa-search"></i>
@@ -85,9 +86,9 @@
                     </div>
                     <div>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-outline-primary filtro-estado-pendiente active" data-estado="todos">Todos</button>
-                            <button type="button" class="btn btn-outline-warning filtro-estado-pendiente" data-estado="pendiente">Pendientes</button>
-                            <button type="button" class="btn btn-outline-info filtro-estado-pendiente" data-estado="enprogreso">En progreso</button>
+                            <button type="button" class="btn btn-outline-primary filtro-estado-pendiente active" data-estado="todos" aria-pressed="true">Todos</button>
+                            <button type="button" class="btn btn-outline-warning filtro-estado-pendiente" data-estado="pendiente" aria-pressed="false">Pendientes</button>
+                            <button type="button" class="btn btn-outline-info filtro-estado-pendiente" data-estado="enprogreso" aria-pressed="false">En progreso</button>
                         </div>
                     </div>
                 </div>
@@ -188,7 +189,8 @@
                 </h3>
                 <div class="card-tools">
                     <div class="input-group input-group-sm" style="width: 250px;">
-                        <input type="text" id="buscarHabitacionCompletada" class="form-control float-right" placeholder="Buscar habitación">
+                        <label for="buscarHabitacionCompletada" class="sr-only">Buscar habitación completada</label>
+                        <input type="text" id="buscarHabitacionCompletada" class="form-control float-right" placeholder="Buscar habitación" aria-label="Buscar habitación completada">
                         <div class="input-group-append">
                             <button type="button" class="btn btn-default">
                                 <i class="fas fa-search"></i>

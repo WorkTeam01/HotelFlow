@@ -114,9 +114,9 @@ $dashboard_data = [
                     <h3 class="card-title">Actividad Reciente (Últimos 7 días)</h3>
                     <!-- Selector simple de métrica -->
                     <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-primary metrica-btn active" data-metrica="servicios_equipajes">Servicios</button>
-                        <button type="button" class="btn btn-outline-success metrica-btn" data-metrica="ocupacion">Ocupación</button>
-                        <button type="button" class="btn btn-outline-danger metrica-btn" data-metrica="ingresos">Ingresos</button>
+                        <button type="button" class="btn btn-outline-primary metrica-btn active" data-metrica="servicios_equipajes" aria-pressed="true">Servicios</button>
+                        <button type="button" class="btn btn-outline-success metrica-btn" data-metrica="ocupacion" aria-pressed="false">Ocupación</button>
+                        <button type="button" class="btn btn-outline-danger metrica-btn" data-metrica="ingresos" aria-pressed="false">Ingresos</button>
                     </div>
                     <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer/expandir panel">
@@ -460,11 +460,11 @@ $dashboard_data = [
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0">Mapa de Habitaciones</h5>
                         <div class="btn-group btn-group-sm">
-                            <button type="button" class="btn btn-default active" data-filter="all">Todas (<span id="contador-total"><?= $stats['habitaciones']['total'] ?? 0 ?></span>)</button>
-                            <button type="button" class="btn btn-success" data-filter="disponible">Disponibles (<span id="contador-disponibles"><?= $stats['habitaciones']['por_estado']['disponible'] ?? 0 ?></span>)</button>
-                            <button type="button" class="btn btn-warning" data-filter="ocupada">Ocupadas (<span id="contador-ocupadas"><?= $stats['habitaciones']['por_estado']['ocupada'] ?? 0 ?></span>)</button>
-                            <button type="button" class="btn btn-danger" data-filter="mantenimiento">Mantenimiento (<span id="contador-mantenimiento"><?= $stats['habitaciones']['por_estado']['mantenimiento'] ?? 0 ?></span>)</button>
-                            <button type="button" class="btn btn-primary" data-filter="limpieza">Limpieza (<span id="contador-limpieza"><?= $stats['habitaciones']['por_estado']['limpieza'] ?? 0 ?></span>)</button>
+                            <button type="button" class="btn btn-default active" data-filter="all" aria-pressed="true">Todas (<span id="contador-total"><?= $stats['habitaciones']['total'] ?? 0 ?></span>)</button>
+                            <button type="button" class="btn btn-success" data-filter="disponible" aria-pressed="false">Disponibles (<span id="contador-disponibles"><?= $stats['habitaciones']['por_estado']['disponible'] ?? 0 ?></span>)</button>
+                            <button type="button" class="btn btn-warning" data-filter="ocupada" aria-pressed="false">Ocupadas (<span id="contador-ocupadas"><?= $stats['habitaciones']['por_estado']['ocupada'] ?? 0 ?></span>)</button>
+                            <button type="button" class="btn btn-danger" data-filter="mantenimiento" aria-pressed="false">Mantenimiento (<span id="contador-mantenimiento"><?= $stats['habitaciones']['por_estado']['mantenimiento'] ?? 0 ?></span>)</button>
+                            <button type="button" class="btn btn-primary" data-filter="limpieza" aria-pressed="false">Limpieza (<span id="contador-limpieza"><?= $stats['habitaciones']['por_estado']['limpieza'] ?? 0 ?></span>)</button>
                         </div>
                     </div>
 

@@ -1,11 +1,11 @@
 /**
  * Script para el panel de habitaciones del dashboard de Recepcionista
  */
-$(document).ready(function() {
+$(document).ready(function () {
     // Búsqueda de habitación
-    $("#buscarHabitacion").on("keyup", function() {
+    $("#buscarHabitacion").on("keyup", function () {
         var value = $(this).val().toString();
-        $(".habitacion-item").each(function() {
+        $(".habitacion-item").each(function () {
             var numero = $(this).data("numero").toString();
             $(this).toggle(numero.indexOf(value) > -1);
         });
@@ -15,19 +15,19 @@ $(document).ready(function() {
     $('[data-toggle="tooltip"]').tooltip();
 
     // Búsqueda de baño
-    $("#buscarBano").on("keyup", function() {
+    $("#buscarBano").on("keyup", function () {
         var value = $(this).val().toString();
-        $(".bano-item").each(function() {
+        $(".bano-item").each(function () {
             var numero = $(this).data("numero").toString();
             $(this).toggle(numero.indexOf(value) > -1);
         });
     });
 
     // Filtrado de habitaciones
-    $(".filtro-habitacion").on("click", function() {
+    $(".filtro-habitacion").on("click", function () {
         // Actualizar botón activo
-        $(".filtro-habitacion").removeClass("active");
-        $(this).addClass("active");
+        $(".filtro-habitacion").removeClass("active").attr("aria-pressed", "false");
+        $(this).addClass("active").attr("aria-pressed", "true");
 
         // Obtener el estado seleccionado
         var estado = $(this).data("estado");
@@ -42,13 +42,13 @@ $(document).ready(function() {
     });
 
     // Manejar asignación de limpieza
-    $('.btn-asignar-limpieza').on('click', function() {
+    $('.btn-asignar-limpieza').on('click', function () {
         const id = $(this).data('id');
         window.location.href = `${BASE_URL}views/limpieza`;
     });
 
     // Manejar cambio de estado de asignaciones
-    $('.cambiar-estado-asignacion').on('click', function() {
+    $('.cambiar-estado-asignacion').on('click', function () {
         const id = $(this).data('id');
         const estado = $(this).data('estado');
 
@@ -79,7 +79,7 @@ $(document).ready(function() {
                         estado: estado,
                         csrf_token: CSRF_TOKEN
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             Swal.fire({
                                 title: '¡Éxito!',
@@ -102,7 +102,7 @@ $(document).ready(function() {
                             });
                         }
                     },
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         console.error("Error AJAX:", status, error);
                         button.html(originalText);
                         button.prop('disabled', false);

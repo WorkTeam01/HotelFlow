@@ -1,30 +1,30 @@
 /**
  * Script para filtrado y cambio de estado en el dashboard de Limpieza
  */
-$(document).ready(function() {
+$(document).ready(function () {
     // Búsqueda de habitación pendiente - corregido para números
-    $("#buscarHabitacionPendiente").on("keyup", function() {
+    $("#buscarHabitacionPendiente").on("keyup", function () {
         var value = $(this).val().toString();
-        $(".habitacion-card-pendiente").each(function() {
+        $(".habitacion-card-pendiente").each(function () {
             var numero = $(this).data("numero").toString();
             $(this).toggle(numero.indexOf(value) > -1);
         });
     });
 
     // Búsqueda de habitación completada - corregido para números
-    $("#buscarHabitacionCompletada").on("keyup", function() {
+    $("#buscarHabitacionCompletada").on("keyup", function () {
         var value = $(this).val().toString();
-        $(".habitacion-card-completada").each(function() {
+        $(".habitacion-card-completada").each(function () {
             var numero = $(this).data("numero").toString();
             $(this).toggle(numero.indexOf(value) > -1);
         });
     });
 
     // Filtrado por estado para pendientes
-    $(".filtro-estado-pendiente").on("click", function() {
+    $(".filtro-estado-pendiente").on("click", function () {
         // Actualizar botón activo
-        $(".filtro-estado-pendiente").removeClass("active");
-        $(this).addClass("active");
+        $(".filtro-estado-pendiente").removeClass("active").attr("aria-pressed", "false");
+        $(this).addClass("active").attr("aria-pressed", "true");
 
         // Obtener el estado seleccionado
         var estado = $(this).data("estado");
@@ -39,7 +39,7 @@ $(document).ready(function() {
     });
 
     // Manejar cambio de estado de asignaciones
-    $('.cambiar-estado').on('click', function() {
+    $('.cambiar-estado').on('click', function () {
         const id = $(this).data('id');
         const estado = $(this).data('estado');
 
@@ -86,7 +86,7 @@ $(document).ready(function() {
                         estado: estado,
                         csrf_token: CSRF_TOKEN
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             Swal.fire({
                                 title: '¡Éxito!',
@@ -109,7 +109,7 @@ $(document).ready(function() {
                             });
                         }
                     },
-                    error: function() {
+                    error: function () {
                         button.html(originalText);
                         button.prop('disabled', false);
 
