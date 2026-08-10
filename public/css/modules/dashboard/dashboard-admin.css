@@ -159,8 +159,21 @@
         width: 100%;
     }
 
-    .d-flex.justify-content-between.align-items-center {
+    .habitaciones-mapa .d-flex.justify-content-between.align-items-center {
         flex-direction: column;
+    }
+
+    .habitacion-item a {
+        width: 60px;
+        height: 60px;
+    }
+
+    .habitacion-item a i {
+        top: 12px;
+    }
+
+    .habitacion-item a span:not(.badge) {
+        bottom: 8px;
     }
 }
 
@@ -173,6 +186,37 @@
     .habitaciones-mapa .btn-group button {
         font-size: 0.8rem;
         padding: 0.25rem 0.5rem;
+    }
+}
+
+/* Tamaño de las habitaciones del mapa según viewport (antes duplicado en JS) */
+@media (min-width: 577px) and (max-width: 767.98px) {
+    .habitacion-item a {
+        width: 65px;
+        height: 65px;
+    }
+
+    .habitacion-item a i {
+        top: 13px;
+    }
+
+    .habitacion-item a span:not(.badge) {
+        bottom: 10px;
+    }
+}
+
+@media (min-width: 768px) {
+    .habitacion-item a {
+        width: 70px;
+        height: 70px;
+    }
+
+    .habitacion-item a i {
+        top: 15px;
+    }
+
+    .habitacion-item a span:not(.badge) {
+        bottom: 12px;
     }
 }
 

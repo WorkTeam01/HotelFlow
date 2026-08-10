@@ -26,10 +26,6 @@ $(document).ready(function () {
 
     // Filtrado de habitaciones en el mapa
     initializarFiltroHabitaciones();
-
-    // Ajustar vista en móviles
-    ajustarVistaResponsiva();
-    $(window).resize(ajustarVistaResponsiva);
 });
 
 /**
@@ -456,122 +452,6 @@ function initializarFiltroHabitaciones() {
             $('.habitacion-item[data-estado="' + filtro + '"]').show();
         }
     });
-}
-
-/**
- * Ajusta elementos responsivos según el tamaño de pantalla
- */
-function ajustarVistaResponsiva() {
-    const ancho = window.innerWidth;
-
-    // Ajustar tamaño de habitaciones
-    if (ancho < 576) { // Extra small devices
-        $('.habitacion-item a').css({
-            'width': '60px',
-            'height': '60px'
-        });
-        $('.habitacion-item a i').css('top', '12px');
-        $('.habitacion-item a span:not(.badge)').css('bottom', '8px');
-
-        // Ajustar botones de filtro
-        $('.habitaciones-mapa .btn-group').css({
-            'flex-direction': 'row',
-            'flex-wrap': 'wrap',
-            'justify-content': 'center',
-            'margin-top': '10px'
-        });
-        $('.habitaciones-mapa .btn-group button').css({
-            'font-size': '0.7rem',
-            'padding': '0.2rem 0.4rem',
-            'margin': '2px'
-        });
-
-        // Ajustar encabezado del mapa
-        $('.habitaciones-mapa h5').css({
-            'font-size': '1rem',
-            'text-align': 'center',
-            'width': '100%'
-        });
-        $('.d-flex.justify-content-between.align-items-center').css('flex-direction', 'column');
-
-    } else if (ancho < 768) { // Small devices
-        $('.habitacion-item a').css({
-            'width': '65px',
-            'height': '65px'
-        });
-        $('.habitacion-item a i').css('top', '13px');
-        $('.habitacion-item a span:not(.badge)').css('bottom', '10px');
-
-        // Restaurar botones de filtro
-        $('.habitaciones-mapa .btn-group').css({
-            'flex-direction': '',
-            'flex-wrap': '',
-            'justify-content': '',
-            'margin-top': '5px'
-        });
-        $('.habitaciones-mapa .btn-group button').css({
-            'font-size': '0.8rem',
-            'padding': '0.25rem 0.5rem',
-            'margin': ''
-        });
-
-        // Restaurar encabezado
-        $('.habitaciones-mapa h5').css({
-            'font-size': '',
-            'text-align': '',
-            'width': ''
-        });
-        $('.d-flex.justify-content-between.align-items-center').css('flex-direction', '');
-
-    } else { // Medium devices and up
-        $('.habitacion-item a').css({
-            'width': '70px',
-            'height': '70px'
-        });
-        $('.habitacion-item a i').css('top', '15px');
-        $('.habitacion-item a span:not(.badge)').css('bottom', '12px');
-
-        // Restaurar todos los estilos
-        $('.habitaciones-mapa .btn-group, .habitaciones-mapa .btn-group button, .habitaciones-mapa h5, .d-flex.justify-content-between.align-items-center').css({
-            'flex-direction': '',
-            'flex-wrap': '',
-            'justify-content': '',
-            'margin-top': '',
-            'font-size': '',
-            'padding': '',
-            'margin': '',
-            'text-align': '',
-            'width': ''
-        });
-    }
-
-    // Ajustar info-boxes en móviles
-    if (ancho < 576) {
-        $('.info-box').css('min-height', '80px');
-        $('.info-box-icon').css({
-            'width': '50px',
-            'height': '50px',
-            'font-size': '1.5rem',
-            'line-height': '50px'
-        });
-        $('.info-box-content').css({
-            'margin-left': '60px',
-            'padding': '5px 10px'
-        });
-        $('.info-box-text').css('font-size', '12px');
-        $('.info-box-number').css('font-size', '18px');
-    } else {
-        // Restaurar tamaños normales
-        $('.info-box, .info-box-icon, .info-box-content, .info-box-text, .info-box-number').css({
-            'min-height': '',
-            'width': '',
-            'height': '',
-            'font-size': '',
-            'line-height': '',
-            'margin-left': '',
-            'padding': ''
-        });
-    }
 }
 
 /**
