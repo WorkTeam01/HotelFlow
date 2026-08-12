@@ -3,7 +3,8 @@ require_once __DIR__ . '/../../controllers/servicios-bano/ServicioBanoController
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
-$idusuario = $_SESSION['usuario_id'] ?? 0; // Obtener el ID del usuario loguea
+requireLogin();
+$idusuario = $_SESSION['usuario_id']; // Obtener el ID del usuario loguea
 
 // Verificar si se proporcionó un ID
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -18,7 +19,7 @@ if (!$id) {
 // Verificar si el usuario tiene permiso para crear servicios de baño
 $auth = new AuthorizationService();
 
-if (!($auth->puedeAccederModulo($idusuario, 'servicios_bano'))) {
+if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'servicios_bano')) {
     $_SESSION['mensaje'] = 'No tiene permisos para ver servicios de baños.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . 'views/servicios-bano');

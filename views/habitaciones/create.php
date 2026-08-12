@@ -4,16 +4,12 @@ require_once __DIR__ . '/../../controllers/habitaciones/HabitacionController.php
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
-// Iniciar sesión si no está iniciada
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
+requireLogin();
 $idusuario = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
-if (!($auth->puedeAccederModulo($idusuario, 'habitaciones'))) {
+if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'habitaciones')) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
 

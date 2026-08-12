@@ -4,11 +4,12 @@ require_once __DIR__ . '/../../controllers/precios-equipaje/PrecioEquipajeContro
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
+requireLogin();
 $idusuario = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo ANTES de incluir el header
-if (!$auth->puedeAccederModulo($idusuario, 'precios_equipaje')) {
+if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'precios_equipaje')) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
 

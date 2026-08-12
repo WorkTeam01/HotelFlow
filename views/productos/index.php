@@ -3,12 +3,13 @@ require_once __DIR__ . '/../../controllers/productos/ProductoController.php';
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
-$idusuario = $_SESSION['usuario_id'] ?? '';
+requireLogin();
+$idusuario = $_SESSION['usuario_id'];
 
 $authService = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
-if (!($authService->puedeAccederModulo($idusuario, 'productos'))) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'productos')) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL);

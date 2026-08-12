@@ -3,12 +3,13 @@ require_once __DIR__ . '/../../controllers/personas/PersonaController.php';
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
-$idusuario = $_SESSION['usuario_id'] ?? '';
+requireLogin();
+$idusuario = $_SESSION['usuario_id'];
 
 $authService = new AuthorizationService();
 
 // Verificar permisos para el módulo de personas
-if (!($authService->puedeAccederModulo($idusuario, 'clientes'))) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'clientes')) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL);
