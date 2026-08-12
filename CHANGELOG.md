@@ -5,6 +5,28 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.1.4] - 2026-08-12
+
+Extracción del sidebar a su propio archivo con reorganización de grupos, extracción de CSS embebido restante en `recepcion`, y barrido de seguridad/accesibilidad en todas las vistas.
+
+### Changed
+
+- `views/layouts/sidebar.php` extraído de `header.php` (ya no vive inline dentro del layout); resalta automáticamente el link/grupo activo comparando la ruta normalizada de `$_SERVER['REQUEST_URI']` contra cada `href`, y auto-expande el grupo correcto al entrar directo por URL.
+- Grupos del sidebar realineados a la convención estándar de un PMS (triada Front Desk/Housekeeping/POS): **Limpieza** sale de "Servicios" a su propio `<li>` de primer nivel (rol dedicado, sin submenú); **Productos** y **Compras** se fusionan en **Inventario y Compras**.
+- `views/recepcion/lista-recepciones.php` y `views/recepcion/show-recepcion` ganan hoja de estilos dedicada (`public/css/modules/recepciones/lista-recepciones.css`, `show-recepcion.css`) declarada vía `$module_styles`.
+- Símbolo de moneda corregido de `$` a `Bs` (boliviano) en `views/recepcion/create.php` y `views/recepcion/lista-recepciones.php`.
+- Accesibilidad: `aria-label` añadido a botones de icono sin texto (`data-card-widget="collapse"`, acciones de tabla en `lista-recepciones.php`, botón de cerrar modal) y `loading="lazy"` a la imagen de perfil de cliente en `recepcion/show.php`.
+
+### Security
+
+- Barrido del patrón de autorización explícito (`esAdministrador() || puedeAccederModulo()`) extendido a las vistas de `habitaciones`, `almacenamiento-equipaje`, `clientes`, `productos`, `servicios-bano`, `recepcion`, `limpieza`, `banos`, `categorias` y `precios-equipaje`.
+- Reemplazado el patrón manual `if (session_status() == PHP_SESSION_NONE) { session_start(); }` por `requireLogin()` en las vistas que aún lo usaban — `requireLogin()` ya inicia sesión además de verificar autenticación, así que el check manual dejaba una ventana sin verificar auth.
+- `views/recepcion/recibo.php`: valores dinámicos (nombre de cliente, habitación, método de pago, observaciones, datos de la empresa) ahora pasan por `htmlspecialchars()` antes de insertarse en el PDF; los `catch` de generación de PDF ya no filtran `$e->getMessage()`/archivo/línea al usuario — se loguean con `error_log()` y se devuelve un mensaje genérico.
+
+### Docs
+
+- `CLAUDE.md` actualizado: sección de sidebar reescrita para reflejar la extracción a `sidebar.php` y la reorganización de grupos; nota añadida a la regla de "verificación de autorización explícita" documentando el alcance de este barrido y el reemplazo de `session_start()` manual por `requireLogin()`.
+
 ## [1.1.3] - 2026-08-10
 
 Auditoría de UX/accesibilidad del módulo Dashboard (administrador, recepcionista, limpieza) vía `/impeccable audit`, 13/20 → 19/20.
@@ -201,6 +223,8 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.1.4]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.3...1.1.4
+[1.1.3]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.2...1.1.3
 [1.1.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.0.4...1.1.0
