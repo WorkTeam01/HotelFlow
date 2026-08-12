@@ -10,11 +10,12 @@ $module_scripts = ['recepciones/index-recepciones'];
 // Panel de tarjetas por piso, sin tabla: no necesita DataTables
 $skip_datatables = true;
 
+requireLogin();
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar permisos de acceso al módulo
-if (!($authService->puedeAccederModulo($idusuario, 'recepcion'))) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'recepcion')) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL);
@@ -114,7 +115,7 @@ sort($pisos_unicos);
                                 <a href="<?= $URL; ?>views/recepcion/lista-recepciones.php" class="btn btn-primary btn-sm">
                                     <i class="fas fa-list"></i> Ver todas las recepciones
                                 </a>
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Expandir Filtros y Controles">
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>

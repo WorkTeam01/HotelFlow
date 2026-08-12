@@ -36,6 +36,12 @@
     border-left: 3px solid #007bff;
 }
 
+/* Área táctil mínima (44x44px) para los botones de colapsar tarjetas */
+.card-tools .btn-tool {
+    min-width: 44px;
+    min-height: 44px;
+}
+
 /* Mejorar visibilidad de los campos requeridos */
 .form-group label span.text-danger {
     font-weight: bold;

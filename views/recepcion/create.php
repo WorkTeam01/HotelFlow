@@ -7,11 +7,12 @@ require_once __DIR__ . '/../layouts/session.php';
 $module_styles = ['recepciones/index-recepciones', 'recepciones/create-recepcion'];
 $module_scripts = ['recepciones/create-recepcion'];
 
+requireLogin();
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar permisos de acceso al módulo
-if (!($authService->puedeAccederModulo($idusuario, 'recepcion'))) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'recepcion')) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL);
@@ -160,7 +161,7 @@ $pisos_unicos = $datos['pisos_unicos'];
 
                                                     <small class="text-muted d-block mb-3">
                                                         <i class="fas fa-dollar-sign mr-1"></i>
-                                                        Precio base: $<?= number_format($hab['precio_base'], 2); ?>
+                                                        Precio base: Bs <?= number_format($hab['precio_base'], 2); ?>
                                                     </small>
                                                 </div>
 
@@ -261,7 +262,7 @@ $pisos_unicos = $datos['pisos_unicos'];
                                 </div>
                                 <div class="detail-item mb-2">
                                     <i class="fas fa-dollar-sign text-info mr-2"></i>
-                                    <strong>Precio base:</strong> $<?= number_format($habitacion['precio_base'], 2); ?>
+                                    <strong>Precio base:</strong> Bs <?= number_format($habitacion['precio_base'], 2); ?>
                                 </div>
                                 <div class="detail-item">
                                     <i class="fas fa-check-circle text-success mr-2"></i>
@@ -437,7 +438,7 @@ $pisos_unicos = $datos['pisos_unicos'];
                                             <label for="montototal">Monto total <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">Bs</span>
                                                 </div>
                                                 <input type="number" class="form-control" id="montototal" name="montototal"
                                                     step="0.01" min="0" value="<?= $habitacion['precio_base']; ?>" required>
@@ -451,7 +452,7 @@ $pisos_unicos = $datos['pisos_unicos'];
                                             <label for="montopagado">Adelanto/Pago</label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">Bs</span>
                                                 </div>
                                                 <input type="number" class="form-control" id="montopagado" name="montopagado"
                                                     step="0.01" min="0" value="0">
@@ -480,7 +481,7 @@ $pisos_unicos = $datos['pisos_unicos'];
                                             <label for="pago_recibido">Monto recibido</label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">Bs</span>
                                                 </div>
                                                 <input type="number" class="form-control" id="pago_recibido" name="pago_recibido"
                                                     step="0.01" min="0" value="0">
@@ -492,7 +493,7 @@ $pisos_unicos = $datos['pisos_unicos'];
                                             <label for="cambio">Cambio</label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">Bs</span>
                                                 </div>
                                                 <input type="number" class="form-control" id="cambio" name="cambio"
                                                     step="0.01" min="0" value="0" readonly>
@@ -508,13 +509,13 @@ $pisos_unicos = $datos['pisos_unicos'];
                                             <h6><i class="fas fa-calculator mr-2"></i>Resumen financiero:</h6>
                                             <div class="row">
                                                 <div class="col-md-4">
-                                                    <strong>Total:</strong> <span id="resumen-total">$0.00</span>
+                                                    <strong>Total:</strong> <span id="resumen-total">Bs 0.00</span>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <strong>Pagado:</strong> <span id="resumen-pagado">$0.00</span>
+                                                    <strong>Pagado:</strong> <span id="resumen-pagado">Bs 0.00</span>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <strong>Saldo:</strong> <span id="resumen-saldo" class="text-danger">$0.00</span>
+                                                    <strong>Saldo:</strong> <span id="resumen-saldo" class="text-danger">Bs 0.00</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -615,8 +616,8 @@ $pisos_unicos = $datos['pisos_unicos'];
                 <h5 class="modal-title">
                     <i class="fas fa-bed mr-2"></i>Confirmar Selección de Habitación
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">

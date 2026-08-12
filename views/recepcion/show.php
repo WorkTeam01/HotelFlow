@@ -7,11 +7,12 @@ require_once __DIR__ . '/../layouts/session.php';
 $module_styles = ['recepciones/show-recepcion'];
 $module_scripts = ['recepciones/show-recepcion'];
 
+requireLogin();
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar permisos de acceso al módulo
-if (!($authService->puedeAccederModulo($idusuario, 'recepcion'))) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'recepcion')) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL);
@@ -170,7 +171,7 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                             Información de Estancia
                         </h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Información de Estancia">
                                 <i class="fas fa-minus"></i>
                             </button>
                         </div>
@@ -251,7 +252,7 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                             Información Financiera
                         </h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Información Financiera">
                                 <i class="fas fa-minus"></i>
                             </button>
                         </div>
@@ -370,7 +371,7 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                             Información del Cliente
                         </h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Información del Cliente">
                                 <i class="fas fa-minus"></i>
                             </button>
                         </div>
@@ -379,7 +380,8 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                         <div class="text-center mb-3">
                             <img class="profile-user-img img-fluid img-circle"
                                 src="<?= $URL; ?>public/img/user_default.jpg"
-                                alt="Imagen del cliente">
+                                alt="Imagen del cliente"
+                                loading="lazy">
                         </div>
 
                         <h3 class="profile-username text-center">
@@ -434,7 +436,7 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                             Acciones
                         </h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Acciones">
                                 <i class="fas fa-minus"></i>
                             </button>
                         </div>
@@ -507,7 +509,7 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                             Información de Registro
                         </h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Información de Registro">
                                 <i class="fas fa-minus"></i>
                             </button>
                         </div>

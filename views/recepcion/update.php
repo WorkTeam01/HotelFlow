@@ -7,11 +7,12 @@ require_once __DIR__ . '/../layouts/session.php';
 $module_styles = ['recepciones/update-recepcion'];
 $module_scripts = ['recepciones/update-recepcion'];
 
+requireLogin();
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar permisos de acceso al módulo
-if (!($authService->puedeAccederModulo($idusuario, 'recepcion'))) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'recepcion')) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL);
@@ -136,7 +137,7 @@ switch ($recepcion['estado']) {
                                 <i class="fas fa-info-circle mr-2"></i>Datos Principales
                             </h3>
                             <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Datos Principales">
                                     <i class="fas fa-minus"></i>
                                 </button>
                             </div>
@@ -299,7 +300,7 @@ switch ($recepcion['estado']) {
                                 <i class="fas fa-dollar-sign mr-2"></i>Información Financiera
                             </h3>
                             <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Información Financiera">
                                     <i class="fas fa-minus"></i>
                                 </button>
                             </div>
@@ -451,7 +452,7 @@ switch ($recepcion['estado']) {
                                 <i class="fas fa-clipboard-list mr-2"></i>Resumen de Recepción
                             </h3>
                             <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Resumen de Recepción">
                                     <i class="fas fa-minus"></i>
                                 </button>
                             </div>
@@ -516,7 +517,7 @@ switch ($recepcion['estado']) {
                                 <i class="fas fa-question-circle mr-2"></i>Información de Ayuda
                             </h3>
                             <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Información de Ayuda">
                                     <i class="fas fa-minus"></i>
                                 </button>
                             </div>

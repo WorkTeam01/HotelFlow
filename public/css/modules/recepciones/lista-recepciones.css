@@ -1,0 +1,23 @@
+/**
+ * Estilos específicos para la lista de recepciones
+ * HotelFlow
+ */
+
+/* Área táctil mínima (44x44px) para los botones de colapsar tarjetas */
+.card-tools .btn-tool {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* Saldo pendiente resaltado bajo el monto pagado */
+#tablaRecepciones .text-danger small {
+    display: inline-block;
+    margin-top: 2px;
+}
+
+@media (max-width: 576px) {
+    #tablaRecepciones .btn-group {
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+}

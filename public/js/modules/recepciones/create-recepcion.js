@@ -300,9 +300,9 @@ window.RecepcionModule.Create = (function ($) {
         var pagado = parseFloat(elements.montoPagado.val()) || 0;
         var saldo = total - pagado;
 
-        $('#resumen-total').text('$' + total.toFixed(2));
-        $('#resumen-pagado').text('$' + pagado.toFixed(2));
-        $('#resumen-saldo').text('$' + saldo.toFixed(2));
+        $('#resumen-total').text('Bs ' + total.toFixed(2));
+        $('#resumen-pagado').text('Bs ' + pagado.toFixed(2));
+        $('#resumen-saldo').text('Bs ' + saldo.toFixed(2));
 
         // Cambiar color del saldo
         var saldoElement = $('#resumen-saldo');

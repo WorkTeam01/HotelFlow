@@ -10,7 +10,7 @@ $idusuario = $_SESSION['usuario_id'] ?? 0;
 
 // Verificar permisos
 $auth = new AuthorizationService();
-if (!($auth->puedeAccederModulo($idusuario, 'recepcion'))) {
+if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'recepcion')) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a recepciones.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL);
@@ -20,6 +20,7 @@ if (!($auth->puedeAccederModulo($idusuario, 'recepcion'))) {
 // Incluir el encabezado
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_styles = ['recepciones/lista-recepciones'];
 $module_scripts = ['recepciones/lista-recepciones'];
 include_once '../layouts/header.php';
 
@@ -110,7 +111,7 @@ $recepciones_en_curso = $datos['recepciones_en_curso'] ?? [];
                         // Asumiendo que tienes este dato en las estadísticas
                         $ingresos_hoy = $estadisticas['ingresos_hoy'] ?? 0;
                         ?>
-                        <span class="info-box-number">$<?= number_format($ingresos_hoy, 2); ?></span>
+                        <span class="info-box-number">Bs <?= number_format($ingresos_hoy, 2); ?></span>
                     </div>
                 </div>
             </div>
@@ -262,12 +263,12 @@ $recepciones_en_curso = $datos['recepciones_en_curso'] ?? [];
                                                 <?php endif; ?>
                                             </td>
                                             <td class="text-right">
-                                                $<?= number_format(floatval($recepcion['montototal'] ?? 0), 2); ?>
+                                                Bs <?= number_format(floatval($recepcion['montototal'] ?? 0), 2); ?>
                                             </td>
                                             <td class="text-right">
-                                                $<?= number_format(floatval($recepcion['montopagado'] ?? 0), 2); ?>
+                                                Bs <?= number_format(floatval($recepcion['montopagado'] ?? 0), 2); ?>
                                                 <?php if ($saldo > 0): ?>
-                                                    <br><small class="text-danger">Saldo: $<?= number_format($saldo, 2); ?></small>
+                                                    <br><small class="text-danger">Saldo: Bs <?= number_format($saldo, 2); ?></small>
                                                 <?php endif; ?>
                                             </td>
                                             <td class="text-center">
@@ -276,18 +277,18 @@ $recepciones_en_curso = $datos['recepciones_en_curso'] ?? [];
                                             <td class="text-center">
                                                 <div class="btn-group">
                                                     <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $recepcion['idrecepcion']; ?>"
-                                                        class="btn btn-info btn-sm" title="Ver detalles">
+                                                        class="btn btn-info btn-sm" title="Ver detalles" aria-label="Ver detalles">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
 
                                                     <?php if ($estado === 'reservado'): ?>
                                                         <a href="<?= $URL; ?>views/recepcion/update.php?id=<?= $recepcion['idrecepcion']; ?>"
-                                                            class="btn btn-warning btn-sm" title="Editar">
+                                                            class="btn btn-warning btn-sm" title="Editar" aria-label="Editar">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
                                                         <button type="button" class="btn btn-success btn-sm btn-checkin"
                                                             data-id="<?= $recepcion['idrecepcion']; ?>"
-                                                            title="Realizar Check-in">
+                                                            title="Realizar Check-in" aria-label="Realizar Check-in">
                                                             <i class="fas fa-sign-in-alt"></i>
                                                         </button>
                                                     <?php endif; ?>
@@ -295,20 +296,20 @@ $recepciones_en_curso = $datos['recepciones_en_curso'] ?? [];
                                                     <?php if ($estado === 'en_curso'): ?>
                                                         <button type="button" class="btn btn-warning btn-sm btn-checkout"
                                                             data-id="<?= $recepcion['idrecepcion']; ?>"
-                                                            title="Realizar Check-out">
+                                                            title="Realizar Check-out" aria-label="Realizar Check-out">
                                                             <i class="fas fa-sign-out-alt"></i>
                                                         </button>
                                                     <?php endif; ?>
 
                                                     <a href="<?= $URL; ?>views/recepcion/recibo.php?id=<?= $recepcion['idrecepcion']; ?>"
-                                                        class="btn btn-secondary btn-sm" target="_blank" title="Imprimir comprobante">
+                                                        class="btn btn-secondary btn-sm" target="_blank" title="Imprimir comprobante" aria-label="Imprimir comprobante">
                                                         <i class="fas fa-print"></i>
                                                     </a>
 
                                                     <?php if (in_array($estado, ['reservado', 'en_curso'])): ?>
                                                         <button type="button" class="btn btn-danger btn-sm btn-cancelar"
                                                             data-id="<?= $recepcion['idrecepcion']; ?>"
-                                                            title="Cancelar reserva">
+                                                            title="Cancelar reserva" aria-label="Cancelar reserva">
                                                             <i class="fas fa-times"></i>
                                                         </button>
                                                     <?php endif; ?>

@@ -1,0 +1,10 @@
+/**
+ * Estilos específicos para el detalle de recepción
+ * HotelFlow
+ */
+
+/* Área táctil mínima (44x44px) para los botones de colapsar tarjetas */
+.card-tools .btn-tool {
+    min-width: 44px;
+    min-height: 44px;
+}

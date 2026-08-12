@@ -67,7 +67,7 @@ try {
     $idusuario = $_SESSION['usuario_id'];
     $authService = new AuthorizationService();
 
-    if (!($authService->puedeAccederModulo($idusuario, 'recepcion'))) {
+    if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'recepcion')) {
         die("Error: No tiene permisos para generar este recibo");
     }
 
@@ -104,9 +104,10 @@ try {
     // Extraer datos principales con validación
     $cliente = ($recepcion['nombre_cliente'] ?? '') . ' ' . ($recepcion['apellido_cliente'] ?? '');
     $cliente = trim($cliente) ?: 'Cliente no disponible';
+    $cliente = htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8');
 
-    $numero_habitacion = $recepcion['numero_habitacion'] ?? 'Sin habitación';
-    $tipo_habitacion = $recepcion['descripcion_habitacion'] ?? 'Habitación estándar';
+    $numero_habitacion = htmlspecialchars($recepcion['numero_habitacion'] ?? 'Sin habitación', ENT_QUOTES, 'UTF-8');
+    $tipo_habitacion = htmlspecialchars($recepcion['descripcion_habitacion'] ?? 'Habitación estándar', ENT_QUOTES, 'UTF-8');
     $fecha_entrada = formatearFecha($recepcion['fechaentrada'] ?? date('Y-m-d H:i:s'));
     $fecha_salida_prevista = formatearFecha($recepcion['fechasalida_prevista'] ?? date('Y-m-d H:i:s'));
     $fecha_salida_real = !empty($recepcion['fechasalida']) ? formatearFecha($recepcion['fechasalida']) : null;
@@ -116,23 +117,23 @@ try {
     $saldo_pendiente = $monto_pagado - $monto_total;
 
     $estado = ucfirst(str_replace('_', ' ', $recepcion['estado'] ?? 'reservado'));
-    $metodo_pago = $recepcion['metodopago'] ?? 'Sin especificar';
-    $tipo_tarifa = $recepcion['tipo_tarifa'] ?? 'Tarifa estándar';
-    $observaciones = $recepcion['observaciones'] ?? '';
+    $metodo_pago = htmlspecialchars($recepcion['metodopago'] ?? 'Sin especificar', ENT_QUOTES, 'UTF-8');
+    $tipo_tarifa = htmlspecialchars($recepcion['tipo_tarifa'] ?? 'Tarifa estándar', ENT_QUOTES, 'UTF-8');
+    $observaciones = htmlspecialchars($recepcion['observaciones'] ?? '', ENT_QUOTES, 'UTF-8');
 
     // Datos del cliente
-    $documento_cliente = ($recepcion['tipodoc_cliente'] ?? '') . ': ' . ($recepcion['numdoc_cliente'] ?? '');
-    $telefono_cliente = $recepcion['telefono_cliente'] ?? 'No disponible';
+    $documento_cliente = htmlspecialchars(($recepcion['tipodoc_cliente'] ?? '') . ': ' . ($recepcion['numdoc_cliente'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $telefono_cliente = htmlspecialchars($recepcion['telefono_cliente'] ?? 'No disponible', ENT_QUOTES, 'UTF-8');
 
     // Datos de la empresa
     $empresa = [
-        'nombre' => strtoupper($APP_NAME),
+        'nombre' => htmlspecialchars(strtoupper($APP_NAME), ENT_QUOTES, 'UTF-8'),
         'direccion' => 'Santa Cruz - Bolivia',
-        'telefono' => $config['empresa']['telefono'] ?? '+591 74691060'
+        'telefono' => htmlspecialchars($config['empresa']['telefono'] ?? '+591 74691060', ENT_QUOTES, 'UTF-8')
     ];
 
     // Obtener usuario que procesó
-    $usuario_registro = $recepcion['nombre_usuario'] ?? $_SESSION['usuario_nombre'] ?? 'Usuario no disponible';
+    $usuario_registro = htmlspecialchars($recepcion['nombre_usuario'] ?? $_SESSION['usuario_nombre'] ?? 'Usuario no disponible', ENT_QUOTES, 'UTF-8');
 
     // Determinar tipo de documento según estado
     $tipo_documento = '';
@@ -348,9 +349,9 @@ EOD;
     // Output PDF
     $pdf->Output('Recepcion_' . $recepcion['idrecepcion'] . '.pdf', $is_mobile ? 'D' : 'I');
 } catch (Exception $e) {
-    // Capturar cualquier error y mostrarlo
-    die("Error al generar el PDF: " . $e->getMessage() . "\nArchivo: " . $e->getFile() . "\nLínea: " . $e->getLine());
+    error_log('[recepcion/recibo] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    die("Ocurrió un error al generar el PDF. Intente nuevamente.");
 } catch (Error $e) {
-    // Capturar errores fatales
-    die("Error fatal al generar el PDF: " . $e->getMessage() . "\nArchivo: " . $e->getFile() . "\nLínea: " . $e->getLine());
+    error_log('[recepcion/recibo] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    die("Ocurrió un error al generar el PDF. Intente nuevamente.");
 }
