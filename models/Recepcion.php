@@ -108,8 +108,31 @@ class Recepcion
     }
 
     /**
+     * Bloquea la fila de recepción (FOR UPDATE) dentro de la transacción actual y
+     * devuelve sus datos completos (mismo shape que getById()). Debe llamarse siempre
+     * que actualizar()/cambiarEstado() vayan a decidir una transición de estado, para
+     * evitar que dos peticiones concurrentes sobre el mismo registro pisen el estado
+     * de la habitación de forma inconsistente. Orden canónico de bloqueo: recepcion -> habitaciones.
+     *
+     * @param int $id ID de la recepción
+     * @return array|bool Datos de la recepción o false si no existe
+     */
+    private function getByIdForUpdate($id)
+    {
+        $stmt = $this->conexion->prepare("SELECT idrecepcion FROM {$this->tabla} WHERE idrecepcion = :id FOR UPDATE");
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+            return false;
+        }
+
+        return $this->getById($id);
+    }
+
+    /**
      * Obtiene una recepción por su ID - CORREGIDO con información de piso
-     * 
+     *
      * @param int $id ID de la recepción
      * @return array|bool Datos de la recepción o false si no existe
      */
@@ -335,9 +358,10 @@ class Recepcion
         try {
             $this->conexion->beginTransaction();
 
-            // Capturar el estado anterior antes de modificar, para poder comparar
-            // correctamente tras el UPDATE (getById() luego devolvería el nuevo estado)
-            $recepcion_anterior = $this->getById($id);
+            // Bloquear la fila de recepción (orden canónico: recepcion -> habitaciones)
+            // para evitar que dos actualizaciones concurrentes sobre el mismo registro
+            // pisen el estado de la habitación de forma inconsistente.
+            $recepcion_anterior = $this->getByIdForUpdate($id);
             $estado_anterior = $recepcion_anterior ? $recepcion_anterior['estado'] : null;
 
             // Construir consulta de actualización dinámicamente
@@ -414,37 +438,27 @@ class Recepcion
             if (isset($datos['estado']) && $recepcion_anterior) {
                 $idhabitacion = $recepcion_anterior['idhabitacion'];
 
-                if ($datos['estado'] === 'en_curso' && $estado_anterior !== 'en_curso') {
-                    // Ocupar la habitación
-                    $query = "UPDATE habitaciones SET estado = 'ocupada'
-                          WHERE id_habitacion = :idhabitacion";
-                    $stmt = $this->conexion->prepare($query);
-                    $stmt->bindParam(':idhabitacion', $idhabitacion, PDO::PARAM_INT);
-                    $result = $stmt->execute();
+                if (
+                    ($datos['estado'] === 'en_curso' && $estado_anterior !== 'en_curso') ||
+                    ($datos['estado'] === 'finalizado' && $estado_anterior !== 'finalizado') ||
+                    ($datos['estado'] === 'cancelado' && $estado_anterior !== 'cancelado')
+                ) {
+                    // Bloquear la habitación antes de mover su estado (mismo orden que crear()/cambiarEstado())
+                    $stmtLock = $this->conexion->prepare("SELECT estado FROM habitaciones WHERE id_habitacion = :idhabitacion FOR UPDATE");
+                    $stmtLock->bindParam(':idhabitacion', $idhabitacion, PDO::PARAM_INT);
+                    $stmtLock->execute();
 
-                    if (!$result) {
-                        $this->conexion->rollBack();
-                        error_log("Error al actualizar el estado de la habitación: " . print_r($stmt->errorInfo(), true));
-                        return false;
-                    }
-                } else if ($datos['estado'] === 'finalizado' && $estado_anterior !== 'finalizado') {
-                    // Pasar la habitación a limpieza
-                    $query = "UPDATE habitaciones SET estado = 'limpieza'
-                          WHERE id_habitacion = :idhabitacion";
-                    $stmt = $this->conexion->prepare($query);
-                    $stmt->bindParam(':idhabitacion', $idhabitacion, PDO::PARAM_INT);
-                    $result = $stmt->execute();
+                    $estado_habitacion_nuevo = match ($datos['estado']) {
+                        'en_curso' => 'ocupada',
+                        'finalizado' => 'limpieza',
+                        'cancelado' => 'disponible',
+                        default => null,
+                    };
 
-                    if (!$result) {
-                        $this->conexion->rollBack();
-                        error_log("Error al actualizar el estado de la habitación: " . print_r($stmt->errorInfo(), true));
-                        return false;
-                    }
-                } else if ($datos['estado'] === 'cancelado' && $estado_anterior !== 'cancelado') {
-                    // Liberar la habitación
-                    $query = "UPDATE habitaciones SET estado = 'disponible'
+                    $query = "UPDATE habitaciones SET estado = :estado_habitacion
                           WHERE id_habitacion = :idhabitacion";
                     $stmt = $this->conexion->prepare($query);
+                    $stmt->bindParam(':estado_habitacion', $estado_habitacion_nuevo, PDO::PARAM_STR);
                     $stmt->bindParam(':idhabitacion', $idhabitacion, PDO::PARAM_INT);
                     $result = $stmt->execute();
 
@@ -479,8 +493,9 @@ class Recepcion
         try {
             $this->conexion->beginTransaction();
 
-            // Obtener datos actuales de la recepción
-            $recepcion = $this->getById($id);
+            // Bloquear la fila de recepción (orden canónico: recepcion -> habitaciones) para
+            // evitar dos checkouts/cancelaciones concurrentes sobre el mismo registro.
+            $recepcion = $this->getByIdForUpdate($id);
             if (!$recepcion) {
                 $this->conexion->rollBack();
                 $this->lastError = "Recepción no encontrada";
@@ -514,23 +529,18 @@ class Recepcion
             }
 
             // Actualizar estado de la habitación según corresponda
-            if ($estado === 'finalizado') {
-                // Al hacer checkout, marcar habitación para limpieza
-                $query = "UPDATE habitaciones SET estado = 'limpieza' 
-                          WHERE id_habitacion = :idhabitacion";
-                $stmt = $this->conexion->prepare($query);
-                $stmt->bindParam(':idhabitacion', $recepcion['idhabitacion'], PDO::PARAM_INT);
-                $result = $stmt->execute();
+            if ($estado === 'finalizado' || ($estado === 'cancelado' && $recepcion['estado'] !== 'finalizado')) {
+                // Bloquear la habitación antes de mover su estado (mismo orden que crear()/actualizar())
+                $stmtLock = $this->conexion->prepare("SELECT estado FROM habitaciones WHERE id_habitacion = :idhabitacion FOR UPDATE");
+                $stmtLock->bindParam(':idhabitacion', $recepcion['idhabitacion'], PDO::PARAM_INT);
+                $stmtLock->execute();
 
-                if (!$result) {
-                    $this->conexion->rollBack();
-                    return false;
-                }
-            } elseif ($estado === 'cancelado' && $recepcion['estado'] !== 'finalizado') {
-                // Si se cancela y no estaba finalizado, liberar la habitación
-                $query = "UPDATE habitaciones SET estado = 'disponible' 
+                $estado_habitacion_nuevo = $estado === 'finalizado' ? 'limpieza' : 'disponible';
+
+                $query = "UPDATE habitaciones SET estado = :estado_habitacion
                           WHERE id_habitacion = :idhabitacion";
                 $stmt = $this->conexion->prepare($query);
+                $stmt->bindParam(':estado_habitacion', $estado_habitacion_nuevo, PDO::PARAM_STR);
                 $stmt->bindParam(':idhabitacion', $recepcion['idhabitacion'], PDO::PARAM_INT);
                 $result = $stmt->execute();
 
