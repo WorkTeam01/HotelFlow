@@ -130,65 +130,10 @@ $pisos_unicos = $datos['pisos_unicos'];
 
                             <div class="card-body">
                                 <div class="row">
+                                    <?php $modo = 'seleccion'; ?>
                                     <?php foreach ($habitaciones as $hab): ?>
-                                        <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
-                                            <div class="card h-100 habitacion-card habitacion-selectable"
-                                                data-numero="<?= htmlspecialchars($hab['numero']); ?>"
-                                                data-precio="<?= $hab['precio_base']; ?>">
-
-                                                <div class="card-header bg-success text-white text-center py-2">
-                                                    <h6 class="card-title mb-0 room-number">
-                                                        <i class="fas fa-door-open mr-1"></i>
-                                                        N°: <?= htmlspecialchars($hab['numero']); ?>
-                                                    </h6>
-                                                </div>
-
-                                                <div class="card-body text-center p-3">
-                                                    <div class="mb-2">
-                                                        <i class="fas fa-bed fa-2x text-muted"></i>
-                                                    </div>
-
-                                                    <h6 class="card-subtitle mb-2 text-muted room-type">
-                                                        <?= htmlspecialchars($hab['tipo_nombre']); ?>
-                                                    </h6>
-
-                                                    <div class="mb-2">
-                                                        <span class="badge badge-success badge-pill px-3">
-                                                            <i class="fas fa-check-circle mr-1"></i>
-                                                            Disponible
-                                                        </span>
-                                                    </div>
-
-                                                    <small class="text-muted d-block mb-3">
-                                                        <i class="fas fa-dollar-sign mr-1"></i>
-                                                        Precio base: Bs <?= number_format($hab['precio_base'], 2); ?>
-                                                    </small>
-                                                </div>
-
-                                                <!-- Card-footer con botones divididos como en la imagen -->
-                                                <div class="card-footer p-0">
-                                                    <div class="row no-gutters">
-                                                        <div class="col-6">
-                                                            <a href="#" class="btn btn-info btn-block rounded-0">
-                                                                <i class="fas fa-eye mr-1"></i>
-                                                                Detalles
-                                                            </a>
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <button type="button"
-                                                                class="btn btn-success btn-block rounded-0 btn-select-room"
-                                                                data-id="<?= $hab['id_habitacion']; ?>"
-                                                                data-numero="<?= htmlspecialchars($hab['numero']); ?>"
-                                                                data-tipo="<?= htmlspecialchars($hab['tipo_nombre']); ?>"
-                                                                data-precio="<?= $hab['precio_base']; ?>">
-                                                                <i class="fas fa-check mr-1"></i>
-                                                                Asignar
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <?php $habitacion = $hab; ?>
+                                        <?php include __DIR__ . '/partials/card-habitacion.php'; ?>
                                     <?php endforeach; ?>
                                 </div>
                             </div>
