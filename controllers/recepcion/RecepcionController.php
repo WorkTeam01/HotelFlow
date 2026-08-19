@@ -232,6 +232,23 @@ class RecepcionController
     }
 
     /**
+     * Obtiene el folio (líneas de cargo/pago/reverso y saldo) de una recepción
+     *
+     * @param int $id ID de la recepción
+     * @return array ['lineas' => array, 'saldo' => array]
+     */
+    public function obtenerFolio($id)
+    {
+        require_once __DIR__ . '/../../models/Pago.php';
+        $pagoModelo = new Pago();
+
+        return [
+            'lineas' => $pagoModelo->getByRecepcion($id),
+            'saldo' => $pagoModelo->calcularSaldo($id),
+        ];
+    }
+
+    /**
      * Muestra el formulario para editar una recepción
      * 
      * @param int $id ID de la recepción

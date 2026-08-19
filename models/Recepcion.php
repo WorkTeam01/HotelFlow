@@ -257,6 +257,43 @@ class Recepcion
 
             $idrecepcion = $this->conexion->lastInsertId();
 
+            // Escribir la línea inicial del folio (cargo por la estancia + pago si corresponde),
+            // dentro de la misma transacción. `pagos` es la fuente de verdad del folio;
+            // montototal/montopagado en esta tabla quedan como cache calculado a partir de ella
+            // (ver Pago::registrarLinea/calcularSaldo) y no deben modificarse fuera de este flujo.
+            $metodopagoFolio = $datos['metodopago'] ?? 'OTROS';
+            $queryCargo = "INSERT INTO pagos (idrecepcion, tipo, concepto, montototal, metodopago, idusuario)
+                           VALUES (:idrecepcion, 'cargo', 'Estancia', :monto, :metodopago, :idusuario)";
+            $stmtCargo = $this->conexion->prepare($queryCargo);
+            $stmtCargo->bindParam(':idrecepcion', $idrecepcion, PDO::PARAM_INT);
+            $stmtCargo->bindParam(':monto', $datos['montototal'], PDO::PARAM_STR);
+            $stmtCargo->bindParam(':metodopago', $metodopagoFolio, PDO::PARAM_STR);
+            $stmtCargo->bindParam(':idusuario', $datos['idusuario'], PDO::PARAM_INT);
+
+            if (!$stmtCargo->execute()) {
+                $this->conexion->rollBack();
+                error_log('[' . static::class . '] ' . implode(' ', $stmtCargo->errorInfo()));
+                $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+                return false;
+            }
+
+            if ((float)$datos['montopagado'] > 0) {
+                $queryPago = "INSERT INTO pagos (idrecepcion, tipo, concepto, montototal, metodopago, idusuario)
+                              VALUES (:idrecepcion, 'pago', 'Pago inicial (check-in)', :monto, :metodopago, :idusuario)";
+                $stmtPago = $this->conexion->prepare($queryPago);
+                $stmtPago->bindParam(':idrecepcion', $idrecepcion, PDO::PARAM_INT);
+                $stmtPago->bindParam(':monto', $datos['montopagado'], PDO::PARAM_STR);
+                $stmtPago->bindParam(':metodopago', $metodopagoFolio, PDO::PARAM_STR);
+                $stmtPago->bindParam(':idusuario', $datos['idusuario'], PDO::PARAM_INT);
+
+                if (!$stmtPago->execute()) {
+                    $this->conexion->rollBack();
+                    error_log('[' . static::class . '] ' . implode(' ', $stmtPago->errorInfo()));
+                    $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+                    return false;
+                }
+            }
+
             // Actualizar el estado de la habitación si el estado es en_curso
             if ($datos['estado'] === 'en_curso') {
                 $estado_habitacion = 'ocupada';

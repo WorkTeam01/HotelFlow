@@ -42,6 +42,11 @@ if (!$recepcion) {
     exit;
 }
 
+// Folio de huésped (líneas de cargo/pago + saldo real, ver Pago::calcularSaldo)
+$folio = $controller->obtenerFolio($id);
+$folio_lineas = $folio['lineas'];
+$folio_saldo = $folio['saldo'];
+
 // Incluir el encabezado después de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
@@ -360,6 +365,8 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                         </div>
                     </div>
                 </div>
+
+                <?php include __DIR__ . '/partials/folio.php'; ?>
             </div>
 
             <div class="col-md-4">

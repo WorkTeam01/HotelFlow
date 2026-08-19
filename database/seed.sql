@@ -141,6 +141,13 @@ INSERT INTO `persona` (`nombre`, `apellidopaterno`, `apellidomaterno`, `tipodocu
 INSERT INTO `recepcion` (`idcliente`, `idhabitacion`, `idtarifa`, `idusuario`, `metodopago`, `fechaentrada`, `fechasalida_prevista`, `montototal`, `montopagado`, `cambio`, `estado`) VALUES
 (1, 1, 2, 2, 'Efectivo', NOW(), DATE_ADD(NOW(), INTERVAL 1 DAY), 80.00, 80.00, 0.00, 'en_curso');
 
+-- Folio de la recepción anterior: `recepcion`.montototal/montopagado son un cache calculado
+-- a partir de `pagos` (ver Pago::calcularSaldo/registrarLinea) — sembrar ambas líneas para
+-- que el folio y el cache queden consistentes desde el primer arranque.
+INSERT INTO `pagos` (`idrecepcion`, `tipo`, `concepto`, `montototal`, `metodopago`, `idusuario`) VALUES
+(1, 'cargo', 'Estancia', 80.00, 'Efectivo', 2),
+(1, 'pago', 'Pago inicial (check-in)', 80.00, 'Efectivo', 2);
+
 -- Asignación de limpieza pendiente para la habitación 102 (marcada 'limpieza' arriba)
 INSERT INTO `asignaciones_limpieza` (`idusuario`, `idhabitacion`, `fecha`, `hora`, `estado`) VALUES
 (3, 2, CURDATE(), CURTIME(), 'pendiente');

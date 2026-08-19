@@ -194,8 +194,12 @@ CREATE TABLE `pagos` (
   `id_pago` int(11) NOT NULL,
   `idrecepcion` int(11) DEFAULT NULL,
   `idequipaje` int(11) DEFAULT NULL,
+  `tipo` enum('cargo','pago','reverso') NOT NULL DEFAULT 'pago',
+  `concepto` varchar(120) NOT NULL DEFAULT '',
+  `idusuario` int(11) DEFAULT NULL,
+  `id_pago_reversado` int(11) DEFAULT NULL,
   `montototal` decimal(10,2) NOT NULL,
-  `metodopago` enum('Efectivo','QR','Otros') NOT NULL,
+  `metodopago` enum('Efectivo','QR','OTROS') NOT NULL,
   `fechacreacion` datetime DEFAULT current_timestamp(),
   `fechaactualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -536,7 +540,10 @@ ALTER TABLE `intentos_login`
 ALTER TABLE `pagos`
   ADD PRIMARY KEY (`id_pago`),
   ADD KEY `idrecepcion` (`idrecepcion`),
-  ADD KEY `idequipaje` (`idequipaje`);
+  ADD KEY `idequipaje` (`idequipaje`),
+  ADD KEY `idx_pagos_recepcion_fecha` (`idrecepcion`,`fechacreacion`),
+  ADD KEY `idusuario` (`idusuario`),
+  ADD KEY `id_pago_reversado` (`id_pago_reversado`);
 
 --
 -- Indices de la tabla `permiso`
@@ -816,7 +823,9 @@ ALTER TABLE `habitaciones`
 --
 ALTER TABLE `pagos`
   ADD CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`idrecepcion`) REFERENCES `recepcion` (`idrecepcion`),
-  ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`idequipaje`) REFERENCES `almacenamiento_equipaje` (`idalmacen`);
+  ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`idequipaje`) REFERENCES `almacenamiento_equipaje` (`idalmacen`),
+  ADD CONSTRAINT `pagos_ibfk_3` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuario`),
+  ADD CONSTRAINT `pagos_ibfk_4` FOREIGN KEY (`id_pago_reversado`) REFERENCES `pagos` (`id_pago`);
 
 --
 -- Filtros para la tabla `permiso_usuario`
