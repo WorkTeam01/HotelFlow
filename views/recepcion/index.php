@@ -35,6 +35,8 @@ $datos = $controller->index();
 $habitaciones_disponibles = $datos['habitaciones_disponibles'];
 $recepciones_en_curso = $datos['recepciones_en_curso'];
 $habitaciones_mantenimiento = $datos['habitaciones_mantenimiento'];
+$llegadas_hoy = $datos['llegadas_hoy'];
+$reservas_proximas = $datos['reservas_proximas'];
 $estadisticas = $datos['estadisticas'];
 
 // Agrupar las habitaciones por pisos para cada sección
@@ -170,6 +172,58 @@ sort($pisos_unicos);
 
         <div class="row">
             <div class="col-md-12">
+                <!-- Sección: Llegadas de hoy (reservas con fecha de entrada = hoy) -->
+                <div class="section-llegadas">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-calendar-day text-info mr-2"></i> Llegadas de Hoy</h4>
+                        <span class="badge badge-info badge-lg px-3 py-2"><?= count($llegadas_hoy); ?> reservadas</span>
+                    </div>
+
+                    <?php if (empty($llegadas_hoy)): ?>
+                        <div class="card card-body">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                No hay llegadas reservadas para hoy.
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="card piso-card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <?php $modo = 'reserva'; ?>
+                                    <?php foreach ($llegadas_hoy as $recepcion): ?>
+                                        <?php include __DIR__ . '/partials/card-habitacion.php'; ?>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($reservas_proximas)): ?>
+                        <div class="card card-outline card-secondary collapsed-card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-calendar-alt mr-2"></i>Reservas próximas
+                                </h5>
+                                <div class="card-tools">
+                                    <span class="badge badge-secondary mr-2"><?= count($reservas_proximas); ?></span>
+                                    <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Expandir reservas próximas">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <?php $modo = 'reserva'; ?>
+                                    <?php foreach ($reservas_proximas as $recepcion): ?>
+                                        <?php include __DIR__ . '/partials/card-habitacion.php'; ?>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
                 <!-- Sección Principal: Habitaciones Disponibles -->
                 <div class="section-disponibles">
                     <div class="d-flex justify-content-between align-items-center mb-4">

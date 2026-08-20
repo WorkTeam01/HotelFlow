@@ -41,5 +41,8 @@ return [
         'max_fallos_identificador' => (int) env('LOGIN_RATE_LIMIT_MAX_FALLOS_IDENTIFICADOR', 5),
         'max_fallos_ip' => (int) env('LOGIN_RATE_LIMIT_MAX_FALLOS_IP', 20),
         'purga_horas' => (int) env('LOGIN_RATE_LIMIT_PURGA_HORAS', 24)
+    ],
+    'recepcion' => [
+        'noshow_horas' => (int) env('RECEPCION_NOSHOW_HORAS', 6)
     ]
 ];

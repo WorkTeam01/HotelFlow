@@ -14,6 +14,8 @@
  * - modo 'ocupada': $recepcion (numero_habitacion, nombre_cliente, apellido_cliente,
  *   fechasalida_prevista, idrecepcion)
  * - modo 'mantenimiento': $habitacion (numero, tipo_nombre, estado, id_habitacion)
+ * - modo 'reserva': $recepcion (numero_habitacion, nombre_cliente, apellido_cliente,
+ *   fechaentrada, idrecepcion)
  *
  * Solo pinta HTML, no contiene lógica de negocio ni consultas.
  */
@@ -231,6 +233,53 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+<?php elseif ($modo === 'reserva'): ?>
+    <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-3">
+        <div class="card h-100 habitacion-card">
+            <div class="card-header bg-info py-2">
+                <h6 class="card-title mb-0 room-number">
+                    <i class="fas fa-calendar-check mr-1"></i>
+                    N°: <?= htmlspecialchars($recepcion['numero_habitacion']); ?>
+                </h6>
+            </div>
+
+            <div class="card-body text-center p-3">
+                <div class="mb-2">
+                    <i class="fas fa-bed fa-2x text-muted"></i>
+                </div>
+
+                <h6 class="card-subtitle mb-2 text-primary client-name">
+                    <?= htmlspecialchars($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido_cliente']); ?>
+                </h6>
+
+                <div class="mb-2">
+                    <span class="badge badge-info badge-pill px-3">
+                        <i class="fas fa-calendar-day mr-1"></i>
+                        Reservado
+                    </span>
+                </div>
+
+                <small class="text-muted d-block mb-1">
+                    <i class="fas fa-sign-in-alt mr-1"></i>
+                    Entrada: <?= date('d/m/Y', strtotime($recepcion['fechaentrada'])); ?>
+                </small>
+
+                <small class="text-muted d-block mb-3">
+                    <i class="far fa-clock mr-1"></i>
+                    <?= date('H:i', strtotime($recepcion['fechaentrada'])); ?>
+                </small>
+            </div>
+
+            <div class="card-footer p-0">
+                <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $recepcion['idrecepcion']; ?>"
+                    class="btn btn-info btn-block rounded-0">
+                    <i class="fas fa-eye"></i>
+                    <span class="d-none d-lg-inline ml-1">Ver detalle</span>
+                </a>
             </div>
         </div>
     </div>

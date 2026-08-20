@@ -34,6 +34,12 @@ class RecepcionController
      */
     public function index($filtro = null)
     {
+        // Liberar reservas vencidas (no-show) antes de leer cualquier dato para el
+        // panel — fail-open: si falla, se loguea y el panel se carga igual.
+        $config = require __DIR__ . '/../../config/config.php';
+        $noshowHoras = $config['recepcion']['noshow_horas'] ?? 6;
+        $this->modelo->liberarNoShows($noshowHoras);
+
         // Obtener estadísticas
         $estadisticas = $this->modelo->getEstadisticas();
 
@@ -45,6 +51,10 @@ class RecepcionController
 
         // Obtener recepciones en curso para mostrar
         $recepciones_en_curso = $this->modelo->getAllByEstado('en_curso');
+
+        // Reservas: llegadas de hoy y próximas (distinción operativa reserva vs. en curso)
+        $llegadas_hoy = $this->modelo->getLlegadasHoy();
+        $reservas_proximas = $this->modelo->getReservasProximas();
 
         // Si hay un filtro específico, obtener recepciones por ese estado
         $recepciones_filtradas = [];
@@ -60,6 +70,8 @@ class RecepcionController
             'habitaciones_disponibles' => $habitaciones_disponibles,
             'habitaciones_mantenimiento' => $habitaciones_mantenimiento,
             'recepciones_en_curso' => $recepciones_en_curso,
+            'llegadas_hoy' => $llegadas_hoy,
+            'reservas_proximas' => $reservas_proximas,
             'recepciones' => $recepciones_filtradas
         ];
     }

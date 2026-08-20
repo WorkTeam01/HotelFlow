@@ -978,8 +978,123 @@ class Recepcion
     }
 
     /**
+     * Reservas cuya fecha de entrada prevista es hoy (llegadas de hoy), sin importar
+     * si ya vencieron dentro del día. Solo estado 'reservado'.
+     *
+     * @return array
+     */
+    public function getLlegadasHoy()
+    {
+        try {
+            $query = "SELECT r.*,
+                      p.nombre as nombre_cliente, p.apellidopaterno as apellido_cliente,
+                      h.numero as numero_habitacion,
+                      piso.nombre as piso_nombre
+                      FROM {$this->tabla} r
+                      LEFT JOIN persona p ON r.idcliente = p.idpersona
+                      LEFT JOIN habitaciones h ON r.idhabitacion = h.id_habitacion
+                      LEFT JOIN pisos piso ON h.idpiso = piso.idpiso
+                      WHERE r.estado = 'reservado' AND DATE(r.fechaentrada) = CURDATE()
+                      ORDER BY r.fechaentrada ASC";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
+     * Reservas con fecha de entrada prevista futura (después de hoy). Solo estado 'reservado'.
+     *
+     * @return array
+     */
+    public function getReservasProximas()
+    {
+        try {
+            $query = "SELECT r.*,
+                      p.nombre as nombre_cliente, p.apellidopaterno as apellido_cliente,
+                      h.numero as numero_habitacion,
+                      piso.nombre as piso_nombre
+                      FROM {$this->tabla} r
+                      LEFT JOIN persona p ON r.idcliente = p.idpersona
+                      LEFT JOIN habitaciones h ON r.idhabitacion = h.id_habitacion
+                      LEFT JOIN pisos piso ON h.idpiso = piso.idpiso
+                      WHERE r.estado = 'reservado' AND DATE(r.fechaentrada) > CURDATE()
+                      ORDER BY r.fechaentrada ASC";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
+     * Libera automáticamente las reservas ('reservado') cuya fecha de entrada prevista
+     * venció hace más de $horas horas: pasan a 'cancelado' con una observación de
+     * no-show, y su habitación (si seguía 'reservada'/'ocupada' por esta reserva)
+     * vuelve a 'disponible'. Fail-open: cualquier error se loguea pero nunca bloquea
+     * la carga de index.php (mismo criterio que el rate-limit de login). No toca
+     * nunca reservas 'en_curso'.
+     *
+     * @param int $horas Umbral de horas de gracia tras la entrada prevista
+     * @return int Cantidad de reservas liberadas
+     */
+    public function liberarNoShows($horas)
+    {
+        try {
+            $query = "SELECT idrecepcion, idhabitacion FROM {$this->tabla}
+                      WHERE estado = 'reservado'
+                      AND fechaentrada < DATE_SUB(NOW(), INTERVAL :horas HOUR)
+                      FOR UPDATE";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->bindValue(':horas', (int)$horas, PDO::PARAM_INT);
+
+            $this->conexion->beginTransaction();
+            $stmt->execute();
+            $vencidas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($vencidas)) {
+                $this->conexion->commit();
+                return 0;
+            }
+
+            // Nota: una reserva ('reservado') nunca cambia habitaciones.estado — solo
+            // crear() con estado 'en_curso' lo hace — así que la habitación ya sigue
+            // 'disponible' y no requiere ningún UPDATE adicional aquí.
+            $observacion = 'Liberada automáticamente por no-show (sin check-in tras ' . (int)$horas . ' horas).';
+
+            foreach ($vencidas as $reserva) {
+                $stmtUpd = $this->conexion->prepare(
+                    "UPDATE {$this->tabla}
+                     SET estado = 'cancelado',
+                         observaciones = TRIM(CONCAT(COALESCE(observaciones, ''), ' ', :observacion))
+                     WHERE idrecepcion = :id"
+                );
+                $stmtUpd->bindValue(':observacion', $observacion, PDO::PARAM_STR);
+                $stmtUpd->bindValue(':id', $reserva['idrecepcion'], PDO::PARAM_INT);
+                $stmtUpd->execute();
+            }
+
+            $this->conexion->commit();
+            return count($vencidas);
+        } catch (PDOException $e) {
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
      * Obtiene el último error ocurrido
-     * 
+     *
      * @return string Mensaje de error
      */
     public function getLastError()
