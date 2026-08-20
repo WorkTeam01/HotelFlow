@@ -5,6 +5,29 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.2.0] - 2026-08-19
+
+Refactorización del módulo Recepción al estándar funcional/arquitectónico de un PMS real (folio de huésped, wizard de 2 pasos, robustez de concurrencia, cambio de habitación auditable, llegadas/reservas y liberación automática de no-show). Plan completo documentado y ejecutado en 6 fases atómicas.
+
+### Added
+
+- **Folio de huésped real**: tabla `pagos` activada como libro mayor append-only (`tipo` `cargo|pago|reverso`, `concepto`, `idusuario`, `id_pago_reversado`); `recepcion.montototal`/`montopagado` pasan a ser un cache recalculado en la misma transacción. Nuevo modelo `models/Pago.php`, endpoints `registrar_pago_ajax.php`/`registrar_cargo_ajax.php`, partial `views/recepcion/partials/folio.php`. Backfill idempotente para recepciones previas a la migración.
+- **Wizard de check-in de 2 pasos**: `views/recepcion/create.php` (647 → ~116 líneas) pasa a ser un despachador delgado sobre `partials/paso-seleccion-habitacion.php` y `partials/paso-datos-checkin.php`, mismo contrato `?idhabitacion=`.
+- **Partial de tarjeta de habitación reutilizable** (`views/recepcion/partials/card-habitacion.php`, modos `disponible|ocupada|mantenimiento|seleccion|reserva`), elimina 4 copias casi idénticas del markup entre `index.php` y `create.php`.
+- **Cambio de habitación auditable**: `Recepcion::cambiarHabitacion()` mueve una estancia `en_curso` a otra habitación, libera la anterior, registra el movimiento en la nueva tabla `recepcion_movimientos` y carga al folio la diferencia de tarifa si la habitación destino es más cara. Endpoint `cambiar_habitacion_ajax.php`, partial `views/recepcion/partials/cambio-habitacion.php` con historial.
+- **Llegadas de hoy y reservas próximas**: nueva sección en `views/recepcion/index.php` que distingue reservas (`estado='reservado'`) de estancias en curso, con `Recepcion::getLlegadasHoy()`/`getReservasProximas()`.
+- **Liberación automática de no-show**: `Recepcion::liberarNoShows()` cancela, fail-open y de forma determinista al cargar el panel de recepción, las reservas sin check-in vencidas por más de `RECEPCION_NOSHOW_HORAS` horas (nuevo, default 6, configurable vía `.env`/`config/config.php`).
+
+### Fixed
+
+- Condición de carrera cerrada en `Recepcion::cambiarEstado()`/`actualizar()`: ambos métodos ahora bloquean la fila de `recepcion` (`FOR UPDATE`) y la de `habitaciones` antes de decidir una transición de estado, con orden canónico de bloqueo `recepcion` → `habitaciones` (mismo criterio que ya usaba `crear()`).
+- Regresión visual de 1.1.4: el modal de confirmación de `create.php` mostraba el precio con `$` en vez del badge "Bs" usado en el resto del módulo.
+- `?idhabitacion=` inexistente/ocupado en `create.php` causaba warnings de PHP en vez de redirigir; ahora valida y redirige antes de `include header.php`.
+
+### Docs
+
+- `CLAUDE.md`: documentadas las reglas de folio-como-cache, orden canónico de bloqueo `recepcion` → `habitaciones`, y la convención de partials con docblock de dependencias (`views/[modulo]/partials/*.php`).
+
 ## [1.1.4] - 2026-08-12
 
 Extracción del sidebar a su propio archivo con reorganización de grupos, extracción de CSS embebido restante en `recepcion`, y barrido de seguridad/accesibilidad en todas las vistas.
@@ -223,6 +246,7 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.2.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.4...1.2.0
 [1.1.4]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.3...1.1.4
 [1.1.3]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.2...1.1.3
 [1.1.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.1...1.1.2
