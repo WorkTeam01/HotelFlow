@@ -47,6 +47,14 @@ $folio = $controller->obtenerFolio($id);
 $folio_lineas = $folio['lineas'];
 $folio_saldo = $folio['saldo'];
 
+// Historial de cambios de habitación/extensión (Fase 5)
+$movimientos = $controller->obtenerMovimientos($id);
+
+// Habitaciones disponibles para ofrecer como destino de un cambio (solo aplica a en_curso)
+$habitaciones_disponibles_cambio = $recepcion['estado'] === 'en_curso'
+    ? $controller->modelo->getHabitacionesDisponibles()
+    : [];
+
 // Incluir el encabezado después de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
@@ -367,6 +375,8 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                 </div>
 
                 <?php include __DIR__ . '/partials/folio.php'; ?>
+
+                <?php include __DIR__ . '/partials/cambio-habitacion.php'; ?>
             </div>
 
             <div class="col-md-4">

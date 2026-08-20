@@ -361,6 +361,23 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `recepcion_movimientos`
+--
+
+CREATE TABLE `recepcion_movimientos` (
+  `idmovimiento` int(11) NOT NULL,
+  `idrecepcion` int(11) NOT NULL,
+  `tipo` enum('cambio_habitacion','extension_estancia') NOT NULL,
+  `valor_anterior` varchar(64) DEFAULT NULL,
+  `valor_nuevo` varchar(64) DEFAULT NULL,
+  `motivo` varchar(255) DEFAULT NULL,
+  `idusuario` int(11) NOT NULL,
+  `fechacreacion` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `servicio_bano`
 --
 
@@ -598,6 +615,14 @@ ALTER TABLE `recepcion`
   ADD KEY `idtarifa` (`idtarifa`);
 
 --
+-- Indices de la tabla `recepcion_movimientos`
+--
+ALTER TABLE `recepcion_movimientos`
+  ADD PRIMARY KEY (`idmovimiento`),
+  ADD KEY `idx_mov_recepcion` (`idrecepcion`),
+  ADD KEY `idusuario` (`idusuario`);
+
+--
 -- Indices de la tabla `servicio_bano`
 --
 ALTER TABLE `servicio_bano`
@@ -743,6 +768,12 @@ ALTER TABLE `recepcion`
   MODIFY `idrecepcion` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `recepcion_movimientos`
+--
+ALTER TABLE `recepcion_movimientos`
+  MODIFY `idmovimiento` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `servicio_bano`
 --
 ALTER TABLE `servicio_bano`
@@ -848,6 +879,13 @@ ALTER TABLE `recepcion`
   ADD CONSTRAINT `recepcion_ibfk_2` FOREIGN KEY (`idhabitacion`) REFERENCES `habitaciones` (`id_habitacion`),
   ADD CONSTRAINT `recepcion_ibfk_3` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuario`),
   ADD CONSTRAINT `recepcion_ibfk_4` FOREIGN KEY (`idtarifa`) REFERENCES `tarifas` (`idtarifa`);
+
+--
+-- Filtros para la tabla `recepcion_movimientos`
+--
+ALTER TABLE `recepcion_movimientos`
+  ADD CONSTRAINT `recmov_ibfk_1` FOREIGN KEY (`idrecepcion`) REFERENCES `recepcion` (`idrecepcion`),
+  ADD CONSTRAINT `recmov_ibfk_2` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuario`);
 
 --
 -- Filtros para la tabla `servicio_bano`

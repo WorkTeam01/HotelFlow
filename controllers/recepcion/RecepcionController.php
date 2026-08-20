@@ -394,6 +394,43 @@ class RecepcionController
     }
 
     /**
+     * Cambia la habitación de una recepción en curso
+     *
+     * @param int $id ID de la recepción
+     * @param int $idHabitacionDestino ID de la habitación destino
+     * @param int $idusuario Usuario que realiza el cambio
+     * @param string|null $motivo Motivo del cambio
+     * @return array Resultado de la operación
+     */
+    public function cambiarHabitacion($id, $idHabitacionDestino, $idusuario, $motivo = null)
+    {
+        if ($this->modelo->cambiarHabitacion($id, $idHabitacionDestino, $idusuario, $motivo)) {
+            return [
+                'success' => true,
+                'message' => 'Habitación cambiada correctamente',
+                'icon' => 'success'
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => $this->modelo->getLastError(),
+            'icon' => 'error'
+        ];
+    }
+
+    /**
+     * Obtiene el historial de movimientos (cambios de habitación/extensión) de una recepción
+     *
+     * @param int $id ID de la recepción
+     * @return array
+     */
+    public function obtenerMovimientos($id)
+    {
+        return $this->modelo->getMovimientos($id);
+    }
+
+    /**
      * Prepara los datos de recepción desde $_POST
      * siguiendo el enfoque tradicional del manejo de pagos
      * 

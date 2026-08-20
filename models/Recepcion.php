@@ -561,6 +561,219 @@ class Recepcion
     }
 
     /**
+     * Mueve una recepción en_curso a otra habitación, liberando la anterior y
+     * dejando rastro en `recepcion_movimientos`. Orden canónico de bloqueo:
+     * recepcion -> habitaciones (ambas habitaciones bloqueadas ordenadas por
+     * id_habitacion ASC para evitar deadlock con otras transacciones que también
+     * bloqueen dos habitaciones). Si el precio_base de la habitación destino es
+     * mayor al de la actual, la diferencia se registra como cargo en el folio.
+     *
+     * @param int $id ID de la recepción
+     * @param int $idHabitacionDestino ID de la habitación destino
+     * @param int $idusuario Usuario que realiza el cambio
+     * @param string|null $motivo Motivo del cambio (opcional)
+     * @return bool True si se realizó el cambio, False en caso contrario
+     */
+    public function cambiarHabitacion($id, $idHabitacionDestino, $idusuario, $motivo = null)
+    {
+        try {
+            $this->conexion->beginTransaction();
+
+            $recepcion = $this->getByIdForUpdate($id);
+            if (!$recepcion) {
+                $this->conexion->rollBack();
+                $this->lastError = 'Recepción no encontrada.';
+                return false;
+            }
+
+            if ($recepcion['estado'] !== 'en_curso') {
+                $this->conexion->rollBack();
+                $this->lastError = 'Solo se puede cambiar de habitación una estancia en curso.';
+                return false;
+            }
+
+            $idHabitacionOrigen = (int)$recepcion['idhabitacion'];
+
+            if ($idHabitacionOrigen === (int)$idHabitacionDestino) {
+                $this->conexion->rollBack();
+                $this->lastError = 'La habitación destino debe ser distinta a la actual.';
+                return false;
+            }
+
+            // Bloquear ambas habitaciones en orden ascendente de ID, sin importar
+            // cuál es origen/destino, para no deadlockear con otro cambio simultáneo.
+            $idsOrdenados = [$idHabitacionOrigen, (int)$idHabitacionDestino];
+            sort($idsOrdenados);
+
+            $stmtLock = $this->conexion->prepare(
+                "SELECT id_habitacion, estado, precio_base FROM habitaciones WHERE id_habitacion IN (:id1, :id2) ORDER BY id_habitacion ASC FOR UPDATE"
+            );
+            $stmtLock->bindValue(':id1', $idsOrdenados[0], PDO::PARAM_INT);
+            $stmtLock->bindValue(':id2', $idsOrdenados[1], PDO::PARAM_INT);
+            $stmtLock->execute();
+            $habitaciones = $stmtLock->fetchAll(PDO::FETCH_ASSOC);
+
+            $habitacionesPorId = [];
+            foreach ($habitaciones as $hab) {
+                $habitacionesPorId[(int)$hab['id_habitacion']] = $hab;
+            }
+
+            $habitacionDestino = $habitacionesPorId[(int)$idHabitacionDestino] ?? null;
+            $habitacionOrigen = $habitacionesPorId[$idHabitacionOrigen] ?? null;
+
+            // Revalidar disponibilidad DESPUÉS del FOR UPDATE, nunca antes
+            if (!$habitacionDestino || $habitacionDestino['estado'] !== 'disponible') {
+                $this->conexion->rollBack();
+                $this->lastError = 'La habitación destino ya no está disponible.';
+                return false;
+            }
+
+            $stmtMoverRecepcion = $this->conexion->prepare(
+                "UPDATE {$this->tabla} SET idhabitacion = :idhabitacion WHERE idrecepcion = :id"
+            );
+            $stmtMoverRecepcion->bindParam(':idhabitacion', $idHabitacionDestino, PDO::PARAM_INT);
+            $stmtMoverRecepcion->bindParam(':id', $id, PDO::PARAM_INT);
+
+            if (!$stmtMoverRecepcion->execute()) {
+                $this->conexion->rollBack();
+                error_log('[' . static::class . '] ' . implode(' ', $stmtMoverRecepcion->errorInfo()));
+                $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+                return false;
+            }
+
+            $stmtOrigen = $this->conexion->prepare("UPDATE habitaciones SET estado = 'limpieza' WHERE id_habitacion = :id");
+            $stmtOrigen->bindParam(':id', $idHabitacionOrigen, PDO::PARAM_INT);
+            if (!$stmtOrigen->execute()) {
+                $this->conexion->rollBack();
+                error_log('[' . static::class . '] ' . implode(' ', $stmtOrigen->errorInfo()));
+                $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+                return false;
+            }
+
+            $stmtDestino = $this->conexion->prepare("UPDATE habitaciones SET estado = 'ocupada' WHERE id_habitacion = :id");
+            $stmtDestino->bindParam(':id', $idHabitacionDestino, PDO::PARAM_INT);
+            if (!$stmtDestino->execute()) {
+                $this->conexion->rollBack();
+                error_log('[' . static::class . '] ' . implode(' ', $stmtDestino->errorInfo()));
+                $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+                return false;
+            }
+
+            $stmtMov = $this->conexion->prepare(
+                "INSERT INTO recepcion_movimientos (idrecepcion, tipo, valor_anterior, valor_nuevo, motivo, idusuario)
+                 VALUES (:idrecepcion, 'cambio_habitacion', :anterior, :nuevo, :motivo, :idusuario)"
+            );
+            $stmtMov->bindParam(':idrecepcion', $id, PDO::PARAM_INT);
+            $valorAnterior = (string)($habitacionOrigen['id_habitacion'] ?? $idHabitacionOrigen);
+            $valorNuevo = (string)$idHabitacionDestino;
+            $stmtMov->bindParam(':anterior', $valorAnterior, PDO::PARAM_STR);
+            $stmtMov->bindParam(':nuevo', $valorNuevo, PDO::PARAM_STR);
+            if (empty($motivo)) {
+                $stmtMov->bindValue(':motivo', null, PDO::PARAM_NULL);
+            } else {
+                $stmtMov->bindParam(':motivo', $motivo, PDO::PARAM_STR);
+            }
+            $stmtMov->bindParam(':idusuario', $idusuario, PDO::PARAM_INT);
+
+            if (!$stmtMov->execute()) {
+                $this->conexion->rollBack();
+                error_log('[' . static::class . '] ' . implode(' ', $stmtMov->errorInfo()));
+                $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+                return false;
+            }
+
+            // Diferencia de tarifa: si la habitación destino es más cara, se carga la
+            // diferencia al folio dentro de la misma transacción (fuente de verdad: pagos)
+            $precioOrigen = (float)($habitacionOrigen['precio_base'] ?? 0);
+            $precioDestino = (float)($habitacionDestino['precio_base'] ?? 0);
+            $diferencia = $precioDestino - $precioOrigen;
+
+            if ($diferencia > 0.01) {
+                $numeroDestino = $idHabitacionDestino;
+                $concepto = 'Cambio de habitación (diferencia de tarifa)';
+                $queryCargo = "INSERT INTO pagos (idrecepcion, tipo, concepto, montototal, metodopago, idusuario)
+                               VALUES (:idrecepcion, 'cargo', :concepto, :monto, 'OTROS', :idusuario)";
+                $stmtCargo = $this->conexion->prepare($queryCargo);
+                $stmtCargo->bindParam(':idrecepcion', $id, PDO::PARAM_INT);
+                $stmtCargo->bindParam(':concepto', $concepto, PDO::PARAM_STR);
+                $stmtCargo->bindParam(':monto', $diferencia, PDO::PARAM_STR);
+                $stmtCargo->bindParam(':idusuario', $idusuario, PDO::PARAM_INT);
+
+                if (!$stmtCargo->execute()) {
+                    $this->conexion->rollBack();
+                    error_log('[' . static::class . '] ' . implode(' ', $stmtCargo->errorInfo()));
+                    $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+                    return false;
+                }
+
+                // Recalcular el cache de recepcion a partir del folio real (mismo criterio que Pago::registrarLinea)
+                $stmtSaldo = $this->conexion->prepare(
+                    "SELECT
+                        COALESCE(SUM(CASE WHEN p.tipo = 'cargo' THEN p.montototal
+                            WHEN p.tipo = 'reverso' AND orig.tipo = 'cargo' THEN -p.montototal ELSE 0 END), 0) AS total_cargos,
+                        COALESCE(SUM(CASE WHEN p.tipo = 'pago' THEN p.montototal
+                            WHEN p.tipo = 'reverso' AND orig.tipo = 'pago' THEN -p.montototal ELSE 0 END), 0) AS total_pagado
+                     FROM pagos p LEFT JOIN pagos orig ON orig.id_pago = p.id_pago_reversado
+                     WHERE p.idrecepcion = :idrecepcion FOR UPDATE"
+                );
+                $stmtSaldo->bindParam(':idrecepcion', $id, PDO::PARAM_INT);
+                $stmtSaldo->execute();
+                $saldo = $stmtSaldo->fetch(PDO::FETCH_ASSOC);
+
+                $stmtCache = $this->conexion->prepare(
+                    "UPDATE {$this->tabla} SET montototal = :montototal, montopagado = :montopagado WHERE idrecepcion = :id"
+                );
+                $stmtCache->bindValue(':montototal', $saldo['total_cargos'], PDO::PARAM_STR);
+                $stmtCache->bindValue(':montopagado', $saldo['total_pagado'], PDO::PARAM_STR);
+                $stmtCache->bindParam(':id', $id, PDO::PARAM_INT);
+
+                if (!$stmtCache->execute()) {
+                    $this->conexion->rollBack();
+                    error_log('[' . static::class . '] ' . implode(' ', $stmtCache->errorInfo()));
+                    $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+                    return false;
+                }
+            }
+
+            $this->conexion->commit();
+            return true;
+        } catch (PDOException $e) {
+            $this->conexion->rollBack();
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return false;
+        }
+    }
+
+    /**
+     * Historial de cambios de habitación/extensión de una recepción, en orden cronológico.
+     *
+     * @param int $idrecepcion
+     * @return array
+     */
+    public function getMovimientos($idrecepcion)
+    {
+        try {
+            $query = "SELECT m.*, u.nombre as nombre_usuario,
+                      ho.numero as numero_origen, hd.numero as numero_destino
+                      FROM recepcion_movimientos m
+                      LEFT JOIN usuarios u ON m.idusuario = u.idusuario
+                      LEFT JOIN habitaciones ho ON ho.id_habitacion = m.valor_anterior
+                      LEFT JOIN habitaciones hd ON hd.id_habitacion = m.valor_nuevo
+                      WHERE m.idrecepcion = :idrecepcion
+                      ORDER BY m.fechacreacion ASC, m.idmovimiento ASC";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->bindParam(':idrecepcion', $idrecepcion, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
      * Obtiene las habitaciones disponibles para recepción
      * 
      * @return array Lista de habitaciones disponibles
