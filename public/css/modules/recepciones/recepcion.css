@@ -1,0 +1,160 @@
+/**
+ * recepcion.css — vista unificada de Recepción (tabs Hoy / Mapa / Historial)
+ * Tokens + KPI bar + filas de movimiento + room rack.
+ * Sin redefinir utilidades de Bootstrap; todo lo propio va prefijado `rec-`.
+ */
+
+:root {
+    --rec-tile-min-height: 96px;
+    --rec-gap: 0.5rem;
+}
+
+/* ── Tabs ───────────────────────────────────────────────────────────── */
+.rec-tabs .nav-link {
+    font-weight: 600;
+}
+.rec-tabs .nav-link .badge {
+    margin-left: 0.35rem;
+}
+
+/* ── KPI bar ────────────────────────────────────────────────────────── */
+.rec-kpi .info-box {
+    min-height: auto;
+    margin-bottom: 0.75rem;
+}
+.rec-kpi .info-box-number {
+    font-size: 1.1rem;
+}
+
+/* ── Filas de movimiento (tab Hoy) ─────────────────────────────────── */
+.rec-mov {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    gap: 0.5rem;
+}
+.rec-mov:last-child {
+    border-bottom: 0;
+}
+.rec-mov__info {
+    min-width: 0;
+}
+.rec-mov__nombre {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rec-mov__meta {
+    font-size: 0.8rem;
+}
+.rec-mov__accion .btn {
+    white-space: nowrap;
+}
+
+/* ── Empty / loading states ────────────────────────────────────────── */
+.rec-empty {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    color: #6c757d;
+}
+.rec-empty i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+/* ── Room rack (tab Mapa) ──────────────────────────────────────────── */
+.rec-rack {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 calc(var(--rec-gap) * -0.5);
+}
+.rec-tile-col {
+    padding: calc(var(--rec-gap) * 0.5);
+}
+.rec-tile {
+    position: relative;
+    min-height: var(--rec-tile-min-height);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 0.25rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+}
+.rec-tile__strip {
+    height: 6px;
+    flex: 0 0 auto;
+}
+.rec-tile__body {
+    padding: 0.4rem 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.rec-tile__num {
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.1;
+}
+.rec-tile__huesped {
+    display: block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rec-tile__hk {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 0.75rem;
+}
+.rec-tile__action {
+    display: block;
+}
+.rec-tile__action .btn {
+    border-radius: 0;
+}
+
+/* Área táctil ≥44px sin alterar la caja visible (patrón ::before) */
+.rec-tile__action .btn::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: max(100%, 44px);
+}
+
+.rec-leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+.rec-leyenda span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.rec-leyenda .rec-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+@media (max-width: 768px) {
+    .rec-tabs.nav-tabs {
+        display: flex;
+    }
+    .rec-tabs.nav-tabs .nav-item {
+        flex: 1 1 auto;
+        text-align: center;
+    }
+}

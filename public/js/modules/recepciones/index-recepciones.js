@@ -1,344 +1,174 @@
 /**
- * JavaScript para recepciones - Compatible con AdminLTE
- * Versión simplificada sin funcionalidad de búsqueda
+ * Panel de Recepción — vista unificada con tabs Hoy / Mapa / Historial.
+ * - Persiste el tab activo en el hash y en sessionStorage.
+ * - Inicializa el DataTable del historial y el Select2 remoto del buscador global.
+ * - Acciones inline (check-in / check-out / cancelar) por POST con SweetAlert2.
  */
+$(function () {
+    'use strict';
 
-$(document).ready(function () {
-    // Variables principales
-    var allCards = $('.habitacion-card');
-    var filterButtons = $('.btn-filter');
-    var pisoButtons = $('.btn-piso');
+    var TABS = ['hoy', 'mapa', 'historial'];
+    var STORAGE_KEY = 'recepcion_tab_activo';
 
-    /**
-     * Filtrar habitaciones por estado
-     */
-    function filterRoomsByStatus(status) {
-        // Actualizar botones usando colores nativos de Bootstrap/AdminLTE
-        filterButtons.removeClass('active btn-primary btn-success btn-warning btn-danger')
-            .addClass('btn-outline-secondary');
-
-        var activeButton = filterButtons.filter('[data-status="' + status + '"]');
-        activeButton.removeClass('btn-outline-secondary');
-
-        switch (status) {
-            case 'todas':
-                activeButton.addClass('btn-primary active');
-                break;
-            case 'disponibles':
-                activeButton.addClass('btn-success active');
-                break;
-            case 'ocupadas':
-                activeButton.addClass('btn-warning active');
-                break;
-            case 'mantenimiento':
-                activeButton.addClass('btn-danger active');
-                break;
-        }
-
-        // Mostrar/ocultar secciones
-        if (status === 'todas') {
-            $('.section-disponibles, .section-ocupadas, .section-mantenimiento').show();
-        } else {
-            $('.section-disponibles, .section-ocupadas, .section-mantenimiento').hide();
-            $('.section-' + status).show();
-        }
-
-        // Aplicar filtro de piso actual si hay uno activo
-        var activePiso = pisoButtons.filter('.active').data('piso');
-        if (activePiso && activePiso !== 'todos') {
-            applyPisoFilter(activePiso);
-        }
-
-        updateCounters();
+    // ── Tabs: hash + sessionStorage ───────────────────────────────────
+    function activarTab(nombre) {
+        if (TABS.indexOf(nombre) === -1) return;
+        $('#tab-' + nombre + '-link').tab('show');
     }
 
-    /**
-     * Filtrar por piso - UNIVERSAL para todas las secciones
-     */
-    function filterRoomsByPiso(pisoSeleccionado) {
-        // Usar colores nativos de AdminLTE
-        pisoButtons.removeClass('active btn-info btn-secondary').addClass('btn-outline-info');
-
-        var activeButton = pisoButtons.filter('[data-piso="' + pisoSeleccionado + '"]');
-        if (pisoSeleccionado === 'todos') {
-            activeButton.removeClass('btn-outline-info').addClass('btn-secondary active');
-        } else {
-            activeButton.removeClass('btn-outline-info').addClass('btn-info active');
-        }
-
-        applyPisoFilter(pisoSeleccionado);
-        updateCounters();
+    var inicial = (window.location.hash || '').replace('#', '');
+    if (TABS.indexOf(inicial) === -1) {
+        try { inicial = sessionStorage.getItem(STORAGE_KEY); } catch (e) { inicial = null; }
+    }
+    if (TABS.indexOf(inicial) !== -1) {
+        activarTab(inicial);
     }
 
-    /**
-     * Aplicar filtro de piso a TODAS las secciones sin restricciones
-     */
-    function applyPisoFilter(pisoSeleccionado) {
-        if (pisoSeleccionado === 'todos') {
-            // Mostrar TODAS las secciones de pisos en TODAS las categorías
-            $('.piso-section').show();
-        } else {
-            // Ocultar TODAS las secciones de pisos primero
-            $('.piso-section').hide();
-
-            // Mostrar SOLO las secciones del piso seleccionado
-            $('.piso-section[data-piso="' + pisoSeleccionado + '"]').show();
-        }
-
-        // Después de aplicar filtro de piso, ocultar secciones principales vacías
-        hideEmptySectionsAfterPisoFilter();
-    }
-
-    /**
-     * Ocultar secciones principales vacías después del filtro de piso
-     */
-    function hideEmptySectionsAfterPisoFilter() {
-        $('.section-disponibles, .section-ocupadas, .section-mantenimiento').each(function () {
-            var visiblePisoSections = $(this).find('.piso-section:visible').length;
-            $(this).toggle(visiblePisoSections > 0);
-        });
-    }
-
-    /**
-     * Ocultar secciones vacías - MEJORADO
-     */
-    function hideEmptySections() {
-        // Ocultar secciones de pisos vacías
-        $('.piso-section').each(function () {
-            var visibleCards = $(this).find('.habitacion-card:visible').length;
-            $(this).toggle(visibleCards > 0);
-        });
-
-        // Ocultar secciones principales vacías
-        $('.section-disponibles, .section-ocupadas, .section-mantenimiento').each(function () {
-            var visibleSections = $(this).find('.piso-section:visible').length;
-            $(this).toggle(visibleSections > 0);
-        });
-    }
-
-    /**
-     * Aplicar filtros activos - MEJORADO para manejar la combinación correcta
-     */
-    function applyActiveFilters() {
-        var activeStatus = filterButtons.filter('.active').data('status');
-        var activePiso = pisoButtons.filter('.active').data('piso');
-
-        // Primero aplicar filtro de estado
-        if (activeStatus && activeStatus !== 'todas') {
-            $('.section-disponibles, .section-ocupadas, .section-mantenimiento').hide();
-            $('.section-' + activeStatus).show();
-        } else {
-            $('.section-disponibles, .section-ocupadas, .section-mantenimiento').show();
-        }
-
-        // Luego aplicar filtro de piso (que funciona sobre las secciones visibles)
-        if (activePiso && activePiso !== 'todos') {
-            applyPisoFilter(activePiso);
-        }
-    }
-
-    /**
-     * Actualizar contadores - MEJORADO para contar correctamente
-     */
-    function updateCounters() {
-        var disponibles = $('.section-disponibles .habitacion-card:visible').length;
-        var ocupadas = $('.section-ocupadas .habitacion-card:visible').length;
-        var mantenimiento = $('.section-mantenimiento .habitacion-card:visible').length;
-        var total = disponibles + ocupadas + mantenimiento;
-
-        // Actualizar contadores en botones
-        filterButtons.each(function () {
-            var status = $(this).data('status');
-            var count = 0;
-
-            switch (status) {
-                case 'todas':
-                    count = total;
-                    break;
-                case 'disponibles':
-                    count = disponibles;
-                    break;
-                case 'ocupadas':
-                    count = ocupadas;
-                    break;
-                case 'mantenimiento':
-                    count = mantenimiento;
-                    break;
-            }
-
-            var badge = $(this).find('.filter-count');
-            if (badge.length === 0) {
-                badge = $('<span class="badge badge-light filter-count ml-1"></span>');
-                $(this).append(badge);
-            }
-            badge.text(count);
-        });
-    }
-
-    /**
-     * Limpiar filtros
-     */
-    function clearAllFilters() {
-        // Resetear a estilos nativos
-        filterButtons.removeClass('active btn-primary btn-success btn-warning btn-danger')
-            .addClass('btn-outline-secondary');
-        filterButtons.filter('[data-status="todas"]')
-            .removeClass('btn-outline-secondary')
-            .addClass('btn-primary active');
-
-        pisoButtons.removeClass('active btn-info').addClass('btn-outline-info');
-        pisoButtons.filter('[data-piso="todos"]')
-            .removeClass('btn-outline-info')
-            .addClass('btn-secondary active');
-
-        // Mostrar todas las tarjetas y secciones
-        allCards.show();
-        $('.piso-section').show();
-        $('.section-disponibles, .section-ocupadas, .section-mantenimiento').show();
-
-        // Limpiar localStorage
-        localStorage.removeItem('recepcion_status_filter');
-        localStorage.removeItem('recepcion_piso_filter');
-
-        updateCounters();
-    }
-
-    // ========================================
-    // EVENT HANDLERS
-    // ========================================
-
-    // Filtros de estado
-    filterButtons.on('click', function (e) {
-        e.preventDefault();
-        var status = $(this).data('status');
-        filterRoomsByStatus(status);
-
-        // Aplicar filtro de piso activo si existe
-        var activePiso = pisoButtons.filter('.active').data('piso');
-        if (activePiso && activePiso !== 'todos') {
-            applyPisoFilter(activePiso);
-        }
-
-        // Guardar preferencia solo si no es "todas"
-        if (status !== 'todas') {
-            localStorage.setItem('recepcion_status_filter', status);
-        } else {
-            localStorage.removeItem('recepcion_status_filter');
+    $('#recTabs a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        var nombre = $(e.target).attr('href').replace('#', '');
+        try { sessionStorage.setItem(STORAGE_KEY, nombre); } catch (err) { /* no-op */ }
+        if (history.replaceState) {
+            history.replaceState(null, '', '#' + nombre);
         }
     });
 
-    // Filtros de piso
-    pisoButtons.on('click', function (e) {
-        e.preventDefault();
-        var piso = $(this).data('piso');
-        filterRoomsByPiso(piso);
-
-        // Guardar preferencia solo si no es "todos"
-        if (piso !== 'todos') {
-            localStorage.setItem('recepcion_piso_filter', piso);
-        } else {
-            localStorage.removeItem('recepcion_piso_filter');
-        }
-    });
-
-    // Botón de limpiar filtros
-    if ($('#clear-filters-btn').length === 0) {
-        var clearButton = $('<button type="button" id="clear-filters-btn" class="btn btn-outline-secondary btn-sm ml-2"><i class="fas fa-times"></i> <span class="d-none d-sm-inline">Limpiar</span></button>');
-        $('.piso-filters-container').append(clearButton);
-        clearButton.on('click', clearAllFilters);
+    // ── DataTable del historial ───────────────────────────────────────
+    if ($.fn.DataTable && $('#tablaRecepciones').length) {
+        $('#tablaRecepciones').DataTable({
+            responsive: true,
+            autoWidth: false,
+            pageLength: 10,
+            order: [[0, 'asc']],
+            columnDefs: [{ orderable: false, targets: [8] }],
+            language: {
+                sProcessing: 'Procesando...',
+                sLengthMenu: 'Mostrar _MENU_ registros',
+                sZeroRecords: 'No se encontraron resultados',
+                sEmptyTable: 'Sin recepciones registradas',
+                sInfo: 'Mostrando _START_ a _END_ de _TOTAL_ recepciones',
+                sInfoEmpty: 'Mostrando 0 a 0 de 0 recepciones',
+                sInfoFiltered: '(filtrado de _MAX_ recepciones)',
+                sSearch: 'Buscar:',
+                sLoadingRecords: 'Cargando...',
+                oPaginate: { sFirst: 'Primero', sLast: 'Último', sNext: 'Siguiente', sPrevious: 'Anterior' }
+            }
+        });
     }
 
-    // Atajos de teclado básicos
-    $(document).on('keydown', function (e) {
-        if (!$('input, textarea, select').is(':focus')) {
-            switch (e.key) {
-                case '1':
-                    filterButtons.filter('[data-status="todas"]').click();
-                    break;
-                case '2':
-                    filterButtons.filter('[data-status="disponibles"]').click();
-                    break;
-                case '3':
-                    filterButtons.filter('[data-status="ocupadas"]').click();
-                    break;
-                case '4':
-                    filterButtons.filter('[data-status="mantenimiento"]').click();
-                    break;
-                case 'Escape':
-                    clearAllFilters();
-                    break;
+    // ── Buscador global (Select2 remoto) ──────────────────────────────
+    var $buscador = $('#rec-buscador-global');
+    if ($buscador.length && $.fn.select2) {
+        $buscador.select2({
+            theme: 'bootstrap4',
+            placeholder: 'Buscar huésped, habitación o #reserva',
+            allowClear: true,
+            minimumInputLength: 2,
+            width: '100%',
+            ajax: {
+                url: $buscador.data('url'),
+                dataType: 'json',
+                delay: 250,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                data: function (params) { return { q: params.term }; },
+                processResults: function (data) { return { results: data.results || [] }; }
             }
-        }
-    });
+        });
+        $buscador.on('select2:select', function (e) {
+            var url = e.params.data.url;
+            if (url) window.location.href = url;
+        });
+    }
 
-    // Check-out desde el tile: pasa por checkout_ajax (valida el saldo del folio server-side).
-    // Si hay saldo pendiente, deriva al folio en vez de finalizar por GET.
-    $(document).on('click', '.btn-checkout', function (e) {
-        e.preventDefault();
+    // ── Acciones inline ───────────────────────────────────────────────
+    function postAccion(endpoint, payload) {
+        return $.ajax({
+            url: BASE_URL + 'controllers/recepcion/' + endpoint,
+            type: 'POST',
+            dataType: 'json',
+            data: $.extend({ csrf_token: CSRF_TOKEN }, payload),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+    }
 
-        const $btn = $(this);
-        const id = $btn.data('id');
-        const endpoint = $btn.data('endpoint');
-        const csrf = $btn.data('csrf');
-        const habitacionNumero = $btn.data('habitacion');
-        const clienteNombre = $btn.data('cliente');
-
+    $(document).on('click', '.rec-accion-checkin', function () {
+        var id = $(this).data('id');
         Swal.fire({
-            title: '¿Realizar Check-Out?',
-            html: `
-                <div class="text-left">
-                    <p><strong>Cliente:</strong> ${clienteNombre || 'Cliente'}</p>
-                    <p><strong>Habitación:</strong> ${habitacionNumero || 'N/A'}</p>
-                    <p>Se validará que el folio esté saldado antes de finalizar.</p>
-                </div>
-            `,
+            title: '¿Realizar check-in?',
+            text: 'La reserva pasará a "Ocupada".',
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fas fa-check"></i> Confirmar Check-Out',
-            cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
-            allowOutsideClick: false
-        }).then((result) => {
-            if (!result.isConfirmed) {
-                return;
-            }
-            $btn.prop('disabled', true);
-            $.ajax({
-                url: endpoint,
-                type: 'POST',
-                dataType: 'json',
-                data: { csrf_token: csrf, idrecepcion: id },
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            }).done(function (res) {
-                if (res.success) {
-                    window.location.reload();
-                    return;
-                }
-                if (res.requiere_pago) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Saldo pendiente',
-                        text: 'Bs ' + (parseFloat(res.saldo) || 0).toFixed(2) + '. Regístralo en el folio antes del check-out.',
-                        confirmButtonText: 'Ir al folio'
-                    }).then(function () {
-                        window.location.href = BASE_URL + 'views/recepcion/show.php?id=' + id + '#folio-recepcion';
-                    });
-                    return;
-                }
-                Swal.fire({ icon: 'error', title: 'No se pudo hacer el check-out', text: res.message });
-            }).fail(function () {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Fallo de comunicación con el servidor' });
-            }).always(function () {
-                $btn.prop('disabled', false);
-            });
+            confirmButtonText: 'Sí, check-in',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#28a745'
+        }).then(function (r) {
+            if (!r.isConfirmed) return;
+            postAccion('transicion_ajax.php', { idrecepcion: id, nuevo_estado: 'en_curso' })
+                .done(function (res) {
+                    if (res.success) { window.location.reload(); }
+                    else { Swal.fire({ icon: 'error', title: 'No se pudo', text: res.message }); }
+                })
+                .fail(function () { Swal.fire({ icon: 'error', title: 'Error', text: 'Fallo de comunicación con el servidor' }); });
         });
     });
 
-    // ========================================
-    // INICIALIZACIÓN
-    // ========================================
+    $(document).on('click', '.rec-accion-cancelar', function () {
+        var id = $(this).data('id');
+        Swal.fire({
+            title: '¿Cancelar la reserva?',
+            text: 'Esta acción no se puede deshacer.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, cancelar',
+            cancelButtonText: 'No',
+            confirmButtonColor: '#dc3545'
+        }).then(function (r) {
+            if (!r.isConfirmed) return;
+            postAccion('transicion_ajax.php', { idrecepcion: id, nuevo_estado: 'cancelado' })
+                .done(function (res) {
+                    if (res.success) { window.location.reload(); }
+                    else { Swal.fire({ icon: 'error', title: 'No se pudo', text: res.message }); }
+                })
+                .fail(function () { Swal.fire({ icon: 'error', title: 'Error', text: 'Fallo de comunicación con el servidor' }); });
+        });
+    });
 
-    // Inicializar contadores
-    updateCounters();
+    $(document).on('click', '.rec-accion-checkout', function () {
+        var $btn = $(this);
+        var id = $btn.data('id');
+        var cliente = $btn.data('cliente') || 'Huésped';
+        var habitacion = $btn.data('habitacion') || 'N/A';
+
+        Swal.fire({
+            title: '¿Realizar check-out?',
+            html: '<div class="text-left"><p><strong>Huésped:</strong> ' + cliente + '</p>' +
+                '<p><strong>Habitación:</strong> ' + habitacion + '</p>' +
+                '<p>Se validará que el folio esté saldado antes de finalizar.</p></div>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Confirmar check-out',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ffc107'
+        }).then(function (r) {
+            if (!r.isConfirmed) return;
+            $btn.prop('disabled', true);
+            postAccion('checkout_ajax.php', { idrecepcion: id })
+                .done(function (res) {
+                    if (res.success) { window.location.reload(); return; }
+                    if (res.requiere_pago) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Saldo pendiente',
+                            text: 'Bs ' + (parseFloat(res.saldo) || 0).toFixed(2) + '. Regístralo en el folio antes del check-out.',
+                            confirmButtonText: 'Ir al folio'
+                        }).then(function () {
+                            window.location.href = BASE_URL + 'views/recepcion/show.php?id=' + id + '#folio-recepcion';
+                        });
+                        return;
+                    }
+                    Swal.fire({ icon: 'error', title: 'No se pudo hacer el check-out', text: res.message });
+                })
+                .fail(function () { Swal.fire({ icon: 'error', title: 'Error', text: 'Fallo de comunicación con el servidor' }); })
+                .always(function () { $btn.prop('disabled', false); });
+        });
+    });
 });

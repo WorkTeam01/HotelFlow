@@ -64,7 +64,6 @@ $sidebarRutaActual = sidebarNormalizarRuta($_SERVER['REQUEST_URI'] ?? '');
                     <?php
                     $sidebarGrupoRecepcionActivo = sidebarEsActivo($URL . 'views/recepcion', $sidebarRutaActual)
                         || sidebarEsActivo($URL . 'views/recepcion/create.php', $sidebarRutaActual)
-                        || sidebarEsActivo($URL . 'views/recepcion/lista-recepciones.php', $sidebarRutaActual)
                         || sidebarEsActivo($URL . 'views/habitaciones', $sidebarRutaActual);
                     ?>
                     <li class="nav-item<?= $sidebarGrupoRecepcionActivo ? ' menu-open' : ''; ?>">
@@ -88,12 +87,6 @@ $sidebarRutaActual = sidebarNormalizarRuta($_SERVER['REQUEST_URI'] ?? '');
                                     <a href="<?= $URL; ?>views/recepcion/create.php" class="nav-link<?= sidebarClaseActiva($URL . 'views/recepcion/create.php', $sidebarRutaActual); ?>">
                                         <i class="fas fa-plus nav-icon"></i>
                                         <p>Nueva Reserva/Check-in</p>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="<?= $URL; ?>views/recepcion/lista-recepciones.php" class="nav-link<?= sidebarClaseActiva($URL . 'views/recepcion/lista-recepciones.php', $sidebarRutaActual); ?>">
-                                        <i class="fas fa-list nav-icon"></i>
-                                        <p>Historial de recepciones</p>
                                     </a>
                                 </li>
                             <?php endif; ?>

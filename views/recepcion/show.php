@@ -130,7 +130,7 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                             </div>
                             <div class="text-right">
                                 <div class="btn-group">
-                                    <a href="<?= $URL; ?>views/recepcion/lista-recepciones.php" class="btn btn-light">
+                                    <a href="<?= $URL; ?>views/recepcion/index.php#historial" class="btn btn-light">
                                         <i class="fas fa-arrow-left mr-1"></i> Volver
                                     </a>
 
