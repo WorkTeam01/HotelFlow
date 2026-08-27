@@ -88,22 +88,17 @@ class RecepcionController
         $clientes = $this->modelo->getClientes();
         $tarifas = $this->modelo->getTarifas();
 
-        // Si hay una habitación preseleccionada, obtener sus detalles
-        $habitacion = null;
-        $habitaciones_disponibles = [];
-        $habitaciones_por_piso = [];
-        $pisos_unicos = [];
+        // La vista es una sola página: el rack de habitaciones disponibles se muestra
+        // siempre (agrupado por piso) y ?idhabitacion= solo preselecciona una.
+        $habitaciones_disponibles = $this->modelo->getHabitacionesDisponibles();
+        $habitaciones_por_piso = self::agruparHabitacionesPorPiso($habitaciones_disponibles);
+        $pisos_unicos = array_keys($habitaciones_por_piso);
 
+        $habitacion = null;
         if ($idhabitacion) {
-            // Obtener detalles de la habitación específica
             require_once __DIR__ . '/../../controllers/habitaciones/HabitacionController.php';
             $habController = new HabitacionController();
             $habitacion = $habController->getById($idhabitacion);
-        } else {
-            // Sin habitación preseleccionada: obtener todas las disponibles agrupadas por piso
-            $habitaciones_disponibles = $this->modelo->getHabitacionesDisponibles();
-            $habitaciones_por_piso = self::agruparHabitacionesPorPiso($habitaciones_disponibles);
-            $pisos_unicos = array_keys($habitaciones_por_piso);
         }
 
         return [
