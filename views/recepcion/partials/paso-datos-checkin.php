@@ -273,7 +273,7 @@
                                     <option value="">Seleccione un método de pago</option>
                                     <option value="Efectivo">Efectivo</option>
                                     <option value="QR">QR</option>
-                                    <option value="Otros">Otros</option>
+                                    <option value="OTROS">Otros</option>
                                 </select>
                             </div>
                         </div>

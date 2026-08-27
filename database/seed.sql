@@ -82,7 +82,8 @@ INSERT INTO `habitaciones` (`numero`, `id_tipo`, `idpiso`, `precio_base`, `estad
 ('101', 1, 1, 80.00, 'ocupada'),
 ('102', 2, 1, 120.00, 'limpieza'),
 ('103', 3, 1, 150.00, 'disponible'),
-('201', 4, 2, 250.00, 'disponible');
+('201', 4, 2, 250.00, 'disponible'),
+('202', 4, 2, 250.00, 'limpieza');
 
 -- --------------------------------------------------------
 -- Tarifas
@@ -147,6 +148,17 @@ INSERT INTO `recepcion` (`idcliente`, `idhabitacion`, `idtarifa`, `idusuario`, `
 INSERT INTO `pagos` (`idrecepcion`, `tipo`, `concepto`, `montototal`, `metodopago`, `idusuario`) VALUES
 (1, 'cargo', 'Estancia', 80.00, 'Efectivo', 2),
 (1, 'pago', 'Pago inicial (check-in)', 80.00, 'Efectivo', 2);
+
+-- Dos reservas FUTURAS que se solapan en la habitación 103 (recepciones 2 y 3):
+-- material de prueba para Recepcion::existeSolape() (el seed inserta directo, sin pasar
+-- por el modelo) y para el badge derivado de no-show. Reservado no toca habitaciones.estado.
+INSERT INTO `recepcion` (`idcliente`, `idhabitacion`, `idtarifa`, `idusuario`, `metodopago`, `fechaentrada`, `fechasalida_prevista`, `montototal`, `montopagado`, `cambio`, `estado`) VALUES
+(1, 3, 5, 2, 'OTROS', DATE_ADD(CURDATE(), INTERVAL 3 DAY), DATE_ADD(CURDATE(), INTERVAL 6 DAY), 150.00, 0.00, NULL, 'reservado'),
+(2, 3, 5, 2, 'OTROS', DATE_ADD(CURDATE(), INTERVAL 5 DAY), DATE_ADD(CURDATE(), INTERVAL 8 DAY), 150.00, 0.00, NULL, 'reservado');
+
+INSERT INTO `pagos` (`idrecepcion`, `tipo`, `concepto`, `montototal`, `metodopago`, `idusuario`) VALUES
+(2, 'cargo', 'Estancia', 150.00, 'OTROS', 2),
+(3, 'cargo', 'Estancia', 150.00, 'OTROS', 2);
 
 -- Asignación de limpieza pendiente para la habitación 102 (marcada 'limpieza' arriba)
 INSERT INTO `asignaciones_limpieza` (`idusuario`, `idhabitacion`, `fecha`, `hora`, `estado`) VALUES

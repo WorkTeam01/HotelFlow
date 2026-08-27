@@ -248,6 +248,175 @@ class RecepcionController
     }
 
     /**
+     * Añade 'estado_ui' (salida de estadoRecepcion() sobre el estado derivado) a cada
+     * fila de una lista de recepciones. Ninguna vista vuelve a resolver color/etiqueta.
+     *
+     * @param array $recepciones
+     * @return array
+     */
+    private static function decorarEstados(array $recepciones): array
+    {
+        foreach ($recepciones as &$r) {
+            $r['estado_derivado'] = self::estadoDerivado($r);
+            $r['estado_ui'] = self::estadoRecepcion($r['estado_derivado']);
+        }
+        unset($r);
+        return $recepciones;
+    }
+
+    /**
+     * Datos del tab "Hoy": llegadas, salidas previstas e in-house con contadores.
+     *
+     * @return array{llegadas:array, salidas:array, in_house:array, contadores:array}
+     */
+    public function hoy(): array
+    {
+        $llegadas = self::decorarEstados($this->modelo->getLlegadasHoy());
+        $salidas = self::decorarEstados($this->modelo->getSalidasHoy());
+        $inHouse = self::decorarEstados($this->modelo->getInHouse());
+
+        $salidasVencidas = 0;
+        foreach ($salidas as $s) {
+            if ($s['estado_derivado'] === 'salida_vencida') {
+                $salidasVencidas++;
+            }
+        }
+
+        $kpis = $this->modelo->getKpisDia();
+
+        return [
+            'llegadas' => $llegadas,
+            'salidas' => $salidas,
+            'in_house' => $inHouse,
+            'contadores' => [
+                'llegadas' => count($llegadas),
+                'llegadas_pendientes' => (int) $kpis['llegadas_pendientes'],
+                'salidas' => count($salidas),
+                'salidas_vencidas' => $salidasVencidas,
+                'in_house' => count($inHouse),
+                'sucias' => (int) $kpis['habitaciones_sucias'],
+            ],
+        ];
+    }
+
+    /**
+     * Datos del tab "Mapa" (room rack). Absorbe el agrupado por piso que hacía la vista.
+     * Cada fila lleva doble dimensión: 'estado_ui' (ocupación) y 'housekeeping_ui'.
+     *
+     * @return array{habitaciones_por_piso:array<string,array>, pisos:array, contadores:array}
+     */
+    public function mapa(): array
+    {
+        $filas = $this->modelo->getMapaHabitaciones();
+        $porPiso = [];
+        $contadores = [
+            'disponible' => 0, 'ocupada' => 0, 'reservada' => 0,
+            'limpieza' => 0, 'mantenimiento' => 0, 'total' => 0,
+        ];
+
+        foreach ($filas as $f) {
+            if (!empty($f['idrecepcion']) && $f['estado_recepcion'] === 'en_curso') {
+                $ocupacion = self::estadoDerivado([
+                    'estado' => 'en_curso',
+                    'fechasalida_prevista' => $f['fechasalida_prevista'] ?? null,
+                ]);
+                $contadores['ocupada']++;
+            } elseif (!empty($f['idrecepcion']) && $f['estado_recepcion'] === 'reservado') {
+                $ocupacion = 'reservado';
+                $contadores['reservada']++;
+            } elseif ($f['estado'] === 'mantenimiento') {
+                $ocupacion = 'mantenimiento';
+                $contadores['mantenimiento']++;
+            } elseif ($f['estado'] === 'limpieza') {
+                $ocupacion = 'limpieza';
+                $contadores['limpieza']++;
+            } else {
+                $ocupacion = 'disponible';
+                $contadores['disponible']++;
+            }
+
+            $housekeeping = in_array($f['estado'], ['limpieza', 'mantenimiento'], true) ? $f['estado'] : 'disponible';
+
+            $f['estado_ui'] = self::estadoRecepcion($ocupacion);
+            $f['housekeeping_ui'] = self::estadoRecepcion($housekeeping);
+            $f['huesped'] = $f['huesped'] ?? null;
+
+            $piso = $f['piso_nombre'] ?? 'Sin piso';
+            $porPiso[$piso][] = $f;
+            $contadores['total']++;
+        }
+
+        ksort($porPiso);
+
+        return [
+            'habitaciones_por_piso' => $porPiso,
+            'pisos' => array_keys($porPiso),
+            'contadores' => $contadores,
+        ];
+    }
+
+    /**
+     * KPIs del día para partials/kpi-bar.php. El cálculo lo hace el modelo (SQL).
+     *
+     * @return array
+     */
+    public function kpis(): array
+    {
+        return $this->modelo->getKpisDia();
+    }
+
+    /**
+     * Tab Historial. Filtro opcional por estado; sin liberarNoShows() (ya corrió en panel()).
+     *
+     * @param string|null $estado
+     * @return array{recepciones:array}
+     */
+    public function historial(?string $estado = null): array
+    {
+        $recepciones = $estado
+            ? $this->modelo->getAllByEstado($estado)
+            : $this->modelo->getAll();
+
+        return ['recepciones' => self::decorarEstados($recepciones)];
+    }
+
+    /**
+     * Búsqueda global para el Select2 remoto (endpoint buscar_ajax.php).
+     *
+     * @param string $termino
+     * @param int    $limite
+     * @return array
+     */
+    public function buscar(string $termino, int $limite = 20): array
+    {
+        $termino = trim($termino);
+        if ($termino === '') {
+            return [];
+        }
+        return $this->modelo->buscarGlobal($termino, $limite);
+    }
+
+    /**
+     * Reemplaza a index(): orquesta el panel completo. Único punto que llama
+     * liberarNoShows() (una vez por carga).
+     *
+     * @return array{hoy:array, mapa:array, kpis:array, historial:array}
+     */
+    public function panel(): array
+    {
+        $config = require __DIR__ . '/../../config/config.php';
+        $noshowHoras = $config['recepcion']['noshow_horas'] ?? 6;
+        $this->modelo->liberarNoShows($noshowHoras);
+
+        return [
+            'hoy' => $this->hoy(),
+            'mapa' => $this->mapa(),
+            'kpis' => $this->kpis(),
+            'historial' => $this->historial(),
+        ];
+    }
+
+    /**
      * Procesa los datos del formulario para crear una nueva recepción
      *
      * @return array Resultado de la operación

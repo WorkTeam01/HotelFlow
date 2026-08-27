@@ -207,6 +207,14 @@ class Recepcion
                 return false;
             }
 
+            // Impedir overbooking: la habitación no puede tener otra reserva/estancia
+            // solapada con este rango de fechas (comprobado tras el FOR UPDATE de habitaciones).
+            if ($this->existeSolape($datos['idhabitacion'], $datos['fechaentrada'], $datos['fechasalida_prevista'])) {
+                $this->conexion->rollBack();
+                $this->lastError = 'La habitación ya tiene una reserva o estancia que se solapa con esas fechas.';
+                return false;
+            }
+
             $datos['montototal'] = (float)$tarifa['precio'];
             $datos['montopagado'] = $datos['montototal'];
 
@@ -363,6 +371,29 @@ class Recepcion
             // pisen el estado de la habitación de forma inconsistente.
             $recepcion_anterior = $this->getByIdForUpdate($id);
             $estado_anterior = $recepcion_anterior ? $recepcion_anterior['estado'] : null;
+
+            // Si cambian las fechas de la estancia, revalidar solape sobre la misma
+            // habitación (excluyéndose a sí misma). Bloquear habitaciones después de
+            // recepcion (orden canónico) antes de la comprobación.
+            if (
+                $recepcion_anterior
+                && (array_key_exists('fechaentrada', $datos) || array_key_exists('fechasalida_prevista', $datos))
+            ) {
+                $entradaNueva = $datos['fechaentrada'] ?? $recepcion_anterior['fechaentrada'];
+                $salidaNueva = $datos['fechasalida_prevista'] ?? $recepcion_anterior['fechasalida_prevista'];
+
+                $stmtLockHab = $this->conexion->prepare(
+                    "SELECT estado FROM habitaciones WHERE id_habitacion = :idhabitacion FOR UPDATE"
+                );
+                $stmtLockHab->bindValue(':idhabitacion', (int) $recepcion_anterior['idhabitacion'], PDO::PARAM_INT);
+                $stmtLockHab->execute();
+
+                if ($this->existeSolape((int) $recepcion_anterior['idhabitacion'], $entradaNueva, $salidaNueva, (int) $id)) {
+                    $this->conexion->rollBack();
+                    $this->lastError = 'Las nuevas fechas se solapan con otra reserva o estancia de esa habitación.';
+                    return false;
+                }
+            }
 
             // Construir consulta de actualización dinámicamente
             $campos = [];
@@ -978,6 +1009,278 @@ class Recepcion
     }
 
     /**
+     * Salidas previstas para hoy: estancias en curso cuya fecha de salida prevista
+     * cae hoy. Ordenadas por hora de salida.
+     *
+     * @return array
+     */
+    public function getSalidasHoy()
+    {
+        try {
+            $query = "SELECT r.*,
+                      p.nombre as nombre_cliente, p.apellidopaterno as apellido_cliente,
+                      h.numero as numero_habitacion,
+                      piso.nombre as piso_nombre
+                      FROM {$this->tabla} r
+                      LEFT JOIN persona p ON r.idcliente = p.idpersona
+                      LEFT JOIN habitaciones h ON r.idhabitacion = h.id_habitacion
+                      LEFT JOIN pisos piso ON h.idpiso = piso.idpiso
+                      WHERE r.estado = 'en_curso' AND DATE(r.fechasalida_prevista) = CURDATE()
+                      ORDER BY r.fechasalida_prevista ASC";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
+     * Huéspedes en casa (in-house): todas las estancias en curso, con el saldo real
+     * del folio calculado por subconsulta contra `pagos` (los reversos restan del
+     * tipo de línea que reversan).
+     *
+     * @return array
+     */
+    public function getInHouse()
+    {
+        try {
+            $query = "SELECT r.*,
+                      p.nombre as nombre_cliente, p.apellidopaterno as apellido_cliente,
+                      h.numero as numero_habitacion,
+                      piso.nombre as piso_nombre,
+                      COALESCE((
+                        SELECT SUM(CASE
+                            WHEN pg.tipo = 'cargo' THEN pg.montototal
+                            WHEN pg.tipo = 'pago' THEN -pg.montototal
+                            WHEN pg.tipo = 'reverso' AND og.tipo = 'cargo' THEN -pg.montototal
+                            WHEN pg.tipo = 'reverso' AND og.tipo = 'pago' THEN pg.montototal
+                            ELSE 0 END)
+                        FROM pagos pg LEFT JOIN pagos og ON og.id_pago = pg.id_pago_reversado
+                        WHERE pg.idrecepcion = r.idrecepcion
+                      ), 0) AS saldo
+                      FROM {$this->tabla} r
+                      LEFT JOIN persona p ON r.idcliente = p.idpersona
+                      LEFT JOIN habitaciones h ON r.idhabitacion = h.id_habitacion
+                      LEFT JOIN pisos piso ON h.idpiso = piso.idpiso
+                      WHERE r.estado = 'en_curso'
+                      ORDER BY h.numero ASC";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
+     * Room rack: una fila por habitación (siempre COUNT(*) FROM habitaciones filas),
+     * con la recepción activa asociada si existe (estancia en curso, o reserva cuya
+     * entrada es hoy). La subconsulta LIMIT 1 garantiza como máximo una recepción por
+     * habitación, priorizando 'en_curso' sobre 'reservado'.
+     *
+     * @return array
+     */
+    public function getMapaHabitaciones()
+    {
+        try {
+            $query = "SELECT h.id_habitacion, h.numero, h.estado, h.precio_base,
+                      piso.nombre as piso_nombre, th.nombre as tipo_nombre,
+                      r.idrecepcion, r.estado as estado_recepcion, r.fechaentrada, r.fechasalida_prevista,
+                      CASE WHEN p.idpersona IS NULL THEN NULL
+                           ELSE CONCAT(p.nombre, ' ', p.apellidopaterno) END as huesped
+                      FROM habitaciones h
+                      LEFT JOIN pisos piso ON h.idpiso = piso.idpiso
+                      LEFT JOIN tipo_habitacion th ON th.id_tipo = h.id_tipo
+                      LEFT JOIN {$this->tabla} r ON r.idrecepcion = (
+                          SELECT r2.idrecepcion FROM {$this->tabla} r2
+                          WHERE r2.idhabitacion = h.id_habitacion
+                            AND (r2.estado = 'en_curso'
+                                 OR (r2.estado = 'reservado' AND DATE(r2.fechaentrada) = CURDATE()))
+                          ORDER BY FIELD(r2.estado, 'en_curso', 'reservado'), r2.fechaentrada ASC
+                          LIMIT 1
+                      )
+                      LEFT JOIN persona p ON r.idcliente = p.idpersona
+                      ORDER BY piso.nombre ASC, h.numero ASC";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
+     * KPIs del día para la barra del panel. Todos los cálculos los hace el motor SQL;
+     * el controlador solo reenvía el array.
+     *
+     * @return array{ocupacion_pct:float, adr:float, ingresos_dia:float,
+     *               llegadas_pendientes:int, salidas_pendientes:int, habitaciones_sucias:int}
+     */
+    public function getKpisDia()
+    {
+        $base = [
+            'ocupacion_pct' => 0.0,
+            'adr' => 0.0,
+            'ingresos_dia' => 0.0,
+            'llegadas_pendientes' => 0,
+            'salidas_pendientes' => 0,
+            'habitaciones_sucias' => 0,
+        ];
+
+        try {
+            // Ocupación: habitaciones ocupadas / total de habitaciones
+            $stmt = $this->conexion->query(
+                "SELECT
+                    (SELECT COUNT(*) FROM habitaciones) AS total,
+                    (SELECT COUNT(*) FROM habitaciones WHERE estado = 'ocupada') AS ocupadas,
+                    (SELECT COUNT(*) FROM habitaciones WHERE estado = 'limpieza') AS sucias"
+            );
+            $hab = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['total' => 0, 'ocupadas' => 0, 'sucias' => 0];
+            $total = (int) $hab['total'];
+            $base['habitaciones_sucias'] = (int) $hab['sucias'];
+            if ($total > 0) {
+                $base['ocupacion_pct'] = round((int) $hab['ocupadas'] * 100 / $total, 1);
+            }
+
+            // ADR (estándar hotelero): ingreso de alojamiento / habitaciones vendidas.
+            // "Vendidas" = estancias en curso o finalizadas cuyo rango cubre hoy.
+            $stmt = $this->conexion->query(
+                "SELECT COALESCE(SUM(t.precio), 0) AS alojamiento, COUNT(*) AS vendidas
+                 FROM {$this->tabla} r
+                 LEFT JOIN tarifas t ON r.idtarifa = t.idtarifa
+                 WHERE r.estado IN ('en_curso', 'finalizado')
+                   AND DATE(r.fechaentrada) <= CURDATE()
+                   AND (r.fechasalida_prevista IS NULL OR DATE(r.fechasalida_prevista) >= CURDATE())"
+            );
+            $adr = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['alojamiento' => 0, 'vendidas' => 0];
+            if ((int) $adr['vendidas'] > 0) {
+                $base['adr'] = round((float) $adr['alojamiento'] / (int) $adr['vendidas'], 2);
+            }
+
+            // Ingresos del día: pagos cobrados hoy (pagos.fechacreacion), neto de reversos de pago
+            $stmt = $this->conexion->query(
+                "SELECT COALESCE(SUM(CASE
+                    WHEN p.tipo = 'pago' THEN p.montototal
+                    WHEN p.tipo = 'reverso' AND og.tipo = 'pago' THEN -p.montototal
+                    ELSE 0 END), 0) AS ingresos
+                 FROM pagos p LEFT JOIN pagos og ON og.id_pago = p.id_pago_reversado
+                 WHERE DATE(p.fechacreacion) = CURDATE()"
+            );
+            $base['ingresos_dia'] = (float) ($stmt->fetch(PDO::FETCH_ASSOC)['ingresos'] ?? 0);
+
+            // Pendientes de hoy
+            $stmt = $this->conexion->query(
+                "SELECT
+                    (SELECT COUNT(*) FROM {$this->tabla}
+                     WHERE estado = 'reservado' AND DATE(fechaentrada) = CURDATE()) AS llegadas,
+                    (SELECT COUNT(*) FROM {$this->tabla}
+                     WHERE estado = 'en_curso' AND DATE(fechasalida_prevista) = CURDATE()) AS salidas"
+            );
+            $pend = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['llegadas' => 0, 'salidas' => 0];
+            $base['llegadas_pendientes'] = (int) $pend['llegadas'];
+            $base['salidas_pendientes'] = (int) $pend['salidas'];
+
+            return $base;
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return $base;
+        }
+    }
+
+    /**
+     * Comprueba si una habitación ya tiene una reserva o estancia que se solapa con
+     * el rango [entrada, salida). Dos rangos se solapan si entrada < salida_existente
+     * y salida > entrada_existente. Se invoca DENTRO de la transacción de
+     * crear()/actualizar(), después del FOR UPDATE sobre `habitaciones`.
+     *
+     * Fail-open: si la consulta falla se loguea y se devuelve false (no bloquea la
+     * operación por un fallo de infraestructura; mismo criterio que el rate-limit de login).
+     *
+     * @param int         $idhabitacion
+     * @param string      $entrada    Fecha/hora de entrada (Y-m-d H:i:s)
+     * @param string      $salida     Fecha/hora de salida prevista
+     * @param int|null    $excluirId  Recepción a excluir de la comprobación (al editarse a sí misma)
+     * @return bool
+     */
+    public function existeSolape($idhabitacion, $entrada, $salida, $excluirId = null)
+    {
+        try {
+            $query = "SELECT COUNT(*) FROM {$this->tabla}
+                      WHERE idhabitacion = :idhabitacion
+                        AND estado IN ('reservado', 'en_curso')
+                        AND fechaentrada < :salida
+                        AND fechasalida_prevista > :entrada
+                        AND (:excluir IS NULL OR idrecepcion <> :excluir)";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->bindValue(':idhabitacion', (int) $idhabitacion, PDO::PARAM_INT);
+            $stmt->bindValue(':salida', $salida, PDO::PARAM_STR);
+            $stmt->bindValue(':entrada', $entrada, PDO::PARAM_STR);
+            if ($excluirId === null) {
+                $stmt->bindValue(':excluir', null, PDO::PARAM_NULL);
+            } else {
+                $stmt->bindValue(':excluir', (int) $excluirId, PDO::PARAM_INT);
+            }
+            $stmt->execute();
+            return (int) $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Búsqueda global de reserva/huésped para el Select2 remoto del módulo.
+     * Coincide contra nombre/apellido/documento del huésped, número de habitación
+     * e id de recepción. Named params distintos (:q1..:q5) porque la conexión usa
+     * ATTR_EMULATE_PREPARES=false y no admite reusar un named param.
+     *
+     * @param string $termino
+     * @param int    $limite
+     * @return array
+     */
+    public function buscarGlobal($termino, $limite)
+    {
+        try {
+            $like = '%' . $termino . '%';
+            $query = "SELECT r.idrecepcion, r.estado, r.fechaentrada, r.fechasalida_prevista,
+                      h.numero as numero_habitacion,
+                      CONCAT(p.nombre, ' ', p.apellidopaterno) as huesped,
+                      p.numdocumento
+                      FROM {$this->tabla} r
+                      LEFT JOIN persona p ON r.idcliente = p.idpersona
+                      LEFT JOIN habitaciones h ON r.idhabitacion = h.id_habitacion
+                      WHERE p.nombre LIKE :q1
+                         OR p.apellidopaterno LIKE :q2
+                         OR p.numdocumento LIKE :q3
+                         OR h.numero LIKE :q4
+                         OR CAST(r.idrecepcion AS CHAR) LIKE :q5
+                      ORDER BY r.fechaentrada DESC
+                      LIMIT :limite";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->bindValue(':q1', $like, PDO::PARAM_STR);
+            $stmt->bindValue(':q2', $like, PDO::PARAM_STR);
+            $stmt->bindValue(':q3', $like, PDO::PARAM_STR);
+            $stmt->bindValue(':q4', $like, PDO::PARAM_STR);
+            $stmt->bindValue(':q5', $like, PDO::PARAM_STR);
+            $stmt->bindValue(':limite', (int) $limite, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
      * Reservas cuya fecha de entrada prevista es hoy (llegadas de hoy), sin importar
      * si ya vencieron dentro del día. Solo estado 'reservado'.
      *
@@ -1186,8 +1489,8 @@ class Recepcion
         }
 
         // Validar método de pago si se proporciona
-        if (!empty($datos['metodopago']) && !in_array($datos['metodopago'], ['Efectivo', 'QR', 'Otros'])) {
-            $errores[] = 'El método de pago debe ser válido (Efectivo, QR, Otros).';
+        if (!empty($datos['metodopago']) && !in_array($datos['metodopago'], ['Efectivo', 'QR', 'OTROS'])) {
+            $errores[] = 'El método de pago debe ser válido (Efectivo, QR, OTROS).';
         }
 
         // Si es efectivo, el cambio debe ser válido (no negativo)

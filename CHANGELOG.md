@@ -5,6 +5,24 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [Unreleased]
+
+Refactor del frontend del módulo Recepción (en curso, por fases). Ver `REFACTOR_RECEPCION_FRONTEND_PLAN.md`.
+
+### Added
+
+- Consultas de front desk en `models/Recepcion.php`: `getSalidasHoy()`, `getInHouse()` (saldo real del folio por subconsulta), `getMapaHabitaciones()` (una fila por habitación), `getKpisDia()` (ocupación %, ADR estándar hotelero, ingresos cobrados hoy, pendientes, sucias), `existeSolape()` y `buscarGlobal()`.
+- Métodos de orquestación en `RecepcionController`: `hoy()`, `mapa()`, `kpis()`, `historial()`, `buscar()` y `panel()` (único que dispara `liberarNoShows()`).
+
+### Fixed
+
+- **Overbooking**: `Recepcion::crear()` y `Recepcion::actualizar()` rechazan reservas/estancias cuyo rango de fechas se solapa con otra de la misma habitación (comprobado dentro de la transacción, tras el `FOR UPDATE` sobre `habitaciones`).
+- `validarDatos()` y `partials/paso-datos-checkin.php` unificados al valor de enum real `OTROS` para `metodopago` (antes enviaban `Otros`, funcionaba solo por colación `_ci`).
+
+### Removed
+
+- Trigger `tr_exact_time_check` (BEFORE UPDATE ON `recepcion`): forzaba check-out fantasma desde la BD saltándose el folio y el orden de bloqueo. **Paso manual en bases existentes:** `DROP TRIGGER IF EXISTS \`tr_exact_time_check\`;`
+
 ## [1.2.0] - 2026-08-19
 
 Refactorización del módulo Recepción al estándar funcional/arquitectónico de un PMS real (folio de huésped, wizard de 2 pasos, robustez de concurrencia, cambio de habitación auditable, llegadas/reservas y liberación automática de no-show). Plan completo documentado y ejecutado en 6 fases atómicas.

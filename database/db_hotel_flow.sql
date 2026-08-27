@@ -335,28 +335,11 @@ CREATE TABLE `recepcion` (
   `fechaactualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Disparadores `recepcion`
---
-DELIMITER $$
-CREATE TRIGGER `tr_exact_time_check` BEFORE UPDATE ON `recepcion` FOR EACH ROW BEGIN
-    -- Verificar si es exactamente la hora de salida prevista
-    IF NEW.estado = 'en_curso' AND 
-       DATE_FORMAT(NEW.fechasalida_prevista, '%Y-%m-%d %H:%i:00') = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:00') THEN
-        
-        -- Cambiar estado de la habitación a 'limpieza'
-        UPDATE habitaciones 
-        SET estado = 'limpieza', 
-            fechaactualizacion = NOW()
-        WHERE id_habitacion = NEW.idhabitacion;
-        
-        -- Cambiar estado de la recepción a 'finalizado'
-        SET NEW.estado = 'finalizado';
-        SET NEW.fechaactualizacion = NOW();
-    END IF;
-END
-$$
-DELIMITER ;
+-- Nota: el trigger `tr_exact_time_check` (BEFORE UPDATE ON `recepcion`) se eliminó
+-- durante el refactor frontend de recepción. Forzaba estado='finalizado' + habitación a 'limpieza' desde la BD cuando
+-- fechasalida_prevista coincidía al minuto con NOW(), saltándose el folio y el orden
+-- canónico de bloqueo. El check-out ahora es explícito (RecepcionController::checkout()).
+-- En bases existentes ejecutar manualmente: DROP TRIGGER IF EXISTS `tr_exact_time_check`;
 
 -- --------------------------------------------------------
 
