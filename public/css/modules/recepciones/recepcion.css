@@ -90,6 +90,23 @@
     height: 6px;
     flex: 0 0 auto;
 }
+
+/* Variantes de ocupación: tinte sutil de fondo por color (una regla por estado) */
+.rec-tile--success {
+    background: rgba(40, 167, 69, 0.06);
+}
+.rec-tile--warning {
+    background: rgba(255, 193, 7, 0.08);
+}
+.rec-tile--info {
+    background: rgba(23, 162, 184, 0.07);
+}
+.rec-tile--secondary {
+    background: rgba(108, 117, 125, 0.08);
+}
+.rec-tile--danger {
+    background: rgba(220, 53, 69, 0.07);
+}
 .rec-tile__body {
     padding: 0.4rem 0.5rem;
     flex: 1 1 auto;

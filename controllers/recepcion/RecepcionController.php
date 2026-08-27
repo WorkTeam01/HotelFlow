@@ -301,7 +301,8 @@ class RecepcionController
 
     /**
      * Datos del tab "Mapa" (room rack). Absorbe el agrupado por piso que hacía la vista.
-     * Cada fila lleva doble dimensión: 'estado_ui' (ocupación) y 'housekeeping_ui'.
+     * Cada fila lleva doble dimensión: 'estado_ui' (ocupación) y 'housekeeping_ui',
+     * más 'mostrar_hk' (bool) y 'accion' (['label','href' relativo,'clase']) para el tile.
      *
      * @return array{habitaciones_por_piso:array<string,array>, pisos:array, contadores:array}
      */
@@ -335,11 +336,36 @@ class RecepcionController
                 $contadores['disponible']++;
             }
 
-            $housekeeping = in_array($f['estado'], ['limpieza', 'mantenimiento'], true) ? $f['estado'] : 'disponible';
+            $esHk = in_array($f['estado'], ['limpieza', 'mantenimiento'], true);
+            $housekeeping = $esHk ? $f['estado'] : 'disponible';
 
-            $f['estado_ui'] = self::estadoRecepcion($ocupacion);
+            $estadoUi = self::estadoRecepcion($ocupacion);
+            $f['estado_ui'] = $estadoUi;
             $f['housekeeping_ui'] = self::estadoRecepcion($housekeeping);
             $f['huesped'] = $f['huesped'] ?? null;
+            $f['mostrar_hk'] = $esHk;
+
+            // Acción primaria del tile, ya resuelta (el partial solo pinta HTML):
+            // ruta relativa; el partial le antepone $URL.
+            if (!empty($f['idrecepcion'])) {
+                $f['accion'] = [
+                    'label' => 'Ver folio',
+                    'href' => 'views/recepcion/show.php?id=' . (int) $f['idrecepcion'],
+                    'clase' => $estadoUi['clase'],
+                ];
+            } elseif ($esHk) {
+                $f['accion'] = [
+                    'label' => 'Ver habitación',
+                    'href' => 'views/habitaciones/show.php?id=' . (int) $f['id_habitacion'],
+                    'clase' => 'secondary',
+                ];
+            } else {
+                $f['accion'] = [
+                    'label' => 'Check-in',
+                    'href' => 'views/recepcion/create.php?idhabitacion=' . (int) $f['id_habitacion'],
+                    'clase' => 'success',
+                ];
+            }
 
             $piso = $f['piso_nombre'] ?? 'Sin piso';
             $porPiso[$piso][] = $f;
