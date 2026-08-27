@@ -12,7 +12,7 @@
 
 $puedeRegistrarMovimientos = !in_array($recepcion['estado'], ['finalizado', 'cancelado'], true);
 ?>
-<div class="card card-outline card-info" data-module="folio-recepcion" data-idrecepcion="<?= (int)$recepcion['idrecepcion']; ?>">
+<div class="card card-outline card-info" id="folio-recepcion" data-module="folio-recepcion" data-idrecepcion="<?= (int)$recepcion['idrecepcion']; ?>">
     <div class="card-header">
         <h3 class="card-title">
             <i class="fas fa-file-invoice mr-2"></i>

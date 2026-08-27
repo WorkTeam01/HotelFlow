@@ -44,7 +44,7 @@ $_SESSION['icono'] = $resultado['icon'];
 
 // Redirigir a la página anterior o a la página de detalles de la recepción
 $referer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : null;
-if ($referer && strpos($referer, $URL) !== false) {
+if ($referer && str_starts_with($referer, $URL)) {
     header('Location: ' . $referer);
 } else {
     header('Location: ' . $URL . 'views/recepcion/show.php?id=' . $id);

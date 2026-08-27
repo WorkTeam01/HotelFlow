@@ -59,19 +59,10 @@ if ($recepcion['estado'] === 'finalizado' || $recepcion['estado'] === 'cancelado
 $skip_chartjs = true;
 include_once '../layouts/header.php';
 
-// Determinar clase y etiqueta según el estado
-$clase_estado = '';
-$etiqueta_estado = '';
-switch ($recepcion['estado']) {
-    case 'reservado':
-        $clase_estado = 'info';
-        $etiqueta_estado = 'Reservado';
-        break;
-    case 'en_curso':
-        $clase_estado = 'warning';
-        $etiqueta_estado = 'En curso (Check-in)';
-        break;
-}
+// Estado canónico (etiqueta/color) desde la fuente única de verdad
+$estado_ui = RecepcionController::estadoRecepcion($recepcion['estado']);
+$clase_estado = $estado_ui['clase'];
+$etiqueta_estado = $estado_ui['label'];
 ?>
 
 <!-- Content Header (Page header) -->
@@ -172,33 +163,20 @@ switch ($recepcion['estado']) {
                                     </div>
                                 </div>
 
-                                <!-- Habitación -->
+                                <!-- Habitación (solo lectura: el cambio de habitación se hace desde el detalle) -->
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="idhabitacion">
+                                        <label>
                                             <i class="fas fa-bed mr-1 text-primary"></i>
-                                            Habitación <span class="text-danger">*</span>
+                                            Habitación
                                         </label>
-                                        <select class="form-control select2" id="idhabitacion" name="idhabitacion" required>
-                                            <?php foreach ($habitaciones_disponibles as $habitacion): ?>
-                                                <option value="<?= $habitacion['id_habitacion']; ?>"
-                                                    data-numero="<?= htmlspecialchars($habitacion['numero']); ?>"
-                                                    data-tipo="<?= htmlspecialchars($habitacion['tipo_nombre']); ?>"
-                                                    data-piso="<?= htmlspecialchars($habitacion['piso_nombre']); ?>"
-                                                    <?= ($recepcion['idhabitacion'] == $habitacion['id_habitacion']) ? 'selected' : ''; ?>
-                                                    <?= (isset($habitacion['es_actual']) && $habitacion['es_actual']) ? 'data-actual="true"' : ''; ?>>
-                                                    <?= htmlspecialchars($habitacion['numero'] . ' - ' . $habitacion['tipo_nombre'] . ' - Piso ' . $habitacion['piso_nombre']); ?>
-                                                    <?= (isset($habitacion['es_actual']) && $habitacion['es_actual']) ? ' (Actual)' : ''; ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <div class="invalid-feedback">Por favor seleccione una habitación</div>
-                                        <small class="form-text text-warning">
-                                            <i class="fas fa-exclamation-triangle"></i> Cambiar la habitación liberará la habitación actual y ocupará la nueva.
+                                        <input type="text" class="form-control" readonly
+                                            value="<?= htmlspecialchars($recepcion['numero_habitacion'] . ' - ' . ($recepcion['tipo_tarifa'] ?? 'Estándar')); ?>">
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle"></i>
+                                            Para cambiar de habitación usa
+                                            <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>">el detalle de la recepción</a>.
                                         </small>
-                                        <div id="habitacion-info" class="form-text text-muted mt-2" style="display: none;">
-                                            <span id="habitacion-numero"></span> | <span id="habitacion-tipo"></span> | <span id="habitacion-piso"></span>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -234,18 +212,21 @@ switch ($recepcion['estado']) {
                                     </div>
                                 </div>
 
-                                <!-- Estado -->
+                                <!-- Estado (solo lectura: check-in / check-out se hacen desde el detalle) -->
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="estado">
+                                        <label>
                                             <i class="fas fa-toggle-on mr-1 text-primary"></i>
-                                            Estado <span class="text-danger">*</span>
+                                            Estado
                                         </label>
-                                        <select class="form-control" id="estado" name="estado" required>
-                                            <option value="reservado" <?= ($recepcion['estado'] == 'reservado') ? 'selected' : ''; ?>>Reservado</option>
-                                            <option value="en_curso" <?= ($recepcion['estado'] == 'en_curso') ? 'selected' : ''; ?>>Check-in (En curso)</option>
-                                        </select>
-                                        <div class="invalid-feedback">Por favor seleccione un estado</div>
+                                        <div>
+                                            <span class="badge badge-<?= $clase_estado; ?> px-3 py-2"><?= $etiqueta_estado; ?></span>
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle"></i>
+                                            El check-in y el check-out se realizan desde
+                                            <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>">el detalle de la recepción</a>.
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -293,153 +274,16 @@ switch ($recepcion['estado']) {
                         </div>
                     </div>
 
-                    <!-- Información financiera -->
-                    <div class="card card-outline card-success">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-dollar-sign mr-2"></i>Información Financiera
-                            </h3>
-                            <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Información Financiera">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <!-- Monto total -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="montototal">
-                                            <i class="fas fa-money-bill-wave mr-1 text-success"></i>
-                                            Monto Total <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">Bs</span>
-                                            </div>
-                                            <input type="number" class="form-control" id="montototal" name="montototal"
-                                                step="0.01" min="0" value="<?= $recepcion['montototal']; ?>" required>
-                                            <div class="invalid-feedback">Por favor ingrese el monto total</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Monto pagado -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="montopagado">
-                                            <i class="fas fa-hand-holding-usd mr-1 text-success"></i>
-                                            Monto Pagado
-                                        </label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">Bs</span>
-                                            </div>
-                                            <input type="number" class="form-control" id="montopagado" name="montopagado"
-                                                step="0.01" min="0" value="<?= $recepcion['montopagado']; ?>">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Método de pago -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="metodopago">
-                                            <i class="fas fa-credit-card mr-1 text-success"></i>
-                                            Método de Pago
-                                        </label>
-                                        <select class="form-control" id="metodopago" name="metodopago">
-                                            <option value="">Sin método de pago</option>
-                                            <option value="Efectivo" <?= ($recepcion['metodopago'] == 'Efectivo') ? 'selected' : ''; ?>>Efectivo</option>
-                                            <option value="QR" <?= ($recepcion['metodopago'] == 'QR') ? 'selected' : ''; ?>>QR</option>
-                                            <option value="Otros" <?= ($recepcion['metodopago'] == 'Otros') ? 'selected' : ''; ?>>Otros</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Sección de cambio (visible solo cuando se selecciona Efectivo) -->
-                            <div id="seccion-cambio" class="row mt-3" <?= ($recepcion['metodopago'] != 'Efectivo') ? 'style="display: none;"' : ''; ?>>
-                                <div class="col-md-12">
-                                    <div class="card bg-light">
-                                        <div class="card-body">
-                                            <h5 class="card-title">
-                                                <i class="fas fa-exchange-alt mr-2 text-warning"></i>
-                                                Detalle del pago en efectivo
-                                            </h5>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="monto_recibido">Monto Recibido</label>
-                                                        <div class="input-group">
-                                                            <div class="input-group-prepend">
-                                                                <span class="input-group-text">Bs</span>
-                                                            </div>
-                                                            <input type="number" class="form-control" id="monto_recibido" name="monto_recibido"
-                                                                step="0.01" min="0" value="<?= $recepcion['montopagado'] + ($recepcion['cambio'] ?? 0); ?>">
-                                                        </div>
-                                                        <small class="text-muted">Dinero entregado por el cliente</small>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="cambio">Cambio</label>
-                                                        <div class="input-group">
-                                                            <div class="input-group-prepend">
-                                                                <span class="input-group-text">Bs</span>
-                                                            </div>
-                                                            <input type="number" class="form-control" id="cambio" name="cambio"
-                                                                step="0.01" min="0" value="<?= $recepcion['cambio'] ?? '0.00'; ?>" readonly>
-                                                        </div>
-                                                        <small class="text-muted">Dinero devuelto al cliente</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Resumen financiero -->
-                            <div class="row mt-4">
-                                <div class="col-md-12">
-                                    <div class="alert alert-info">
-                                        <h5><i class="fas fa-info-circle mr-2"></i>Resumen financiero</h5>
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <strong>Total:</strong> <span id="resumen-total">Bs <?= number_format($recepcion['montototal'], 2); ?></span>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <strong>Pagado:</strong> <span id="resumen-pagado">Bs <?= number_format($recepcion['montopagado'], 2); ?></span>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <strong>Saldo:</strong> <span id="resumen-saldo" class="<?= ($recepcion['montototal'] - $recepcion['montopagado'] > 0) ? 'text-danger' : 'text-success'; ?>">
-                                                    Bs <?= number_format(max(0, $recepcion['montototal'] - $recepcion['montopagado']), 2); ?>
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Barra de progreso de pago -->
-                                        <div class="progress mt-3" style="height: 20px;">
-                                            <?php
-                                            $porcentajePagado = ($recepcion['montototal'] > 0) ? ($recepcion['montopagado'] / $recepcion['montototal']) * 100 : 0;
-                                            $porcentajePagado = min(100, $porcentajePagado); // No exceder 100%
-                                            ?>
-                                            <div class="progress-bar <?= $porcentajePagado >= 100 ? 'bg-success' : 'bg-warning'; ?>"
-                                                role="progressbar"
-                                                style="width: <?= $porcentajePagado; ?>%"
-                                                aria-valuenow="<?= $porcentajePagado; ?>"
-                                                aria-valuemin="0"
-                                                aria-valuemax="100">
-                                                <?= number_format($porcentajePagado, 1); ?>% pagado
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- El dinero de esta reserva se gestiona en el folio, no aquí -->
+                    <div class="callout callout-info">
+                        <h5><i class="fas fa-file-invoice-dollar mr-2"></i>El dinero se gestiona en el folio</h5>
+                        <p class="mb-2">
+                            Los cargos, pagos y el saldo de esta reserva son la fuente de verdad del folio del
+                            huésped. Desde este formulario solo se editan los datos de la estancia.
+                        </p>
+                        <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>#folio-recepcion" class="btn btn-sm btn-info">
+                            <i class="fas fa-external-link-alt mr-1"></i> Ir al folio
+                        </a>
                     </div>
                 </div>
 
@@ -485,10 +329,6 @@ switch ($recepcion['estado']) {
                                         <span class="badge badge-<?= $clase_estado; ?> px-3 py-2"><?= $etiqueta_estado; ?></span>
                                     </div>
                                 </li>
-                                <li class="list-group-item px-0">
-                                    <i class="fas fa-money-bill-wave text-success mr-2"></i> <strong>Monto:</strong>
-                                    <div id="resumen-monto" class="text-muted mt-1">Bs <?= number_format($recepcion['montototal'], 2); ?></div>
-                                </li>
                             </ul>
 
                             <div id="resumen-observaciones-container" class="mt-3" <?= empty($recepcion['observaciones']) ? 'style="display: none;"' : ''; ?>>
@@ -523,22 +363,22 @@ switch ($recepcion['estado']) {
                             </div>
                         </div>
                         <div class="card-body">
-                            <h6><i class="fas fa-info-circle text-info mr-2"></i>Cambio de habitación</h6>
+                            <h6><i class="fas fa-info-circle text-info mr-2"></i>Datos de estancia</h6>
                             <p class="text-muted small">
-                                Si cambia la habitación, el sistema liberará la habitación actual y ocupará la nueva
-                                automáticamente cuando guarde los cambios.
+                                Aquí se editan cliente, tarifa, fechas y observaciones. Al cambiar la tarifa se
+                                recalcula la fecha de salida prevista.
                             </p>
 
-                            <h6 class="mt-3"><i class="fas fa-info-circle text-info mr-2"></i>Cambio de tarifa</h6>
+                            <h6 class="mt-3"><i class="fas fa-info-circle text-info mr-2"></i>Cambio de habitación</h6>
                             <p class="text-muted small">
-                                Al cambiar la tarifa, el monto total se actualizará automáticamente con el precio
-                                de la tarifa seleccionada. Si necesita un precio diferente, puede modificarlo manualmente.
+                                El cambio de habitación se hace desde el detalle de la recepción (flujo auditado que
+                                libera la habitación anterior y carga la diferencia de tarifa al folio si corresponde).
                             </p>
 
-                            <h6 class="mt-3"><i class="fas fa-info-circle text-info mr-2"></i>Pagos</h6>
+                            <h6 class="mt-3"><i class="fas fa-info-circle text-info mr-2"></i>Dinero y check-out</h6>
                             <p class="text-muted small">
-                                Si el monto pagado es menor al monto total, el sistema registrará el saldo pendiente.
-                                El cliente deberá pagar este saldo antes del check-out.
+                                Los cargos y pagos se registran en el folio del huésped. El check-out valida que el
+                                saldo esté cubierto antes de finalizar la estancia.
                             </p>
                         </div>
                     </div>

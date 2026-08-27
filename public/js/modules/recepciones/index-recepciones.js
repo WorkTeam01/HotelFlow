@@ -271,13 +271,17 @@ $(document).ready(function () {
         }
     });
 
-    // Configuración para el checkout con SweetAlert2
+    // Check-out desde el tile: pasa por checkout_ajax (valida el saldo del folio server-side).
+    // Si hay saldo pendiente, deriva al folio en vez de finalizar por GET.
     $(document).on('click', '.btn-checkout', function (e) {
         e.preventDefault();
 
-        const checkoutUrl = $(this).attr('href');
-        const habitacionNumero = $(this).data('habitacion');
-        const clienteNombre = $(this).data('cliente');
+        const $btn = $(this);
+        const id = $btn.data('id');
+        const endpoint = $btn.data('endpoint');
+        const csrf = $btn.data('csrf');
+        const habitacionNumero = $btn.data('habitacion');
+        const clienteNombre = $btn.data('cliente');
 
         Swal.fire({
             title: '¿Realizar Check-Out?',
@@ -285,7 +289,7 @@ $(document).ready(function () {
                 <div class="text-left">
                     <p><strong>Cliente:</strong> ${clienteNombre || 'Cliente'}</p>
                     <p><strong>Habitación:</strong> ${habitacionNumero || 'N/A'}</p>
-                    <p>Esta acción finalizará la estancia del cliente.</p>
+                    <p>Se validará que el folio esté saldado antes de finalizar.</p>
                 </div>
             `,
             icon: 'question',
@@ -296,10 +300,38 @@ $(document).ready(function () {
             cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
             allowOutsideClick: false
         }).then((result) => {
-            if (result.isConfirmed) {
-                // Redirigir a la URL de checkout
-                window.location.href = checkoutUrl;
+            if (!result.isConfirmed) {
+                return;
             }
+            $btn.prop('disabled', true);
+            $.ajax({
+                url: endpoint,
+                type: 'POST',
+                dataType: 'json',
+                data: { csrf_token: csrf, idrecepcion: id },
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).done(function (res) {
+                if (res.success) {
+                    window.location.reload();
+                    return;
+                }
+                if (res.requiere_pago) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Saldo pendiente',
+                        text: 'Bs ' + (parseFloat(res.saldo) || 0).toFixed(2) + '. Regístralo en el folio antes del check-out.',
+                        confirmButtonText: 'Ir al folio'
+                    }).then(function () {
+                        window.location.href = BASE_URL + 'views/recepcion/show.php?id=' + id + '#folio-recepcion';
+                    });
+                    return;
+                }
+                Swal.fire({ icon: 'error', title: 'No se pudo hacer el check-out', text: res.message });
+            }).fail(function () {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Fallo de comunicación con el servidor' });
+            }).always(function () {
+                $btn.prop('disabled', false);
+            });
         });
     });
 

@@ -165,8 +165,91 @@ class RecepcionController
     }
 
     /**
+     * Estado canónico para UI. Fuente única de verdad de etiqueta/color/icono para
+     * TODAS las vistas y partials del módulo (elimina los switch de estado duplicados).
+     * Cubre los estados de BD (recepcion.estado y habitaciones.estado) y los estados
+     * derivados que calcula el controlador (no_show, salida_vencida).
+     *
+     * @param string $estado 'reservado'|'en_curso'|'ocupada'|'finalizado'|'cancelado'
+     *                        |'disponible'|'limpieza'|'mantenimiento'|'no_show'|'salida_vencida'
+     * @return array{label:string, clase:string, badge:string, icono:string, orden:int}
+     *   clase = sufijo AdminLTE ('success'|'warning'|'info'|'danger'|'secondary')
+     *   badge = 'badge-'.clase   icono = nombre FontAwesome sin prefijo 'fa-'
+     */
+    public static function estadoRecepcion(string $estado): array
+    {
+        switch ($estado) {
+            case 'disponible':
+                $ui = ['label' => 'Disponible', 'clase' => 'success', 'icono' => 'door-open', 'orden' => 1];
+                break;
+            case 'reservado':
+                $ui = ['label' => 'Reservada', 'clase' => 'info', 'icono' => 'calendar-check', 'orden' => 2];
+                break;
+            case 'en_curso':
+            case 'ocupada':
+                $ui = ['label' => 'Ocupada', 'clase' => 'warning', 'icono' => 'bed', 'orden' => 3];
+                break;
+            case 'salida_vencida':
+                $ui = ['label' => 'Salida vencida', 'clase' => 'danger', 'icono' => 'clock', 'orden' => 4];
+                break;
+            case 'limpieza':
+                $ui = ['label' => 'Por limpiar', 'clase' => 'secondary', 'icono' => 'broom', 'orden' => 4];
+                break;
+            case 'finalizado':
+                $ui = ['label' => 'Finalizada', 'clase' => 'secondary', 'icono' => 'check-circle', 'orden' => 5];
+                break;
+            case 'no_show':
+                $ui = ['label' => 'No-show', 'clase' => 'danger', 'icono' => 'user-slash', 'orden' => 6];
+                break;
+            case 'cancelado':
+                $ui = ['label' => 'Cancelada', 'clase' => 'danger', 'icono' => 'times-circle', 'orden' => 6];
+                break;
+            case 'mantenimiento':
+                $ui = ['label' => 'Mantenimiento', 'clase' => 'danger', 'icono' => 'tools', 'orden' => 7];
+                break;
+            default:
+                $ui = ['label' => 'Desconocido', 'clase' => 'secondary', 'icono' => 'question-circle', 'orden' => 99];
+                break;
+        }
+
+        $ui['badge'] = 'badge-' . $ui['clase'];
+        return $ui;
+    }
+
+    /**
+     * Estado derivado de una fila de recepción, resuelto contra la hora actual.
+     * - 'reservado' con entrada vencida hace más de noshow_horas → 'no_show'
+     * - 'en_curso' con salida prevista ya pasada                  → 'salida_vencida'
+     * - resto → el estado tal cual está en BD
+     *
+     * @param array $recepcion Fila con al menos 'estado', 'fechaentrada', 'fechasalida_prevista'
+     * @return string
+     */
+    public static function estadoDerivado(array $recepcion): string
+    {
+        $estado = $recepcion['estado'] ?? '';
+        $ahora = time();
+
+        if ($estado === 'reservado' && !empty($recepcion['fechaentrada'])) {
+            $config = require __DIR__ . '/../../config/config.php';
+            $horas = $config['recepcion']['noshow_horas'] ?? 6;
+            if (strtotime($recepcion['fechaentrada']) < $ahora - ($horas * 3600)) {
+                return 'no_show';
+            }
+        }
+
+        if ($estado === 'en_curso' && !empty($recepcion['fechasalida_prevista'])) {
+            if (strtotime($recepcion['fechasalida_prevista']) < $ahora) {
+                return 'salida_vencida';
+            }
+        }
+
+        return $estado;
+    }
+
+    /**
      * Procesa los datos del formulario para crear una nueva recepción
-     * 
+     *
      * @return array Resultado de la operación
      */
     public function guardar()
@@ -355,8 +438,132 @@ class RecepcionController
     }
 
     /**
+     * Actualiza SOLO los datos de estancia de una recepción. NUNCA acepta
+     * montototal/montopagado/cambio/metodopago (el dinero se gestiona por el folio,
+     * ver models/Pago.php) ni transiciones de estado (van por cambiarEstado()/checkout()).
+     * Whitelist estricta contra mass-assignment hacia Recepcion::actualizar().
+     *
+     * @param int $id
+     * @param array $datos $_POST completo; se filtra internamente
+     * @return array{success:bool, message:string, icon:string}
+     */
+    public function actualizarEstancia(int $id, array $datos): array
+    {
+        $permitidos = ['idcliente', 'idtarifa', 'fechaentrada', 'fechasalida_prevista', 'observaciones'];
+        $limpios = [];
+        foreach ($permitidos as $campo) {
+            if (array_key_exists($campo, $datos)) {
+                $limpios[$campo] = $datos[$campo];
+            }
+        }
+
+        if (isset($limpios['idcliente'])) {
+            $limpios['idcliente'] = (int) $limpios['idcliente'];
+        }
+        if (isset($limpios['idtarifa'])) {
+            $limpios['idtarifa'] = (int) $limpios['idtarifa'];
+        }
+
+        $limpios = $this->modelo->sanitizarDatos($limpios);
+
+        $errores = [];
+        if (empty($limpios['idcliente'])) {
+            $errores[] = 'El cliente es obligatorio.';
+        }
+        if (empty($limpios['idtarifa'])) {
+            $errores[] = 'La tarifa es obligatoria.';
+        }
+        if (empty($limpios['fechaentrada'])) {
+            $errores[] = 'La fecha de entrada es obligatoria.';
+        }
+        if (empty($limpios['fechasalida_prevista'])) {
+            $errores[] = 'La fecha de salida prevista es obligatoria.';
+        } elseif (!empty($limpios['fechaentrada']) && strtotime($limpios['fechasalida_prevista']) <= strtotime($limpios['fechaentrada'])) {
+            $errores[] = 'La fecha de salida prevista debe ser posterior a la fecha de entrada.';
+        }
+
+        if (!empty($errores)) {
+            return ['success' => false, 'message' => $errores[0], 'icon' => 'error'];
+        }
+
+        if ($this->modelo->actualizar($id, $limpios)) {
+            return ['success' => true, 'message' => 'Datos de estancia actualizados correctamente', 'icon' => 'success'];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Error al actualizar la estancia: ' . $this->modelo->getLastError(),
+            'icon' => 'error',
+        ];
+    }
+
+    /**
+     * Check-out completo: verifica el saldo real del folio (Pago::calcularSaldo) antes
+     * de finalizar. Si hay saldo pendiente y no se envía un pago que lo cubra, no finaliza.
+     * Reutiliza Pago::registrarPago() + Recepcion::cambiarEstado() (cada uno transaccional,
+     * sin SQL de dinero nuevo); si el registro del pago tuvo éxito el folio queda cuadrado
+     * aunque el cambio de estado fallara y se pueda reintentar.
+     *
+     * @param int $id
+     * @param int $idusuario
+     * @param array|null $pagoFinal ['monto'=>float, 'metodopago'=>'Efectivo'|'QR'|'OTROS']
+     * @return array{success:bool, message:string, requiere_pago?:bool, saldo?:float}
+     */
+    public function checkout(int $id, int $idusuario, ?array $pagoFinal = null): array
+    {
+        require_once __DIR__ . '/../../models/Pago.php';
+        $pagoModelo = new Pago();
+
+        $recepcion = $this->modelo->getById($id);
+        if (!$recepcion) {
+            return ['success' => false, 'message' => 'Recepción no encontrada.'];
+        }
+        if ($recepcion['estado'] !== 'en_curso') {
+            return ['success' => false, 'message' => 'Solo se puede hacer check-out de una estancia en curso.'];
+        }
+
+        $saldo = (float) $pagoModelo->calcularSaldo($id)['saldo'];
+
+        if ($saldo > 0.01) {
+            if ($pagoFinal === null) {
+                return [
+                    'success' => false,
+                    'requiere_pago' => true,
+                    'saldo' => $saldo,
+                    'message' => 'Saldo pendiente Bs ' . number_format($saldo, 2),
+                ];
+            }
+
+            $monto = (float) ($pagoFinal['monto'] ?? 0);
+            $metodo = $pagoFinal['metodopago'] ?? '';
+
+            if (!in_array($metodo, ['Efectivo', 'QR', 'OTROS'], true)) {
+                return ['success' => false, 'message' => 'Método de pago no válido.', 'saldo' => $saldo];
+            }
+            if ($monto + 0.01 < $saldo) {
+                return [
+                    'success' => false,
+                    'message' => 'El pago no cubre el saldo. Saldo pendiente Bs ' . number_format($saldo - $monto, 2),
+                    'saldo' => $saldo,
+                ];
+            }
+
+            $idLinea = $pagoModelo->registrarPago($id, $saldo, $metodo, $idusuario, 'Pago de saldo (check-out)');
+            if (!$idLinea) {
+                return ['success' => false, 'message' => $pagoModelo->getLastError(), 'saldo' => $saldo];
+            }
+        }
+
+        if ($this->modelo->cambiarEstado($id, 'finalizado')) {
+            return ['success' => true, 'message' => 'Check-out realizado correctamente'];
+        }
+
+        return ['success' => false, 'message' => 'Error al finalizar la recepción: ' . $this->modelo->getLastError()];
+    }
+
+    /**
      * Cambia el estado de una recepción
-     * 
+     *
      * @param int $id ID de la recepción
      * @param string $estado Nuevo estado
      * @return array Resultado de la operación

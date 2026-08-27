@@ -60,32 +60,11 @@ $skip_select2 = true;
 $skip_chartjs = true;
 include_once '../layouts/header.php';
 
-// Determinar clase CSS según el estado
-$clase_estado = '';
-$icono_estado = '';
-$badge_estado = '';
-switch ($recepcion['estado']) {
-    case 'reservado':
-        $clase_estado = 'info';
-        $icono_estado = 'calendar-check';
-        $badge_estado = 'badge-info';
-        break;
-    case 'en_curso':
-        $clase_estado = 'warning';
-        $icono_estado = 'bed';
-        $badge_estado = 'badge-warning';
-        break;
-    case 'finalizado':
-        $clase_estado = 'success';
-        $icono_estado = 'check-circle';
-        $badge_estado = 'badge-success';
-        break;
-    case 'cancelado':
-        $clase_estado = 'danger';
-        $icono_estado = 'times-circle';
-        $badge_estado = 'badge-danger';
-        break;
-}
+// Estado canónico (etiqueta/color/icono) desde la fuente única de verdad
+$estado_ui = RecepcionController::estadoRecepcion($recepcion['estado']);
+$clase_estado = $estado_ui['clase'];
+$icono_estado = $estado_ui['icono'];
+$badge_estado = $estado_ui['badge'];
 
 // Calcular información financiera coherente
 $montoTotal = (float)$recepcion['montototal'];
@@ -145,7 +124,7 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                                 <h3 class="m-0">
                                     <i class="fas fa-<?= $icono_estado; ?> mr-2"></i>
                                     Recepción #<?= $recepcion['idrecepcion']; ?> -
-                                    <span class="badge badge-light"><?= ucfirst(str_replace('_', ' ', $recepcion['estado'])); ?></span>
+                                    <span class="badge badge-light"><?= htmlspecialchars($estado_ui['label']); ?></span>
                                 </h3>
                                 <p class="mb-0 mt-2 lead">Habitación <?= htmlspecialchars($recepcion['numero_habitacion']); ?> - <?= htmlspecialchars($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido_cliente']); ?></p>
                             </div>
@@ -471,24 +450,23 @@ if (empty($tiempoEstancia) && $estanciaPrevista->i > 0) {
                             <?php endif; ?>
 
                             <?php if ($recepcion['estado'] === 'en_curso'): ?>
-                                <?php if ($saldoPendiente > 0): ?>
-                                    <li class="nav-item">
-                                        <a href="<?= $URL; ?>views/recepcion/checkout.php?id=<?= $recepcion['idrecepcion']; ?>"
-                                            class="nav-link text-success">
-                                            <i class="fas fa-sign-out-alt mr-2"></i> Realizar Check-out
-                                            <span class="badge badge-danger ml-1">Pago pendiente: Bs <?= number_format($saldoPendiente, 2); ?></span>
-                                        </a>
-                                    </li>
-                                <?php else: ?>
-                                    <li class="nav-item">
-                                        <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= $recepcion['idrecepcion']; ?>&nuevo_estado=finalizado&csrf_token=<?= generateCSRFToken(); ?>"
-                                            class="nav-link text-success"
-                                            onclick="return confirm('¿Está seguro que desea realizar el check-out para esta recepción?');">
-                                            <i class="fas fa-sign-out-alt mr-2"></i> Realizar Check-out
+                                <li class="nav-item">
+                                    <a href="#" id="btn-checkout"
+                                        class="nav-link text-success"
+                                        data-id="<?= (int) $recepcion['idrecepcion']; ?>"
+                                        data-saldo="<?= number_format((float) $folio_saldo['saldo'], 2, '.', ''); ?>"
+                                        data-cliente="<?= htmlspecialchars($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido_cliente']); ?>"
+                                        data-habitacion="<?= htmlspecialchars($recepcion['numero_habitacion']); ?>"
+                                        data-endpoint="<?= $URL; ?>controllers/recepcion/checkout_ajax.php"
+                                        data-csrf="<?= generateCSRFToken(); ?>">
+                                        <i class="fas fa-sign-out-alt mr-2"></i> Realizar Check-out
+                                        <?php if ((float) $folio_saldo['saldo'] > 0): ?>
+                                            <span class="badge badge-danger ml-1">Saldo: Bs <?= number_format((float) $folio_saldo['saldo'], 2); ?></span>
+                                        <?php else: ?>
                                             <span class="badge badge-success ml-1">Pago completo</span>
-                                        </a>
-                                    </li>
-                                <?php endif; ?>
+                                        <?php endif; ?>
+                                    </a>
+                                </li>
                             <?php endif; ?>
 
                             <?php if ($recepcion['estado'] !== 'finalizado' && $recepcion['estado'] !== 'cancelado'): ?>

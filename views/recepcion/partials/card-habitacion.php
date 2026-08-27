@@ -117,13 +117,16 @@
                         </a>
                     </div>
                     <div class="col-6">
-                        <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= $recepcion['idrecepcion']; ?>&nuevo_estado=finalizado&csrf_token=<?= generateCSRFToken(); ?>"
-                            class="btn btn-success btn-checkout"
+                        <button type="button"
+                            class="btn btn-success btn-block rounded-0 btn-checkout"
+                            data-id="<?= (int) $recepcion['idrecepcion']; ?>"
                             data-habitacion="<?= htmlspecialchars($recepcion['numero_habitacion']); ?>"
-                            data-cliente="<?= htmlspecialchars($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido_cliente']); ?>">
+                            data-cliente="<?= htmlspecialchars($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido_cliente']); ?>"
+                            data-endpoint="<?= $URL; ?>controllers/recepcion/checkout_ajax.php"
+                            data-csrf="<?= generateCSRFToken(); ?>">
                             <i class="fas fa-sign-out-alt"></i>
                             <span class="d-none d-lg-inline ml-1">Check-out</span>
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>

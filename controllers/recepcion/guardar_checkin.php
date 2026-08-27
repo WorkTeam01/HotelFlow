@@ -20,8 +20,8 @@ if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($id
     exit;
 }
 
-// Verificar token CSRF en solicitudes POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token']))) {
+// Verificar token CSRF (obligatorio, no opcional: ausencia de token = inválido)
+if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
     $_SESSION['mensaje'] = 'Token de seguridad inválido. Recargue la página e intente nuevamente.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . 'views/recepcion/create.php');

@@ -206,30 +206,9 @@ $recepciones_en_curso = $datos['recepciones_en_curso'] ?? [];
                                     $contador = 1;
                                     foreach ($recepciones as $recepcion):
                                         $estado = $recepcion['estado'];
-                                        $clase_estado = '';
-                                        $texto_estado = '';
-
-                                        switch ($estado) {
-                                            case 'reservado':
-                                                $clase_estado = 'badge-warning';
-                                                $texto_estado = 'Reservado';
-                                                break;
-                                            case 'en_curso':
-                                                $clase_estado = 'badge-success';
-                                                $texto_estado = 'En curso';
-                                                break;
-                                            case 'finalizado':
-                                                $clase_estado = 'badge-info';
-                                                $texto_estado = 'Finalizado';
-                                                break;
-                                            case 'cancelado':
-                                                $clase_estado = 'badge-danger';
-                                                $texto_estado = 'Cancelado';
-                                                break;
-                                            default:
-                                                $clase_estado = 'badge-secondary';
-                                                $texto_estado = ucfirst($estado);
-                                        }
+                                        $estado_ui = RecepcionController::estadoRecepcion($estado);
+                                        $clase_estado = $estado_ui['badge'];
+                                        $texto_estado = $estado_ui['label'];
 
                                         // Calcular saldo pendiente
                                         $saldo = ($recepcion['montototal'] ?? 0) - ($recepcion['montopagado'] ?? 0);
