@@ -101,6 +101,13 @@ try {
         die("Error: No se puede generar recibo para recepciones canceladas");
     }
 
+    // Folio de huésped: líneas de cargo/pago/reverso + saldo real (libro mayor).
+    // Fuente de verdad para el desglose financiero del recibo; el cache
+    // montototal/montopagado de recepcion queda solo como fallback.
+    $folio = $recepcionController->obtenerFolio($id_recepcion);
+    $folio_lineas = $folio['lineas'] ?? [];
+    $folio_saldo = $folio['saldo'] ?? ['total_cargos' => 0, 'total_pagado' => 0, 'saldo' => 0];
+
     // Extraer datos principales con validación
     $cliente = ($recepcion['nombre_cliente'] ?? '') . ' ' . ($recepcion['apellido_cliente'] ?? '');
     $cliente = trim($cliente) ?: 'Cliente no disponible';
@@ -112,9 +119,17 @@ try {
     $fecha_salida_prevista = formatearFecha($recepcion['fechasalida_prevista'] ?? date('Y-m-d H:i:s'));
     $fecha_salida_real = !empty($recepcion['fechasalida']) ? formatearFecha($recepcion['fechasalida']) : null;
 
-    $monto_total = $recepcion['montototal'] ?? 0;
-    $monto_pagado = $recepcion['montopagado'] ?? 0;
-    $saldo_pendiente = $monto_pagado - $monto_total;
+    // Si el folio tiene líneas, es la fuente de verdad; si no (recepciones
+    // anteriores al folio), se usa el cache de la tabla recepcion.
+    if (!empty($folio_lineas)) {
+        $monto_total = (float)$folio_saldo['total_cargos'];
+        $monto_pagado = (float)$folio_saldo['total_pagado'];
+        $saldo_pendiente = (float)$folio_saldo['saldo'];
+    } else {
+        $monto_total = (float)($recepcion['montototal'] ?? 0);
+        $monto_pagado = (float)($recepcion['montopagado'] ?? 0);
+        $saldo_pendiente = $monto_total - $monto_pagado;
+    }
 
     $estado = ucfirst(str_replace('_', ' ', $recepcion['estado'] ?? 'reservado'));
     $metodo_pago = htmlspecialchars($recepcion['metodopago'] ?? 'Sin especificar', ENT_QUOTES, 'UTF-8');
@@ -151,25 +166,22 @@ try {
 
     // Create PDF
     $is_mobile = isMobile();
-    $pdf = new TCPDF('P', 'mm', array(80, 250), true, 'UTF-8', false);
     $font_size = 9;
     $margin = 5;
 
-    // Set document properties
-    $pdf->SetCreator(PDF_CREATOR);
-    $pdf->SetAuthor($APP_NAME);
-    $pdf->SetTitle($tipo_documento);
-    $pdf->SetSubject('Recibo de Recepción');
-    $pdf->SetKeywords('recibo, recepcion, alojamiento, check-in, reserva');
-    $pdf->setPrintHeader(false);
-    $pdf->setPrintFooter(false);
-    $pdf->SetMargins($margin, $margin, $margin);
-    $pdf->SetAutoPageBreak(TRUE, $margin);
-    $pdf->AddPage();
-    $pdf->SetFont('Helvetica', '', $font_size);
+    // Convertir monto a literal con manejo de errores
+    try {
+        $monto_total_literal = numeroletras($monto_total);
+    } catch (Exception $e) {
+        $monto_total_literal = "(" . number_format($monto_total, 2) . " BOLIVIANOS)";
+    }
+
+    // Formatear montos
+    $monto_total_formatted = number_format($monto_total, 2, ',', '.');
+    $monto_pagado_formatted = number_format($monto_pagado, 2, ',', '.');
 
     // Set header content
-    $html = <<<EOD
+    $html_cabecera = <<<EOD
 <style>
     * { font-family: Arial, sans-serif; margin: 0; padding: 0; }
     table { width: 100%; border-collapse: collapse; }
@@ -202,22 +214,8 @@ try {
 <hr style="margin: 2px 0 3px 0;">
 EOD;
 
-    $pdf->writeHTML($html, true, false, true, '');
-
-    // Convertir monto a literal con manejo de errores
-    try {
-        $monto_total_literal = numeroletras($monto_total);
-    } catch (Exception $e) {
-        $monto_total_literal = "(" . number_format($monto_total, 2) . " BOLIVIANOS)";
-    }
-
-    // Formatear montos
-    $monto_total_formatted = number_format($monto_total, 2, ',', '.');
-    $monto_pagado_formatted = number_format($monto_pagado, 2, ',', '.');
-    $saldo_formatted = number_format($saldo_pendiente, 2, ',', '.');
-
     // Generate details HTML
-    $html = <<<EOD
+    $html_cuerpo = <<<EOD
 <table cellspacing="1">
     <tr>
         <td width="50%"><strong>Habitación:</strong></td>
@@ -235,7 +233,7 @@ EOD;
 
     // Agregar método de pago en el detalle de la reserva
     if ($metodo_pago !== 'Sin especificar') {
-        $html .= <<<EOD
+        $html_cuerpo .= <<<EOD
     <tr>
         <td width="50%"><strong>Método de pago:</strong></td>
         <td width="50%">$metodo_pago</td>
@@ -243,7 +241,7 @@ EOD;
 EOD;
     }
 
-    $html .= <<<EOD
+    $html_cuerpo .= <<<EOD
 </table>
 <hr style="margin: 3px 0 2px 0;">
 <p style="margin: 3px 0; text-align: center; font-weight: bold">FECHAS DE ESTANCIA</p>
@@ -261,7 +259,7 @@ EOD;
 
     // Agregar fecha de salida real si existe
     if ($fecha_salida_real) {
-        $html .= <<<EOD
+        $html_cuerpo .= <<<EOD
     <tr>
         <td width="50%"><strong>Check-out real:</strong></td>
         <td width="50%">$fecha_salida_real</td>
@@ -269,37 +267,68 @@ EOD;
 EOD;
     }
 
-    $html .= <<<EOD
+    // Desglose itemizado del folio (cargos, pagos y reversos en orden cronológico)
+    $filas_folio = '';
+    foreach ($folio_lineas as $linea) {
+        $concepto_folio = htmlspecialchars($linea['concepto'] ?? '', ENT_QUOTES, 'UTF-8');
+        $monto_linea = number_format((float)$linea['montototal'], 2, ',', '.');
+        $tipo_linea = $linea['tipo'] ?? 'pago';
+        if ($tipo_linea === 'cargo') {
+            $etiqueta_folio = $concepto_folio !== '' ? $concepto_folio : 'Cargo';
+            $signo_folio = '';
+        } elseif ($tipo_linea === 'pago') {
+            $metodo_linea = htmlspecialchars($linea['metodopago'] ?? '', ENT_QUOTES, 'UTF-8');
+            $etiqueta_folio = 'Pago' . ($metodo_linea !== '' ? " ($metodo_linea)" : '');
+            $signo_folio = '-';
+        } else {
+            $etiqueta_folio = $concepto_folio !== '' ? $concepto_folio : 'Reverso';
+            $signo_folio = '';
+        }
+        $filas_folio .= "<tr><td width=\"65%\">$etiqueta_folio</td>"
+            . "<td width=\"35%\" style=\"text-align: right;\">$signo_folio$monto_linea</td></tr>";
+    }
+    if ($filas_folio === '') {
+        $filas_folio = '<tr><td colspan="2" class="center">Sin movimientos registrados</td></tr>';
+    }
+
+    $total_cargos_formatted = number_format($monto_total, 2, ',', '.');
+    $saldo_abs_formatted = number_format(abs($saldo_pendiente), 2, ',', '.');
+    $etiqueta_saldo = $saldo_pendiente > 0.001 ? 'SALDO PENDIENTE Bs' : 'SALDO Bs';
+
+    $html_cuerpo .= <<<EOD
 </table>
 <hr style="margin: 5px 0 3px 0;">
-<p style="margin: 3px 0; text-align: center; font-weight: bold">INFORMACIÓN FINANCIERA</p>
+<p style="margin: 3px 0; text-align: center; font-weight: bold">DETALLE FINANCIERO</p>
 <hr style="margin: 2px 0 3px 0;">
 <table cellspacing="1">
+    $filas_folio
+</table>
+<hr style="margin: 3px 0 2px 0;">
+<table cellspacing="1">
     <tr>
-        <td width="70%">Monto pagado Bs</td>
-        <td width="30%" style="text-align: right;">$monto_pagado_formatted</td>
+        <td width="65%">Total cargos Bs</td>
+        <td width="35%" style="text-align: right;">$total_cargos_formatted</td>
     </tr>
     <tr>
-        <td width="70%"><strong>MONTO TOTAL Bs</strong></td>
-        <td width="30%" style="text-align: right;"><strong>$monto_total_formatted</strong></td>
+        <td width="65%">Total pagado Bs</td>
+        <td width="35%" style="text-align: right;">$monto_pagado_formatted</td>
     </tr>
     <tr>
-        <td width="70%"><strong>CAMBIO Bs</strong></td>
-        <td width="30%" style="text-align: right;"><strong>$saldo_formatted</strong></td>
+        <td width="65%"><strong>$etiqueta_saldo</strong></td>
+        <td width="35%" style="text-align: right;"><strong>$saldo_abs_formatted</strong></td>
     </tr>
 </table>
 <p style="margin: 5px 0 3px 0;"><strong>SON:</strong> $monto_total_literal</p>
 EOD;
 
-    $html .= <<<EOD
+    $html_cuerpo .= <<<EOD
 <hr style="margin: 3px 0;">
 <table style="margin: 2px 0;">
-    <tr><br>
+    <tr>
         <td width="30%">Hora: $hora_actual</td>
         <td width="70%">Atendido por: $usuario_registro</td>
     </tr>
 </table>
-<br>
 <hr style="margin: 3px 0 2px 0;">
 <p style="text-align: center; font-size: 7pt; margin: 2px 0; font-weight: bold;">POLÍTICAS IMPORTANTES:</p>
 <p style="text-align: center; font-size: 7pt; margin: 1px 0;">
@@ -312,10 +341,9 @@ EOD;
 <p style="text-align: center; font-weight: bold; font-size: 8pt; margin: 2px 0;">ESTE RECIBO NO TIENE VALOR FISCAL</p>
 EOD;
 
-    $pdf->writeHTML($html, true, false, true, '');
+    $html_recibo = $html_cabecera . $html_cuerpo;
 
-    // Generate QR code con manejo de errores
-    $style = array(
+    $qr_style = array(
         'border' => 0,
         'vpadding' => '1',
         'hpadding' => '1',
@@ -324,21 +352,59 @@ EOD;
         'module_width' => 1,
         'module_height' => 1
     );
+    $qr_texto = "Recepción: {$recepcion['idrecepcion']} | Cliente: $cliente | Habitación: $numero_habitacion | Total: Bs $monto_total_formatted";
+    $qr_lado = 35; // mm
 
-    $QR = "Recepción: {$recepcion['idrecepcion']} | Cliente: $cliente | Habitación: $numero_habitacion | Total: Bs $monto_total_formatted";
+    /**
+     * Construye el recibo completo sobre un TCPDF de la altura de página indicada.
+     * Se invoca dos veces: primero sobre una página muy alta solo para medir cuánto
+     * ocupa el contenido, y luego sobre una página del tamaño exacto para el output
+     * final — así el rollo térmico se corta justo al terminar el recibo, sin dejar
+     * papel en blanco ni empujar el QR a otra página.
+     */
+    $construirRecibo = function (float $altoPagina) use (
+        $font_size,
+        $margin,
+        $tipo_documento,
+        $APP_NAME,
+        $html_recibo,
+        $qr_texto,
+        $qr_style,
+        $qr_lado
+    ): TCPDF {
+        $pdf = new TCPDF('P', 'mm', array(80, $altoPagina), true, 'UTF-8', false);
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor($APP_NAME);
+        $pdf->SetTitle($tipo_documento);
+        $pdf->SetSubject('Recibo de Recepción');
+        $pdf->SetKeywords('recibo, recepcion, alojamiento, check-in, reserva');
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetMargins($margin, $margin, $margin);
+        $pdf->SetAutoPageBreak(false, $margin);
+        $pdf->AddPage();
+        $pdf->SetFont('Helvetica', '', $font_size);
 
-    try {
-        $pdf->write2DBarcode($QR, 'QRCODE,L', 24, $pdf->GetY() + 2, 35, 35, $style);
-    } catch (Exception $e) {
-        // Si falla el QR, continuar sin él
-        $pdf->writeHTML('<p style="text-align: center; margin: 2px 0;">Código QR no disponible</p>', true, false, true, '');
-    }
+        $pdf->writeHTML($html_recibo, true, false, true, '');
 
-    $pdf->Ln(38);
+        try {
+            $pdf->write2DBarcode($qr_texto, 'QRCODE,L', (80 - $qr_lado) / 2, $pdf->GetY() + 2, $qr_lado, $qr_lado, $qr_style);
+            $pdf->SetY($pdf->GetY() + $qr_lado + 3);
+        } catch (Exception $e) {
+            $pdf->writeHTML('<p style="text-align: center; margin: 2px 0;">Código QR no disponible</p>', true, false, true, '');
+        }
 
-    // Add a final message
-    $html = '<p style="text-align: center; font-size: ' . $font_size . 'pt; margin: 2px 0;">GRACIAS POR ELEGIRNOS</p>';
-    $pdf->writeHTML($html, true, false, true, '');
+        $pdf->writeHTML('<p style="text-align: center; font-size: ' . $font_size . 'pt; margin: 2px 0;">GRACIAS POR ELEGIRNOS</p>', true, false, true, '');
+
+        return $pdf;
+    };
+
+    // Primera pasada: medir el alto real del contenido sobre una página holgada.
+    $medidor = $construirRecibo(1000.0);
+    $alto_contenido = $medidor->GetY() + $margin;
+
+    // Segunda pasada: recibo final a la altura exacta.
+    $pdf = $construirRecibo($alto_contenido);
 
     // Set headers
     header('Content-Type: application/pdf');
