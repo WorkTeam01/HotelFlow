@@ -147,6 +147,14 @@
     height: max(100%, 44px);
 }
 
+/* Foco visible por teclado en elementos interactivos del rack y las filas */
+.rec-tile .btn:focus-visible,
+.rec-mov .btn:focus-visible,
+.rec-mov a:focus-visible {
+    outline: 2px solid #004085;
+    outline-offset: 2px;
+}
+
 .rec-leyenda {
     display: flex;
     flex-wrap: wrap;

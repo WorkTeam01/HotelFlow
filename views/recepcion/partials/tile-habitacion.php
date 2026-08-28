@@ -39,7 +39,8 @@ $accion = $t['accion'];
             <?php endif; ?>
         </div>
         <div class="rec-tile__action">
-            <a href="<?= $URL . $accion['href']; ?>" class="btn btn-sm btn-block btn-outline-<?= $accion['clase']; ?>">
+            <a href="<?= $URL . $accion['href']; ?>" class="btn btn-sm btn-block btn-outline-<?= $accion['clase']; ?>"
+                aria-label="<?= htmlspecialchars($accion['label'] . ' — habitación ' . $t['numero'] . ' (' . $ocupacion['label'] . ')'); ?>">
                 <?= htmlspecialchars($accion['label']); ?>
             </a>
         </div>

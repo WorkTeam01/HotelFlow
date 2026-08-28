@@ -595,7 +595,9 @@ ALTER TABLE `recepcion`
   ADD KEY `idcliente` (`idcliente`),
   ADD KEY `idhabitacion` (`idhabitacion`),
   ADD KEY `idusuario` (`idusuario`),
-  ADD KEY `idtarifa` (`idtarifa`);
+  ADD KEY `idtarifa` (`idtarifa`),
+  ADD KEY `idx_recepcion_estado_entrada` (`estado`,`fechaentrada`),
+  ADD KEY `idx_recepcion_estado_salida` (`estado`,`fechasalida_prevista`);
 
 --
 -- Indices de la tabla `recepcion_movimientos`

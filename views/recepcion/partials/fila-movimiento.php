@@ -46,19 +46,20 @@ if ($tipo === 'llegada') {
     </div>
     <div class="rec-mov__accion">
         <?php if ($tipo === 'llegada'): ?>
-            <button type="button" class="btn btn-sm btn-success rec-accion-checkin" data-id="<?= (int) $mov['idrecepcion']; ?>">
-                <i class="fas fa-sign-in-alt"></i> <span class="d-none d-sm-inline">Check-in</span>
+            <button type="button" class="btn btn-sm btn-success rec-accion-checkin" data-id="<?= (int) $mov['idrecepcion']; ?>" aria-label="Check-in de <?= htmlspecialchars($nombre !== '' ? $nombre : 'huésped'); ?>, habitación <?= htmlspecialchars($hab); ?>">
+                <i class="fas fa-sign-in-alt" aria-hidden="true"></i> <span class="d-none d-sm-inline">Check-in</span>
             </button>
         <?php elseif ($tipo === 'salida'): ?>
             <button type="button" class="btn btn-sm btn-warning rec-accion-checkout"
                 data-id="<?= (int) $mov['idrecepcion']; ?>"
                 data-habitacion="<?= htmlspecialchars($hab); ?>"
-                data-cliente="<?= htmlspecialchars($nombre); ?>">
-                <i class="fas fa-sign-out-alt"></i> <span class="d-none d-sm-inline">Check-out</span>
+                data-cliente="<?= htmlspecialchars($nombre); ?>"
+                aria-label="Check-out de <?= htmlspecialchars($nombre !== '' ? $nombre : 'huésped'); ?>, habitación <?= htmlspecialchars($hab); ?>">
+                <i class="fas fa-sign-out-alt" aria-hidden="true"></i> <span class="d-none d-sm-inline">Check-out</span>
             </button>
         <?php else: ?>
-            <a href="<?= $showUrl; ?>" class="btn btn-sm btn-info">
-                <i class="fas fa-folder-open"></i> <span class="d-none d-sm-inline">Ver folio</span>
+            <a href="<?= $showUrl; ?>" class="btn btn-sm btn-info" aria-label="Ver folio de <?= htmlspecialchars($nombre !== '' ? $nombre : 'huésped'); ?>, habitación <?= htmlspecialchars($hab); ?>">
+                <i class="fas fa-folder-open" aria-hidden="true"></i> <span class="d-none d-sm-inline">Ver folio</span>
             </a>
         <?php endif; ?>
     </div>
