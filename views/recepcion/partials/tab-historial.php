@@ -72,37 +72,46 @@ $recepciones = $historial['recepciones'] ?? [];
                         <span class="badge <?= $estadoUi['badge']; ?>"><?= htmlspecialchars($estadoUi['label']); ?></span>
                     </td>
                     <td class="text-center">
+                        <?php $tieneAcciones = in_array($estado, ['reservado', 'en_curso'], true); ?>
                         <div class="btn-group">
                             <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $recepcion['idrecepcion']; ?>"
                                 class="btn btn-info btn-sm" title="Ver detalles" aria-label="Ver detalles"><i class="fas fa-eye"></i></a>
 
-                            <?php if ($estado === 'reservado'): ?>
-                                <a href="<?= $URL; ?>views/recepcion/update.php?id=<?= $recepcion['idrecepcion']; ?>"
-                                    class="btn btn-warning btn-sm" title="Editar" aria-label="Editar"><i class="fas fa-edit"></i></a>
-                                <button type="button" class="btn btn-success btn-sm rec-accion-checkin"
-                                    data-id="<?= $recepcion['idrecepcion']; ?>" title="Realizar Check-in" aria-label="Realizar Check-in">
-                                    <i class="fas fa-sign-in-alt"></i>
-                                </button>
-                            <?php endif; ?>
-
-                            <?php if ($estado === 'en_curso'): ?>
-                                <button type="button" class="btn btn-warning btn-sm rec-accion-checkout"
-                                    data-id="<?= $recepcion['idrecepcion']; ?>"
-                                    data-habitacion="<?= htmlspecialchars($recepcion['numero_habitacion'] ?? ''); ?>"
-                                    data-cliente="<?= htmlspecialchars(($recepcion['nombre_cliente'] ?? '') . ' ' . ($recepcion['apellido_cliente'] ?? '')); ?>"
-                                    title="Realizar Check-out" aria-label="Realizar Check-out">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                </button>
-                            <?php endif; ?>
-
                             <a href="<?= $URL; ?>views/recepcion/recibo.php?id=<?= $recepcion['idrecepcion']; ?>"
                                 class="btn btn-secondary btn-sm" target="_blank" title="Imprimir comprobante" aria-label="Imprimir comprobante"><i class="fas fa-print"></i></a>
 
-                            <?php if (in_array($estado, ['reservado', 'en_curso'])): ?>
-                                <button type="button" class="btn btn-danger btn-sm rec-accion-cancelar"
-                                    data-id="<?= $recepcion['idrecepcion']; ?>" title="Cancelar" aria-label="Cancelar">
-                                    <i class="fas fa-times"></i>
+                            <?php if ($tieneAcciones): ?>
+                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Más acciones">
+                                    <span class="sr-only">Más acciones</span>
                                 </button>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <a class="dropdown-item" href="<?= $URL; ?>views/recepcion/update.php?id=<?= $recepcion['idrecepcion']; ?>">
+                                        <i class="fas fa-edit mr-2"></i> Editar
+                                    </a>
+
+                                    <?php if ($estado === 'reservado'): ?>
+                                        <button type="button" class="dropdown-item text-success rec-accion-checkin"
+                                            data-id="<?= $recepcion['idrecepcion']; ?>">
+                                            <i class="fas fa-sign-in-alt mr-2"></i> Check-in
+                                        </button>
+                                    <?php endif; ?>
+
+                                    <?php if ($estado === 'en_curso'): ?>
+                                        <button type="button" class="dropdown-item text-primary rec-accion-checkout"
+                                            data-id="<?= $recepcion['idrecepcion']; ?>"
+                                            data-habitacion="<?= htmlspecialchars($recepcion['numero_habitacion'] ?? ''); ?>"
+                                            data-cliente="<?= htmlspecialchars(($recepcion['nombre_cliente'] ?? '') . ' ' . ($recepcion['apellido_cliente'] ?? '')); ?>">
+                                            <i class="fas fa-sign-out-alt mr-2"></i> Check-out
+                                        </button>
+                                    <?php endif; ?>
+
+                                    <div class="dropdown-divider"></div>
+                                    <button type="button" class="dropdown-item text-danger rec-accion-cancelar"
+                                        data-id="<?= $recepcion['idrecepcion']; ?>">
+                                        <i class="fas fa-times mr-2"></i> Cancelar
+                                    </button>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </td>

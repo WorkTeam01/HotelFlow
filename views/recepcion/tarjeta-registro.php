@@ -40,7 +40,11 @@ $e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarjeta de registro — Folio #<?= (int) $recepcion['idrecepcion']; ?></title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             font-family: "Segoe UI", Arial, sans-serif;
@@ -67,8 +71,14 @@ $e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
             margin-bottom: 20px;
         }
 
-        .tarjeta__head h1 { font-size: 20px; }
-        .tarjeta__head p { color: #666; font-size: 12px; }
+        .tarjeta__head h1 {
+            font-size: 20px;
+        }
+
+        .tarjeta__head p {
+            color: #666;
+            font-size: 12px;
+        }
 
         .folio-num {
             font-size: 16px;
@@ -85,7 +95,10 @@ $e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
             margin: 20px 0 10px;
         }
 
-        table { width: 100%; border-collapse: collapse; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
         td {
             padding: 6px 4px;
@@ -121,9 +134,18 @@ $e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
         }
 
         @media print {
-            body { background: #fff; padding: 0; }
-            .tarjeta { border: none; }
-            .no-print { display: none; }
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .tarjeta {
+                border: none;
+            }
+
+            .no-print {
+                display: none;
+            }
         }
 
         .no-print {
@@ -156,19 +178,46 @@ $e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 
         <h2>Datos del huésped</h2>
         <table>
-            <tr><td class="label">Nombre completo</td><td><?= $e($nombreCompleto); ?></td></tr>
-            <tr><td class="label">Documento</td><td><?= $e(($recepcion['tipodoc_cliente'] ?? 'Doc') . ': ' . ($recepcion['numdoc_cliente'] ?? '—')); ?></td></tr>
-            <tr><td class="label">Teléfono</td><td><?= $e($recepcion['telefono_cliente'] ?? '—'); ?></td></tr>
-            <tr><td class="label">Email</td><td><?= $e($recepcion['email_cliente'] ?? '—'); ?></td></tr>
-            <tr><td class="label">Dirección</td><td><?= $e($recepcion['direccion_cliente'] ?? '—'); ?></td></tr>
+            <tr>
+                <td class="label">Nombre completo</td>
+                <td><?= $e($nombreCompleto); ?></td>
+            </tr>
+            <tr>
+                <td class="label">Documento</td>
+                <td><?= $e(($recepcion['tipodoc_cliente'] ?? 'Doc') . ': ' . ($recepcion['numdoc_cliente'] ?? '—')); ?></td>
+            </tr>
+            <tr>
+                <td class="label">Teléfono</td>
+                <td><?= $e($recepcion['telefono_cliente'] ?? '—'); ?></td>
+            </tr>
+            <tr>
+                <td class="label">Email</td>
+                <td><?= $e($recepcion['email_cliente'] ?? '—'); ?></td>
+            </tr>
+            <tr>
+                <td class="label">Dirección</td>
+                <td><?= $e($recepcion['direccion_cliente'] ?? '—'); ?></td>
+            </tr>
         </table>
 
         <h2>Datos de la estancia</h2>
         <table>
-            <tr><td class="label">Habitación</td><td><?= $e($recepcion['numero_habitacion']); ?> — <?= $e($recepcion['tipo_habitacion'] ?? 'Estándar'); ?></td></tr>
-            <tr><td class="label">Fecha de entrada</td><td><?= date('d/m/Y H:i', strtotime($recepcion['fechaentrada'])); ?></td></tr>
-            <tr><td class="label">Fecha de salida prevista</td><td><?= date('d/m/Y H:i', strtotime($recepcion['fechasalida_prevista'])); ?></td></tr>
-            <tr><td class="label">Tarifa aplicada</td><td><?= $e($recepcion['tipo_tarifa'] ?? '—'); ?></td></tr>
+            <tr>
+                <td class="label">Habitación</td>
+                <td><?= $e($recepcion['numero_habitacion']); ?> — <?= $e($recepcion['tipo_habitacion'] ?? 'Estándar'); ?></td>
+            </tr>
+            <tr>
+                <td class="label">Fecha de entrada</td>
+                <td><?= date('d/m/Y H:i', strtotime($recepcion['fechaentrada'])); ?></td>
+            </tr>
+            <tr>
+                <td class="label">Fecha de salida prevista</td>
+                <td><?= date('d/m/Y H:i', strtotime($recepcion['fechasalida_prevista'])); ?></td>
+            </tr>
+            <tr>
+                <td class="label">Tarifa aplicada</td>
+                <td><?= $e($recepcion['tipo_tarifa'] ?? '—'); ?></td>
+            </tr>
         </table>
 
         <p class="aviso">

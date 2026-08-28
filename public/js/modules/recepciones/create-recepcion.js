@@ -19,6 +19,7 @@ window.RecepcionModule.Create = (function ($) {
     var $form, $habRadios, $tarifa, $entrada, $salida, $estado, $cliente,
         $metodo, $recibido, $total, $pagado, $btns;
     var disponibilidadTimer = null;
+    var $tarifaOpts = null; // copia intacta de todos los <option> de #idtarifa
 
     function fmt(n) { return 'Bs ' + (parseFloat(n) || 0).toFixed(2); }
 
@@ -40,20 +41,25 @@ window.RecepcionModule.Create = (function ($) {
         var idtipo = $room ? String($room.data('idtipo')) : null;
         var current = $tarifa.val();
 
-        $tarifa.find('option').each(function () {
-            var opt = $(this);
-            if (!opt.val()) { return; }
-            var match = idtipo && String(opt.data('idtipo')) === idtipo;
-            opt.prop('disabled', !match).toggle(!!match);
-        });
+        // Se reconstruyen los <option> (en vez de solo ocultarlos) para que
+        // Select2 refleje el filtro: no respeta option.toggle()/disabled.
+        if (!$tarifaOpts) { $tarifaOpts = $tarifa.find('option').clone(); }
 
-        if (!idtipo) {
-            $tarifa.val('').prop('disabled', true);
-            $tarifa.find('option:first').text('Elija primero una habitación');
-        } else {
-            $tarifa.prop('disabled', false);
-            $tarifa.find('option:first').text('Seleccione una tarifa');
-            if ($tarifa.find('option:selected').prop('disabled')) { $tarifa.val(''); }
+        var $placeholder = $tarifaOpts.filter(function () { return !this.value; }).clone()
+            .text(idtipo ? 'Seleccione una tarifa' : 'Elija primero una habitación');
+        var $matching = idtipo
+            ? $tarifaOpts.filter(function () {
+                return this.value && String($(this).data('idtipo')) === idtipo;
+            }).clone()
+            : $();
+
+        $tarifa.empty().append($placeholder).append($matching).prop('disabled', !idtipo);
+
+        var keep = current && $matching.filter(function () { return this.value === current; }).length;
+        $tarifa.val(keep ? current : '');
+
+        if (typeof refreshSelect2 === 'function' && $tarifa.data('select2')) {
+            refreshSelect2('#idtarifa');
         }
         if (current !== $tarifa.val()) { onTarifaChange(); }
     }
@@ -257,7 +263,9 @@ window.RecepcionModule.Create = (function ($) {
         $pagado = $('#montopagado');
         $btns = $('#btn-submit, #btn-submit-side');
 
-        if ($.fn.select2) { $cliente.select2({ theme: 'bootstrap4', width: '100%' }); }
+        if (typeof initializeSelect2 === 'function') {
+            initializeSelect2();
+        }
 
         initBuscador();
         initPisoFiltros();

@@ -37,19 +37,21 @@ if ($idhabitacion && !$habitacion) {
 }
 
 $skip_chartjs = true;
-$skip_datatables = true;
 include_once '../layouts/header.php';
 ?>
 
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2 align-items-center">
-            <div class="col-sm-5"><h1>Nueva reserva</h1></div>
-            <div class="col-sm-7 d-flex flex-column flex-sm-row justify-content-sm-end align-items-sm-center">
-                <?php include __DIR__ . '/partials/buscador-global.php'; ?>
-                <a href="<?= $URL; ?>views/recepcion/index.php" class="btn btn-outline-secondary btn-sm ml-sm-2 mt-2 mt-sm-0">
-                    <i class="fas fa-arrow-left mr-1"></i> Volver
-                </a>
+        <div class="row">
+            <div class="col-sm-6">
+                <h1>Nueva reserva</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/dashboard/index.php"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/recepcion/index.php"><i class="fas fa-bell"></i> Recepción</a></li>
+                    <li class="breadcrumb-item active">Nueva reserva</li>
+                </ol>
             </div>
         </div>
     </div>

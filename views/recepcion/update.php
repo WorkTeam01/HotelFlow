@@ -68,7 +68,7 @@ $etiqueta_estado = $estado_ui['label'];
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-sm-6">
                 <h1>
                     <i class="fas fa-edit text-warning mr-2"></i>
@@ -79,7 +79,7 @@ $etiqueta_estado = $estado_ui['label'];
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
                     <li class="breadcrumb-item"><a href="<?= $URL; ?>views/recepcion"><i class="fas fa-bed"></i> Recepción</a></li>
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>">Detalle</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>"><i class="fas fa-info-circle"></i> Detalle</a></li>
                     <li class="breadcrumb-item active">Editar Recepción</li>
                 </ol>
             </div>
@@ -91,7 +91,7 @@ $etiqueta_estado = $estado_ui['label'];
 <section class="content">
     <div class="container-fluid">
         <!-- Tarjeta de información de recepción -->
-        <div class="row mb-3">
+        <div class="row">
             <div class="col-md-12">
                 <div class="card bg-light">
                     <div class="card-body">
@@ -339,14 +339,12 @@ $etiqueta_estado = $estado_ui['label'];
                             </div>
                         </div>
                         <div class="card-footer">
-                            <div class="d-flex justify-content-between">
-                                <button type="submit" class="btn btn-warning">
-                                    <i class="fas fa-save mr-1"></i> Actualizar
-                                </button>
-                                <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $recepcion['idrecepcion']; ?>" class="btn btn-secondary">
-                                    <i class="fas fa-times mr-1"></i> Cancelar
-                                </a>
-                            </div>
+                            <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $recepcion['idrecepcion']; ?>" class="btn btn-outline-secondary btn-block">
+                                <i class="fas fa-times mr-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-warning btn-block">
+                                <i class="fas fa-save mr-1"></i> Actualizar
+                            </button>
                         </div>
                     </div>
 

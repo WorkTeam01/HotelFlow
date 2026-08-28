@@ -11,7 +11,7 @@
  */
 ?>
 <div class="row rec-kpi">
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-12 col-md-4">
         <div class="info-box">
             <span class="info-box-icon bg-info"><i class="fas fa-chart-pie"></i></span>
             <div class="info-box-content">
@@ -20,7 +20,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-12 col-md-4">
         <div class="info-box">
             <span class="info-box-icon bg-primary"><i class="fas fa-tag"></i></span>
             <div class="info-box-content">
@@ -29,7 +29,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-12 col-md-4">
         <div class="info-box">
             <span class="info-box-icon bg-success"><i class="fas fa-money-bill-wave"></i></span>
             <div class="info-box-content">
@@ -38,7 +38,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-12 col-md-4">
         <div class="info-box">
             <span class="info-box-icon bg-info"><i class="fas fa-sign-in-alt"></i></span>
             <div class="info-box-content">
@@ -47,7 +47,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-12 col-md-4">
         <div class="info-box">
             <span class="info-box-icon bg-warning"><i class="fas fa-sign-out-alt"></i></span>
             <div class="info-box-content">
@@ -56,7 +56,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-12 col-md-4">
         <div class="info-box">
             <span class="info-box-icon bg-secondary"><i class="fas fa-broom"></i></span>
             <div class="info-box-content">

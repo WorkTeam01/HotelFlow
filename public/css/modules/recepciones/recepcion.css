@@ -16,6 +16,16 @@
 .rec-tabs .nav-link .badge {
     margin-left: 0.35rem;
 }
+/* Barra de acciones sobre los tabs (buscador global + nueva reserva) */
+.rec-toolbar {
+    gap: 0.5rem;
+}
+@media (max-width: 575.98px) {
+    .rec-toolbar,
+    .rec-toolbar .form-group {
+        width: 100%;
+    }
+}
 
 /* ── KPI bar ────────────────────────────────────────────────────────── */
 .rec-kpi .info-box {
@@ -197,14 +207,14 @@
     font-weight: 700;
 }
 
+.rec-encabezado .card-body {
+    padding: .75rem 1rem;
+}
+
 .rec-actionbar {
-    position: sticky;
-    top: 0;
-    z-index: 1015; /* bajo el navbar fijo de AdminLTE (1030) */
-    background: #fff;
-    border-bottom: 1px solid rgba(0, 0, 0, .125);
-    padding: .5rem 0;
-    margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
 .rec-actionbar .btn {

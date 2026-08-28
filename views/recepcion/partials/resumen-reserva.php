@@ -33,6 +33,9 @@
         <div class="d-flex justify-content-between"><span>Saldo</span><strong id="rs-saldo" class="text-danger">Bs 0.00</strong></div>
     </div>
     <div class="card-footer">
+        <a href="<?= $URL; ?>views/recepcion/index.php" class="btn btn-outline-secondary btn-block mb-2">
+            <i class="fas fa-arrow-left mr-1"></i> Volver
+        </a>
         <button type="submit" form="formReserva" class="btn btn-success btn-block btn-lg" id="btn-submit-side">
             <i class="fas fa-check mr-2"></i><span id="btn-text-side">Confirmar reserva</span>
         </button>

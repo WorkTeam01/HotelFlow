@@ -27,7 +27,9 @@ $hayDisponibles = !empty($habitaciones_por_piso);
 
     <!-- 1 · Fechas -->
     <div class="card card-outline card-primary">
-        <div class="card-header"><h3 class="card-title"><i class="fas fa-calendar-alt mr-2"></i>Fechas de la estancia</h3></div>
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-calendar-alt mr-2"></i>Fechas de la estancia</h3>
+        </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
@@ -109,7 +111,9 @@ $hayDisponibles = !empty($habitaciones_por_piso);
 
     <!-- 3 · Huésped -->
     <div class="card card-outline card-info">
-        <div class="card-header"><h3 class="card-title"><i class="fas fa-user mr-2"></i>Huésped</h3></div>
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-user mr-2"></i>Huésped</h3>
+        </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-8">
@@ -138,13 +142,15 @@ $hayDisponibles = !empty($habitaciones_por_piso);
 
     <!-- 4 · Tarifa y estado -->
     <div class="card card-outline card-warning">
-        <div class="card-header"><h3 class="card-title"><i class="fas fa-tags mr-2"></i>Tarifa</h3></div>
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-tags mr-2"></i>Tarifa</h3>
+        </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for="idtarifa">Tarifa <span class="text-danger">*</span></label>
-                        <select class="form-control" id="idtarifa" name="idtarifa" required>
+                        <select class="form-control select2" id="idtarifa" name="idtarifa" required>
                             <option value="">Elija primero una habitación</option>
                             <?php foreach ($tarifas as $tarifa): ?>
                                 <option value="<?= (int) $tarifa['idtarifa']; ?>"
@@ -165,7 +171,7 @@ $hayDisponibles = !empty($habitaciones_por_piso);
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for="estado">Tipo de registro <span class="text-danger">*</span></label>
-                        <select class="form-control" id="estado" name="estado" required>
+                        <select class="form-control select2" id="estado" name="estado" required>
                             <option value="en_curso" selected>Check-in inmediato</option>
                             <option value="reservado">Solo reservar</option>
                         </select>
@@ -182,13 +188,15 @@ $hayDisponibles = !empty($habitaciones_por_piso);
 
     <!-- 5 · Cobro inicial -->
     <div class="card card-outline card-success">
-        <div class="card-header"><h3 class="card-title"><i class="fas fa-cash-register mr-2"></i>Cobro inicial</h3></div>
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-cash-register mr-2"></i>Cobro inicial</h3>
+        </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for="pago_metodo">Método de pago</label>
-                        <select class="form-control" id="pago_metodo" name="pago_metodo">
+                        <select class="form-control select2" id="pago_metodo" name="pago_metodo">
                             <option value="">Sin cobro ahora</option>
                             <option value="Efectivo">Efectivo</option>
                             <option value="QR">QR</option>
@@ -218,5 +226,8 @@ $hayDisponibles = !empty($habitaciones_por_piso);
         <button type="submit" class="btn btn-success btn-block btn-lg" id="btn-submit">
             <i class="fas fa-check mr-2"></i><span id="btn-text">Confirmar reserva</span>
         </button>
+        <a href="<?= $URL; ?>views/recepcion/index.php" class="btn btn-outline-secondary btn-block mt-2">
+            <i class="fas fa-arrow-left mr-1"></i> Volver
+        </a>
     </div>
 </form>

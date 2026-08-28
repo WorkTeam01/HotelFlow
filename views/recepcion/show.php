@@ -83,7 +83,7 @@ $nombreCompleto = trim($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido
 
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-sm-6">
                 <h1><i class="fas fa-concierge-bell text-<?= $clase_estado; ?> mr-2"></i> Folio #<?= (int) $recepcion['idrecepcion']; ?></h1>
             </div>
@@ -101,82 +101,91 @@ $nombreCompleto = trim($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido
 <section class="content">
     <div class="container-fluid">
 
-        <!-- Cabecera compacta: identidad + saldo en una línea -->
-        <div class="rec-header mb-2">
-            <span class="h5 mb-0">#<?= (int) $recepcion['idrecepcion']; ?></span>
-            <span class="text-muted">·</span>
-            <strong><?= htmlspecialchars($nombreCompleto); ?></strong>
-            <span class="text-muted">·</span>
-            <span><i class="fas fa-bed mr-1 text-muted"></i>Hab. <?= htmlspecialchars($recepcion['numero_habitacion']); ?></span>
-            <span class="badge <?= $estado_ui['badge']; ?>"><i class="fas fa-<?= $estado_ui['icono']; ?> mr-1"></i><?= htmlspecialchars($estado_ui['label']); ?></span>
-            <span class="rec-header__saldo text-<?= $saldo > 0.01 ? 'danger' : 'success'; ?>">
-                Saldo: Bs <?= number_format($saldo, 2); ?>
-            </span>
-        </div>
+        <!-- Cabecera compacta + barra de acciones (en card, no flotando) -->
+        <div class="card rec-encabezado">
+            <div class="card-body">
+                <div class="rec-header mb-2">
+                    <span class="h5 mb-0">#<?= (int) $recepcion['idrecepcion']; ?></span>
+                    <span class="text-muted">·</span>
+                    <strong><?= htmlspecialchars($nombreCompleto); ?></strong>
+                    <span class="text-muted">·</span>
+                    <span><i class="fas fa-bed mr-1 text-muted"></i>Hab. <?= htmlspecialchars($recepcion['numero_habitacion']); ?></span>
+                    <span class="badge <?= $estado_ui['badge']; ?>"><i class="fas fa-<?= $estado_ui['icono']; ?> mr-1"></i><?= htmlspecialchars($estado_ui['label']); ?></span>
+                    <span class="rec-header__saldo text-<?= $saldo > 0.01 ? 'danger' : 'success'; ?>">
+                        Saldo: Bs <?= number_format($saldo, 2); ?>
+                    </span>
+                </div>
 
-        <!-- Action bar sticky -->
-        <div class="rec-actionbar">
-            <a href="<?= $URL; ?>views/recepcion/index.php#hoy" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-arrow-left mr-1"></i> Volver
-            </a>
+                <div class="rec-actionbar">
+                    <a href="<?= $URL; ?>views/recepcion/index.php#hoy" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left mr-1"></i> Volver
+                    </a>
 
-            <?php if ($puedeCheckin): ?>
-                <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= (int) $recepcion['idrecepcion']; ?>&nuevo_estado=en_curso&csrf_token=<?= generateCSRFToken(); ?>"
-                    class="btn btn-sm btn-primary"
-                    onclick="return confirm('¿Confirmar el check-in de esta reserva?');">
-                    <i class="fas fa-sign-in-alt mr-1"></i> Check-in
-                </a>
-            <?php endif; ?>
+                    <?php if ($esActiva): ?>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-bolt mr-1"></i> Acciones
+                            </button>
+                            <div class="dropdown-menu">
+                                <?php if ($puedeCheckin): ?>
+                                    <a class="dropdown-item text-primary font-weight-bold"
+                                        href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= (int) $recepcion['idrecepcion']; ?>&nuevo_estado=en_curso&csrf_token=<?= generateCSRFToken(); ?>"
+                                        onclick="return confirm('¿Confirmar el check-in de esta reserva?');">
+                                        <i class="fas fa-sign-in-alt mr-2"></i> Check-in
+                                    </a>
+                                <?php endif; ?>
 
-            <?php if ($puedeCheckout): ?>
-                <a href="#" id="btn-checkout" class="btn btn-sm btn-success"
-                    data-id="<?= (int) $recepcion['idrecepcion']; ?>"
-                    data-saldo="<?= number_format($saldo, 2, '.', ''); ?>"
-                    data-cliente="<?= htmlspecialchars($nombreCompleto); ?>"
-                    data-habitacion="<?= htmlspecialchars($recepcion['numero_habitacion']); ?>"
-                    data-endpoint="<?= $URL; ?>controllers/recepcion/checkout_ajax.php"
-                    data-csrf="<?= generateCSRFToken(); ?>">
-                    <i class="fas fa-sign-out-alt mr-1"></i> Check-out
-                    <?php if ($saldo > 0.01): ?>
-                        <span class="badge badge-light ml-1">Bs <?= number_format($saldo, 2); ?></span>
+                                <?php if ($puedeCheckout): ?>
+                                    <a class="dropdown-item text-success font-weight-bold" href="#" id="btn-checkout"
+                                        data-id="<?= (int) $recepcion['idrecepcion']; ?>"
+                                        data-saldo="<?= number_format($saldo, 2, '.', ''); ?>"
+                                        data-cliente="<?= htmlspecialchars($nombreCompleto); ?>"
+                                        data-habitacion="<?= htmlspecialchars($recepcion['numero_habitacion']); ?>"
+                                        data-endpoint="<?= $URL; ?>controllers/recepcion/checkout_ajax.php"
+                                        data-csrf="<?= generateCSRFToken(); ?>">
+                                        <i class="fas fa-sign-out-alt mr-2"></i> Check-out<?php if ($saldo > 0.01): ?> (saldo Bs <?= number_format($saldo, 2); ?>)<?php endif; ?>
+                                    </a>
+                                <?php endif; ?>
+
+                                <?php if ($puedeCambiarHabitacion): ?>
+                                    <a class="dropdown-item" href="#cambio-habitacion">
+                                        <i class="fas fa-exchange-alt mr-2"></i> Cambiar habitación
+                                    </a>
+                                <?php endif; ?>
+
+                                <a class="dropdown-item" href="#folio-recepcion">
+                                    <i class="fas fa-plus-circle mr-2"></i> Agregar cargo
+                                </a>
+                                <a class="dropdown-item" href="#folio-recepcion">
+                                    <i class="fas fa-hand-holding-usd mr-2"></i> Registrar pago
+                                </a>
+                                <a class="dropdown-item" href="<?= $URL; ?>views/recepcion/update.php?id=<?= (int) $recepcion['idrecepcion']; ?>">
+                                    <i class="fas fa-edit mr-2"></i> Editar estancia
+                                </a>
+
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item text-danger"
+                                    href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= (int) $recepcion['idrecepcion']; ?>&nuevo_estado=cancelado&csrf_token=<?= generateCSRFToken(); ?>"
+                                    onclick="return confirm('¿Confirmar la cancelación de esta recepción?');">
+                                    <i class="fas fa-times-circle mr-2"></i> Cancelar
+                                </a>
+                            </div>
+                        </div>
                     <?php endif; ?>
-                </a>
-            <?php endif; ?>
 
-            <?php if ($puedeCambiarHabitacion): ?>
-                <a href="#cambio-habitacion" class="btn btn-sm btn-outline-warning">
-                    <i class="fas fa-exchange-alt mr-1"></i> Cambiar habitación
-                </a>
-            <?php endif; ?>
-
-            <?php if ($esActiva): ?>
-                <a href="#folio-recepcion" class="btn btn-sm btn-outline-warning">
-                    <i class="fas fa-plus-circle mr-1"></i> Agregar cargo
-                </a>
-                <a href="#folio-recepcion" class="btn btn-sm btn-outline-success">
-                    <i class="fas fa-hand-holding-usd mr-1"></i> Registrar pago
-                </a>
-                <a href="<?= $URL; ?>views/recepcion/update.php?id=<?= (int) $recepcion['idrecepcion']; ?>" class="btn btn-sm btn-outline-secondary">
-                    <i class="fas fa-edit mr-1"></i> Editar estancia
-                </a>
-                <a href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= (int) $recepcion['idrecepcion']; ?>&nuevo_estado=cancelado&csrf_token=<?= generateCSRFToken(); ?>"
-                    class="btn btn-sm btn-outline-danger"
-                    onclick="return confirm('¿Confirmar la cancelación de esta recepción?');">
-                    <i class="fas fa-times-circle mr-1"></i> Cancelar
-                </a>
-            <?php endif; ?>
-
-            <div class="btn-group">
-                <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-print mr-1"></i> Imprimir
-                </button>
-                <div class="dropdown-menu dropdown-menu-right">
-                    <a class="dropdown-item" href="<?= $URL; ?>views/recepcion/recibo.php?id=<?= (int) $recepcion['idrecepcion']; ?>" target="_blank" rel="noopener">
-                        <i class="fas fa-receipt mr-2"></i> Recibo
-                    </a>
-                    <a class="dropdown-item" href="<?= $URL; ?>views/recepcion/tarjeta-registro.php?id=<?= (int) $recepcion['idrecepcion']; ?>" target="_blank" rel="noopener">
-                        <i class="fas fa-id-card mr-2"></i> Tarjeta de registro
-                    </a>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-print mr-1"></i> Imprimir
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="<?= $URL; ?>views/recepcion/recibo.php?id=<?= (int) $recepcion['idrecepcion']; ?>" target="_blank" rel="noopener">
+                                <i class="fas fa-receipt mr-2"></i> Recibo
+                            </a>
+                            <a class="dropdown-item" href="<?= $URL; ?>views/recepcion/tarjeta-registro.php?id=<?= (int) $recepcion['idrecepcion']; ?>" target="_blank" rel="noopener">
+                                <i class="fas fa-id-card mr-2"></i> Tarjeta de registro
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
