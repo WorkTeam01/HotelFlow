@@ -175,3 +175,61 @@
         text-align: center;
     }
 }
+
+/* ── Fase 5: cabecera compacta + action bar de show.php ───────────────────── */
+.rec-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .35rem .9rem;
+}
+
+.rec-header__saldo {
+    margin-left: auto;
+    font-weight: 700;
+}
+
+.rec-actionbar {
+    position: sticky;
+    top: 0;
+    z-index: 1015; /* bajo el navbar fijo de AdminLTE (1030) */
+    background: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, .125);
+    padding: .5rem 0;
+    margin-bottom: 1rem;
+}
+
+.rec-actionbar .btn {
+    margin: .15rem;
+}
+
+/* Área táctil ≥44px sin alterar la caja visible del botón (patrón ::before) */
+.rec-actionbar .btn::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+}
+
+.rec-actionbar .btn {
+    position: relative;
+}
+
+@media (max-width: 767.98px) {
+    .rec-actionbar {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .rec-actionbar .btn {
+        flex: 1 1 auto;
+    }
+
+    .rec-header__saldo {
+        margin-left: 0;
+        width: 100%;
+    }
+}
