@@ -19,6 +19,13 @@ bash.exe.stackdump
 *.sql
 !database/*.sql
 
+# Imagenes y medios
+/public/uploads/usuarios/*
+!/public/uploads/usuarios/user_default.jpg
+/public/uploads/productos/*
+!/public/uploads/productos/producto_default.png
+/public/uploads/personas/*
+
 # Entorno y Secretos
 .env
 .claude
