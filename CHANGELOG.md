@@ -5,23 +5,52 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
-## [Unreleased]
+## [1.3.0] - 2026-08-27
 
-Refactor del frontend del módulo Recepción (en curso, por fases). Ver `REFACTOR_RECEPCION_FRONTEND_PLAN.md`.
+Refactor del frontend del módulo Recepción al estándar de un PMS real (Cloudbeds / Mews / Little Hotelier), sin salir de AdminLTE 3 + Bootstrap 4.
 
 ### Added
 
-- Consultas de front desk en `models/Recepcion.php`: `getSalidasHoy()`, `getInHouse()` (saldo real del folio por subconsulta), `getMapaHabitaciones()` (una fila por habitación), `getKpisDia()` (ocupación %, ADR estándar hotelero, ingresos cobrados hoy, pendientes, sucias), `existeSolape()` y `buscarGlobal()`.
-- Métodos de orquestación en `RecepcionController`: `hoy()`, `mapa()`, `kpis()`, `historial()`, `buscar()` y `panel()` (único que dispara `liberarNoShows()`).
+- **Vista unificada de Recepción**: `views/recepcion/index.php` pasa a una sola vista con tabs `Hoy` / `Mapa` / `Historial` (hash persistido en `sessionStorage`). Nuevos partials `tab-hoy.php` (llegadas / salidas previstas / en casa con contadores y acción inline), `tab-mapa.php`, `tab-historial.php`, `kpi-bar.php` (6 KPIs del día), `fila-movimiento.php` y `buscador-global.php` (Select2 remoto de huésped/reserva presente en index, show y create).
+- **Room rack denso**: `partials/tile-habitacion.php` — un tile parametrizado (`col-6 col-sm-4 col-md-3 col-lg-2`, alto ≤96px) con doble dimensión ocupación + housekeeping; un hotel de 36 habitaciones entra en un viewport 1366×768. Reemplaza las 5 ramas de `card-habitacion.php`.
+- **Helper de estado único**: `RecepcionController::estadoRecepcion()` (label/clase/badge/icono/orden) y `estadoDerivado()` (`no_show`, `salida_vencida` resueltos contra la hora actual). Fuente única de vocabulario y color de estado para todas las vistas del módulo.
+- **Consultas de front desk** en `models/Recepcion.php`: `getSalidasHoy()`, `getInHouse()` (saldo real del folio por subconsulta), `getMapaHabitaciones()` (una fila por habitación), `getKpisDia()` (ocupación %, ADR estándar hotelero, ingresos cobrados hoy, pendientes, sucias), `existeSolape()` y `buscarGlobal()`.
+- **Orquestación en `RecepcionController`**: `hoy()`, `mapa()`, `kpis()`, `historial()`, `buscar()`, `panel()` (único que dispara `liberarNoShows()`, llamado una sola vez por carga), `checkout()` y `actualizarEstancia()` (whitelist estricta).
+- **`create.php` como página única** con panel resumen sticky en vivo (patrón Little Hotelier): nuevos partials `form-reserva.php` y `resumen-reserva.php`; desaparece el wizard de pasos y el "paso 3 Confirmación" fantasma.
+- **`show.php`**: cabecera compacta (identidad + saldo en una línea) + action bar `sticky-top` con los botones filtrados por estado; nueva `views/recepcion/tarjeta-registro.php` imprimible.
+- **Endpoints** `controllers/recepcion/checkout_ajax.php`, `buscar_ajax.php` y `disponibilidad_ajax.php` (todos con `requireLogin` + autorización explícita + CSRF).
+- Índices `idx_recepcion_estado_entrada (estado, fechaentrada)` e `idx_recepcion_estado_salida (estado, fechasalida_prevista)` en `recepcion`.
+- Accesibilidad: `aria-label` en botones solo-icono del tab Hoy y del rack, `aria-live="polite"` en los contadores, foco visible por teclado en tiles y filas, áreas táctiles ≥44px con el patrón `::before`.
+
+### Changed
+
+- `views/recepcion/show.php` (563 → ~230 líneas): se eliminan las 4 representaciones redundantes del dinero (trío `small-box`, `info-box` de método/tarifa, bloque de efectivo, progress bar); el saldo vive solo en la cabecera y el detalle solo en `partials/folio.php` (con columna Usuario + hora).
+- `views/recepcion/update.php`: reducida a datos de estancia; **cero campos de dinero**. El ajuste financiero va por el folio, el cambio de habitación por su flujo auditado.
+- El check-out del rack y de la lista usan el mismo flujo POST que `show.php` (antes eran `<a href>` GET con reglas distintas y sin comprobar saldo).
+- `validarDatos()` unificado al valor de enum real `OTROS` para `metodopago` (antes enviaba `Otros`, funcionaba solo por colación `_ci`).
+- `cambiar_estado.php`: redirección validada con `str_starts_with($referer, $URL)` (antes `strpos(...) !== false`, open redirect de baja severidad); `guardar_checkin.php` verifica CSRF incondicionalmente; `actualizar_recepcion.php` castea `idrecepcion` a `int` y valida `> 0`.
 
 ### Fixed
 
+- **Check-out roto**: `show.php` enlazaba a `views/recepcion/checkout.php` (archivo inexistente → 404) siempre que hubiera saldo pendiente. Reemplazado por `checkout_ajax.php` con cobro del saldo en la misma transacción.
+- **Folio-as-ledger**: `update.php` escribía `montototal`/`montopagado`/`cambio` directo sobre `recepcion` vía `actualizar()`, desincronizando el cache respecto de la tabla `pagos`. Eliminado.
 - **Overbooking**: `Recepcion::crear()` y `Recepcion::actualizar()` rechazan reservas/estancias cuyo rango de fechas se solapa con otra de la misma habitación (comprobado dentro de la transacción, tras el `FOR UPDATE` sobre `habitaciones`).
-- `validarDatos()` y `partials/paso-datos-checkin.php` unificados al valor de enum real `OTROS` para `metodopago` (antes enviaban `Otros`, funcionaba solo por colación `_ci`).
+- Housekeeping invisible: una habitación en `limpieza` ("por limpiar") ya se distingue visualmente de una en `mantenimiento` ("fuera de servicio").
 
 ### Removed
 
+- `views/recepcion/lista-recepciones.php` y sus assets (`lista-recepciones.js`, `lista-recepciones.css`) — el panel y el historial estaban solapados. `partials/card-habitacion.php`, `paso-seleccion-habitacion.php`, `paso-datos-checkin.php`, `index-recepciones.css`. Redirección legacy `?redirect=historial` → `index.php#historial` durante esta release.
 - Trigger `tr_exact_time_check` (BEFORE UPDATE ON `recepcion`): forzaba check-out fantasma desde la BD saltándose el folio y el orden de bloqueo. **Paso manual en bases existentes:** `DROP TRIGGER IF EXISTS \`tr_exact_time_check\`;`
+
+### Migración
+
+En bases existentes, además del `DROP TRIGGER` de arriba:
+
+```sql
+ALTER TABLE `recepcion`
+  ADD KEY `idx_recepcion_estado_entrada` (`estado`,`fechaentrada`),
+  ADD KEY `idx_recepcion_estado_salida` (`estado`,`fechasalida_prevista`);
+```
 
 ## [1.2.0] - 2026-08-19
 

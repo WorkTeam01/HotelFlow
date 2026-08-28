@@ -4,7 +4,7 @@
 
 **Sistema integral para la administración de establecimientos hoteleros**
 
-[![Versión](https://img.shields.io/badge/Versión-1.2.0-blue?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/Versión-1.3.0-blue?style=flat-square)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.4+-003545?style=flat-square&logo=mariadb&logoColor=white)](https://mariadb.org)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-4-7952B3?style=flat-square&logo=bootstrap&logoColor=white)](https://getbootstrap.com)
@@ -75,14 +75,14 @@ Exportación de reportes de ventas y estadísticas del negocio.
 
 ## Características
 
-| Módulo           | Funcionalidades                                                             |
-| ---------------- | --------------------------------------------------------------------------- |
-| **Habitaciones** | Gestión por tipo, piso y estado. Sistema de tarifas y galería de imágenes   |
-| **Recepción**    | Check-in/check-out, folio de huésped con cargos/pagos múltiples, cambio de habitación auditable, llegadas/reservas del día y liberación automática de no-show, recibos PDF |
-| **Servicios**    | Baños, limpieza y almacenamiento de equipaje con seguimiento en tiempo real |
-| **Comercial**    | Punto de venta, control de inventario, compras y reportes                   |
-| **Dashboard**    | Métricas en tiempo real, estadísticas por rol y exportación de reportes     |
-| **Usuarios**     | Sistema de roles (Admin, Recepcionista, Limpieza) con permisos granulares   |
+| Módulo           | Funcionalidades                                                                                                                                                            |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Habitaciones** | Gestión por tipo, piso y estado. Sistema de tarifas y galería de imágenes                                                                                                  |
+| **Recepción**    | Panel único con tabs Hoy / Mapa de habitaciones / Historial, KPIs del día, folio de huésped con cargos/pagos múltiples, check-in/out, cambio de habitación auditable, validación de solape, recibos y tarjeta de registro |
+| **Servicios**    | Baños, limpieza y almacenamiento de equipaje con seguimiento en tiempo real                                                                                                |
+| **Comercial**    | Punto de venta, control de inventario, compras y reportes                                                                                                                  |
+| **Dashboard**    | Métricas en tiempo real, estadísticas por rol y exportación de reportes                                                                                                    |
+| **Usuarios**     | Sistema de roles (Admin, Recepcionista, Limpieza) con permisos granulares                                                                                                  |
 
 ## Requisitos
 
@@ -187,13 +187,14 @@ HotelFlow/
 
 ### Recepción
 
-- Proceso completo de check-in/check-out (wizard de 2 pasos)
+- Panel único con tabs: **Hoy** (llegadas, salidas previstas y huéspedes en casa con acción inline), **Mapa** (room rack denso con doble dimensión ocupación + housekeeping) e **Historial**
+- Barra de KPIs del día: ocupación %, ADR, ingresos, pendientes y habitaciones sucias
+- Nueva reserva en página única con resumen en vivo; check-in/check-out con cobro de saldo por el folio
 - Folio de huésped con múltiples cargos y pagos (libro mayor auditable)
 - Cambio de habitación con historial y cargo automático de diferencia de tarifa
-- Distinción operativa entre llegadas de hoy, reservas próximas y estancias en curso, con liberación automática de reservas no confirmadas (no-show)
-- Registro de huéspedes con documentación
-- Generación automática de recibos PDF
-- Historial de estancias
+- Validación de solape de fechas por habitación (anti-overbooking) en UI y servidor
+- Liberación automática de reservas no confirmadas (no-show)
+- Buscador global de reserva/huésped, recibos PDF y tarjeta de registro imprimible
 
 ### Servicios
 
