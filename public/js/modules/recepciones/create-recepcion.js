@@ -284,7 +284,7 @@ window.RecepcionModule.Create = (function ($) {
         $cliente.on('change', updateResumen);
         $estado.on('change', updateResumen);
         $metodo.on('change', function () {
-            $('#seccion-efectivo').toggle($(this).val() === 'Efectivo');
+            $('#seccion-efectivo').toggleClass('d-none', $(this).val() !== 'Efectivo');
             updateResumen();
         });
         $recibido.on('input', updateResumen);

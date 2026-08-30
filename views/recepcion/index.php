@@ -66,7 +66,7 @@ $historial = $panel['historial'];
 
         <div class="row">
             <div class="col-12">
-                <div class="card card-outline card-outline-tabs">
+                <div class="card card-outline card-outline-tabs card-primary">
                     <div class="card-header p-0 border-bottom-0">
                         <ul class="nav nav-tabs rec-tabs" id="recTabs" role="tablist">
                             <li class="nav-item">

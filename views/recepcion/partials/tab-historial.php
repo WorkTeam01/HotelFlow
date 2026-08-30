@@ -41,12 +41,12 @@ $recepciones = $historial['recepciones'] ?? [];
                     <td class="text-center"><?= $contador++; ?></td>
                     <td>
                         <?= htmlspecialchars(($recepcion['nombre_cliente'] ?? '') . ' ' . ($recepcion['apellido_cliente'] ?? '')); ?>
-                        <br><small class="text-muted"><?= htmlspecialchars($recepcion['numdoc_cliente'] ?? ''); ?></small>
+                        <br><small class="rec-hist-sub"><?= htmlspecialchars($recepcion['numdoc_cliente'] ?? ''); ?></small>
                     </td>
                     <td class="text-center">
                         <strong><?= htmlspecialchars($recepcion['numero_habitacion'] ?? 'N/A'); ?></strong>
                         <?php if (!empty($recepcion['piso_nombre'])): ?>
-                            <br><small class="text-muted">Piso: <?= htmlspecialchars($recepcion['piso_nombre']); ?></small>
+                            <br><small class="rec-hist-sub">Piso: <?= htmlspecialchars($recepcion['piso_nombre']); ?></small>
                         <?php endif; ?>
                     </td>
                     <td class="text-center">
@@ -56,7 +56,7 @@ $recepciones = $historial['recepciones'] ?? [];
                         <?php if (!empty($recepcion['fechasalida'])): ?>
                             <?= date('d/m/Y H:i', strtotime($recepcion['fechasalida'])); ?>
                         <?php elseif (!empty($recepcion['fechasalida_prevista'])): ?>
-                            <span class="text-muted"><?= date('d/m/Y H:i', strtotime($recepcion['fechasalida_prevista'])); ?><br><small>(Previsto)</small></span>
+                            <span class="rec-hist-sub"><?= date('d/m/Y H:i', strtotime($recepcion['fechasalida_prevista'])); ?><br><small>(Previsto)</small></span>
                         <?php else: ?>
                             N/A
                         <?php endif; ?>
@@ -75,13 +75,13 @@ $recepciones = $historial['recepciones'] ?? [];
                         <?php $tieneAcciones = in_array($estado, ['reservado', 'en_curso'], true); ?>
                         <div class="btn-group">
                             <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $recepcion['idrecepcion']; ?>"
-                                class="btn btn-info btn-sm" title="Ver detalles" aria-label="Ver detalles"><i class="fas fa-eye"></i></a>
+                                class="btn btn-info btn-sm rec-touch" title="Ver detalles" aria-label="Ver detalles"><i class="fas fa-eye"></i></a>
 
                             <a href="<?= $URL; ?>views/recepcion/recibo.php?id=<?= $recepcion['idrecepcion']; ?>"
-                                class="btn btn-secondary btn-sm" target="_blank" title="Imprimir comprobante" aria-label="Imprimir comprobante"><i class="fas fa-print"></i></a>
+                                class="btn btn-secondary btn-sm rec-touch" target="_blank" title="Imprimir comprobante" aria-label="Imprimir comprobante"><i class="fas fa-print"></i></a>
 
                             <?php if ($tieneAcciones): ?>
-                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split"
+                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split rec-touch"
                                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Más acciones">
                                     <span class="sr-only">Más acciones</span>
                                 </button>

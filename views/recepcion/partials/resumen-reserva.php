@@ -11,7 +11,9 @@
  */
 ?>
 <div class="card card-primary card-outline rec-resumen sticky-top">
-    <div class="card-header"><h3 class="card-title"><i class="fas fa-clipboard-check mr-2"></i>Resumen</h3></div>
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-clipboard-check mr-2"></i>Resumen</h3>
+    </div>
     <div class="card-body">
         <dl class="rec-resumen__lista mb-0">
             <dt>Habitación</dt>
@@ -36,7 +38,7 @@
         <a href="<?= $URL; ?>views/recepcion/index.php" class="btn btn-outline-secondary btn-block mb-2">
             <i class="fas fa-arrow-left mr-1"></i> Volver
         </a>
-        <button type="submit" form="formReserva" class="btn btn-success btn-block btn-lg" id="btn-submit-side">
+        <button type="submit" form="formReserva" class="btn btn-primary btn-block btn-lg" id="btn-submit-side">
             <i class="fas fa-check mr-2"></i><span id="btn-text-side">Confirmar reserva</span>
         </button>
     </div>

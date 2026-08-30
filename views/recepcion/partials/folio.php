@@ -16,21 +16,22 @@ $puedeRegistrarMovimientos = !in_array($recepcion['estado'], ['finalizado', 'can
     <div class="card-header">
         <h3 class="card-title">
             <i class="fas fa-file-invoice mr-2"></i>
-            Folio de Huésped
+            Folio de huésped
         </h3>
         <div class="card-tools">
-            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Folio de Huésped">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar folio de huésped">
                 <i class="fas fa-minus"></i>
             </button>
         </div>
     </div>
     <div class="card-body p-0">
-        <table class="table table-sm mb-0">
+        <div class="table-responsive">
+        <table class="table table-sm mb-0 rec-folio-tabla">
             <thead>
                 <tr>
                     <th>Fecha</th>
                     <th>Concepto</th>
-                    <th>Registrado por</th>
+                    <th class="d-none d-sm-table-cell rec-folio-usuario">Registrado por</th>
                     <th class="text-right">Monto</th>
                 </tr>
             </thead>
@@ -49,9 +50,9 @@ $puedeRegistrarMovimientos = !in_array($recepcion['estado'], ['finalizado', 'can
                             <td><?= date('d/m/Y H:i', strtotime($linea['fechacreacion'])); ?></td>
                             <td>
                                 <?= htmlspecialchars($linea['concepto']); ?>
-                                <span class="badge badge-light"><?= htmlspecialchars(ucfirst($linea['tipo'])); ?></span>
+                                <span class="badge badge-light text-nowrap"><?= htmlspecialchars(ucfirst($linea['tipo'])); ?></span>
                             </td>
-                            <td><?= htmlspecialchars($linea['nombre_usuario'] ?? 'Sistema'); ?></td>
+                            <td class="d-none d-sm-table-cell rec-folio-usuario"><?= htmlspecialchars($linea['nombre_usuario'] ?? 'Sistema'); ?></td>
                             <td class="text-right <?= $claseTipo; ?>">
                                 <?= $esNegativo ? '-' : ''; ?>Bs <?= number_format((float)$linea['montototal'], 2); ?>
                             </td>
@@ -68,6 +69,7 @@ $puedeRegistrarMovimientos = !in_array($recepcion['estado'], ['finalizado', 'can
                 </tr>
             </tfoot>
         </table>
+        </div>
     </div>
 
     <?php if ($puedeRegistrarMovimientos): ?>
@@ -87,7 +89,7 @@ $puedeRegistrarMovimientos = !in_array($recepcion['estado'], ['finalizado', 'can
                                 <option value="OTROS">Otros</option>
                             </select>
                             <div class="input-group-append">
-                                <button type="submit" class="btn btn-success">
+                                <button type="submit" class="btn btn-success rec-touch">
                                     <i class="fas fa-hand-holding-usd mr-1"></i> Registrar pago
                                 </button>
                             </div>
@@ -105,7 +107,7 @@ $puedeRegistrarMovimientos = !in_array($recepcion['estado'], ['finalizado', 'can
                             <input type="number" step="0.01" min="0.01" name="monto"
                                 class="form-control" placeholder="Monto" required>
                             <div class="input-group-append">
-                                <button type="submit" class="btn btn-warning">
+                                <button type="submit" class="btn btn-warning rec-touch">
                                     <i class="fas fa-plus-circle mr-1"></i> Agregar cargo
                                 </button>
                             </div>

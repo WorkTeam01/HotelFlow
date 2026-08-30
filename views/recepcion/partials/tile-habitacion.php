@@ -35,7 +35,7 @@ $accion = $t['accion'];
             <?php if (!empty($t['huesped'])): ?>
                 <span class="rec-tile__huesped small"><?= htmlspecialchars($t['huesped']); ?></span>
             <?php else: ?>
-                <span class="badge <?= $ocupacion['badge']; ?> badge-sm"><?= htmlspecialchars($ocupacion['label']); ?></span>
+                <span class="badge <?= $ocupacion['badge']; ?>"><?= htmlspecialchars($ocupacion['label']); ?></span>
             <?php endif; ?>
         </div>
         <div class="rec-tile__action">

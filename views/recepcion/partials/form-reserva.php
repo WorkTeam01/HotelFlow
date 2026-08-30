@@ -204,7 +204,7 @@ $hayDisponibles = !empty($habitaciones_por_piso);
                         </select>
                     </div>
                 </div>
-                <div class="col-md-6" id="seccion-efectivo" style="display:none;">
+                <div class="col-md-6 d-none" id="seccion-efectivo">
                     <div class="form-group">
                         <label for="pago_recibido">Monto recibido (efectivo)</label>
                         <div class="input-group">

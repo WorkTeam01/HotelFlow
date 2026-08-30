@@ -11,7 +11,7 @@
  * Solo pinta HTML.
  */
 ?>
-<div class="form-group mb-0" style="min-width: 260px;">
+<div class="form-group mb-0 rec-buscador">
     <select id="rec-buscador-global" class="form-control form-control-sm"
         data-url="<?= htmlspecialchars($URL); ?>controllers/recepcion/buscar_ajax.php"
         aria-label="Buscar reserva o huésped">

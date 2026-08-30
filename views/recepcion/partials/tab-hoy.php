@@ -25,9 +25,9 @@ $columnas = [
 <div class="row">
     <?php foreach ($columnas as $col): ?>
         <div class="col-lg-4 mb-3">
-            <div class="card card-outline card-<?= $col['clase']; ?> h-100">
-                <div class="card-header">
-                    <h3 class="card-title">
+            <div class="card card-outline card-<?= $col['clase']; ?> h-100 rec-col">
+                <div class="card-header rec-col__header">
+                    <h3 class="card-title rec-col__title">
                         <i class="fas fa-<?= $col['icono']; ?> mr-2"></i><?= $col['titulo']; ?>
                     </h3>
                     <div class="card-tools">

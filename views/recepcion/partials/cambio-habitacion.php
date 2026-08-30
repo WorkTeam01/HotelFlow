@@ -16,10 +16,10 @@ $puedeCambiarHabitacion = $recepcion['estado'] === 'en_curso';
     <div class="card-header">
         <h3 class="card-title">
             <i class="fas fa-exchange-alt mr-2"></i>
-            Cambio de Habitación
+            Cambio de habitación
         </h3>
         <div class="card-tools">
-            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Cambio de Habitación">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar cambio de habitación">
                 <i class="fas fa-minus"></i>
             </button>
         </div>
