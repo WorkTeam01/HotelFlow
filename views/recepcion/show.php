@@ -78,6 +78,8 @@ if ($tiempoEstancia === '' && $estanciaPrevista->i > 0) {
     $tiempoEstancia = $estanciaPrevista->i . ' minuto(s)';
 }
 
+$tarifaLabel = RecepcionController::etiquetaTarifa($recepcion);
+
 $nombreCompleto = trim($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido_cliente']);
 ?>
 
@@ -128,9 +130,9 @@ $nombreCompleto = trim($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido
                             </button>
                             <div class="dropdown-menu">
                                 <?php if ($puedeCheckin): ?>
-                                    <a class="dropdown-item text-primary font-weight-bold"
+                                    <a class="dropdown-item text-primary font-weight-bold rec-confirm-nav"
                                         href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= (int) $recepcion['idrecepcion']; ?>&nuevo_estado=en_curso&csrf_token=<?= generateCSRFToken(); ?>"
-                                        onclick="return confirm('¿Confirmar el check-in de esta reserva?');">
+                                        data-confirm="¿Confirmar el check-in de esta reserva?">
                                         <i class="fas fa-sign-in-alt mr-2"></i> Check-in
                                     </a>
                                 <?php endif; ?>
@@ -164,9 +166,9 @@ $nombreCompleto = trim($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido
                                 </a>
 
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item text-danger"
+                                <a class="dropdown-item text-danger rec-confirm-nav"
                                     href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= (int) $recepcion['idrecepcion']; ?>&nuevo_estado=cancelado&csrf_token=<?= generateCSRFToken(); ?>"
-                                    onclick="return confirm('¿Confirmar la cancelación de esta recepción?');">
+                                    data-confirm="¿Confirmar la cancelación de esta recepción?">
                                     <i class="fas fa-times-circle mr-2"></i> Cancelar
                                 </a>
                             </div>
@@ -218,10 +220,10 @@ $nombreCompleto = trim($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido
                             <dd class="col-sm-8"><?= htmlspecialchars($tiempoEstancia ?: '—'); ?></dd>
 
                             <dt class="col-sm-4">Habitación</dt>
-                            <dd class="col-sm-8"><?= htmlspecialchars($recepcion['numero_habitacion']); ?> — <?= htmlspecialchars($recepcion['tipo_habitacion'] ?? 'Estándar'); ?></dd>
+                            <dd class="col-sm-8"><?= htmlspecialchars($recepcion['numero_habitacion']); ?> — <?= htmlspecialchars($recepcion['tipo_nombre'] ?? 'Estándar'); ?></dd>
 
                             <dt class="col-sm-4">Tarifa</dt>
-                            <dd class="col-sm-8"><?= htmlspecialchars($recepcion['tipo_tarifa'] ?? '—'); ?></dd>
+                            <dd class="col-sm-8"><?= htmlspecialchars($tarifaLabel ?: '—'); ?></dd>
                         </dl>
 
                         <?php if (!empty($recepcion['observaciones'])): ?>

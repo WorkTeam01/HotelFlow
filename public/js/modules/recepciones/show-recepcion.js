@@ -2,9 +2,6 @@ $(document).ready(function () {
     // Inicializar tooltips
     $('[data-toggle="tooltip"]').tooltip();
 
-    // Animación de las tarjetas al cargar la página
-    $('.card').addClass('card-animation');
-
     function enviarMovimientoFolio(form, tituloExito) {
         const $form = $(form);
         const $boton = $form.find('button[type="submit"]');
@@ -97,6 +94,23 @@ $(document).ready(function () {
                     });
                 }
             });
+        });
+    });
+
+    // Confirmación antes de navegar a una acción de estado (check-in / cancelar)
+    $(document).on('click', '.rec-confirm-nav', function (e) {
+        e.preventDefault();
+        const destino = this.href;
+        Swal.fire({
+            title: $(this).data('confirm') || '¿Confirmar la acción?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, continuar',
+            cancelButtonText: 'Cancelar'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                window.location.href = destino;
+            }
         });
     });
 
