@@ -70,17 +70,20 @@ $etiqueta_estado = $estado_ui['label'];
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-6">
-                <h1>
-                    <i class="fas fa-edit text-warning mr-2"></i>
-                    Editar Recepción
-                </h1>
+                <h1>Editar recepción</h1>
+                <p class="text-muted mb-0">
+                    Recepción #<?= (int) $recepcion['idrecepcion']; ?> &middot;
+                    Hab. <?= htmlspecialchars($recepcion['numero_habitacion']); ?> &middot;
+                    <?= htmlspecialchars($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido_cliente']); ?>
+                    <span class="badge badge-<?= $clase_estado; ?> ml-1"><?= htmlspecialchars($etiqueta_estado); ?></span>
+                </p>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
                     <li class="breadcrumb-item"><a href="<?= $URL; ?>views/recepcion"><i class="fas fa-bed"></i> Recepción</a></li>
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>"><i class="fas fa-info-circle"></i> Detalle</a></li>
-                    <li class="breadcrumb-item active">Editar Recepción</li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>">Folio #<?= (int) $id; ?></a></li>
+                    <li class="breadcrumb-item active">Editar</li>
                 </ol>
             </div>
         </div>
@@ -90,29 +93,6 @@ $etiqueta_estado = $estado_ui['label'];
 <!-- Main content -->
 <section class="content">
     <div class="container-fluid">
-        <!-- Tarjeta de información de recepción -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card bg-light">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="mr-3">
-                                <i class="fas fa-info-circle fa-3x text-warning"></i>
-                            </div>
-                            <div>
-                                <h5 class="mb-1">Editando Recepción #<?= $recepcion['idrecepcion']; ?></h5>
-                                <p class="mb-0">
-                                    Habitación: <strong><?= htmlspecialchars($recepcion['numero_habitacion']); ?></strong> |
-                                    Cliente: <strong><?= htmlspecialchars($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido_cliente']); ?></strong> |
-                                    Estado: <span class="badge badge-<?= $clase_estado; ?>"><?= $etiqueta_estado; ?></span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <form id="formEditarRecepcion" action="<?= $URL; ?>controllers/recepcion/actualizar_recepcion.php" method="POST" class="needs-validation" novalidate>
             <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
             <!-- ID de la recepción -->
@@ -120,18 +100,13 @@ $etiqueta_estado = $estado_ui['label'];
 
             <div class="row">
                 <!-- Panel izquierdo -->
-                <div class="col-md-8">
+                <div class="col-lg-8">
                     <!-- Datos principales -->
                     <div class="card card-outline card-warning">
                         <div class="card-header">
                             <h3 class="card-title">
-                                <i class="fas fa-info-circle mr-2"></i>Datos Principales
+                                <i class="fas fa-info-circle mr-2"></i>Datos de la estancia
                             </h3>
-                            <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Datos Principales">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                            </div>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -157,9 +132,6 @@ $etiqueta_estado = $estado_ui['label'];
                                             <?php endforeach; ?>
                                         </select>
                                         <div class="invalid-feedback">Por favor seleccione un cliente</div>
-                                        <div id="cliente-info" class="form-text text-muted mt-2" style="display: none;">
-                                            <span id="cliente-documento"></span> | <span id="cliente-nombre"></span>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -171,11 +143,10 @@ $etiqueta_estado = $estado_ui['label'];
                                             Habitación
                                         </label>
                                         <input type="text" class="form-control" readonly
-                                            value="<?= htmlspecialchars($recepcion['numero_habitacion'] . ' - ' . ($recepcion['tipo_tarifa'] ?? 'Estándar')); ?>">
+                                            value="<?= htmlspecialchars($recepcion['numero_habitacion'] . ' — ' . ($recepcion['tipo_nombre'] ?? 'Estándar')); ?>">
                                         <small class="form-text text-muted">
-                                            <i class="fas fa-info-circle"></i>
                                             Para cambiar de habitación usa
-                                            <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>">el detalle de la recepción</a>.
+                                            <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>">el folio</a>.
                                         </small>
                                     </div>
                                 </div>
@@ -206,26 +177,19 @@ $etiqueta_estado = $estado_ui['label'];
                                             <?php endforeach; ?>
                                         </select>
                                         <div class="invalid-feedback">Por favor seleccione una tarifa</div>
-                                        <div id="tarifa-info" class="form-text text-muted mt-2" style="display: none;">
-                                            <span id="tarifa-tipo"></span> | <span id="tarifa-duracion"></span> | <span id="tarifa-precio"></span>
-                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Estado (solo lectura: check-in / check-out se hacen desde el detalle) -->
+                                <!-- Estado (solo lectura: check-in / check-out se hacen desde el folio) -->
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>
-                                            <i class="fas fa-toggle-on mr-1 text-primary"></i>
-                                            Estado
-                                        </label>
+                                        <label>Estado actual</label>
                                         <div>
-                                            <span class="badge badge-<?= $clase_estado; ?> px-3 py-2"><?= $etiqueta_estado; ?></span>
+                                            <span class="badge badge-<?= $clase_estado; ?> px-3 py-2"><?= htmlspecialchars($etiqueta_estado); ?></span>
                                         </div>
                                         <small class="form-text text-muted">
-                                            <i class="fas fa-info-circle"></i>
-                                            El check-in y el check-out se realizan desde
-                                            <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>">el detalle de la recepción</a>.
+                                            El check-in y el check-out se hacen desde
+                                            <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>">el folio</a>.
                                         </small>
                                     </div>
                                 </div>
@@ -237,7 +201,7 @@ $etiqueta_estado = $estado_ui['label'];
                                     <div class="form-group">
                                         <label for="fechaentrada">
                                             <i class="fas fa-calendar-check mr-1 text-primary"></i>
-                                            Fecha y Hora de Entrada <span class="text-danger">*</span>
+                                            Fecha y hora de entrada <span class="text-danger">*</span>
                                         </label>
                                         <input type="datetime-local" class="form-control" id="fechaentrada" name="fechaentrada"
                                             value="<?= date('Y-m-d\TH:i', strtotime($recepcion['fechaentrada'])); ?>" required>
@@ -250,7 +214,7 @@ $etiqueta_estado = $estado_ui['label'];
                                     <div class="form-group">
                                         <label for="fechasalida_prevista">
                                             <i class="fas fa-calendar-times mr-1 text-primary"></i>
-                                            Fecha de Salida Prevista <span class="text-danger">*</span>
+                                            Fecha de salida prevista <span class="text-danger">*</span>
                                         </label>
                                         <input type="datetime-local" class="form-control" id="fechasalida_prevista" name="fechasalida_prevista"
                                             value="<?= date('Y-m-d\TH:i', strtotime($recepcion['fechasalida_prevista'])); ?>" required>
@@ -274,110 +238,27 @@ $etiqueta_estado = $estado_ui['label'];
                         </div>
                     </div>
 
-                    <!-- El dinero de esta reserva se gestiona en el folio, no aquí -->
-                    <div class="callout callout-info">
-                        <h5><i class="fas fa-file-invoice-dollar mr-2"></i>El dinero se gestiona en el folio</h5>
-                        <p class="mb-2">
-                            Los cargos, pagos y el saldo de esta reserva son la fuente de verdad del folio del
-                            huésped. Desde este formulario solo se editan los datos de la estancia.
-                        </p>
-                        <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $id; ?>#folio-recepcion" class="btn btn-sm btn-info">
-                            <i class="fas fa-external-link-alt mr-1"></i> Ir al folio
-                        </a>
-                    </div>
                 </div>
 
-                <!-- Panel derecho -->
-                <div class="col-md-4">
-                    <!-- Resumen -->
-                    <div class="card card-outline card-primary">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-clipboard-list mr-2"></i>Resumen de Recepción
-                            </h3>
-                            <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Resumen de Recepción">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
+                <!-- Panel derecho: acciones + nota del folio -->
+                <div class="col-lg-4">
+                    <div class="card card-outline card-warning rec-update-acciones">
                         <div class="card-body">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item px-0">
-                                    <i class="fas fa-user text-primary mr-2"></i> <strong>Cliente:</strong>
-                                    <div id="resumen-cliente" class="text-muted mt-1"><?= htmlspecialchars($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido_cliente']); ?></div>
-                                </li>
-                                <li class="list-group-item px-0">
-                                    <i class="fas fa-bed text-primary mr-2"></i> <strong>Habitación:</strong>
-                                    <div id="resumen-habitacion" class="text-muted mt-1"><?= htmlspecialchars($recepcion['numero_habitacion']); ?></div>
-                                </li>
-                                <li class="list-group-item px-0">
-                                    <i class="fas fa-tag text-primary mr-2"></i> <strong>Tarifa:</strong>
-                                    <div id="resumen-tarifa" class="text-muted mt-1"><?= htmlspecialchars($recepcion['tipo_tarifa']); ?></div>
-                                </li>
-                                <li class="list-group-item px-0">
-                                    <i class="fas fa-calendar-alt text-primary mr-2"></i> <strong>Fechas:</strong>
-                                    <div class="text-muted mt-1">
-                                        <span id="resumen-entrada"><?= date('d/m/Y H:i', strtotime($recepcion['fechaentrada'])); ?></span>
-                                        <span class="mx-2">→</span>
-                                        <span id="resumen-salida"><?= date('d/m/Y H:i', strtotime($recepcion['fechasalida_prevista'])); ?></span>
-                                    </div>
-                                </li>
-                                <li class="list-group-item px-0">
-                                    <i class="fas fa-toggle-on text-primary mr-2"></i> <strong>Estado:</strong>
-                                    <div id="resumen-estado" class="mt-1">
-                                        <span class="badge badge-<?= $clase_estado; ?> px-3 py-2"><?= $etiqueta_estado; ?></span>
-                                    </div>
-                                </li>
-                            </ul>
-
-                            <div id="resumen-observaciones-container" class="mt-3" <?= empty($recepcion['observaciones']) ? 'style="display: none;"' : ''; ?>>
-                                <div class="callout callout-info p-2">
-                                    <h6 class="text-primary"><i class="fas fa-comment mr-2"></i>Observaciones:</h6>
-                                    <p id="resumen-observaciones" class="mb-0 text-muted small"><?= htmlspecialchars($recepcion['observaciones'] ?? ''); ?></p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer">
-                            <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $recepcion['idrecepcion']; ?>" class="btn btn-outline-secondary btn-block">
+                            <button type="submit" class="btn btn-warning btn-block btn-lg">
+                                <i class="fas fa-save mr-1"></i> Guardar cambios
+                            </button>
+                            <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= (int) $recepcion['idrecepcion']; ?>" class="btn btn-outline-secondary btn-block">
                                 <i class="fas fa-times mr-1"></i> Cancelar
                             </a>
-                            <button type="submit" class="btn btn-warning btn-block">
-                                <i class="fas fa-save mr-1"></i> Actualizar
-                            </button>
                         </div>
-                    </div>
-
-                    <!-- Información de ayuda -->
-                    <div class="card card-outline card-info">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-question-circle mr-2"></i>Información de Ayuda
-                            </h3>
-                            <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Colapsar Información de Ayuda">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <h6><i class="fas fa-info-circle text-info mr-2"></i>Datos de estancia</h6>
-                            <p class="text-muted small">
-                                Aquí se editan cliente, tarifa, fechas y observaciones. Al cambiar la tarifa se
-                                recalcula la fecha de salida prevista.
+                        <div class="card-footer bg-white">
+                            <p class="text-muted small mb-2">
+                                Aquí solo se editan los datos de la estancia. Cargos, pagos y cambio de
+                                habitación se gestionan en el folio.
                             </p>
-
-                            <h6 class="mt-3"><i class="fas fa-info-circle text-info mr-2"></i>Cambio de habitación</h6>
-                            <p class="text-muted small">
-                                El cambio de habitación se hace desde el detalle de la recepción (flujo auditado que
-                                libera la habitación anterior y carga la diferencia de tarifa al folio si corresponde).
-                            </p>
-
-                            <h6 class="mt-3"><i class="fas fa-info-circle text-info mr-2"></i>Dinero y check-out</h6>
-                            <p class="text-muted small">
-                                Los cargos y pagos se registran en el folio del huésped. El check-out valida que el
-                                saldo esté cubierto antes de finalizar la estancia.
-                            </p>
+                            <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= (int) $id; ?>#folio-recepcion" class="btn btn-sm btn-outline-info btn-block">
+                                <i class="fas fa-external-link-alt mr-1"></i> Ir al folio
+                            </a>
                         </div>
                     </div>
                 </div>

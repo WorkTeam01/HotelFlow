@@ -11,19 +11,7 @@ $(document).ready(function () {
         placeholder: 'Seleccione una opción'
     });
 
-    function mostrarInfoCliente() {
-        var opt = $('#idcliente option:selected');
-        if (opt.val()) {
-            var nombre = opt.data('nombre');
-            $('#cliente-documento').text(opt.data('tipodoc') + ': ' + opt.data('numdoc'));
-            $('#cliente-nombre').text(nombre);
-            $('#cliente-info').show();
-            $('#resumen-cliente').text(nombre);
-        } else {
-            $('#cliente-info').hide();
-        }
-    }
-
+    // Al cambiar la tarifa se recalcula la fecha de salida prevista.
     function actualizarFechaSalida() {
         var opt = $('#idtarifa option:selected');
         if (!opt.val()) return;
@@ -45,52 +33,7 @@ $(document).ready(function () {
         );
     }
 
-    function mostrarInfoTarifa() {
-        var opt = $('#idtarifa option:selected');
-        if (opt.val()) {
-            var precio = parseFloat(opt.data('precio')) || 0;
-            var tipoNombre = opt.data('tipo-nombre');
-            var tipoEstancia = opt.data('estancia');
-            var duracion = parseInt(opt.data('duracion')) || 0;
-            var duracionTexto = (tipoEstancia === 'horas' ? duracion + ' hora(s)' : duracion + ' día(s)');
-
-            $('#tarifa-tipo').text(tipoNombre);
-            $('#tarifa-duracion').text(duracionTexto);
-            $('#tarifa-precio').text('Bs ' + precio.toFixed(2));
-            $('#tarifa-info').show();
-            $('#resumen-tarifa').text(tipoNombre + ' - ' + duracionTexto);
-            $('#resumen-monto').text('Bs ' + precio.toFixed(2));
-            actualizarFechaSalida();
-        } else {
-            $('#tarifa-info').hide();
-        }
-    }
-
-    function actualizarFechasResumen() {
-        var fmt = function (val, target) {
-            if (!val) return;
-            var f = new Date(val);
-            var p = function (n) { return String(n).padStart(2, '0'); };
-            $(target).text(p(f.getDate()) + '/' + p(f.getMonth() + 1) + '/' + f.getFullYear() + ' ' + p(f.getHours()) + ':' + p(f.getMinutes()));
-        };
-        fmt($('#fechaentrada').val(), '#resumen-entrada');
-        fmt($('#fechasalida_prevista').val(), '#resumen-salida');
-    }
-
-    function actualizarResumenObservaciones() {
-        var obs = $('#observaciones').val();
-        if (obs && obs.trim() !== '') {
-            $('#resumen-observaciones').text(obs);
-            $('#resumen-observaciones-container').show();
-        } else {
-            $('#resumen-observaciones-container').hide();
-        }
-    }
-
-    $('#idcliente').on('change', mostrarInfoCliente);
-    $('#idtarifa').on('change', mostrarInfoTarifa);
-    $('#fechaentrada, #fechasalida_prevista').on('change', actualizarFechasResumen);
-    $('#observaciones').on('input', actualizarResumenObservaciones);
+    $('#idtarifa').on('change', actualizarFechaSalida);
 
     $('#formEditarRecepcion').on('submit', function (e) {
         e.preventDefault();
@@ -113,8 +56,8 @@ $(document).ready(function () {
         Swal.fire({
             title: '¿Confirmar actualización?',
             html: '<div class="text-left">' +
-                '<p><strong>Cliente:</strong> ' + $('#resumen-cliente').text() + '</p>' +
-                '<p><strong>Tarifa:</strong> ' + $('#resumen-tarifa').text() + '</p>' +
+                '<p><strong>Cliente:</strong> ' + ($('#idcliente option:selected').data('nombre') || '—') + '</p>' +
+                '<p><strong>Tarifa:</strong> ' + ($('#idtarifa option:selected').data('tipo-nombre') || '—') + '</p>' +
                 '</div>',
             icon: 'question',
             showCancelButton: true,
@@ -128,8 +71,4 @@ $(document).ready(function () {
             }
         });
     });
-
-    mostrarInfoCliente();
-    mostrarInfoTarifa();
-    actualizarResumenObservaciones();
 });
