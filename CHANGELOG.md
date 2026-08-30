@@ -5,6 +5,37 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.3.1] - 2026-08-30
+
+Auditoría `impeccable` del frontend de Recepción (post 1.3.0): score 14/20 → 20/20.
+
+### Added
+
+- **Helper `RecepcionController::etiquetaTarifa(array $r): string`**: fuente única de la etiqueta de tarifa de una estancia ("1 día(s) · Bs 150.00"), mismo patrón que `estadoRecepcion()`. Usado por `show.php`, `tarjeta-registro.php` y `recibo.php`.
+- `Recepcion::getById()` ahora selecciona `th.nombre as tipo_nombre` y `t.precio as precio_tarifa`.
+- Panel derecho sticky `.rec-update-acciones` en `update.php` (Guardar/Cancelar + nota del folio, solo ≥992px).
+- Tokens de color del módulo en `:root` de `recepcion.css` (`--rec-muted`, `--rec-focus-ring`, `--rec-tint-*`, `--rec-ink`, `--rec-surface`, etc.); `create-recepcion.css` y `update-recepcion.css` los consumen. Cero cambio visual.
+
+### Fixed
+
+- **Tipo de habitación siempre "Estándar"**: `show.php` y `tarjeta-registro.php` leían `$recepcion['tipo_habitacion']`, clave que `getById()` nunca seleccionó → todas las habitaciones caían al fallback. Ahora usan `tipo_nombre`.
+- **"Tarifa: dias"**: las 3 vistas imprimían `tipo_estancia` crudo en vez de una etiqueta legible. Resuelto con `etiquetaTarifa()`.
+- **Campo readonly de habitación en `update.php`** mostraba `201 - dias`; ahora `201 — Suite`.
+- Contraste AA: `text-muted` en filas zebra del historial (≈4.0:1) → clase `.rec-hist-sub` (#58606a, ≥5:1).
+- Áreas táctiles <44px en los botones de acción de `tab-historial.php` y `folio.php` → clase `.rec-touch`.
+- `show.php`: `onclick="return confirm()"` en Check-in/Cancelar → SweetAlert (`.rec-confirm-nav` + handler delegado en `show-recepcion.js`).
+- `tile-habitacion.php`: quitado `badge-sm` (no existe en Bootstrap 4).
+- `show-recepcion.js`: borrada línea muerta `$('.card').addClass('card-animation')`.
+
+### Changed
+
+- **`update.php` −187 líneas**: eliminados los bloques `#cliente-info`/`#habitacion-info`/`#tarifa-info` (repetían el `<option>` seleccionado), el panel "Resumen de Recepción" (espejo del form), la card "Información de Ayuda" y el banner `fa-3x`. `update-recepcion.js` −69 líneas (handlers de elementos borrados); `update-recepcion.css` reescrito lean.
+- `folio.php`: tabla en `.table-responsive`; columna "Registrado por" oculta en móvil (`d-none d-sm-table-cell`); monto y fecha sin wrap en desktop.
+- `index.php`: `card-primary` en `card-outline-tabs` (el tab activo no tenía acento de color).
+- `form-reserva.php`: `style="display:none"` → `.d-none` (con `!important`, `create-recepcion.js` usa `.toggleClass('d-none', …)`).
+- Títulos a formato oración: "Folio de huésped", "Cambio de habitación".
+- `buscador-global.php`: `style="min-width:260px"` → clase `.rec-buscador`.
+
 ## [1.3.0] - 2026-08-27
 
 Refactor del frontend del módulo Recepción al estándar de un PMS real (Cloudbeds / Mews / Little Hotelier), sin salir de AdminLTE 3 + Bootstrap 4.

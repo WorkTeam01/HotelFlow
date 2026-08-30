@@ -55,6 +55,9 @@ _______________
 - Mantener mensajes de feedback via $_SESSION['mensaje'] y $_SESSION['icono']
 - No exponer mensajes de excepcion crudos al usuario; loguear y devolver mensaje generico
 - No agregar nuevas librerias ni cambiar arquitectura base sin justificacion explicita
+- Datos complejos de PHP a JS via atributos data-* (nunca <script> inline con variables); CSS/JS de vista via $module_styles/$module_scripts (nunca <link>/<script>/<style> embebido)
+- Proyecto single-theme (sin dark-mode): un fix de contraste lleva un solo valor validado >=4.5:1 sobre el fondo claro de AdminLTE, sin bloques prefers-color-scheme
+- Estado y etiqueta de tarifa de recepcion salen de helpers unicos de RecepcionController (estadoRecepcion, estadoDerivado, etiquetaTarifa); ninguna vista repite un switch de estado
 
 [Formato de salida]
 _______________
@@ -269,5 +272,5 @@ Preparar el proyecto para publicacion open source:
 
 ---
 
-_Ultima actualizacion: 2026-08-27_
+_Ultima actualizacion: 2026-08-30_
 _Mantener sincronizado con CLAUDE.md cuando cambie arquitectura o flujo._

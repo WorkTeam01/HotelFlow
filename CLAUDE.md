@@ -210,6 +210,12 @@ Tras una pasada de endurecimiento de seguridad en todo el código, todo endpoint
 
 - **Check-out y dinero de recepción salen siempre por el folio.** Un solo camino de check-out: `controllers/recepcion/checkout_ajax.php` → `RecepcionController::checkout()`, que verifica saldo vía `Pago::calcularSaldo()` y, si hay saldo, cobra la línea `pago` y finaliza en la misma transacción. `update.php` no tiene ningún campo de dinero (`montototal`/`montopagado`/`cambio`) — la edición de estancia va por whitelist en `actualizarEstancia()`. No debe reaparecer ningún `href` a `checkout.php` (archivo que nunca existió).
 
+- **Tipo de habitación y tarifa en las vistas de recepción: claves reales de `getById()` + helper `etiquetaTarifa()`.** `Recepcion::getById()` selecciona `th.nombre as tipo_nombre` y `t.precio as precio_tarifa` (además de `t.tipo_estancia`). Las vistas (`show.php`, `tarjeta-registro.php`, `recibo.php`) usan **`$recepcion['tipo_nombre']`** para el tipo de habitación — NO `tipo_habitacion` (clave que nunca existió: hasta 2026-08-30 caía siempre al fallback "Estándar"). La etiqueta de tarifa ("1 día(s) · Bs 150.00") sale **solo** de `RecepcionController::etiquetaTarifa(array $r): string` (mismo patrón de helper único que `estadoRecepcion()`), nunca imprimiendo `tipo_estancia` crudo ("dias") en la vista.
+
+- **El proyecto es single-theme deliberado (sin dark-mode).** HotelFlow es un PMS de back-office; no hay toggle de tema ni `body.dark-mode`. Las reglas globales de "todo override de contraste necesita su contraparte dark" NO aplican aquí — un fix de contraste con un solo valor validado ≥4.5:1 sobre el fondo claro de AdminLTE está completo. No agregar bloques `@media (prefers-color-scheme: dark)` ni tokens dark "por si acaso".
+
+- **Áreas táctiles ≥44px en botones sin `.input-group`: clase `.rec-touch`.** Para botones de acción en `btn-group` (historial) o sueltos (folio) donde no aplica el wrapper `.input-group-text`, usar `.rec-touch` (pseudo-elemento `::before` absoluto con `max(100%,44px)`, mismo patrón que `.rec-tile__action`/`.rec-actionbar`) + `min-width:2.5rem`. No forzar `min-height` en la caja visible.
+
 ## Notas Importantes
 
 - Toda la interfaz está en Español
