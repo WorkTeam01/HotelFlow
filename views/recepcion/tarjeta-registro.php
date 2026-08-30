@@ -31,6 +31,8 @@ if (!$recepcion) {
 
 $nombreCompleto = trim($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido_cliente']);
 $e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+
+$tarifaLabel = RecepcionController::etiquetaTarifa($recepcion);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -204,7 +206,7 @@ $e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
         <table>
             <tr>
                 <td class="label">Habitación</td>
-                <td><?= $e($recepcion['numero_habitacion']); ?> — <?= $e($recepcion['tipo_habitacion'] ?? 'Estándar'); ?></td>
+                <td><?= $e($recepcion['numero_habitacion']); ?> — <?= $e($recepcion['tipo_nombre'] ?? 'Estándar'); ?></td>
             </tr>
             <tr>
                 <td class="label">Fecha de entrada</td>
@@ -216,7 +218,7 @@ $e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
             </tr>
             <tr>
                 <td class="label">Tarifa aplicada</td>
-                <td><?= $e($recepcion['tipo_tarifa'] ?? '—'); ?></td>
+                <td><?= $e($tarifaLabel ?: '—'); ?></td>
             </tr>
         </table>
 

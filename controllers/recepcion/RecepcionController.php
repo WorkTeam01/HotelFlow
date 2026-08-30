@@ -243,6 +243,31 @@ class RecepcionController
     }
 
     /**
+     * Etiqueta legible de la tarifa aplicada: duración + unidad de estancia + precio.
+     * Fuente única para show.php, tarjeta-registro.php y recibo.php (las vistas no
+     * vuelven a componer este texto ni a mostrar `tipo_estancia` crudo como "tarifa").
+     *
+     * @param array $recepcion Fila de Recepcion::getById() (usa tipo_estancia, duracion, precio_tarifa)
+     * @return string Ej. "1 día(s) · Bs 150.00"; cadena vacía si no hay datos de tarifa
+     */
+    public static function etiquetaTarifa(array $recepcion): string
+    {
+        $duracion = (int) ($recepcion['duracion'] ?? 0);
+        if ($duracion <= 0) {
+            return '';
+        }
+
+        $unidad = ($recepcion['tipo_estancia'] ?? '') === 'horas' ? 'hora(s)' : 'día(s)';
+        $label = $duracion . ' ' . $unidad;
+
+        if (!empty($recepcion['precio_tarifa'])) {
+            $label .= ' · Bs ' . number_format((float) $recepcion['precio_tarifa'], 2);
+        }
+
+        return $label;
+    }
+
+    /**
      * Añade 'estado_ui' (salida de estadoRecepcion() sobre el estado derivado) a cada
      * fila de una lista de recepciones. Ninguna vista vuelve a resolver color/etiqueta.
      *

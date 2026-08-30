@@ -144,9 +144,9 @@ class Recepcion
                       p.tipodocumento as tipodoc_cliente, p.numdocumento as numdoc_cliente,
                       p.telefono as telefono_cliente, p.email as email_cliente,
                       h.numero as numero_habitacion, h.precio_base,
-                      t.tipo_estancia as tipo_tarifa, t.tipo_estancia, t.duracion,
+                      t.tipo_estancia as tipo_tarifa, t.tipo_estancia, t.duracion, t.precio as precio_tarifa,
                       u.nombre as nombre_usuario, 
-                      th.descripcion as descripcion_habitacion,
+                      th.descripcion as descripcion_habitacion, th.nombre as tipo_nombre,
                       piso.nombre as piso_nombre
                       FROM {$this->tabla} r
                       LEFT JOIN persona p ON r.idcliente = p.idpersona

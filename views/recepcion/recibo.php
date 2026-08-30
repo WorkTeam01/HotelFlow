@@ -133,7 +133,8 @@ try {
 
     $estado = ucfirst(str_replace('_', ' ', $recepcion['estado'] ?? 'reservado'));
     $metodo_pago = htmlspecialchars($recepcion['metodopago'] ?? 'Sin especificar', ENT_QUOTES, 'UTF-8');
-    $tipo_tarifa = htmlspecialchars($recepcion['tipo_tarifa'] ?? 'Tarifa estándar', ENT_QUOTES, 'UTF-8');
+    $tarifa_label = RecepcionController::etiquetaTarifa($recepcion);
+    $tipo_tarifa = htmlspecialchars($tarifa_label ?: 'Tarifa estándar', ENT_QUOTES, 'UTF-8');
     $observaciones = htmlspecialchars($recepcion['observaciones'] ?? '', ENT_QUOTES, 'UTF-8');
 
     // Datos del cliente
