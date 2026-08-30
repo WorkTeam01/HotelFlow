@@ -53,7 +53,7 @@ Gestión de habitaciones por tipo, piso y estado de ocupación.
 
 ### Recepción
 
-Proceso de check-in/check-out y registro de huéspedes.
+Panel único con tabs Hoy / Mapa de habitaciones / Historial y KPIs del día.
 
 ![Recepción](public/img/screenshots/recepcion.png)
 
