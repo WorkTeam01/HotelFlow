@@ -246,8 +246,99 @@ class HabitacionController
     }
 
     /**
+     * Presentación única de un estado de habitación: etiqueta, color, badge e icono.
+     *
+     * Fuente única de verdad para el vocabulario visual de estado en todas las
+     * vistas del módulo (index, show, update). Alinea el lenguaje de color con el
+     * resto del PMS: verde=disponible, amarillo=ocupada, gris=por limpiar,
+     * rojo=mantenimiento.
+     *
+     * @param string $estado Estado almacenado en habitaciones.estado
+     * @return array{label:string,clase:string,badge:string,icono:string,orden:int}
+     */
+    public static function estadoHabitacion(string $estado): array
+    {
+        switch ($estado) {
+            case 'disponible':
+                $ui = ['label' => 'Disponible', 'clase' => 'success', 'icono' => 'check-circle', 'orden' => 1];
+                break;
+            case 'ocupada':
+                $ui = ['label' => 'Ocupada', 'clase' => 'warning', 'icono' => 'user', 'orden' => 2];
+                break;
+            case 'limpieza':
+                $ui = ['label' => 'Por limpiar', 'clase' => 'secondary', 'icono' => 'broom', 'orden' => 3];
+                break;
+            case 'mantenimiento':
+                $ui = ['label' => 'Mantenimiento', 'clase' => 'danger', 'icono' => 'tools', 'orden' => 4];
+                break;
+            default:
+                $ui = ['label' => ucfirst($estado), 'clase' => 'secondary', 'icono' => 'question-circle', 'orden' => 99];
+                break;
+        }
+
+        $ui['badge'] = 'badge-' . $ui['clase'];
+        return $ui;
+    }
+
+    /**
+     * Lista de estados operables con su presentación, para pintar filtros y acciones.
+     *
+     * @return array<string,array{label:string,clase:string,badge:string,icono:string,orden:int}>
+     */
+    public static function estadosHabitacion(): array
+    {
+        $estados = [];
+        foreach (['disponible', 'ocupada', 'limpieza', 'mantenimiento'] as $estado) {
+            $estados[$estado] = self::estadoHabitacion($estado);
+        }
+        return $estados;
+    }
+
+    /**
+     * Badge y etiqueta para un estado del historial de ocupación de la habitación.
+     *
+     * @return array{badge:string,label:string}
+     */
+    public static function badgeEstadoOcupacion(string $estado): array
+    {
+        switch ($estado) {
+            case 'reservado':
+                return ['badge' => 'badge-info', 'label' => 'Reservado'];
+            case 'en_curso':
+                return ['badge' => 'badge-warning', 'label' => 'En curso'];
+            case 'finalizado':
+                return ['badge' => 'badge-success', 'label' => 'Finalizado'];
+            case 'cancelado':
+                return ['badge' => 'badge-danger', 'label' => 'Cancelado'];
+            default:
+                return ['badge' => 'badge-secondary', 'label' => ucfirst(str_replace('_', ' ', $estado))];
+        }
+    }
+
+    /**
+     * Badge y etiqueta para un estado del historial de limpieza de la habitación.
+     *
+     * @return array{badge:string,label:string}
+     */
+    public static function badgeEstadoLimpieza(string $estado): array
+    {
+        switch ($estado) {
+            case 'pendiente':
+                return ['badge' => 'badge-warning', 'label' => 'Pendiente'];
+            case 'enprogreso':
+                return ['badge' => 'badge-info', 'label' => 'En progreso'];
+            case 'completada':
+                return ['badge' => 'badge-success', 'label' => 'Completada'];
+            case 'verificada':
+                return ['badge' => 'badge-secondary', 'label' => 'Verificada'];
+            default:
+                return ['badge' => 'badge-light', 'label' => ucfirst($estado)];
+        }
+    }
+
+    /**
      * Muestra los detalles de una habitación
-     * 
+     *
      * @param int $id ID de la habitación
      * @return array|false Detalles de la habitación o false si no existe
      */

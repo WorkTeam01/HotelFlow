@@ -49,33 +49,21 @@ $historial_limpieza = $controller->getHistorialLimpieza($id);
 $skip_select2 = true;
 $skip_chartjs = true;
 $module_styles = ['habitaciones/show-habitaciones'];
-$module_scripts = ['habitaciones/show-habitaciones'];
+$module_scripts = ['habitaciones/cambiar-estado-habitaciones'];
 include_once '../layouts/header.php';
 
-// Determinar el color según el estado
-$color_estado = '';
-$icono_estado = '';
-switch ($habitacion['estado']) {
-    case 'disponible':
-        $color_estado = 'success';
-        $icono_estado = 'check-circle';
-        break;
-    case 'ocupada':
-        $color_estado = 'warning';
-        $icono_estado = 'user';
-        break;
-    case 'mantenimiento':
-        $color_estado = 'danger';
-        $icono_estado = 'tools';
-        break;
-    case 'limpieza':
-        $color_estado = 'primary';
-        $icono_estado = 'broom';
-        break;
-    default:
-        $color_estado = 'secondary';
-        $icono_estado = 'info-circle';
-}
+// Presentación de estado (fuente única: HabitacionController::estadoHabitacion)
+$estado_ui = HabitacionController::estadoHabitacion($habitacion['estado']);
+$color_estado = $estado_ui['clase'];
+$icono_estado = $estado_ui['icono'];
+
+// Transiciones ofrecidas desde el detalle (mismo criterio que el listado:
+// "ocupada" solo se ofrece si la habitación está disponible)
+$estado_habitacion = $habitacion['estado'];
+$transiciones = array_values(array_filter(
+    ['disponible', 'ocupada', 'limpieza', 'mantenimiento'],
+    fn($e) => $e !== $estado_habitacion && ($e !== 'ocupada' || $estado_habitacion === 'disponible')
+));
 ?>
 
 <!-- Content Header (Page header) -->
@@ -122,73 +110,59 @@ switch ($habitacion['estado']) {
 
                         <ul class="list-group list-group-unbordered mb-3">
                             <li class="list-group-item">
-                                <b>Número</b> <a class="float-right"><?= htmlspecialchars($habitacion['numero']); ?></a>
+                                <b>Número</b> <span class="float-right"><?= htmlspecialchars($habitacion['numero']); ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b>Tipo</b> <a class="float-right"><?= htmlspecialchars($habitacion['tipo_nombre']); ?></a>
+                                <b>Tipo</b> <span class="float-right"><?= htmlspecialchars($habitacion['tipo_nombre']); ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b>Piso</b> <a class="float-right"><?= htmlspecialchars($habitacion['piso_nombre']); ?></a>
+                                <b>Piso</b> <span class="float-right"><?= htmlspecialchars($habitacion['piso_nombre']); ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b>Capacidad</b> <a class="float-right"><?= $habitacion['capacidad_actual']; ?> personas</a>
+                                <b>Capacidad</b> <span class="float-right"><?= (int) $habitacion['capacidad_actual']; ?> <?= (int) $habitacion['capacidad_actual'] === 1 ? 'persona' : 'personas'; ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b>Precio Base</b> <a class="float-right">$<?= number_format($habitacion['precio_base'], 2); ?></a>
+                                <b>Precio Base</b> <span class="float-right">Bs <?= number_format($habitacion['precio_base'], 2); ?></span>
                             </li>
                             <li class="list-group-item">
                                 <b>Estado</b>
-                                <span class="float-right badge badge-<?= $color_estado; ?> p-2">
+                                <span class="float-right badge <?= $estado_ui['badge']; ?> p-2">
                                     <i class="fas fa-<?= $icono_estado; ?> mr-1"></i>
-                                    <?= ucfirst($habitacion['estado']); ?>
+                                    <?= $estado_ui['label']; ?>
                                 </span>
                             </li>
                         </ul>
 
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <a href="<?= $URL; ?>views/habitaciones/edit.php?id=<?= $habitacion['id_habitacion']; ?>" class="btn btn-warning btn-block">
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <a href="<?= $URL; ?>views/habitaciones/update.php?id=<?= $habitacion['id_habitacion']; ?>" class="btn btn-warning btn-block">
                                     <i class="fas fa-edit"></i> Editar
                                 </a>
                             </div>
-                        </div>
-
-                        <div class="row">
                             <div class="col-6">
                                 <a href="<?= $URL; ?>views/habitaciones/index.php" class="btn btn-secondary btn-block">
                                     <i class="fas fa-arrow-left"></i> Volver
                                 </a>
                             </div>
-                            <div class="col-6">
-                                <button type="button" class="btn btn-primary btn-block" id="btnCambiarEstado">
-                                    <i class="fas fa-exchange-alt"></i> Cambiar Estado
-                                </button>
-                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Información detallada del tipo de habitación -->
-                <div class="card card-outline card-info">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            Detalles del Tipo
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <dl class="row">
-                            <dt class="col-sm-4">Tipo:</dt>
-                            <dd class="col-sm-8"><?= htmlspecialchars($habitacion['tipo_nombre']); ?></dd>
-
-                            <dt class="col-sm-4">Descripción:</dt>
-                            <dd class="col-sm-8">
-                                <?= !empty($habitacion['tipo_descripcion']) ? htmlspecialchars($habitacion['tipo_descripcion']) : '<em class="text-muted">Sin descripción</em>'; ?>
-                            </dd>
-
-                            <dt class="col-sm-4">Capacidad Máxima:</dt>
-                            <dd class="col-sm-8"><?= $habitacion['capacidad_maxima']; ?> personas</dd>
-                        </dl>
+                        <?php if (!empty($transiciones)) : ?>
+                            <p class="text-muted small mb-1">Cambiar estado a:</p>
+                            <div class="d-flex flex-wrap" role="group" aria-label="Cambiar estado de la habitación">
+                                <?php foreach ($transiciones as $destino) :
+                                    $destino_ui = HabitacionController::estadoHabitacion($destino);
+                                ?>
+                                    <button type="button" class="btn btn-<?= $destino_ui['clase']; ?> mb-1 mr-1 cambiar-estado"
+                                        data-id="<?= $habitacion['id_habitacion']; ?>"
+                                        data-estado="<?= $destino; ?>"
+                                        data-estado-actual="<?= $habitacion['estado']; ?>"
+                                        aria-label="Marcar como <?= $destino_ui['label']; ?>">
+                                        <i class="fas fa-<?= $destino_ui['icono']; ?>" aria-hidden="true"></i>
+                                        <?= $destino_ui['label']; ?>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -234,25 +208,7 @@ switch ($habitacion['estado']) {
                                             </thead>
                                             <tbody>
                                                 <?php foreach ($historial_ocupacion as $ocupacion): ?>
-                                                    <?php
-                                                    $estado_clase = '';
-                                                    switch ($ocupacion['estado']) {
-                                                        case 'reservado':
-                                                            $estado_clase = 'badge-info';
-                                                            break;
-                                                        case 'en_curso':
-                                                            $estado_clase = 'badge-warning';
-                                                            break;
-                                                        case 'finalizado':
-                                                            $estado_clase = 'badge-success';
-                                                            break;
-                                                        case 'cancelado':
-                                                            $estado_clase = 'badge-danger';
-                                                            break;
-                                                        default:
-                                                            $estado_clase = 'badge-secondary';
-                                                    }
-                                                    ?>
+                                                    <?php $ocupacion_ui = HabitacionController::badgeEstadoOcupacion($ocupacion['estado']); ?>
                                                     <tr>
                                                         <td><?= htmlspecialchars($ocupacion['nombre_cliente']); ?></td>
                                                         <td><?= date('d/m/Y H:i', strtotime($ocupacion['fechaentrada'])); ?></td>
@@ -260,11 +216,11 @@ switch ($habitacion['estado']) {
                                                             <?= !empty($ocupacion['fechasalida']) ? date('d/m/Y H:i', strtotime($ocupacion['fechasalida'])) : '<span class="text-muted">Pendiente</span>'; ?>
                                                         </td>
                                                         <td>
-                                                            <span class="badge <?= $estado_clase; ?>">
-                                                                <?= ucfirst(str_replace('_', ' ', $ocupacion['estado'])); ?>
+                                                            <span class="badge <?= $ocupacion_ui['badge']; ?>">
+                                                                <?= $ocupacion_ui['label']; ?>
                                                             </span>
                                                         </td>
-                                                        <td>$<?= number_format($ocupacion['montototal'], 2); ?></td>
+                                                        <td>Bs <?= number_format($ocupacion['montototal'], 2); ?></td>
                                                     </tr>
                                                 <?php endforeach; ?>
                                             </tbody>
@@ -294,32 +250,14 @@ switch ($habitacion['estado']) {
                                             </thead>
                                             <tbody>
                                                 <?php foreach ($historial_limpieza as $limpieza): ?>
-                                                    <?php
-                                                    $estado_clase = '';
-                                                    switch ($limpieza['estado']) {
-                                                        case 'pendiente':
-                                                            $estado_clase = 'badge-warning';
-                                                            break;
-                                                        case 'enprogreso':
-                                                            $estado_clase = 'badge-info';
-                                                            break;
-                                                        case 'completada':
-                                                            $estado_clase = 'badge-success';
-                                                            break;
-                                                        case 'verificada':
-                                                            $estado_clase = 'badge-secondary';
-                                                            break;
-                                                        default:
-                                                            $estado_clase = 'badge-light';
-                                                    }
-                                                    ?>
+                                                    <?php $limpieza_ui = HabitacionController::badgeEstadoLimpieza($limpieza['estado']); ?>
                                                     <tr>
                                                         <td><?= date('d/m/Y', strtotime($limpieza['fecha'])); ?></td>
                                                         <td><?= date('H:i', strtotime($limpieza['hora'])); ?></td>
                                                         <td><?= htmlspecialchars($limpieza['nombre_usuario']); ?></td>
                                                         <td>
-                                                            <span class="badge <?= $estado_clase; ?>">
-                                                                <?= ucfirst(str_replace('enprogreso', 'en progreso', $limpieza['estado'])); ?>
+                                                            <span class="badge <?= $limpieza_ui['badge']; ?>">
+                                                                <?= $limpieza_ui['label']; ?>
                                                             </span>
                                                         </td>
                                                         <td>
@@ -335,48 +273,34 @@ switch ($habitacion['estado']) {
                         </div>
                     </div>
                 </div>
+
+                <!-- Información detallada del tipo de habitación -->
+                <div class="card card-outline card-info">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Detalles del Tipo
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">Tipo:</dt>
+                            <dd class="col-sm-9"><?= htmlspecialchars($habitacion['tipo_nombre']); ?></dd>
+
+                            <dt class="col-sm-3">Descripción:</dt>
+                            <dd class="col-sm-9">
+                                <?= !empty($habitacion['tipo_descripcion']) ? htmlspecialchars($habitacion['tipo_descripcion']) : '<em class="text-muted">Sin descripción</em>'; ?>
+                            </dd>
+
+                            <dt class="col-sm-3">Capacidad Máxima:</dt>
+                            <dd class="col-sm-9"><?= (int) $habitacion['capacidad_maxima']; ?> <?= (int) $habitacion['capacidad_maxima'] === 1 ? 'persona' : 'personas'; ?></dd>
+                        </dl>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </section>
-
-<!-- Modal para cambiar estado -->
-<div class="modal fade" id="modalCambiarEstado" tabindex="-1" role="dialog" aria-labelledby="modalCambiarEstadoLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalCambiarEstadoLabel">Cambiar Estado de Habitación</h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="formCambiarEstado">
-                    <input type="hidden" id="id_habitacion" value="<?= $habitacion['id_habitacion']; ?>">
-                    <input type="hidden" id="estado_actual" value="<?= $habitacion['estado']; ?>">
-
-                    <div class="form-group">
-                        <label for="nuevo_estado">Nuevo Estado:</label>
-                        <select class="form-control" id="nuevo_estado" name="nuevo_estado">
-                            <option value="disponible" <?= $habitacion['estado'] == 'disponible' ? 'selected' : ''; ?>>Disponible</option>
-                            <option value="ocupada" <?= $habitacion['estado'] == 'ocupada' ? 'selected' : ''; ?>>Ocupada</option>
-                            <option value="mantenimiento" <?= $habitacion['estado'] == 'mantenimiento' ? 'selected' : ''; ?>>Mantenimiento</option>
-                            <option value="limpieza" <?= $habitacion['estado'] == 'limpieza' ? 'selected' : ''; ?>>Limpieza</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-                <button type="button" class="btn btn-primary" id="btnGuardarEstado">
-                    <i class="fas fa-save"></i> Guardar Cambios
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <?php
 include_once '../layouts/mensajes.php';

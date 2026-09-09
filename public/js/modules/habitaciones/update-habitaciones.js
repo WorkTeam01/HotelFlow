@@ -4,10 +4,7 @@
 
 $(document).ready(function() {
     // Inicializar Select2
-    $('.select2').select2({
-        theme: 'bootstrap4',
-        width: '100%'
-    });
+    initializeSelect2();
 
     // Cuando cambia el tipo de habitación, actualizar la capacidad actual
     $('#id_tipo').change(function() {

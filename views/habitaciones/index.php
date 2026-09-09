@@ -20,7 +20,8 @@ if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario
 
 // Incluir el encabezado después de verificar permisos
 $skip_chartjs = true;
-$module_scripts = ['habitaciones/index-habitaciones'];
+$module_styles = ['habitaciones/habitaciones'];
+$module_scripts = ['habitaciones/cambiar-estado-habitaciones', 'habitaciones/index-habitaciones'];
 include_once '../layouts/header.php';
 
 $controller = new HabitacionController();
@@ -30,6 +31,7 @@ $habitaciones = $controller->index();
 $tipos_habitacion = $controller->getTiposHabitacion();
 $pisos = $controller->getPisos();
 $estadisticas = $controller->getEstadisticas();
+$estados_ui = HabitacionController::estadosHabitacion();
 ?>
 
 <!-- Content Header (Page header) -->
@@ -52,54 +54,33 @@ $estadisticas = $controller->getEstadisticas();
 <!-- Main content -->
 <section class="content">
     <div class="container-fluid">
-        <!-- Info boxes -->
-        <div class="row">
-            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
-                <div class="info-box">
-                    <span class="info-box-icon bg-info elevation-1"><i class="fas fa-bed"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Total</span>
-                        <span class="info-box-number"><?= $estadisticas['total']; ?></span>
-                    </div>
+        <!-- Resumen por estado: también actúan como filtro rápido del listado -->
+        <div class="row" id="resumen-estados">
+            <?php
+            $tarjetas_estado = [
+                ['filtro' => '',              'texto' => 'Total',         'icono' => 'bed',          'clase' => 'info',      'valor' => $estadisticas['total']],
+                ['filtro' => 'disponible',    'texto' => 'Disponibles',   'icono' => $estados_ui['disponible']['icono'],    'clase' => $estados_ui['disponible']['clase'],    'valor' => $estadisticas['disponibles']],
+                ['filtro' => 'ocupada',       'texto' => 'Ocupadas',      'icono' => $estados_ui['ocupada']['icono'],       'clase' => $estados_ui['ocupada']['clase'],       'valor' => $estadisticas['ocupadas']],
+                ['filtro' => 'limpieza',      'texto' => 'Por limpiar',   'icono' => $estados_ui['limpieza']['icono'],      'clase' => $estados_ui['limpieza']['clase'],      'valor' => $estadisticas['limpieza']],
+                ['filtro' => 'mantenimiento', 'texto' => 'Mantenimiento', 'icono' => $estados_ui['mantenimiento']['icono'], 'clase' => $estados_ui['mantenimiento']['clase'], 'valor' => $estadisticas['mantenimiento']],
+            ];
+            foreach ($tarjetas_estado as $tarjeta) :
+            ?>
+                <div class="col-6 col-md-4 col-lg">
+                    <a href="#" role="button"
+                        class="info-box filtro-estado<?= $tarjeta['filtro'] === '' ? ' filtro-estado--activo' : ''; ?>"
+                        data-filtro-estado="<?= $tarjeta['filtro']; ?>"
+                        aria-pressed="<?= $tarjeta['filtro'] === '' ? 'true' : 'false'; ?>"
+                        aria-label="Filtrar habitaciones: <?= $tarjeta['texto']; ?>">
+                        <span class="info-box-icon bg-<?= $tarjeta['clase']; ?> elevation-1"><i class="fas fa-<?= $tarjeta['icono']; ?>"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text"><?= $tarjeta['texto']; ?></span>
+                            <span class="info-box-number" data-contador-estado="<?= $tarjeta['filtro']; ?>"><?= $tarjeta['valor']; ?></span>
+                        </div>
+                    </a>
                 </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
-                <div class="info-box">
-                    <span class="info-box-icon bg-success elevation-1"><i class="fas fa-check-circle"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Disponibles</span>
-                        <span class="info-box-number"><?= $estadisticas['disponibles']; ?></span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
-                <div class="info-box">
-                    <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-user"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Ocupadas</span>
-                        <span class="info-box-number"><?= $estadisticas['ocupadas']; ?></span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
-                <div class="info-box">
-                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-tools"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Mantenimiento</span>
-                        <span class="info-box-number"><?= $estadisticas['mantenimiento']; ?></span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
-                <div class="info-box">
-                    <span class="info-box-icon bg-primary elevation-1"><i class="fas fa-broom"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Limpieza</span>
-                        <span class="info-box-number"><?= $estadisticas['limpieza']; ?></span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <?php endforeach; ?>
+            <div class="col-6 col-md-4 col-lg">
                 <div class="info-box">
                     <span class="info-box-icon bg-secondary elevation-1"><i class="fas fa-dollar-sign"></i></span>
                     <div class="info-box-content">
@@ -123,20 +104,13 @@ $estadisticas = $controller->getEstadisticas();
                         </div>
                     </div>
                     <div class="card-body">
+                        <p class="text-muted small mb-2">
+                            El estado se filtra desde las tarjetas de resumen de arriba.
+                        </p>
+                        <!-- El valor lo controlan las tarjetas #resumen-estados -->
+                        <input type="hidden" id="filtro-estado" value="">
                         <div class="row">
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="filtro-estado">Estado:</label>
-                                    <select class="form-control select2" id="filtro-estado">
-                                        <option value="">Todos los estados</option>
-                                        <option value="disponible">Disponible</option>
-                                        <option value="ocupada">Ocupada</option>
-                                        <option value="mantenimiento">Mantenimiento</option>
-                                        <option value="limpieza">Limpieza</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="filtro-tipo">Tipo de Habitación:</label>
                                     <select class="form-control select2" id="filtro-tipo">
@@ -149,7 +123,7 @@ $estadisticas = $controller->getEstadisticas();
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="filtro-piso">Piso:</label>
                                     <select class="form-control select2" id="filtro-piso">
@@ -162,14 +136,14 @@ $estadisticas = $controller->getEstadisticas();
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="filtro-precio">Precio base:</label>
+                                    <label for="filtro-precio">Precio base (mínimo):</label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text">$</span>
+                                            <span class="input-group-text">Bs</span>
                                         </div>
-                                        <input type="number" class="form-control" id="filtro-precio" placeholder="Mínimo...">
+                                        <input type="number" class="form-control" id="filtro-precio" placeholder="Ej: 100">
                                     </div>
                                 </div>
                             </div>
@@ -182,58 +156,6 @@ $estadisticas = $controller->getEstadisticas();
                                 <button type="button" id="btn-limpiar-filtros" class="btn btn-secondary">
                                     <i class="fas fa-broom"></i> Limpiar Filtros
                                 </button>
-                                <a href="<?= $URL; ?>views/habitaciones/create.php" class="btn btn-success">
-                                    <i class="fas fa-plus"></i> Nueva Habitación
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Vista rápida de estados - Versión responsiva -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card collapsed-card">
-                    <div class="card-header card-outline card-success">
-                        <h3 class="card-title">Vista Rápida por Estado</h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body p-2">
-                        <div class="row">
-                            <div class="col-12 text-center">
-                                <div class="btn-group btn-group-toggle d-flex flex-wrap justify-content-center" data-toggle="buttons">
-                                    <label class="btn btn-outline-secondary active m-1" id="btn-filtro-todos">
-                                        <input type="radio" name="options" autocomplete="off" checked>
-                                        <i class="fas fa-bed mr-1"></i> Todos
-                                        <span class="badge badge-secondary"><?= $estadisticas['total']; ?></span>
-                                    </label>
-                                    <label class="btn btn-outline-success m-1" id="btn-filtro-disponible">
-                                        <input type="radio" name="options" autocomplete="off">
-                                        <i class="fas fa-check-circle mr-1"></i> Disponibles
-                                        <span class="badge badge-success"><?= $estadisticas['disponibles']; ?></span>
-                                    </label>
-                                    <label class="btn btn-outline-warning m-1" id="btn-filtro-ocupada">
-                                        <input type="radio" name="options" autocomplete="off">
-                                        <i class="fas fa-user mr-1"></i> Ocupadas
-                                        <span class="badge badge-warning"><?= $estadisticas['ocupadas']; ?></span>
-                                    </label>
-                                    <label class="btn btn-outline-danger m-1" id="btn-filtro-mantenimiento">
-                                        <input type="radio" name="options" autocomplete="off">
-                                        <i class="fas fa-tools mr-1"></i> Mantenimiento
-                                        <span class="badge badge-danger"><?= $estadisticas['mantenimiento']; ?></span>
-                                    </label>
-                                    <label class="btn btn-outline-primary m-1" id="btn-filtro-limpieza">
-                                        <input type="radio" name="options" autocomplete="off">
-                                        <i class="fas fa-broom mr-1"></i> Limpieza
-                                        <span class="badge badge-primary"><?= $estadisticas['limpieza']; ?></span>
-                                    </label>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -247,7 +169,10 @@ $estadisticas = $controller->getEstadisticas();
                     <div class="card-header">
                         <h3 class="card-title">Listado de Habitaciones</h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <a href="<?= $URL; ?>views/habitaciones/create.php" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> Nueva Habitación
+                            </a>
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer listado">
                                 <i class="fas fa-minus"></i>
                             </button>
                         </div>
@@ -257,109 +182,68 @@ $estadisticas = $controller->getEstadisticas();
                             <table id="tablaHabitaciones" class="table table-bordered table-hover table-striped table-sm">
                                 <thead>
                                     <tr>
-                                        <th class="text-center">Nro</th>
                                         <th class="text-center">Habitación</th>
                                         <th class="text-center">Tipo</th>
                                         <th class="text-center">Piso</th>
                                         <th class="text-center">Capacidad</th>
-                                        <th class="text-center">Precio Base</th>
+                                        <th class="text-center">Precio Base (Bs)</th>
                                         <th class="text-center">Estado</th>
                                         <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
-                                    $contador = 1;
                                     foreach ($habitaciones as $habitacion) :
                                         $estado = $habitacion['estado'];
-                                        $clase_estado = '';
-                                        $texto_estado = '';
+                                        $estado_ui = HabitacionController::estadoHabitacion($estado);
+                                        $numero = htmlspecialchars($habitacion['numero']);
 
-                                        switch ($estado) {
-                                            case 'disponible':
-                                                $clase_estado = 'badge-success';
-                                                $texto_estado = 'Disponible';
-                                                break;
-                                            case 'ocupada':
-                                                $clase_estado = 'badge-warning';
-                                                $texto_estado = 'Ocupada';
-                                                break;
-                                            case 'mantenimiento':
-                                                $clase_estado = 'badge-danger';
-                                                $texto_estado = 'Mantenimiento';
-                                                break;
-                                            case 'limpieza':
-                                                $clase_estado = 'badge-primary';
-                                                $texto_estado = 'Limpieza';
-                                                break;
-                                            default:
-                                                $clase_estado = 'badge-secondary';
-                                                $texto_estado = ucfirst($estado);
+                                        // Transiciones ofrecidas según el estado actual
+                                        $acciones_estado = [];
+                                        if ($estado !== 'disponible') {
+                                            $acciones_estado[] = 'disponible';
+                                        }
+                                        if ($estado === 'disponible') {
+                                            $acciones_estado[] = 'ocupada';
+                                        }
+                                        if ($estado !== 'limpieza') {
+                                            $acciones_estado[] = 'limpieza';
+                                        }
+                                        if ($estado !== 'mantenimiento') {
+                                            $acciones_estado[] = 'mantenimiento';
                                         }
                                     ?>
                                         <tr data-estado="<?= $estado; ?>">
-                                            <td class="text-center"><?= $contador++; ?></td>
-                                            <td class="text-center"><?= htmlspecialchars($habitacion['numero']); ?></td>
+                                            <td class="text-center"><?= $numero; ?></td>
                                             <td><?= htmlspecialchars($habitacion['tipo_nombre']); ?></td>
                                             <td><?= htmlspecialchars($habitacion['piso_nombre']); ?></td>
                                             <td class="text-center"><?= $habitacion['capacidad_actual']; ?></td>
                                             <td class="text-right precio-base"><?= number_format($habitacion['precio_base'], 2); ?></td>
                                             <td class="text-center">
-                                                <span class="badge <?= $clase_estado; ?> p-2"><?= $texto_estado; ?></span>
+                                                <span class="badge <?= $estado_ui['badge']; ?> p-2">
+                                                    <i class="fas fa-<?= $estado_ui['icono']; ?> mr-1"></i><?= $estado_ui['label']; ?>
+                                                </span>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <!-- Botones siempre visibles: Ver y Editar -->
-                                                    <a href="<?= $URL; ?>views/habitaciones/show.php?id=<?= $habitacion['id_habitacion']; ?>" class="btn btn-info btn-sm" title="Ver detalle">
-                                                        <i class="fas fa-eye"></i>
+                                                    <a href="<?= $URL; ?>views/habitaciones/show.php?id=<?= $habitacion['id_habitacion']; ?>" class="btn btn-info btn-sm hab-touch" title="Ver detalle" aria-label="Ver detalle de la habitación <?= $numero; ?>">
+                                                        <i class="fas fa-eye" aria-hidden="true"></i>
                                                     </a>
-                                                    <a href="<?= $URL; ?>views/habitaciones/update.php?id=<?= $habitacion['id_habitacion']; ?>" class="btn btn-warning btn-sm" title="Editar">
-                                                        <i class="fas fa-edit"></i>
+                                                    <a href="<?= $URL; ?>views/habitaciones/update.php?id=<?= $habitacion['id_habitacion']; ?>" class="btn btn-warning btn-sm hab-touch" title="Editar" aria-label="Editar la habitación <?= $numero; ?>">
+                                                        <i class="fas fa-edit" aria-hidden="true"></i>
                                                     </a>
-
-                                                    <!-- Botón para marcar como Disponible (oculto si ya está disponible) -->
-                                                    <?php if ($estado != 'disponible'): ?>
-                                                        <button type="button" class="btn btn-success btn-sm cambiar-estado"
+                                                    <?php foreach ($acciones_estado as $destino) :
+                                                        $destino_ui = HabitacionController::estadoHabitacion($destino);
+                                                    ?>
+                                                        <button type="button" class="btn btn-<?= $destino_ui['clase']; ?> btn-sm hab-touch cambiar-estado"
                                                             data-id="<?= $habitacion['id_habitacion']; ?>"
-                                                            data-estado="disponible"
+                                                            data-estado="<?= $destino; ?>"
                                                             data-estado-actual="<?= $estado; ?>"
-                                                            title="Marcar como Disponible">
-                                                            <i class="fas fa-check-circle"></i>
+                                                            title="Marcar como <?= $destino_ui['label']; ?>"
+                                                            aria-label="Marcar la habitación <?= $numero; ?> como <?= $destino_ui['label']; ?>">
+                                                            <i class="fas fa-<?= $destino_ui['icono']; ?>" aria-hidden="true"></i>
                                                         </button>
-                                                    <?php endif; ?>
-
-                                                    <!-- Botón para marcar como Limpieza (oculto si ya está en limpieza) -->
-                                                    <?php if ($estado != 'limpieza'): ?>
-                                                        <button type="button" class="btn btn-primary btn-sm cambiar-estado"
-                                                            data-id="<?= $habitacion['id_habitacion']; ?>"
-                                                            data-estado="limpieza"
-                                                            data-estado-actual="<?= $estado; ?>"
-                                                            title="Marcar para Limpieza">
-                                                            <i class="fas fa-broom"></i>
-                                                        </button>
-                                                    <?php endif; ?>
-
-                                                    <!-- Botón para marcar como Mantenimiento (oculto si ya está en mantenimiento) -->
-                                                    <?php if ($estado != 'mantenimiento'): ?>
-                                                        <button type="button" class="btn btn-danger btn-sm cambiar-estado"
-                                                            data-id="<?= $habitacion['id_habitacion']; ?>"
-                                                            data-estado="mantenimiento"
-                                                            data-estado-actual="<?= $estado; ?>"
-                                                            title="Marcar para Mantenimiento">
-                                                            <i class="fas fa-tools"></i>
-                                                        </button>
-                                                    <?php endif; ?>
-
-                                                    <!-- Botón para marcar como Ocupada (solo visible si está disponible) -->
-                                                    <?php if ($estado == 'disponible'): ?>
-                                                        <button type="button" class="btn btn-warning btn-sm cambiar-estado"
-                                                            data-id="<?= $habitacion['id_habitacion']; ?>"
-                                                            data-estado="ocupada"
-                                                            data-estado-actual="<?= $estado; ?>"
-                                                            title="Marcar como Ocupada">
-                                                            <i class="fas fa-user"></i>
-                                                        </button>
-                                                    <?php endif; ?>
+                                                    <?php endforeach; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -378,4 +262,3 @@ $estadisticas = $controller->getEstadisticas();
 include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
-

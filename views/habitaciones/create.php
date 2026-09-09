@@ -56,7 +56,7 @@ $pisos = $datos['pisos'];
         <div class="row">
             <!-- Columna del formulario -->
             <div class="col-md-8">
-                <div class="card card-primary">
+                <div class="card card-outline card-primary">
                     <div class="card-header">
                         <h3 class="card-title">Información de la Habitación</h3>
                     </div>
@@ -76,7 +76,7 @@ $pisos = $datos['pisos'];
                                             <input type="text" class="form-control" id="numero" name="numero"
                                                 placeholder="Ej: 101" required maxlength="10" autofocus>
                                         </div>
-                                        <small class="form-text text-muted">Identificador único de la habitación (máx. 10 caracteres)</small>
+                                        <small class="form-text text-muted">Numérelas por piso (101, 102, 201…). Máx. 10 caracteres.</small>
                                     </div>
 
                                     <div class="form-group">
@@ -89,6 +89,7 @@ $pisos = $datos['pisos'];
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
+                                        <small class="form-text text-muted">Seleccione el tipo de habitación.</small>
                                     </div>
 
                                     <div class="form-group">
@@ -114,19 +115,19 @@ $pisos = $datos['pisos'];
                                             <input type="number" class="form-control" id="capacidad_actual" name="capacidad_actual"
                                                 min="0" step="1" value="0" required>
                                         </div>
-                                        <small class="form-text text-muted">Número de personas que pueden ocupar la habitación</small>
+                                        <small class="form-text text-muted">Se completa según el tipo elegido; puede ajustarla.</small>
                                     </div>
 
                                     <div class="form-group">
                                         <label for="precio_base">Precio Base <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                                                <span class="input-group-text">Bs</span>
                                             </div>
                                             <input type="number" class="form-control" id="precio_base" name="precio_base"
                                                 min="0.01" step="0.01" value="0.00" required>
                                         </div>
-                                        <small class="form-text text-muted">Precio base por noche de la habitación</small>
+                                        <small class="form-text text-muted">Precio base por noche, en bolivianos.</small>
                                     </div>
 
                                     <div class="form-group">
@@ -134,8 +135,8 @@ $pisos = $datos['pisos'];
                                         <select class="form-control select2" id="estado" name="estado" required>
                                             <option value="disponible" selected>Disponible</option>
                                             <option value="ocupada">Ocupada</option>
+                                            <option value="limpieza">Por limpiar</option>
                                             <option value="mantenimiento">Mantenimiento</option>
-                                            <option value="limpieza">Limpieza</option>
                                         </select>
                                     </div>
                                 </div>
@@ -165,37 +166,8 @@ $pisos = $datos['pisos'];
 
             <!-- Columna de información y ayuda -->
             <div class="col-md-4">
-                <!-- Tarjeta de ayuda -->
-                <div class="card card-info">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-info-circle mr-1"></i> Información</h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="callout callout-info">
-                            <h5><i class="fas fa-info-circle"></i> Número de Habitación</h5>
-                            <p>Utilice un formato fácil de identificar, como el número de piso seguido de un número de habitación (Ej: 101, 102, 201, etc.)</p>
-                        </div>
-
-                        <div class="callout callout-warning">
-                            <h5><i class="fas fa-exclamation-triangle"></i> Capacidad</h5>
-                            <p>La capacidad se asigna automáticamente según el tipo de habitación seleccionado, pero puede modificarla según necesite.</p>
-                        </div>
-
-                        <div class="callout callout-success">
-                            <h5><i class="fas fa-check-circle"></i> Estado Inicial</h5>
-                            <p>Por defecto, las habitaciones nuevas se crean como "Disponibles". Cambie este valor solo si la habitación no estará disponible inmediatamente.</p>
-                        </div>
-                    </div>
-                </div>
-                <!-- /.card -->
-
                 <!-- Tarjeta de tipos de habitación -->
-                <div class="card card-secondary">
+                <div class="card card-outline card-secondary">
                     <div class="card-header">
                         <h3 class="card-title"><i class="fas fa-tags mr-1"></i> Tipos de Habitación</h3>
                         <div class="card-tools">
@@ -216,7 +188,7 @@ $pisos = $datos['pisos'];
                                 <?php foreach ($tipos_habitacion as $tipo): ?>
                                     <tr>
                                         <td><?= htmlspecialchars($tipo['nombre']); ?></td>
-                                        <td><span class="badge badge-info"><?= $tipo['capacidad_maxima']; ?> personas</span></td>
+                                        <td><span class="badge badge-info"><?= (int) $tipo['capacidad_maxima']; ?> <?= (int) $tipo['capacidad_maxima'] === 1 ? 'persona' : 'personas'; ?></span></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -237,4 +209,3 @@ $pisos = $datos['pisos'];
 include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
-

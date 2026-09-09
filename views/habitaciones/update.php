@@ -49,6 +49,8 @@ $pisos = $datos['pisos'];
 $skip_chartjs = true;
 $module_scripts = ['habitaciones/update-habitaciones'];
 include_once '../layouts/header.php';
+
+$estado_ui = HabitacionController::estadoHabitacion($habitacion['estado']);
 ?>
 
 <!-- Content Header (Page header) -->
@@ -75,7 +77,7 @@ include_once '../layouts/header.php';
         <div class="row">
             <!-- Columna del formulario -->
             <div class="col-md-8">
-                <div class="card card-warning">
+                <div class="card card-outline card-warning">
                     <div class="card-header">
                         <h3 class="card-title">Información de la Habitación</h3>
                     </div>
@@ -146,7 +148,7 @@ include_once '../layouts/header.php';
                                         <label for="precio_base">Precio Base <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                                                <span class="input-group-text">Bs</span>
                                             </div>
                                             <input type="number" class="form-control" id="precio_base" name="precio_base"
                                                 min="0.01" step="0.01" required
@@ -160,8 +162,8 @@ include_once '../layouts/header.php';
                                         <select class="form-control select2" id="estado" name="estado" required>
                                             <option value="disponible" <?= ($habitacion['estado'] == 'disponible') ? 'selected' : ''; ?>>Disponible</option>
                                             <option value="ocupada" <?= ($habitacion['estado'] == 'ocupada') ? 'selected' : ''; ?>>Ocupada</option>
+                                            <option value="limpieza" <?= ($habitacion['estado'] == 'limpieza') ? 'selected' : ''; ?>>Por limpiar</option>
                                             <option value="mantenimiento" <?= ($habitacion['estado'] == 'mantenimiento') ? 'selected' : ''; ?>>Mantenimiento</option>
-                                            <option value="limpieza" <?= ($habitacion['estado'] == 'limpieza') ? 'selected' : ''; ?>>Limpieza</option>
                                         </select>
                                     </div>
                                 </div>
@@ -205,28 +207,21 @@ include_once '../layouts/header.php';
             <!-- Columna de información y ayuda -->
             <div class="col-md-4">
                 <!-- Tarjeta de información de la habitación -->
-                <div class="card card-info">
+                <div class="card card-outline card-info">
                     <div class="card-header">
                         <h3 class="card-title"><i class="fas fa-info-circle mr-1"></i> Detalles de la Habitación</h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer detalles">
                                 <i class="fas fa-minus"></i>
                             </button>
                         </div>
                     </div>
                     <div class="card-body box-profile">
                         <div class="text-center mb-3">
-                            <?php
-                            $iconos = [
-                                'disponible' => '<span class="fa-stack fa-2x"><i class="fas fa-circle fa-stack-2x text-success"></i><i class="fas fa-check-circle fa-stack-1x fa-inverse"></i></span>',
-                                'ocupada' => '<span class="fa-stack fa-2x"><i class="fas fa-circle fa-stack-2x text-warning"></i><i class="fas fa-user fa-stack-1x fa-inverse"></i></span>',
-                                'mantenimiento' => '<span class="fa-stack fa-2x"><i class="fas fa-circle fa-stack-2x text-danger"></i><i class="fas fa-tools fa-stack-1x fa-inverse"></i></span>',
-                                'limpieza' => '<span class="fa-stack fa-2x"><i class="fas fa-circle fa-stack-2x text-primary"></i><i class="fas fa-broom fa-stack-1x fa-inverse"></i></span>'
-                            ];
-
-                            $estado_actual = $habitacion['estado'];
-                            echo $iconos[$estado_actual];
-                            ?>
+                            <span class="fa-stack fa-2x">
+                                <i class="fas fa-circle fa-stack-2x text-<?= $estado_ui['clase']; ?>"></i>
+                                <i class="fas fa-<?= $estado_ui['icono']; ?> fa-stack-1x fa-inverse"></i>
+                            </span>
                         </div>
 
                         <h3 class="profile-username text-center">Habitación <?= htmlspecialchars($habitacion['numero']); ?></h3>
@@ -238,24 +233,13 @@ include_once '../layouts/header.php';
                         <ul class="list-group list-group-unbordered mb-3">
                             <li class="list-group-item">
                                 <b>Estado Actual</b>
-                                <span class="float-right">
-                                    <?php
-                                    $clases_estado = [
-                                        'disponible' => 'badge-success',
-                                        'ocupada' => 'badge-warning',
-                                        'mantenimiento' => 'badge-danger',
-                                        'limpieza' => 'badge-primary'
-                                    ];
-
-                                    echo '<span class="badge ' . $clases_estado[$estado_actual] . ' p-2">' . ucfirst($estado_actual) . '</span>';
-                                    ?>
-                                </span>
+                                <span class="float-right badge <?= $estado_ui['badge']; ?> p-2"><?= $estado_ui['label']; ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b>Capacidad</b> <span class="float-right"><?= $habitacion['capacidad_actual']; ?> personas</span>
+                                <b>Capacidad</b> <span class="float-right"><?= (int) $habitacion['capacidad_actual']; ?> <?= (int) $habitacion['capacidad_actual'] === 1 ? 'persona' : 'personas'; ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b>Precio Base</b> <span class="float-right">$<?= number_format($habitacion['precio_base'], 2); ?></span>
+                                <b>Precio Base</b> <span class="float-right">Bs <?= number_format($habitacion['precio_base'], 2); ?></span>
                             </li>
                         </ul>
 
@@ -267,24 +251,14 @@ include_once '../layouts/header.php';
                 <!-- /.card -->
 
                 <!-- Tarjeta de ayuda -->
-                <div class="card card-secondary">
+                <div class="card card-outline card-secondary">
                     <div class="card-header">
                         <h3 class="card-title"><i class="fas fa-question-circle mr-1"></i> Ayuda</h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
                     </div>
                     <div class="card-body">
-                        <div class="callout callout-warning">
-                            <h5><i class="fas fa-exclamation-triangle"></i> Importante</h5>
-                            <p>Cambiar el estado a "Ocupada" manualmente no generará un registro de ocupación. Para registrar una ocupación completa, use el módulo de recepción.</p>
-                        </div>
-
-                        <div class="callout callout-info">
-                            <h5><i class="fas fa-info-circle"></i> Actualizaciones</h5>
-                            <p>Cualquier cambio realizado se registrará en el historial de la habitación con fecha y usuario que realizó la modificación.</p>
+                        <div class="callout callout-warning mb-0">
+                            <h5 class="mb-1"><i class="fas fa-exclamation-triangle"></i> Estado "Ocupada"</h5>
+                            <p class="mb-0">Cambiarlo aquí no crea un registro de ocupación. Para un check-in completo, use el módulo de Recepción. Todo cambio queda registrado en el historial con fecha y usuario.</p>
                         </div>
                     </div>
                 </div>
