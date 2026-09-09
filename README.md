@@ -4,7 +4,7 @@
 
 **Sistema integral para la administración de establecimientos hoteleros**
 
-[![Versión](https://img.shields.io/badge/Versión-1.3.1-blue?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/Versión-1.3.2-blue?style=flat-square)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.4+-003545?style=flat-square&logo=mariadb&logoColor=white)](https://mariadb.org)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-4-7952B3?style=flat-square&logo=bootstrap&logoColor=white)](https://getbootstrap.com)
@@ -75,14 +75,14 @@ Exportación de reportes de ventas y estadísticas del negocio.
 
 ## Características
 
-| Módulo           | Funcionalidades                                                                                                                                                            |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Habitaciones** | Gestión por tipo, piso y estado. Sistema de tarifas y galería de imágenes                                                                                                  |
+| Módulo           | Funcionalidades                                                                                                                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Habitaciones** | Gestión por tipo, piso y estado. Sistema de tarifas y galería de imágenes                                                                                                                                                 |
 | **Recepción**    | Panel único con tabs Hoy / Mapa de habitaciones / Historial, KPIs del día, folio de huésped con cargos/pagos múltiples, check-in/out, cambio de habitación auditable, validación de solape, recibos y tarjeta de registro |
-| **Servicios**    | Baños, limpieza y almacenamiento de equipaje con seguimiento en tiempo real                                                                                                |
-| **Comercial**    | Punto de venta, control de inventario, compras y reportes                                                                                                                  |
-| **Dashboard**    | Métricas en tiempo real, estadísticas por rol y exportación de reportes                                                                                                    |
-| **Usuarios**     | Sistema de roles (Admin, Recepcionista, Limpieza) con permisos granulares                                                                                                  |
+| **Servicios**    | Baños, limpieza y almacenamiento de equipaje con seguimiento en tiempo real                                                                                                                                               |
+| **Comercial**    | Punto de venta, control de inventario, compras y reportes                                                                                                                                                                 |
+| **Dashboard**    | Métricas en tiempo real, estadísticas por rol y exportación de reportes                                                                                                                                                   |
+| **Usuarios**     | Sistema de roles (Admin, Recepcionista, Limpieza) con permisos granulares                                                                                                                                                 |
 
 ## Requisitos
 
@@ -182,7 +182,7 @@ HotelFlow/
 ### Gestión de Habitaciones
 
 - Tipos: Simple, doble, matrimonial, suite
-- Estados: Disponible, ocupada, mantenimiento, limpieza
+- Estados: Disponible, ocupada, por limpiar, mantenimiento (con cambio de estado inline y auditado)
 - Organización jerárquica por pisos
 - Sistema de tarifas configurable
 

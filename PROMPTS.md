@@ -58,6 +58,9 @@ _______________
 - Datos complejos de PHP a JS via atributos data-* (nunca <script> inline con variables); CSS/JS de vista via $module_styles/$module_scripts (nunca <link>/<script>/<style> embebido)
 - Proyecto single-theme (sin dark-mode): un fix de contraste lleva un solo valor validado >=4.5:1 sobre el fondo claro de AdminLTE, sin bloques prefers-color-scheme
 - Estado y etiqueta de tarifa de recepcion salen de helpers unicos de RecepcionController (estadoRecepcion, estadoDerivado, etiquetaTarifa); ninguna vista repite un switch de estado
+- Igual en habitaciones: HabitacionController::estadoHabitacion / estadosHabitacion / badgeEstadoOcupacion / badgeEstadoLimpieza; el cambio de estado es un flujo unico (cambiar-estado-habitaciones.js, enlace delegado a .cambiar-estado)
+- Assets de modulo con cache-busting automatico (?v=filemtime en header.php/footer.php); no versionar a mano ni poner ?v= en la vista
+- Resaltado de sidebar en subpaginas de una seccion: sidebarEnSeccion() (match por prefijo), no sidebarEsActivo() (match exacto)
 
 [Formato de salida]
 _______________

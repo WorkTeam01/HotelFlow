@@ -5,6 +5,39 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.3.2] - 2026-09-09
+
+Auditoría `impeccable` del frontend de Habitaciones: score 12/20 → 18/20. Unificación del vocabulario de estado, del flujo de cambio de estado y de la responsividad del listado; sin cambios de esquema.
+
+### Added
+
+- **Helper `HabitacionController::estadoHabitacion(string): array`** (`['label','clase','badge','icono','orden']`) y `estadosHabitacion()` — fuente única del vocabulario visual de estado del módulo, mismo patrón que `RecepcionController::estadoRecepcion()`.
+- **Helpers `HabitacionController::badgeEstadoOcupacion()` / `badgeEstadoLimpieza()`** (`['badge','label']`) — estados del historial de `show.php`, antes resueltos con `switch` en la vista.
+- `public/js/modules/habitaciones/cambiar-estado-habitaciones.js` — flujo único de cambio de estado (confirmación SweetAlert + AJAX + `location.reload()`), enlace delegado a `.cambiar-estado`, compartido por listado y detalle.
+- `public/css/modules/habitaciones/habitaciones.css` — `.filtro-estado` (tarjetas de resumen que actúan como filtro) y `.hab-touch` (área táctil ≥44px, patrón `::before` de `.rec-touch`).
+- **`sidebarEnSeccion($hrefBase, $rutaActual)`** en `views/layouts/sidebar.php` — match por prefijo para resaltar/auto-expandir un grupo también en sus subpáginas (`create`/`update`/`show`).
+- **Cache-busting de assets de módulo**: `header.php` y `footer.php` sirven cada `$module_styles`/`$module_scripts` con `?v=<filemtime>` (fallback `$APP_VERSION`).
+
+### Fixed
+
+- **`show.php` enlazaba a `edit.php`** (archivo inexistente) → `update.php`.
+- **`update.php`**: `$iconos[$estado]` / `$clases_estado[$estado]` sin fallback ante un estado inesperado → helper único con rama `default`.
+- **Sidebar**: el grupo Recepción y "Estado de habitaciones" no se resaltaban ni auto-expandían al entrar directo a `create`/`update`/`show` (match exacto de ruta) → `sidebarEnSeccion()`.
+- **Assets de módulo cacheados**: sin versionado, el navegador servía JS/CSS viejo tras cada edición.
+- **Áreas táctiles <44px** en los botones-ícono del listado → `.hab-touch` con `min-width:44px` (ancho AAA, WCAG 2.5.5).
+- **Tarjetas-filtro** (`<a role="button">`) no se activaban con la tecla Espacio → handler `keydown` (Enter ya era nativo).
+
+### Changed
+
+- **4 `switch` divergentes de estado** (index, show, update ×2, ambos JS) → helper único `estadoHabitacion()`. Vocabulario de color alineado con `recepcion`: limpieza = gris "Por limpiar" (antes azul).
+- **`index.php` / `index-habitaciones.js` reescritos**: eliminado el 2º sistema responsive (`ajustarVistaMovil()`) y las ~60 líneas de reconstrucción manual de fila; `columnDefs` con `responsivePriority`; las tarjetas info-box de `#resumen-estados` son el filtro de estado (se quitó la card "Vista Rápida por Estado" redundante); `#filtro-estado` de `<select>` a `<input type="hidden">`; columna "Nro" (contador redundante frente a "Habitación") eliminada.
+- **`show.php`**: eliminado el modal `#modalCambiarEstado`; "Detalles del Tipo" movido a la columna derecha; `<a class="float-right">` sin `href` → `<span>`.
+- Cards `card-primary`/`card-warning` (filled) → `card-outline` en `create`/`update`/`show`. Moneda `$` → `Bs`. Pluralización "1 persona" / "N personas". `aria-label` en los botones-ícono. "Nueva Habitación" salió del card colapsado al header del listado. `<option>` de estado: "Limpieza" → "Por limpiar". `create.php`: callouts de ayuda redundantes eliminados.
+
+### Removed
+
+- `public/js/modules/habitaciones/show-habitaciones.js` — su flujo vive ahora en `cambiar-estado-habitaciones.js`.
+
 ## [1.3.1] - 2026-08-30
 
 Auditoría `impeccable` del frontend de Recepción (post 1.3.0): score 14/20 → 20/20.
