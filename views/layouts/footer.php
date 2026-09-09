@@ -58,7 +58,8 @@ $cargar_datatables = !(isset($skip_datatables) && $skip_datatables === true);
 <!-- Scripts específicos por módulo -->
 <?php if (isset($module_scripts) && is_array($module_scripts)): ?>
     <?php foreach ($module_scripts as $script): ?>
-        <script src="<?= $URL; ?>public/js/modules/<?= $script; ?>.js"></script>
+        <?php $__script_path = __DIR__ . '/../../public/js/modules/' . $script . '.js'; ?>
+        <script src="<?= $URL; ?>public/js/modules/<?= $script; ?>.js?v=<?= @filemtime($__script_path) ?: ($APP_VERSION ?? '1'); ?>"></script>
     <?php endforeach; ?>
 <?php endif; ?>
 

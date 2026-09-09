@@ -79,7 +79,8 @@ global $URL;
     <!-- Estilos específicos por módulo -->
     <?php if (isset($module_styles) && is_array($module_styles)): ?>
         <?php foreach ($module_styles as $style): ?>
-            <link rel="stylesheet" href="<?= $URL; ?>public/css/modules/<?= $style; ?>.css">
+            <?php $__style_path = __DIR__ . '/../../public/css/modules/' . $style . '.css'; ?>
+            <link rel="stylesheet" href="<?= $URL; ?>public/css/modules/<?= $style; ?>.css?v=<?= @filemtime($__style_path) ?: ($APP_VERSION ?? '1'); ?>">
         <?php endforeach; ?>
     <?php endif; ?>
 </head>
