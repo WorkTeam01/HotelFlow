@@ -33,6 +33,18 @@ if (!function_exists('sidebarClaseActiva')) {
     }
 }
 
+if (!function_exists('sidebarEnSeccion')) {
+    /**
+     * Coincide con la ruta base o con cualquier subpágina de esa sección
+     * (create.php, update.php, show.php, …), no solo con el índice exacto.
+     */
+    function sidebarEnSeccion(string $hrefBase, string $rutaActual): bool
+    {
+        $base = sidebarNormalizarRuta($hrefBase);
+        return $rutaActual === $base || strpos($rutaActual, $base . '/') === 0;
+    }
+}
+
 $sidebarRutaActual = sidebarNormalizarRuta($_SERVER['REQUEST_URI'] ?? '');
 ?>
 
@@ -62,9 +74,8 @@ $sidebarRutaActual = sidebarNormalizarRuta($_SERVER['REQUEST_URI'] ?? '');
                 <!-- Recepción -->
                 <?php if ($authService->puedeAccederModulo($idusuariosesion, 'recepcion') || $authService->puedeAccederModulo($idusuariosesion, 'habitaciones')) : ?>
                     <?php
-                    $sidebarGrupoRecepcionActivo = sidebarEsActivo($URL . 'views/recepcion', $sidebarRutaActual)
-                        || sidebarEsActivo($URL . 'views/recepcion/create.php', $sidebarRutaActual)
-                        || sidebarEsActivo($URL . 'views/habitaciones', $sidebarRutaActual);
+                    $sidebarGrupoRecepcionActivo = sidebarEnSeccion($URL . 'views/recepcion', $sidebarRutaActual)
+                        || sidebarEnSeccion($URL . 'views/habitaciones', $sidebarRutaActual);
                     ?>
                     <li class="nav-item<?= $sidebarGrupoRecepcionActivo ? ' menu-open' : ''; ?>">
                         <a href="#" class="nav-link<?= $sidebarGrupoRecepcionActivo ? ' active' : ''; ?>">
@@ -94,7 +105,7 @@ $sidebarRutaActual = sidebarNormalizarRuta($_SERVER['REQUEST_URI'] ?? '');
                             <!-- Habitaciones -->
                             <?php if ($authService->puedeAccederModulo($idusuariosesion, 'habitaciones')) : ?>
                                 <li class="nav-item">
-                                    <a href="<?= $URL; ?>views/habitaciones" class="nav-link<?= sidebarClaseActiva($URL . 'views/habitaciones', $sidebarRutaActual); ?>">
+                                    <a href="<?= $URL; ?>views/habitaciones" class="nav-link<?= sidebarEnSeccion($URL . 'views/habitaciones', $sidebarRutaActual) ? ' active' : ''; ?>">
                                         <i class="fas fa-bed nav-icon"></i>
                                         <p>Estado de habitaciones</p>
                                     </a>
