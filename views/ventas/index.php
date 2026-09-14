@@ -23,7 +23,7 @@ include_once '../layouts/header.php';
 
 $controller = new VentaController();
 $esAdmin = $authService->esAdministrador($idusuario);
-$ventas = $esAdmin ? $controller->index() : $controller->obtenerPorUsuario($idusuario);
+$ventas = $controller->index($esAdmin ? null : $idusuario);
 $estadisticas = $controller->getEstadisticas();
 ?>
 

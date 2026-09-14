@@ -574,7 +574,7 @@ class Venta
         $errores = [];
 
         // Validar campos obligatorios
-        $campos_obligatorios = ['idusuario', 'totalventa', 'fechaventa', 'metodopago', 'pagorecibido'];
+        $campos_obligatorios = ['idusuario', 'fechaventa'];
         foreach ($campos_obligatorios as $campo) {
             if (empty($datos[$campo])) {
                 $errores[] = "El campo {$campo} es obligatorio";
@@ -598,17 +598,43 @@ class Venta
             }
         }
 
-        // Validar método de pago
-        $metodosPermitidos = ['Efectivo', 'QR', 'Otros'];
-        if (!in_array($datos['metodopago'], $metodosPermitidos)) {
-            $errores[] = "El método de pago no es válido";
+        // Normalizar la lista de métodos de pago para validar (igual que crear()).
+        // Si no llega pagos[], se deriva un solo pago desde los campos legacy.
+        $pagos = $datos['pagos'] ?? null;
+        if (!is_array($pagos) || count($pagos) == 0) {
+            $pagos = [[
+                'metodopago' => $datos['metodopago'] ?? '',
+                'monto' => $datos['totalventa'] ?? 0,
+                'pagorecibido' => $datos['pagorecibido'] ?? 0,
+                'cambio' => $datos['cambio'] ?? 0
+            ]];
         }
 
-        // Validar que el pago recibido cubra el total. El total real se recalcula en crear()
-        // a partir de los precios de la BD; esta validación previa solo filtra el caso obvio
-        // en el que el pago no cubre el total tal como fue enviado por el cliente.
-        if ($datos['pagorecibido'] < $datos['totalventa']) {
-            $errores[] = "El pago recibido no cubre el total de la venta";
+        // Validar cada método de pago
+        $metodosPermitidos = ['Efectivo', 'QR', 'Otros'];
+        $sumaMontos = 0;
+        foreach ($pagos as $pago) {
+            $metodoPago = trim((string)($pago['metodopago'] ?? ''));
+            $monto = (float)($pago['monto'] ?? 0);
+            $pagorecibido = (float)($pago['pagorecibido'] ?? 0);
+
+            $sumaMontos += $monto;
+
+            if (!in_array($metodoPago, $metodosPermitidos)) {
+                $errores[] = "El método de pago no es válido";
+            }
+            if ($monto <= 0) {
+                $errores[] = "Todos los pagos deben tener un monto mayor que cero";
+            }
+            if ($metodoPago === 'Efectivo' && $pagorecibido < $monto) {
+                $errores[] = "El pago recibido en efectivo no cubre el monto";
+            }
+        }
+
+        // El total real se recalcula en crear() con los precios de la BD; esta validación
+        // previa solo filtra el caso obvio en el que los pagos no cubren el total enviado.
+        if (isset($datos['totalventa']) && (float)$datos['totalventa'] > 0 && abs($sumaMontos - (float)$datos['totalventa']) > 0.01) {
+            $errores[] = "El total de los pagos no coincide con el total de la venta";
         }
 
         return $errores;
