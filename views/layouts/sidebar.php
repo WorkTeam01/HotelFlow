@@ -233,7 +233,6 @@ $sidebarRutaActual = sidebarNormalizarRuta($_SERVER['REQUEST_URI'] ?? '');
                     <?php
                     $sidebarGrupoVentasActivo = sidebarEsActivo($URL . 'views/ventas/create.php', $sidebarRutaActual)
                         || sidebarEsActivo($URL . 'views/ventas', $sidebarRutaActual)
-                        || sidebarEsActivo($URL . 'controllers/ventas/reporte_ventas.php', $sidebarRutaActual)
                         || sidebarEsActivo($URL . 'views/clientes', $sidebarRutaActual);
                     ?>
                     <li class="nav-item<?= $sidebarGrupoVentasActivo ? ' menu-open' : ''; ?>">
@@ -260,13 +259,7 @@ $sidebarRutaActual = sidebarNormalizarRuta($_SERVER['REQUEST_URI'] ?? '');
                                         <p>Historial de ventas</p>
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="<?= $URL; ?>controllers/ventas/reporte_ventas.php" class="nav-link<?= sidebarClaseActiva($URL . 'controllers/ventas/reporte_ventas.php', $sidebarRutaActual); ?>">
-                                        <i class="fas fa-chart-bar nav-icon"></i>
-                                        <p>Reporte de ventas</p>
-                                    </a>
-                                </li>
-                            <?php endif; ?>
+                                <?php endif; ?>
                             <?php if ($authService->puedeAccederModulo($idusuariosesion, 'clientes')) : ?>
                                 <li class="nav-item">
                                     <a href="<?= $URL; ?>views/clientes" class="nav-link<?= sidebarClaseActiva($URL . 'views/clientes', $sidebarRutaActual); ?>">

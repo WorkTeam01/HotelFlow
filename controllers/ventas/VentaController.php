@@ -390,29 +390,6 @@ class VentaController
     }
 
     /**
-     * Obtiene ventas por rango de fechas
-     * 
-     * @param string $fechaInicio Fecha de inicio (YYYY-MM-DD)
-     * @param string $fechaFin Fecha de fin (YYYY-MM-DD)
-     * @return array Lista de ventas en el rango
-     */
-    public function obtenerPorRangoFechas($fechaInicio, $fechaFin)
-    {
-        return $this->modelo->getPorRangoFechas($fechaInicio, $fechaFin);
-    }
-
-    /**
-     * Obtiene ventas por estado
-     * 
-     * @param int $estado Estado de las ventas (1: Activo, 0: Inactivo)
-     * @return array Lista de ventas con el estado especificado
-     */
-    public function obtenerPorEstado($estado)
-    {
-        return $this->modelo->getPorEstado($estado);
-    }
-
-    /**
      * Obtiene ventas por usuario
      * 
      * @param int $idUsuario ID del usuario
@@ -421,17 +398,6 @@ class VentaController
     public function obtenerPorUsuario($idUsuario)
     {
         return $this->modelo->getPorUsuario($idUsuario);
-    }
-
-    /**
-     * Obtiene ventas por cliente
-     * 
-     * @param int $idCliente ID del cliente
-     * @return array Lista de ventas del cliente
-     */
-    public function obtenerPorCliente($idCliente)
-    {
-        return $this->modelo->getPorCliente($idCliente);
     }
 
     /**

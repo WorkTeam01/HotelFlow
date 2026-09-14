@@ -417,64 +417,6 @@ class Venta
     }
 
     /**
-     * Obtiene las ventas por rango de fechas
-     * 
-     * @param string $fechaInicio Fecha de inicio (formato YYYY-MM-DD)
-     * @param string $fechaFin Fecha de fin (formato YYYY-MM-DD)
-     * @return array Lista de ventas en el rango de fechas
-     */
-    public function getPorRangoFechas($fechaInicio, $fechaFin)
-    {
-        try {
-            $query = "SELECT v.*, 
-                      CONCAT(p.nombre, ' ', p.apellidopaterno) as cliente_nombre,
-                      u.nombre as usuario_nombre 
-                      FROM {$this->tabla} v
-                      LEFT JOIN persona p ON v.idcliente = p.idpersona
-                      JOIN usuarios u ON v.idusuario = u.idusuario
-                      WHERE v.fechaventa BETWEEN :fechaInicio AND :fechaFin
-                      ORDER BY v.fechaventa DESC";
-            $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':fechaInicio', $fechaInicio, PDO::PARAM_STR);
-            $stmt->bindParam(':fechaFin', $fechaFin, PDO::PARAM_STR);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log('[' . static::class . '] ' . $e->getMessage());
-            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            return [];
-        }
-    }
-
-    /**
-     * Obtiene las ventas por estado
-     * 
-     * @param int $estado Estado de las ventas a buscar (1: Activo, 0: Inactivo)
-     * @return array Lista de ventas con el estado especificado
-     */
-    public function getPorEstado($estado)
-    {
-        try {
-            $query = "SELECT v.*, 
-                      CONCAT(p.nombre, ' ', p.apellidopaterno) as cliente_nombre,
-                      u.nombre as usuario_nombre 
-                      FROM {$this->tabla} v
-                      LEFT JOIN persona p ON v.idcliente = p.idpersona
-                      JOIN usuarios u ON v.idusuario = u.idusuario
-                      WHERE v.estado = :estado
-                      ORDER BY v.fechaventa DESC";
-            $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':estado', $estado, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log('[' . static::class . '] ' . $e->getMessage());
-            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            return [];
-        }
-    }
-
-    /**
      * Obtiene las ventas de un usuario específico
      * 
      * @param int $idUsuario ID del usuario
@@ -493,34 +435,6 @@ class Venta
                       ORDER BY v.fechaventa DESC";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':idUsuario', $idUsuario, PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log('[' . static::class . '] ' . $e->getMessage());
-            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            return [];
-        }
-    }
-
-    /**
-     * Obtiene las ventas de un cliente específico
-     * 
-     * @param int $idCliente ID del cliente
-     * @return array Lista de ventas del cliente
-     */
-    public function getPorCliente($idCliente)
-    {
-        try {
-            $query = "SELECT v.*, 
-                      CONCAT(p.nombre, ' ', p.apellidopaterno) as cliente_nombre,
-                      u.nombre as usuario_nombre 
-                      FROM {$this->tabla} v
-                      LEFT JOIN persona p ON v.idcliente = p.idpersona
-                      JOIN usuarios u ON v.idusuario = u.idusuario
-                      WHERE v.idcliente = :idCliente
-                      ORDER BY v.fechaventa DESC";
-            $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':idCliente', $idCliente, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
