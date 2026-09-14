@@ -1,0 +1,74 @@
+/* Estilos del módulo ventas (create.php y listado).
+   No se redefinen utilidades de Bootstrap (.d-none, .text-danger, .is-invalid,
+   .invalid-feedback...): lo que necesita presentación propia usa clases .vent-* */
+
+/* Carrito de create.php (#tabla-productos): con muchos productos, el contenedor
+   crece indefinidamente y empuja el resto del formulario (pago, cliente, total)
+   fuera de vista. Se limita la altura y se habilita scroll propio; el thead queda
+   fijo (sticky) para no perder referencia de columnas al bajar. */
+.carrito-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.carrito-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+/* Columna derecha del formulario de venta (cliente/totales/acciones): queda fija
+   al hacer scroll en pantallas grandes. */
+.sidebar-sticky {
+    position: sticky;
+    top: 1rem;
+}
+
+/* Estados visuales de las tarjetas de pago (pago único y métodos del pago mixto).
+   No reutilizan utilidades de Bootstrap, son clases propias del módulo. */
+.vent-pago-correcto {
+    border-left: 4px solid #28a745;
+}
+
+.vent-pago-incorrecto {
+    border-left: 4px solid #dc3545;
+    background-color: #fff5f5;
+}
+
+/* Tabla de productos de create.php: bajo 767.98px se convierte de tabla a lista de
+   tarjetas apiladas (una por fila) en vez de forzar scroll horizontal de 6 columnas. */
+@media (max-width: 767.98px) {
+    #tabla-productos thead {
+        display: none;
+    }
+
+    #tabla-productos,
+    #tabla-productos tbody,
+    #tabla-productos tr.fila-producto,
+    #tabla-productos tr.fila-producto td {
+        display: block;
+        width: 100% !important;
+    }
+
+    #tabla-productos tr.fila-producto {
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem;
+    }
+
+    #tabla-productos tr.fila-producto td {
+        border: none;
+        padding: 0.375rem 0.25rem;
+        text-align: left !important;
+    }
+
+    #tabla-productos tr.fila-producto td[data-label]:not([data-label=""])::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.75rem;
+        font-weight: bold;
+        color: #6c757d;
+        margin-bottom: 0.15rem;
+    }
+}

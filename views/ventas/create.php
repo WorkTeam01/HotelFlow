@@ -16,7 +16,8 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
 }
 
 $skip_chartjs = true;
-$module_styles = ['ventas/create-venta'];
+$skip_datatables = true;
+$module_styles = ['ventas/ventas'];
 $module_scripts = ['ventas/create-venta'];
 include_once '../layouts/header.php';
 
@@ -47,199 +48,347 @@ $clientes = $personaController->index();
 
 <section class="content">
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">Formulario de Venta</h3>
-                    </div>
-                    <form action="<?= $URL; ?>controllers/ventas/crear_venta.php" method="POST" id="form-venta" novalidate
-                        data-productos="<?= htmlspecialchars(json_encode(array_filter($productos, function ($p) {
-                                                return $p['estado'] == 1 && $p['stock'] > 0;
-                                            })), ENT_QUOTES) ?>"
-                        data-clientes="<?= htmlspecialchars(json_encode($clientes), ENT_QUOTES) ?>">
-                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
-                        <input type="hidden" name="idusuario" value="<?= $_SESSION['usuario_id'] ?>">
-                        <input type="hidden" name="totalventa" id="totalventa-hidden" value="0">
+        <form action="<?= $URL; ?>controllers/ventas/crear_venta.php" method="POST" id="form-venta" novalidate
+            data-productos="<?= htmlspecialchars(json_encode(array_filter($productos, function ($p) {
+                return $p['estado'] == 1 && $p['stock'] > 0;
+            })), ENT_QUOTES) ?>"
+            data-clientes="<?= htmlspecialchars(json_encode($clientes), ENT_QUOTES) ?>">
+            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
+            <input type="hidden" name="totalventa" id="totalventa-hidden" value="0">
 
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label>Vendedor</label>
-                                        <input type="text" class="form-control" value="<?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Usuario actual') ?>" readonly>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="idcliente">Cliente <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="buscar-cliente" placeholder="Buscar por número de documento o nombre" autocomplete="off">
-                                        <input type="hidden" id="idcliente" name="idcliente" required>
-                                        <div class="invalid-feedback">Seleccione un cliente</div>
-                                        <div id="sugerencias-clientes" class="list-group" style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto;"></div>
-                                    </div>
-                                    <div id="info-cliente-seleccionado" class="mt-2" style="display: none;">
-                                        <strong>Cliente seleccionado:</strong>
-                                        <span id="nombre-cliente"></span>
-                                        <button type="button" class="btn btn-sm btn-link text-danger" id="quitar-cliente">
-                                            <i class="fas fa-times"></i> Quitar
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="fechaventa">Fecha <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" id="fechaventa" name="fechaventa" value="<?= date('Y-m-d'); ?>" required>
-                                        <div class="invalid-feedback">Ingrese una fecha válida</div>
-                                    </div>
-                                </div>
+            <div class="row">
+                <!-- Columna izquierda: productos, forma de pago y observaciones -->
+                <div class="col-lg-8">
+                    <div class="card card-outline card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title mb-0">Detalle de Productos</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-sm btn-primary" id="btn-abrir-modal-productos" data-toggle="modal" data-target="#modal-productos">
+                                    <i class="fas fa-plus"></i> Agregar Producto
+                                </button>
                             </div>
-
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="metodopago">Método de Pago <span class="text-danger">*</span></label>
-                                        <select class="form-control select2" id="metodopago" name="metodopago" required>
-                                            <option value="Efectivo">Efectivo</option>
-                                            <option value="QR">QR</option>
-                                            <option value="Otros">Otros</option>
-                                        </select>
-                                        <div class="invalid-feedback">Seleccione un método de pago</div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4" id="pago-recibido-container">
-                                    <div class="form-group">
-                                        <label for="pagorecibido">Pago Recibido <span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control" id="pagorecibido" name="pagorecibido" step="0.01" min="0" value="0.00" required>
-                                        <div class="invalid-feedback">Ingrese el monto recibido</div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4" id="cambio-container">
-                                    <div class="form-group">
-                                        <label for="cambio">Cambio</label>
-                                        <input type="text" class="form-control" id="cambio" readonly>
-                                        <input type="hidden" name="cambio" id="cambio-hidden">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr>
-                            <h5>Detalle de Productos <span class="text-danger">*</span></h5>
-
-                            <div class="row mb-3">
-                                <div class="col-md-8">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="buscar-producto" placeholder="Ingrese el código del producto">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-primary" type="button" id="btn-buscar-producto">
-                                                <i class="fas fa-search"></i> Buscar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="table table-bordered" id="tabla-productos">
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive carrito-scroll">
+                                <table class="table table-bordered mb-0" id="tabla-productos">
                                     <thead class="bg-light">
                                         <tr>
-                                            <th width="30%">Producto</th>
-                                            <th width="10%">Código</th>
+                                            <th width="40%">Producto</th>
                                             <th width="15%">Cantidad</th>
-                                            <th width="15%">Precio Unitario</th>
-                                            <th width="15%">Descuento</th>
-                                            <th width="10%">Subtotal</th>
+                                            <th width="17%">Precio Unit.</th>
+                                            <th width="17%">Descuento</th>
+                                            <th width="11%">Subtotal</th>
                                             <th width="5%"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr id="fila-base" style="display: none;">
-                                            <td>
-                                                <input type="hidden" class="form-control idproducto" name="productos[]">
-                                                <input type="text" class="form-control nombre-producto" readonly>
+                                            <td data-label="Producto">
+                                                <input type="hidden" class="idproducto" name="productos[]">
+                                                <input type="text" class="form-control form-control-sm font-weight-bold nombre-producto border-0 px-0" readonly>
+                                                <input type="text" class="form-control form-control-sm text-muted codigo-producto border-0 px-0" readonly style="font-size: 0.75rem; height: auto;">
                                             </td>
-                                            <td>
-                                                <input type="text" class="form-control codigo-producto" readonly>
-                                            </td>
-                                            <td>
-                                                <input type="number" class="form-control cantidad" name="cantidades[]" min="1" value="1" required>
+                                            <td data-label="Cantidad">
+                                                <input type="number" class="form-control cantidad" name="cantidades[]" min="1" step="1" value="1" required>
                                                 <div class="invalid-feedback">Ingrese una cantidad válida</div>
                                                 <small class="text-muted stock-disponible">Disponible: 0</small>
                                             </td>
-                                            <td>
+                                            <td data-label="Precio Unit.">
                                                 <div class="input-group">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text">$</span>
+                                                        <span class="input-group-text">Bs.</span>
                                                     </div>
                                                     <input type="number" class="form-control precio" name="precios[]" step="0.01" min="0.01" value="0.00" required>
                                                     <div class="invalid-feedback">Ingrese un precio válido</div>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Descuento">
                                                 <div class="input-group">
                                                     <div class="input-group-prepend">
-                                                        <span class="input-group-text">$</span>
+                                                        <span class="input-group-text">Bs.</span>
                                                     </div>
                                                     <input type="number" class="form-control descuento" name="descuentos[]" step="0.01" min="0" value="0.00">
                                                 </div>
+                                                <small class="form-text text-muted">Total por línea</small>
                                             </td>
-                                            <td class="text-right">
+                                            <td data-label="Subtotal" class="text-right">
                                                 <span class="subtotal">0.00</span>
                                             </td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-danger btn-sm btn-eliminar-fila">
-                                                    <i class="fas fa-trash"></i>
+                                            <td data-label="" class="text-center">
+                                                <button type="button" class="btn btn-danger btn-sm btn-eliminar-fila" aria-label="Eliminar fila">
+                                                    <i class="fas fa-trash"></i> <span class="d-md-none">Eliminar</span>
                                                 </button>
                                             </td>
                                         </tr>
 
                                         <!-- Las filas de productos se agregarán dinámicamente aquí -->
                                     </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="5" class="text-right"><strong>Subtotal:</strong></td>
-                                            <td class="text-right"><strong><span id="subtotal-venta">0.00</span></strong></td>
-                                            <td></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="5" class="text-right"><strong>Descuento Total:</strong></td>
-                                            <td class="text-right"><strong><span id="descuento-total">0.00</span></strong></td>
-                                            <td></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="5" class="text-right"><strong>Total Venta:</strong></td>
-                                            <td class="text-right"><strong><span id="total-venta">0.00</span></strong></td>
-                                            <td></td>
-                                        </tr>
-                                    </tfoot>
                                 </table>
+                            </div>
+                            <div id="carrito-vacio" class="text-center text-muted p-5">
+                                <i class="fas fa-shopping-basket fa-2x mb-2"></i>
+                                <p class="mb-0">Aún no agregó productos. Use "Agregar Producto" para iniciar la venta.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Forma de pago -->
+                    <div class="card card-outline card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-money-check-alt"></i> Forma de Pago
+                                <span class="text-danger">*</span>
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                                    <label class="btn btn-outline-primary active" id="btn-pago-unico">
+                                        <input type="radio" name="tipo_pago" value="unico" checked> Pago Único
+                                    </label>
+                                    <label class="btn btn-outline-primary" id="btn-pago-mixto">
+                                        <input type="radio" name="tipo_pago" value="mixto"> Pago Mixto
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Pago único -->
+                            <div id="seccion-pago-unico">
+                                <div class="row">
+                                    <div class="form-group col-md-4">
+                                        <label>Método de Pago <span class="text-danger">*</span></label>
+                                        <select class="form-control select2" id="metodopago-unico" name="metodopago_unico" required>
+                                            <option value="Efectivo" selected>Efectivo</option>
+                                            <option value="QR">QR</option>
+                                            <option value="Otros">Otros</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Monto <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">Bs.</span>
+                                            </div>
+                                            <input type="number" class="form-control" id="monto-unico" name="monto_unico" step="0.01" min="0" value="0.00" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-4" id="div-pago-recibido-unico">
+                                        <label>Pago Recibido</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">Bs.</span>
+                                            </div>
+                                            <input type="number" class="form-control" id="pago-recibido-unico" name="pago_recibido_unico" step="0.01" min="0" value="0.00" required>
+                                            <div class="invalid-feedback">El pago recibido no cubre el total</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="div-cambio-unico" style="display: none;">
+                                    <label>Cambio:</label>
+                                    <div class="input-group" style="max-width: 250px;">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Bs.</span>
+                                        </div>
+                                        <input type="text" class="form-control" id="cambio-unico" readonly>
+                                        <input type="hidden" name="cambio_unico" id="cambio-unico-hidden" value="0.00">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pagos mixtos -->
+                            <div id="seccion-pago-mixto" style="display: none;">
+                                <button type="button" id="btn-agregar-pago" class="btn btn-success btn-sm mb-3">
+                                    <i class="fas fa-plus"></i> Agregar método de pago
+                                </button>
+                                <div id="contenedor-pagos">
+                                    <!-- Aquí se agregarán dinámicamente los métodos de pago -->
+                                </div>
+                            </div>
+
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Total Pagado</span>
+                                <strong id="total-pagado-display" class="text-success">0.00 Bs.</strong>
+                            </div>
+                            <small id="diferencia-pago" class="d-block text-right" aria-live="polite"></small>
+                        </div>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="form-group mb-0">
+                                <label for="observacion">Observaciones:</label>
+                                <textarea class="form-control" id="observacion" name="observacion" rows="2" placeholder="Observaciones adicionales sobre la venta..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna derecha: cliente, fecha, totales y acciones (fija) -->
+                <div class="col-lg-4">
+                    <div class="sidebar-sticky">
+                        <!-- Cliente y fecha -->
+                        <div class="card card-outline card-primary">
+                            <div class="card-header">
+                                <h3 class="card-title">Cliente</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="fechaventa">Fecha de venta <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="fechaventa" name="fechaventa" value="<?= date('Y-m-d'); ?>" required>
+                                    <div class="invalid-feedback">Ingrese una fecha válida</div>
+                                </div>
+                                <div id="sin-cliente-seleccionado">
+                                    <p class="text-muted mb-2">Ningún cliente seleccionado</p>
+                                    <button type="button" class="btn btn-outline-primary btn-block" id="btn-abrir-modal-clientes" data-toggle="modal" data-target="#modal-clientes">
+                                        <i class="fas fa-search"></i> Buscar Cliente
+                                    </button>
+                                </div>
+                                <div id="info-cliente-seleccionado" style="display: none;">
+                                    <input type="hidden" id="idcliente" name="idcliente" required>
+                                    <strong id="nombre-cliente"></strong>
+                                    <div id="documento-cliente" class="text-muted small"></div>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-block mt-2" id="btn-cambiar-cliente">
+                                        <i class="fas fa-exchange-alt"></i> Cambiar cliente
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback d-block" id="cliente-feedback" aria-live="polite" style="display: none !important;">Seleccione un cliente</div>
                             </div>
                         </div>
 
-                        <div class="card-footer">
-                            <div class="row g-1">
-                                <div class="col-12 col-sm-auto">
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="fas fa-save"></i> Registrar Venta
-                                    </button>
+                        <!-- Totales -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Subtotal</span>
+                                    <span><span id="subtotal-venta">0.00</span> Bs.</span>
                                 </div>
-                                <div class="col-12 col-sm-auto">
-                                    <a href="<?= $URL; ?>views/ventas/index.php" class="btn btn-secondary w-100">
-                                        <i class="fas fa-times"></i> Cancelar
-                                    </a>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Descuento</span>
+                                    <span><span id="descuento-total">0.00</span> Bs.</span>
+                                </div>
+                                <hr class="my-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="h5 mb-0">Total</span>
+                                    <span class="h3 mb-0 text-primary"><span id="total-venta">0.00</span> Bs.</span>
                                 </div>
                             </div>
                         </div>
-                    </form>
+
+                        <!-- Acciones -->
+                        <div class="card">
+                            <div class="card-body">
+                                <button type="submit" class="btn btn-primary btn-lg btn-block">
+                                    <i class="fas fa-save"></i> Registrar Venta
+                                </button>
+                                <a href="<?= $URL; ?>views/ventas/index.php" class="btn btn-secondary btn-block">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Modal: buscar/agregar producto -->
+<div class="modal fade" id="modal-productos" tabindex="-1" role="dialog" aria-labelledby="modal-productos-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title" id="modal-productos-titulo">Agregar Producto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control mb-3" id="modal-buscar-producto" placeholder="Buscar por nombre o código..." autocomplete="off">
+                <div id="lista-productos-modal" class="list-group"></div>
+                <p id="sin-resultados-productos" class="text-muted text-center mt-3" style="display: none;">No se encontraron productos.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
-</section>
+</div>
+
+<!-- Modal: buscar/seleccionar cliente -->
+<div class="modal fade" id="modal-clientes" tabindex="-1" role="dialog" aria-labelledby="modal-clientes-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title" id="modal-clientes-titulo">Buscar Cliente</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control mb-3" id="modal-buscar-cliente" placeholder="Buscar por número de documento o nombre..." autocomplete="off">
+                <div id="lista-clientes-modal" class="list-group"></div>
+                <p id="sin-resultados-clientes" class="text-muted text-center mt-3" style="display: none;">No se encontraron clientes.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para nuevo método de pago mixto (fuera del form para no enviar inputs vacíos) -->
+<div id="template-metodo-pago" style="display: none;">
+    <div class="card metodo-pago-item mb-3">
+        <div class="card-header">
+            <h3 class="card-title metodo-pago-titulo">Método de pago</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label>Método de Pago <span class="text-danger">*</span></label>
+                <select class="form-control select2 select-metodo-pago" name="metodopago[]" required>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="QR">QR</option>
+                    <option value="Otros">Otros</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Monto <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Bs.</span>
+                    </div>
+                    <input type="number" class="form-control monto-pago" name="montopago[]" step="0.01" min="0" value="0.00" required>
+                    <div class="invalid-feedback">Ingrese un monto válido</div>
+                </div>
+            </div>
+            <div class="form-group div-pago-recibido">
+                <label>Pago Recibido</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Bs.</span>
+                    </div>
+                    <input type="number" class="form-control pago-recibido" name="pagorecibido[]" step="0.01" min="0" value="0.00">
+                    <div class="invalid-feedback">El pago recibido no cubre el monto</div>
+                </div>
+            </div>
+            <div class="form-group div-cambio" style="display: none;">
+                <label>Cambio:</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Bs.</span>
+                    </div>
+                    <input type="text" class="form-control cambio-pago" readonly>
+                    <input type="hidden" name="cambio[]" class="cambio-hidden" value="0.00">
+                </div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm btn-eliminar-pago" aria-label="Eliminar método de pago">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+        </div>
+    </div>
+</div>
 
 <?php
 include_once '../layouts/mensajes.php';
