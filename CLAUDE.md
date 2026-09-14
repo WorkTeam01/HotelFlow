@@ -222,6 +222,12 @@ Tras una pasada de endurecimiento de seguridad en todo el código, todo endpoint
 
 - **Cache-busting de assets de módulo (`views/layouts/header.php` + `footer.php`):** cada entrada de `$module_styles`/`$module_scripts` se sirve con `?v=<filemtime del archivo>` (fallback `$APP_VERSION`) para que el navegador no sirva CSS/JS viejo tras una edición. No añadir un `?v=` manual en las vistas ni versionar a mano — el layout lo hace por archivo.
 
+- **Ventas = POS con `pagoventa` como ledger y `venta.metodopago`/`pagorecibido`/`cambio` como cache derivado:** la tabla `pagoventa` (append-only, CHECK `metodopago IN ('Efectivo','QR','Otros','Mixto')`) es la fuente de verdad del cobro; las columnas de resumen de `venta` solo la reflejan y se recalculan **en la misma transacción** que inserta las líneas (`Venta::crear()`, `Venta::anular()` — que también marca `estado=0` en sus `pagoventa`). Igual que con `recepcion`/`pagos`, ninguna escritura a `metodopago`/`pagorecibido`/`cambio` fuera de ese flujo. Vocabulario de métodos = **Efectivo / QR / Otros** (más el derivado `'Mixto'`); no inventar tarjeta/transferencia.
+
+- **Helpers únicos de ventas (patrón `estadoRecepcion`/`estadoHabitacion`):** `VentaController::calcularTotales()`, `calcularInfoMetodoPago()` (`['texto','clase','es_mixto']`), `obtenerIconoMetodoPago()`, `esPagoMixto()`, `calcularDesgloseDetalles()`, `calcularResumenPagos()`. Ninguna vista de `ventas` vuelve a escribir un `switch` de badge/total ni imprime `tipo_estancia`/`metodopago` crudo. El listado adjunta `info_metodo_pago` en batch vía `Venta::getMetodosPagoPorVentas()` (sin N+1 por fila), no consultando pagos por venta individual.
+
+- **`idusuario` en ventas siempre de `$_SESSION['usuario_id']`:** el endpoint de creación (y `anular_venta.php`) no aceptan `idusuario` del cliente. El recibo `views/ventas/recibo.php` (página standalone imprimible TCPDF 80mm, permitida por la excepción de `<style>`) verifica `requireLogin()` + permiso `ventas` **+ propiedad** (admin OR `$venta['idusuario'] === $_SESSION['usuario_id']`) antes de generar el PDF y muestra el estado de la venta (incl. anulada con aviso).
+
 ## Notas Importantes
 
 - Toda la interfaz está en Español

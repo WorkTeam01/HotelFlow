@@ -5,6 +5,42 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [Sin publicar]
+
+Refactor del módulo Ventas al estándar POS (patrón FlowPOS adaptado): folio de cobro con pago único/mixto, creación y detalle en dos columnas con modales, recibo térmico PDF, listado con pago mixto y exports corregidos. Plan ejecutado en fases atómicas F0–F6 (el reporte por fechas se eliminó; lo cubren los exports de la DataTable).
+
+### Added
+
+- **Tabla `pagoventa` (ledger del cobro, append-only)** con CHECK `metodopago IN ('Efectivo','QR','Otros','Mixto')`; `venta.metodopago` pasa de `enum` a `varchar(20)` y `venta.observacion` (text). `metodopago`/`pagorecibido`/`cambio` de `venta` pasan a cache derivado recalculado en la misma transacción; backfill idempotente para ventas existentes (1 fila por venta, `WHERE NOT EXISTS`).
+- **`create.php` en dos columnas POS** (`col-lg-8` carrito con scroll + `col-lg-4` sidebar sticky): agregar producto y cliente por **modales** con búsqueda en vivo, pago **único o mixto** (tarjetas `metodo-pago-item` re-numerables), total pagado con "Falta por pagar / Sobrepago / Pago completo" (`aria-live`), empty-state de carrito, observaciones, `removeAttribute('id')` al clonar filas, `aria-invalid`/`aria-describedby` por fila, moneda `Bs.`, `$skip_datatables`.
+- **Helpers únicos** `calcularTotales()`, `calcularInfoMetodoPago()`, `obtenerIconoMetodoPago()`, `esPagoMixto()`, `calcularDesgloseDetalles()`, `calcularResumenPagos()` en `VentaController`; el listado adjunta `info_metodo_pago` en batch (`Venta::getMetodosPagoPorVentas()`, sin N+1 por fila).
+- **`views/ventas/recibo.php`**: ticket térmico TCPDF 80mm con doble pasada de altura (patrón `recepcion/recibo.php`) — detalle itemizado, bloque **PAGO** desglosado del ledger, total, moneda `Bs.`, "SON:" literal, QR, y estado visible (incl. anulada con aviso). Auth + permiso `ventas` + propiedad (admin OR dueño).
+- **`index.php`**: columna "Nro" eliminada, badge/tooltip de pago mixto (`badge-purple` + desglose), botón Imprimir (solo `estado==1`), `aria-label`/tooltips en acciones.
+- **`show.php` en dos columnas**: tarjeta **Métodos de Pago** con desglose por pago y "Total Pagado" si mixto, tabla con Subtotal/Descuento/Total en el tfoot, observaciones y aviso de anulación. Anulación unificada en `public/js/modules/ventas/anular-venta.js` (compartida con el listado, sin `accion=anular`).
+
+### Fixed
+
+- **Exports de la DataTable tras quitar la columna "Nro"**: índices de `columns`/`customize`/`format.body` desalineados y `replace('S/ ','')` muerto — exportaban filas con los totales corridos. El formato del cuerpo también exportaba el método de pago y el estado como texto visible (antes vacíos según la columna).
+- **Pago mixto que no creaba el primer método**: el guard que decidía si ya había `metodo-pago-item` contaba la plantilla oculta y dejaba la sección vacía sin error (el conteo pasa a escoparse al contenedor real).
+- **Tooltips del listado muertos al paginar/buscar**: DataTable recrea las filas en cada redraw; los `data-toggle="tooltip"` se re-vinculan en `drawCallback`.
+- **IDs de fila duplicados** al clonar en el carrito y moneda `$` → `Bs.` en confirmaciones y recibo.
+
+### Changed
+
+- `Venta::getById()` adjunta `pagos`; `crear()` inserta una fila de `pagoventa` por pago y recalcula el cache de `venta` en la misma transacción; `anular()` marca `estado=0` en sus `pagoventa`.
+- Endpoint de creación seguro: `idusuario` sale de `$_SESSION['usuario_id']`, nunca del formulario (hidden eliminado).
+- Columna "Nro" del listado eliminada (contador redundante frente al id de venta); el método del badge se resuelve con `esPagoMixto()` (métodos distintos > 1), no con el cache.
+- Sidebar Ventas: eliminado "Reporte de ventas" (los exports de la DataTable cubren el reporte por fechas).
+
+### Removed
+
+- `views/ventas/reporte.php`, `controllers/ventas/reporte_ventas.php` y su enlace del sidebar.
+- Métodos muertos: `VentaController::generarTicket()` (reemplazado por `recibo.php` vía `ver()`), `obtenerPorRangoFechas`/`obtenerPorEstado`/`obtenerPorCliente`, y `Venta::getPorRangoFechas`/`getPorEstado`/`getPorCliente`.
+
+### Migración
+
+En bases existentes, aplicar el DDL de la fase F0 (crear `pagoventa` con PK/FK/CHECK, `ALTER venta` para `varchar(20)` + `observacion`, y el backfill idempotente) — lenguaje exacto en el commit de F0.
+
 ## [1.3.2] - 2026-09-09
 
 Auditoría `impeccable` del frontend de Habitaciones: score 12/20 → 18/20. Unificación del vocabulario de estado, del flujo de cambio de estado y de la responsividad del listado; sin cambios de esquema.

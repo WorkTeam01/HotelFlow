@@ -4,7 +4,7 @@
 
 **Sistema integral para la administración de establecimientos hoteleros**
 
-[![Versión](https://img.shields.io/badge/Versión-1.3.2-blue?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/Versión-1.4.0-blue?style=flat-square)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.4+-003545?style=flat-square&logo=mariadb&logoColor=white)](https://mariadb.org)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-4-7952B3?style=flat-square&logo=bootstrap&logoColor=white)](https://getbootstrap.com)
@@ -61,7 +61,7 @@ Panel único con tabs Hoy / Mapa de habitaciones / Historial y KPIs del día.
 
 ### Ventas / Punto de venta
 
-Registro de ventas con catálogo de productos y control de stock.
+Registro de ventas en dos columnas con catálogo por modales, pago único o mixto, control de stock y recibo térmico PDF.
 
 ![Ventas](public/img/screenshots/ventas.png)
 
@@ -80,7 +80,7 @@ Exportación de reportes de ventas y estadísticas del negocio.
 | **Habitaciones** | Gestión por tipo, piso y estado. Sistema de tarifas y galería de imágenes                                                                                                                                                 |
 | **Recepción**    | Panel único con tabs Hoy / Mapa de habitaciones / Historial, KPIs del día, folio de huésped con cargos/pagos múltiples, check-in/out, cambio de habitación auditable, validación de solape, recibos y tarjeta de registro |
 | **Servicios**    | Baños, limpieza y almacenamiento de equipaje con seguimiento en tiempo real                                                                                                                                               |
-| **Comercial**    | Punto de venta, control de inventario, compras y reportes                                                                                                                                                                 |
+| **Comercial**    | Punto de venta con pago único/mixto y recibo térmico, control de inventario, compras y reportes exportables (PDF/Excel)                                                                                                   |
 | **Dashboard**    | Métricas en tiempo real, estadísticas por rol y exportación de reportes                                                                                                                                                   |
 | **Usuarios**     | Sistema de roles (Admin, Recepcionista, Limpieza) con permisos granulares                                                                                                                                                 |
 
@@ -204,10 +204,11 @@ HotelFlow/
 
 ### Sistema Comercial
 
-- Punto de venta con catálogo de productos
-- Control de stock automático
+- Punto de venta en dos columnas (carrito + sidebar de cliente/totales/acciones) con catálogo de productos y clientes por modales
+- Pago único o mixto (Efectivo / QR / Otros) con folio de cobro auditable y recibo térmico PDF
+- Control de stock automático (se revierte al anular)
 - Gestión de compras y proveedores
-- Reportes exportables (PDF, Excel)
+- Reportes exportables desde el listado (PDF, Excel, CSV, imprimir)
 
 ### Roles y Permisos
 

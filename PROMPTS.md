@@ -59,6 +59,9 @@ _______________
 - Proyecto single-theme (sin dark-mode): un fix de contraste lleva un solo valor validado >=4.5:1 sobre el fondo claro de AdminLTE, sin bloques prefers-color-scheme
 - Estado y etiqueta de tarifa de recepcion salen de helpers unicos de RecepcionController (estadoRecepcion, estadoDerivado, etiquetaTarifa); ninguna vista repite un switch de estado
 - Igual en habitaciones: HabitacionController::estadoHabitacion / estadosHabitacion / badgeEstadoOcupacion / badgeEstadoLimpieza; el cambio de estado es un flujo unico (cambiar-estado-habitaciones.js, enlace delegado a .cambiar-estado)
+- Ventas = ledger `pagoventa` (append-only) como fuente de verdad del cobro con `venta.metodopago/pagorecibido/cambio` como cache derivado recalculado en la misma transaccion; vocabulario de metodos = Efectivo / QR / Otros (mas 'Mixto'); idusuario siempre de $_SESSION['usuario_id'], nunca del cliente
+- Helpers unicos de ventas: VentaController::calcularTotales / calcularInfoMetodoPago / obtenerIconoMetodoPago / esPagoMixto / calcularDesgloseDetalles / calcularResumenPagos; el listado adjunta info_metodo_pago en batch (Venta::getMetodosPagoPorVentas), sin N+1
+- Recibo de venta: views/ventas/recibo.php (standalone imprimible TCPDF 80mm, excepcion de <style> embebido aceptada) muestra estado de la venta y exige permiso `ventas` + propiedad (admin OR dueño) ademas de requireLogin()
 - Assets de modulo con cache-busting automatico (?v=filemtime en header.php/footer.php); no versionar a mano ni poner ?v= en la vista
 - Resaltado de sidebar en subpaginas de una seccion: sidebarEnSeccion() (match por prefijo), no sidebarEsActivo() (match exacto)
 
@@ -275,5 +278,5 @@ Preparar el proyecto para publicacion open source:
 
 ---
 
-_Ultima actualizacion: 2026-08-30_
+_Ultima actualizacion: 2026-09-14_
 _Mantener sincronizado con CLAUDE.md cuando cambie arquitectura o flujo._
