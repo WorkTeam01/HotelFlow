@@ -35,6 +35,14 @@
     background-color: #fff5f5;
 }
 
+/* Badge del método de pago mixto en el listado: Bootstrap 4 no trae badge-purple,
+   se define con el violeta de AdminLTE (--purple) para que el badge se vea igual
+   que los demás (badge-success/info/secondary). */
+.badge-purple {
+    color: #fff;
+    background-color: #605ca8;
+}
+
 /* Tabla de productos de create.php: bajo 767.98px se convierte de tabla a lista de
    tarjetas apiladas (una por fila) en vez de forzar scroll horizontal de 6 columnas. */
 @media (max-width: 767.98px) {

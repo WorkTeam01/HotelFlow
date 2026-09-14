@@ -1,8 +1,15 @@
 $(document).ready(function () {
+    // Inicializar tooltips (se re-inicializan en cada redraw de la tabla)
+    $('[data-toggle="tooltip"]').tooltip();
+
     // Inicializar DataTable
     $("#tablaVentas").DataTable({
         "responsive": true,
         "autoWidth": false,
+        "drawCallback": function () {
+            // DataTable recrea las filas al paginar/buscar; re-vincular tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+        },
         buttons: [{
             extend: 'collection',
             text: 'Reportes',
@@ -11,7 +18,7 @@ $(document).ready(function () {
                 text: 'Copiar',
                 extend: 'copy',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 }
             }, {
                 extend: 'pdf',
@@ -19,7 +26,7 @@ $(document).ready(function () {
                 filename: 'ventas_sistema_' + new Date().toISOString().slice(0, 10),
                 pageSize: 'LETTER',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 },
                 customize: function (doc) {
                     // Estilo básico
@@ -65,7 +72,6 @@ $(document).ready(function () {
                     // Formatear columnas numéricas
                     doc.content[3].table.body.forEach(function (row) {
                         if (row[4]) { // Columna de Total
-                            row[4].text = row[4].text.replace('S/ ', '');
                             row[4].alignment = 'right';
                         }
                     });
@@ -99,14 +105,11 @@ $(document).ready(function () {
                 messageTop: 'Registro de ventas del sistema',
                 messageBottom: 'Documento generado el ' + new Date().toLocaleDateString('es-BO'),
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7],
+                    columns: [0, 1, 2, 3, 4, 5, 6],
                     format: {
                         body: function (data, row, column, node) {
-                            if (column === 7) { // Columna de estado
-                                return $(node).find('span').text();
-                            }
-                            if (column === 4) { // Columna de total
-                                return data.replace('S/ ', '');
+                            if (column === 5 || column === 6) { // Método Pago / Estado: solo texto visible
+                                return $(node).find('span').text().trim();
                             }
                             return data;
                         }
@@ -116,7 +119,7 @@ $(document).ready(function () {
                 extend: 'csv',
                 text: 'CSV',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 }
             }, {
                 extend: 'print',
@@ -124,11 +127,11 @@ $(document).ready(function () {
                 title: 'Ventas del Sistema' + ' - ' + APP_NAME,
                 messageTop: 'Reporte generado el ' + new Date().toLocaleDateString('es-BO'),
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7],
+                    columns: [0, 1, 2, 3, 4, 5, 6],
                     format: {
                         body: function (data, row, column, node) {
-                            if (column === 7) { // Columna de estado
-                                return $(node).find('span').text();
+                            if (column === 5 || column === 6) { // Método Pago / Estado: solo texto visible
+                                return $(node).find('span').text().trim();
                             }
                             return data;
                         }
@@ -178,28 +181,38 @@ $(document).ready(function () {
     }).buttons().container().appendTo('#tablaVentas_wrapper .col-md-6:eq(0)');
 });
 
-document.addEventListener('DOMContentLoaded', function () {
-    const botonesAnular = document.querySelectorAll('.btn-anular-venta');
+document.addEventListener('click', function (event) {
+    // El recibo de una venta anulada queda deshabilitado (aria-disabled): no navegar.
+    const enlaceImpresion = event.target.closest('a.disabled[aria-disabled="true"]');
+    if (enlaceImpresion) {
+        event.preventDefault();
+        return;
+    }
 
-    botonesAnular.forEach(boton => {
-        boton.addEventListener('click', function () {
-            const ventaId = this.dataset.id;
-            const tituloVenta = this.dataset.titulo;
+    // Confirmación de anulación: delegado para sobrevivir a los redraws de DataTable.
+    const botonAnular = event.target.closest('.btn-anular-venta');
+    if (!botonAnular) {
+        return;
+    }
 
-            Swal.fire({
-                title: `¿Anular venta ${tituloVenta}?`,
-                text: 'La venta será anulada y el stock de productos será revertido.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, anular',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = `${BASE_URL}controllers/ventas/anular_venta.php?id=${ventaId}&csrf_token=${CSRF_TOKEN}`;
-                }
-            });
-        });
+    const ventaId = botonAnular.dataset.id;
+    const tituloVenta = botonAnular.dataset.titulo;
+
+    // Ocultar cualquier tooltip activo antes del diálogo
+    $('[data-toggle="tooltip"]').tooltip('hide');
+
+    Swal.fire({
+        title: `¿Anular venta ${tituloVenta}?`,
+        text: 'La venta será anulada y el stock de productos será revertido.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, anular',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `${BASE_URL}controllers/ventas/anular_venta.php?id=${ventaId}&csrf_token=${CSRF_TOKEN}`;
+        }
     });
 });

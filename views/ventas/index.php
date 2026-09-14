@@ -30,7 +30,7 @@ $estadisticas = $controller->getEstadisticas();
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-sm-6">
                 <h1>Gestión de Ventas</h1>
             </div>
@@ -107,86 +107,78 @@ $estadisticas = $controller->getEstadisticas();
                     </div>
                     <!-- /.card-header -->
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table id="tablaVentas" class="table table-sm table-bordered table-hover table-striped">
-                                <thead>
+                        <table id="tablaVentas" class="table table-sm table-bordered table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Usuario</th>
+                                    <th>Total</th>
+                                    <th>Método Pago</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                foreach ($ventas as $venta) :
+                                    $infoMetodo = $venta['info_metodo_pago'] ?? ['texto' => 'Efectivo', 'clase' => 'badge-success', 'tooltip' => '', 'es_mixto' => false];
+                                    $metodoTooltip = $infoMetodo['tooltip'] ?? '';
+                                    $codigoVenta = 'VENT-' . str_pad($venta['idventa'], 6, '0', STR_PAD_LEFT);
+                                    $esActiva = (int)$venta['estado'] === 1;
+                                    $claseEstado = $esActiva ? 'badge-success' : 'badge-danger';
+                                    $textoEstado = $esActiva ? 'Activa' : 'Anulada';
+                                ?>
                                     <tr>
-                                        <th>Nro</th>
-                                        <th>Código</th>
-                                        <th>Fecha</th>
-                                        <th>Cliente</th>
-                                        <th>Usuario</th>
-                                        <th>Total</th>
-                                        <th>Método Pago</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
+                                        <td><?= $codigoVenta; ?></td>
+                                        <td><?= date('d/m/Y', strtotime($venta['fechaventa'])); ?></td>
+                                        <td><?= htmlspecialchars($venta['cliente_nombre'] ?? 'Consumidor Final'); ?></td>
+                                        <td><?= htmlspecialchars($venta['usuario_nombre'] ?? 'N/A'); ?></td>
+                                        <td class="text-right"><?= number_format($venta['totalventa'], 2); ?></td>
+                                        <td class="text-center">
+                                            <span class="badge <?= htmlspecialchars($infoMetodo['clase']); ?>"
+                                                <?php if (!empty($metodoTooltip)) : ?>
+                                                data-toggle="tooltip" data-html="true" title="<?= htmlspecialchars($metodoTooltip, ENT_QUOTES); ?>"
+                                                <?php endif; ?>>
+                                                <?= htmlspecialchars($infoMetodo['texto']); ?>
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge <?= $claseEstado; ?>"><?= $textoEstado; ?></span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group">
+                                                <a href="<?= $URL; ?>views/ventas/show.php?id=<?= (int)$venta['idventa']; ?>"
+                                                    class="btn btn-info btn-sm"
+                                                    title="Ver detalle" data-toggle="tooltip"
+                                                    aria-label="Ver detalle de <?= $codigoVenta; ?>">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="<?= $URL; ?>views/ventas/recibo.php?id=<?= (int)$venta['idventa']; ?>"
+                                                    class="btn btn-secondary btn-sm<?= $esActiva ? '' : ' disabled'; ?>"
+                                                    <?= $esActiva ? '' : 'disabled tabindex="-1" aria-disabled="true"'; ?>
+                                                    title="<?= $esActiva ? 'Imprimir recibo' : 'Recibo no disponible (venta anulada)'; ?>"
+                                                    data-toggle="tooltip" target="_blank" rel="noopener"
+                                                    aria-label="Imprimir recibo de <?= $codigoVenta; ?>">
+                                                    <i class="fas fa-print"></i>
+                                                </a>
+
+                                                <?php if ($esActiva && $esAdmin) : ?>
+                                                    <button type="button" class="btn btn-danger btn-sm btn-anular-venta"
+                                                        data-id="<?= (int)$venta['idventa']; ?>"
+                                                        data-titulo="<?= $codigoVenta; ?>"
+                                                        title="Anular venta" data-toggle="tooltip"
+                                                        aria-label="Anular <?= $codigoVenta; ?>">
+                                                        <i class="fas fa-ban"></i>
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                    $contador = 1;
-                                    foreach ($ventas as $venta) :
-                                        $metodo_pago = $venta['metodopago'];
-                                        $clase_badge = '';
-                                        $texto_metodo = '';
-
-                                        switch ($metodo_pago) {
-                                            case 'Efectivo':
-                                                $clase_badge = 'badge-success';
-                                                $texto_metodo = 'Efectivo';
-                                                break;
-                                            case 'QR':
-                                                $clase_badge = 'badge-info';
-                                                $texto_metodo = 'QR';
-                                                break;
-                                            case 'Otros':
-                                                $clase_badge = 'badge-secondary';
-                                                $texto_metodo = 'Otro';
-                                                break;
-                                            default:
-                                                $clase_badge = 'badge-secondary';
-                                                $texto_metodo = htmlspecialchars($metodo_pago);
-                                                break;
-                                        }
-
-                                        // Estado de la venta
-                                        $estado = $venta['estado'];
-                                        $clase_estado = $estado ? 'badge-success' : 'badge-danger';
-                                        $texto_estado = $estado ? 'Activa' : 'Anulada';
-                                    ?>
-                                        <tr>
-                                            <td class="text-center"><?= $contador++; ?></td>
-                                            <td>VENT-<?= str_pad($venta['idventa'], 6, '0', STR_PAD_LEFT); ?></td>
-                                            <td><?= date('d/m/Y', strtotime($venta['fechaventa'])); ?></td>
-                                            <td><?= htmlspecialchars($venta['cliente_nombre'] ?? 'Consumidor Final'); ?></td>
-                                            <td><?= htmlspecialchars($venta['usuario_nombre'] ?? 'N/A'); ?></td>
-                                            <td class="text-right"><?= number_format($venta['totalventa'], 2); ?></td>
-                                            <td class="text-center">
-                                                <span class="badge <?= $clase_badge; ?>"><?= $texto_metodo; ?></span>
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="badge <?= $clase_estado; ?>"><?= $texto_estado; ?></span>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="btn-group">
-                                                    <a href="<?= $URL; ?>views/ventas/show.php?id=<?= $venta['idventa']; ?>" class="btn btn-info btn-sm">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-
-                                                    <?php if ($venta['estado'] == 1 && $esAdmin) : ?>
-                                                        <button type="button" class="btn btn-danger btn-sm btn-anular-venta"
-                                                            data-id="<?= $venta['idventa']; ?>"
-                                                            data-titulo="VENT-<?= str_pad($venta['idventa'], 6, '0', STR_PAD_LEFT); ?>">
-                                                            <i class="fas fa-ban"></i>
-                                                        </button>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
                     <!-- /.card-body -->
                 </div>
@@ -204,4 +196,3 @@ $estadisticas = $controller->getEstadisticas();
 include_once '../layouts/mensajes.php';
 include_once '../layouts/footer.php';
 ?>
-
