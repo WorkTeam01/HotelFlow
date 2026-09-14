@@ -7,7 +7,7 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin pr
 
 ## [Sin publicar]
 
-Refactor del módulo Ventas al estándar POS (patrón FlowPOS adaptado): folio de cobro con pago único/mixto, creación y detalle en dos columnas con modales, recibo térmico PDF, listado con pago mixto y exports corregidos. Plan ejecutado en fases atómicas F0–F6 (el reporte por fechas se eliminó; lo cubren los exports de la DataTable).
+Refactor del módulo Ventas al estándar POS (patrón FlowPOS adaptado): folio de cobro con pago único/mixto, creación y detalle en dos columnas con modales, recibo térmico PDF, listado con pago mixto y exports corregidos. El reporte por fechas se eliminó — lo cubren los exports de la DataTable.
 
 ### Added
 
@@ -39,7 +39,7 @@ Refactor del módulo Ventas al estándar POS (patrón FlowPOS adaptado): folio d
 
 ### Migración
 
-En bases existentes, aplicar el DDL de la fase F0 (crear `pagoventa` con PK/FK/CHECK, `ALTER venta` para `varchar(20)` + `observacion`, y el backfill idempotente) — lenguaje exacto en el commit de F0.
+En bases existentes, aplicar el DDL de creación del ledger (crear `pagoventa` con PK/FK/CHECK, `ALTER venta` para `varchar(20)` + `observacion`, y el backfill idempotente) — lenguaje exacto en el commit `6a3186d`.
 
 ## [1.3.2] - 2026-09-09
 
