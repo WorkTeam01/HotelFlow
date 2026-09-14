@@ -29,6 +29,12 @@ class Venta
     private $tablaDetalle = 'detalleventa';
 
     /**
+     * Tabla de pagos de venta (ledger append-only)
+     * @var string
+     */
+    private $tablaPago = 'pagoventa';
+
+    /**
      * Último error ocurrido
      * @var string
      */
@@ -132,7 +138,16 @@ class Venta
             $stmtDetalle->execute();
             $detalles = $stmtDetalle->fetchAll(PDO::FETCH_ASSOC);
 
+            // Obtener métodos de pago de la venta
+            $queryPagos = "SELECT * FROM {$this->tablaPago}
+                           WHERE idventa = :id ORDER BY idpagoventa ASC";
+            $stmtPagos = $this->conexion->prepare($queryPagos);
+            $stmtPagos->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmtPagos->execute();
+            $pagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
+
             $venta['detalles'] = $detalles;
+            $venta['pagos'] = $pagos;
 
             return $venta;
         } catch (PDOException $e) {
@@ -143,9 +158,9 @@ class Venta
     }
 
     /**
-     * Crea una nueva venta con sus detalles
+     * Crea una nueva venta con sus detalles y métodos de pago
      * 
-     * @param array $datos Datos de la venta y sus detalles
+     * @param array $datos Datos de la venta, sus detalles y métodos de pago
      * @return int|bool ID de la nueva venta o false en caso de error
      */
     public function crear($datos)
@@ -155,9 +170,9 @@ class Venta
 
             // Insertar la cabecera de la venta
             $query = "INSERT INTO {$this->tabla} 
-                     (idcliente, idusuario, totalventa, fechaventa, metodopago, pagorecibido, cambio, estado) 
+                     (idcliente, idusuario, totalventa, fechaventa, metodopago, pagorecibido, cambio, observacion, estado) 
                      VALUES 
-                     (:idcliente, :idusuario, :totalventa, :fechaventa, :metodopago, :pagorecibido, :cambio, :estado)";
+                     (:idcliente, :idusuario, :totalventa, :fechaventa, :metodopago, :pagorecibido, :cambio, :observacion, :estado)";
 
             $stmt = $this->conexion->prepare($query);
 
@@ -168,6 +183,7 @@ class Venta
             $stmt->bindParam(':metodopago', $datos['metodopago'], PDO::PARAM_STR);
             $stmt->bindParam(':pagorecibido', $datos['pagorecibido'], PDO::PARAM_STR);
             $stmt->bindParam(':cambio', $datos['cambio'], PDO::PARAM_STR);
+            $this->bindOptionalParam($stmt, ':observacion', $datos['observacion'] ?? null, PDO::PARAM_STR);
             $stmt->bindParam(':estado', $datos['estado'], PDO::PARAM_STR);
 
             if (!$stmt->execute()) {
@@ -215,18 +231,83 @@ class Venta
                 $this->actualizarStockProducto($detalle['idproducto'], -$detalle['cantidad']);
             }
 
-            // Recalcular y persistir el total real de la venta a partir de los precios de la BD,
-            // no del total enviado por el cliente. El cambio también se recalcula a partir del
-            // pago recibido y el total real, no del cambio enviado por el cliente.
-            $pagoRecibido = (float)$datos['pagorecibido'];
-            if ($pagoRecibido < $totalCalculado) {
-                throw new PDOException("El pago recibido no cubre el total de la venta");
-            }
-            $cambioCalculado = $pagoRecibido - $totalCalculado;
+            // Normalizar la lista de pagos. Si no llega pagos[] (formulario actual de pago único),
+            // se deriva un solo pago desde los campos legacy metodopago/pagorecibido/cambio.
+            $pagos = isset($datos['pagos']) && is_array($datos['pagos']) && count($datos['pagos']) > 0
+                ? $datos['pagos']
+                : [[
+                    'metodopago' => $datos['metodopago'],
+                    'monto' => $totalCalculado,
+                    'pagorecibido' => $datos['pagorecibido'],
+                    'cambio' => $datos['cambio']
+                ]];
 
-            $stmtTotal = $this->conexion->prepare("UPDATE {$this->tabla} SET totalventa = :total, cambio = :cambio WHERE idventa = :id");
+            // Recalcular el total real de la venta a partir de los precios de la BD.
+            // Validar que la suma de los montos de pago cubra exactamente ese total.
+            $pagosValidados = [];
+            $sumaMontos = 0;
+            foreach ($pagos as $pago) {
+                $metodo = trim((string)($pago['metodopago'] ?? 'Efectivo'));
+                $monto = round((float)($pago['monto'] ?? 0), 2);
+                $recibido = round((float)($pago['pagorecibido'] ?? 0), 2);
+
+                if ($monto <= 0) {
+                    throw new PDOException("Todos los pagos deben tener un monto mayor que cero");
+                }
+                $sumaMontos += $monto;
+
+                // En efectivo, el pago recibido debe cubrir el monto de ese pago y el cambio se
+                // recalcula desde la BD (no confiar en el cambio enviado por el cliente).
+                if ($metodo === 'Efectivo') {
+                    if ($recibido < $monto) {
+                        throw new PDOException("El pago recibido en efectivo no cubre el monto");
+                    }
+                    $cambio = round($recibido - $monto, 2);
+                } else {
+                    $cambio = 0;
+                }
+
+                $pagosValidados[] = [
+                    'metodopago' => $metodo,
+                    'monto' => $monto,
+                    'pagorecibido' => $metodo === 'Efectivo' ? $recibido : $monto,
+                    'cambio' => $cambio
+                ];
+            }
+
+            if (abs($sumaMontos - $totalCalculado) > 0.01) {
+                throw new PDOException("El total de los pagos no coincide con el total de la venta");
+            }
+
+            // Registrar una línea de pagoventa por cada método de pago (ledger append-only)
+            foreach ($pagosValidados as $pago) {
+                $queryPago = "INSERT INTO {$this->tablaPago}
+                             (idventa, metodopago, monto, pagorecibido, cambio, estado)
+                             VALUES
+                             (:idventa, :metodopago, :monto, :pagorecibido, :cambio, 1)";
+                $stmtPago = $this->conexion->prepare($queryPago);
+                $stmtPago->bindParam(':idventa', $idVenta, PDO::PARAM_INT);
+                $stmtPago->bindParam(':metodopago', $pago['metodopago'], PDO::PARAM_STR);
+                $stmtPago->bindParam(':monto', $pago['monto'], PDO::PARAM_STR);
+                $stmtPago->bindParam(':pagorecibido', $pago['pagorecibido'], PDO::PARAM_STR);
+                $stmtPago->bindParam(':cambio', $pago['cambio'], PDO::PARAM_STR);
+
+                if (!$stmtPago->execute()) {
+                    throw new PDOException("Error al registrar el método de pago");
+                }
+            }
+
+            // Cache derivado: medio único o Mixto, y total recibido/cambio sumado de los pagos.
+            $metodosDistintos = array_unique(array_column($pagosValidados, 'metodopago'));
+            $metodoCache = count($metodosDistintos) > 1 ? 'Mixto' : $metodosDistintos[0];
+            $recibidoCache = round(array_sum(array_column($pagosValidados, 'pagorecibido')), 2);
+            $cambioCache = round(array_sum(array_column($pagosValidados, 'cambio')), 2);
+
+            $stmtTotal = $this->conexion->prepare("UPDATE {$this->tabla} SET totalventa = :total, metodopago = :metodo, pagorecibido = :recibido, cambio = :cambio WHERE idventa = :id");
             $stmtTotal->bindParam(':total', $totalCalculado, PDO::PARAM_STR);
-            $stmtTotal->bindParam(':cambio', $cambioCalculado, PDO::PARAM_STR);
+            $stmtTotal->bindParam(':metodo', $metodoCache, PDO::PARAM_STR);
+            $stmtTotal->bindParam(':recibido', $recibidoCache, PDO::PARAM_STR);
+            $stmtTotal->bindParam(':cambio', $cambioCache, PDO::PARAM_STR);
             $stmtTotal->bindParam(':id', $idVenta, PDO::PARAM_INT);
             $stmtTotal->execute();
 
@@ -289,6 +370,14 @@ class Venta
             // Revertir el stock de cada producto
             foreach ($venta['detalles'] as $detalle) {
                 $this->actualizarStockProducto($detalle['idproducto'], $detalle['cantidad']);
+            }
+
+            // Marcar como anulados los pagos de la venta (ledger append-only: no se borran, se desactivan)
+            $queryPagos = "UPDATE {$this->tablaPago} SET estado = 0, fechaactualizacion = NOW() WHERE idventa = :id";
+            $stmtPagos = $this->conexion->prepare($queryPagos);
+            $stmtPagos->bindParam(':id', $id, PDO::PARAM_INT);
+            if (!$stmtPagos->execute()) {
+                throw new PDOException("Error al anular los pagos de la venta");
             }
 
             // Actualizar el estado de la venta
@@ -434,6 +523,39 @@ class Venta
             $stmt->bindParam(':idCliente', $idCliente, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene los métodos de pago de varias ventas en una sola consulta,
+     * agrupados por idventa (evita N+1 al listar ventas)
+     *
+     * @param array $idsVenta IDs de venta
+     * @return array Mapa idventa => lista de pagos
+     */
+    public function getMetodosPagoPorVentas(array $idsVenta)
+    {
+        if (empty($idsVenta)) {
+            return [];
+        }
+
+        try {
+            $placeholders = implode(',', array_fill(0, count($idsVenta), '?'));
+            $query = "SELECT * FROM {$this->tablaPago}
+                      WHERE idventa IN ($placeholders)
+                      ORDER BY idventa, idpagoventa ASC";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->execute(array_values($idsVenta));
+
+            $pagosPorVenta = [];
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $pago) {
+                $pagosPorVenta[$pago['idventa']][] = $pago;
+            }
+            return $pagosPorVenta;
         } catch (PDOException $e) {
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';

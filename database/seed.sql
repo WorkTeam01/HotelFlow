@@ -172,6 +172,9 @@ INSERT INTO `detalleventa` (`idventa`, `idproducto`, `cantidad`, `precioventa`) 
 (1, 1, 1, 5.00),
 (1, 3, 1, 8.00);
 
+INSERT INTO `pagoventa` (`idventa`, `metodopago`, `monto`, `pagorecibido`, `cambio`, `estado`) VALUES
+(1, 'Efectivo', 13.00, 15.00, 2.00, 1);
+
 -- Compra de reposición de stock del día
 INSERT INTO `compra` (`idusuario`, `totalcompra`, `fechacompra`, `estado`) VALUES
 (1, 40.00, CURDATE(), 'completada');

@@ -207,6 +207,24 @@ CREATE TABLE `pagos` (
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `pagoventa`
+--
+
+CREATE TABLE `pagoventa` (
+  `idpagoventa` int(11) NOT NULL,
+  `idventa` int(11) NOT NULL,
+  `metodopago` varchar(20) NOT NULL,
+  `monto` decimal(11,2) NOT NULL,
+  `pagorecibido` decimal(11,2) NOT NULL DEFAULT 0.00,
+  `cambio` decimal(11,2) NOT NULL DEFAULT 0.00,
+  `fechacreacion` datetime NOT NULL DEFAULT current_timestamp(),
+  `fechaactualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  `estado` tinyint(1) NOT NULL DEFAULT 1 COMMENT '1: Activo, 0: Anulado'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `permiso`
 --
 
@@ -451,9 +469,10 @@ CREATE TABLE `venta` (
   `idusuario` int(11) DEFAULT NULL,
   `totalventa` decimal(11,2) NOT NULL,
   `fechaventa` date NOT NULL,
-  `metodopago` enum('Efectivo','QR','Otros') NOT NULL,
+  `metodopago` varchar(20) NOT NULL,
   `pagorecibido` decimal(10,2) NOT NULL,
   `cambio` decimal(10,2) NOT NULL,
+  `observacion` text DEFAULT NULL,
   `estado` tinyint(1) NOT NULL DEFAULT 1,
   `fechacreacion` datetime DEFAULT current_timestamp(),
   `fechaactualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp(),
@@ -544,6 +563,13 @@ ALTER TABLE `pagos`
   ADD KEY `idx_pagos_recepcion_fecha` (`idrecepcion`,`fechacreacion`),
   ADD KEY `idusuario` (`idusuario`),
   ADD KEY `id_pago_reversado` (`id_pago_reversado`);
+
+--
+-- Indices de la tabla `pagoventa`
+--
+ALTER TABLE `pagoventa`
+  ADD PRIMARY KEY (`idpagoventa`),
+  ADD KEY `idventa` (`idventa`);
 
 --
 -- Indices de la tabla `permiso`
@@ -711,6 +737,12 @@ ALTER TABLE `pagos`
   MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `pagoventa`
+--
+ALTER TABLE `pagoventa`
+  MODIFY `idpagoventa` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `permiso`
 --
 ALTER TABLE `permiso`
@@ -842,6 +874,13 @@ ALTER TABLE `pagos`
   ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`idequipaje`) REFERENCES `almacenamiento_equipaje` (`idalmacen`),
   ADD CONSTRAINT `pagos_ibfk_3` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuario`),
   ADD CONSTRAINT `pagos_ibfk_4` FOREIGN KEY (`id_pago_reversado`) REFERENCES `pagos` (`id_pago`);
+
+--
+-- Filtros para la tabla `pagoventa`
+--
+ALTER TABLE `pagoventa`
+  ADD CONSTRAINT `pagoventa_ibfk_1` FOREIGN KEY (`idventa`) REFERENCES `venta` (`idventa`),
+  ADD CONSTRAINT `chk_pagoventa_metodo` CHECK (`metodopago` IN ('Efectivo','QR','Otros','Mixto'));
 
 --
 -- Filtros para la tabla `permiso_usuario`
