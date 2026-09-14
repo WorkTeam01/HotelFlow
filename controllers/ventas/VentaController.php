@@ -443,43 +443,4 @@ class VentaController
     {
         return $this->modelo->getEstadisticas();
     }
-
-    /**
-     * Genera un ticket de venta (para impresión)
-     * 
-     * @param int $idVenta ID de la venta
-     * @return array Datos para el ticket
-     */
-    public function generarTicket($idVenta)
-    {
-        $venta = $this->modelo->getById($idVenta);
-
-        if (!$venta) {
-            return ['success' => false, 'message' => 'Venta no encontrada'];
-        }
-
-        // Formatear datos para el ticket
-        $ticket = [
-            'id' => $venta['idventa'],
-            'fecha' => date('d/m/Y H:i', strtotime($venta['fechacreacion'])),
-            'cliente' => $venta['cliente_nombre'] ?? 'Consumidor Final',
-            'usuario' => $venta['usuario_nombre'],
-            'metodo_pago' => $venta['metodopago'],
-            'productos' => [],
-            'total' => $venta['totalventa'],
-            'pago' => $venta['pagorecibido'],
-            'cambio' => $venta['cambio']
-        ];
-
-        foreach ($venta['detalles'] as $detalle) {
-            $ticket['productos'][] = [
-                'nombre' => $detalle['producto_nombre'],
-                'cantidad' => $detalle['cantidad'],
-                'precio' => $detalle['precioventa'],
-                'subtotal' => $detalle['cantidad'] * $detalle['precioventa']
-            ];
-        }
-
-        return ['success' => true, 'data' => $ticket];
-    }
 }
