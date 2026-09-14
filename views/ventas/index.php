@@ -18,7 +18,7 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
 // Incluir el encabezado DESPUÉS de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
-$module_scripts = ['ventas/index-ventas'];
+$module_scripts = ['ventas/index-ventas', 'ventas/anular-venta'];
 include_once '../layouts/header.php';
 
 $controller = new VentaController();

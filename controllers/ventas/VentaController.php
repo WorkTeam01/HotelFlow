@@ -342,34 +342,31 @@ class VentaController
     }
 
     /**
-     * Muestra los detalles de una venta
-     * 
+     * Muestra los detalles de una venta con toda la información derivada
+     * que las vistas necesitan (totales, pagos, desglose, info de badge).
+     * La vista no recalcula nada — todo sale de estos helpers.
+     *
      * @param int $id ID de la venta
-     * @return array|null Datos de la venta o redirige en caso de error
+     * @return array|null Datos de la venta o null si no existe (la vista redirige)
      */
     public function ver($id = null)
     {
-        // Verificar si se proporcionó un ID
         if (!$id) {
-            global $URL;
-            $_SESSION['mensaje'] = 'ID de venta no válido';
-            $_SESSION['icono'] = 'error';
-            header('Location: ' . $URL . 'views/ventas');
-            exit;
+            return null;
         }
 
-        // Obtener datos de la venta con detalles
         $venta = $this->modelo->getById($id);
 
         if (!$venta) {
-            global $URL;
-            $_SESSION['mensaje'] = 'Venta no encontrada';
-            $_SESSION['icono'] = 'error';
-            header('Location: ' . $URL . 'views/ventas');
-            exit;
+            return null;
         }
 
-        // Devolver los datos de la venta
+        // Helpers F1: la vista consume estos arrays sin calcular nada
+        $venta['info_metodo_pago'] = $this->calcularInfoMetodoPago($venta['pagos']);
+        $venta['totales'] = $this->calcularTotales($venta);
+        $venta['resumen_pagos'] = $this->calcularResumenPagos($venta['pagos']);
+        $venta['desglose_detalles'] = $this->calcularDesgloseDetalles($venta['detalles']);
+
         return $venta;
     }
 

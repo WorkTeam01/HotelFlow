@@ -181,38 +181,11 @@ $(document).ready(function () {
     }).buttons().container().appendTo('#tablaVentas_wrapper .col-md-6:eq(0)');
 });
 
+// El recibo de una venta anulada queda deshabilitado (aria-disabled): no navegar.
+// La anulación de ventas vive en anular-venta.js (compartido con show.php).
 document.addEventListener('click', function (event) {
-    // El recibo de una venta anulada queda deshabilitado (aria-disabled): no navegar.
-    const enlaceImpresion = event.target.closest('a.disabled[aria-disabled="true"]');
+    var enlaceImpresion = event.target.closest('a.disabled[aria-disabled="true"]');
     if (enlaceImpresion) {
         event.preventDefault();
-        return;
     }
-
-    // Confirmación de anulación: delegado para sobrevivir a los redraws de DataTable.
-    const botonAnular = event.target.closest('.btn-anular-venta');
-    if (!botonAnular) {
-        return;
-    }
-
-    const ventaId = botonAnular.dataset.id;
-    const tituloVenta = botonAnular.dataset.titulo;
-
-    // Ocultar cualquier tooltip activo antes del diálogo
-    $('[data-toggle="tooltip"]').tooltip('hide');
-
-    Swal.fire({
-        title: `¿Anular venta ${tituloVenta}?`,
-        text: 'La venta será anulada y el stock de productos será revertido.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, anular',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = `${BASE_URL}controllers/ventas/anular_venta.php?id=${ventaId}&csrf_token=${CSRF_TOKEN}`;
-        }
-    });
 });
