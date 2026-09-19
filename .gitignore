@@ -30,5 +30,6 @@ bash.exe.stackdump
 .env
 .claude
 
-# Artefactos de pruebas con Playwright MCP
+# Artefactos de pruebas con Playwright
 .playwright-mcp/
+.playwright-cli/
