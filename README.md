@@ -4,7 +4,7 @@
 
 **Sistema integral para la administración de establecimientos hoteleros**
 
-[![Versión](https://img.shields.io/badge/Versión-1.4.0-blue?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/Versión-1.4.1-blue?style=flat-square)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.4+-003545?style=flat-square&logo=mariadb&logoColor=white)](https://mariadb.org)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-4-7952B3?style=flat-square&logo=bootstrap&logoColor=white)](https://getbootstrap.com)
@@ -220,9 +220,9 @@ HotelFlow/
 
 ## Base de Datos
 
-22 tablas con motor InnoDB y codificación UTF-8 (utf8mb4).
+24 tablas con motor InnoDB y codificación UTF-8 (utf8mb4).
 
-**Tablas principales:** `usuarios`, `habitaciones`, `tipo_habitacion`, `pisos`, `persona`, `recepcion`, `productos`, `categoria`, `venta`, `compra`, `servicio_bano`, `almacenamiento_equipaje`, `asignaciones_limpieza`, `tarifas`, `permiso`, `intentos_login`
+**Tablas principales:** `usuarios`, `habitaciones`, `tipo_habitacion`, `pisos`, `persona`, `recepcion`, `recepcion_movimientos`, `pagos`, `productos`, `categoria`, `venta`, `pagoventa`, `detalleventa`, `compra`, `detallecompra`, `servicio_bano`, `almacenamiento_equipaje`, `asignaciones_limpieza`, `tarifas`, `precio_equipaje`, `bano`, `permiso`, `permiso_usuario`, `intentos_login`
 
 ## Contribución
 

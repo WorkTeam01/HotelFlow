@@ -81,9 +81,9 @@ Cada módulo funcional sigue el mismo patrón:
 
 ## Base de Datos
 
-22 tablas usando InnoDB con codificación utf8mb4. Esquema en `database/db_hotel_flow.sql` (solo estructura y relaciones). Datos de ejemplo opcionales en `database/seed.sql`.
+24 tablas usando InnoDB con codificación utf8mb4. Esquema en `database/db_hotel_flow.sql` (solo estructura y relaciones). Datos de ejemplo opcionales en `database/seed.sql`.
 
-**Tablas principales:** usuarios, habitaciones, tipo_habitacion, pisos, persona, recepcion, productos, categoria, venta, detalleventa, compra, detallecompra, servicio_bano, almacenamiento_equipaje, asignaciones_limpieza, tarifas, permiso, permiso_usuario, intentos_login
+**Tablas principales:** usuarios, habitaciones, tipo_habitacion, pisos, persona, recepcion, recepcion_movimientos, pagos, productos, categoria, venta, pagoventa, detalleventa, compra, detallecompra, servicio_bano, almacenamiento_equipaje, asignaciones_limpieza, tarifas, precio_equipaje, bano, permiso, permiso_usuario, intentos_login
 
 ## Assets del Frontend
 
@@ -222,7 +222,7 @@ Tras una pasada de endurecimiento de seguridad en todo el código, todo endpoint
 
 - **Cache-busting de assets de módulo (`views/layouts/header.php` + `footer.php`):** cada entrada de `$module_styles`/`$module_scripts` se sirve con `?v=<filemtime del archivo>` (fallback `$APP_VERSION`) para que el navegador no sirva CSS/JS viejo tras una edición. No añadir un `?v=` manual en las vistas ni versionar a mano — el layout lo hace por archivo.
 
-- **Ventas = POS con `pagoventa` como ledger y `venta.metodopago`/`pagorecibido`/`cambio` como cache derivado:** la tabla `pagoventa` (append-only, CHECK `metodopago IN ('Efectivo','QR','Otros','Mixto')`) es la fuente de verdad del cobro; las columnas de resumen de `venta` solo la reflejan y se recalculan **en la misma transacción** que inserta las líneas (`Venta::crear()`, `Venta::anular()` — que también marca `estado=0` en sus `pagoventa`). Igual que con `recepcion`/`pagos`, ninguna escritura a `metodopago`/`pagorecibido`/`cambio` fuera de ese flujo. Vocabulario de métodos = **Efectivo / QR / Otros** (más el derivado `'Mixto'`); no inventar tarjeta/transferencia.
+- **Ventas = POS con `pagoventa` como ledger y `venta.metodopago`/`pagorecibido`/`cambio` como cache derivado:** la tabla `pagoventa` (append-only, CHECK `metodopago IN ('Efectivo','QR','Otros','Mixto')`) es la fuente de verdad del cobro; las columnas de resumen de `venta` solo la reflejan y se recalculan **en la misma transacción** que inserta las líneas (`Venta::crear()`, `Venta::anular()` — que también marca `estado=0` en sus `pagoventa`). Igual que con `recepcion`/`pagos`, ninguna escritura a `metodopago`/`pagorecibido`/`cambio` fuera de ese flujo. Vocabulario de métodos = **Efectivo / QR / Otros** (más el derivado `'Mixto'`); no inventar tarjeta/transferencia. `venta.idcliente` es nullable — ventas sin cliente se muestran como "Consumidor Final" en listado, detalle y recibo.
 
 - **Helpers únicos de ventas (patrón `estadoRecepcion`/`estadoHabitacion`):** `VentaController::calcularTotales()`, `calcularInfoMetodoPago()` (`['texto','clase','es_mixto']`), `obtenerIconoMetodoPago()`, `esPagoMixto()`, `calcularDesgloseDetalles()`, `calcularResumenPagos()`. Ninguna vista de `ventas` vuelve a escribir un `switch` de badge/total ni imprime `tipo_estancia`/`metodopago` crudo. El listado adjunta `info_metodo_pago` en batch vía `Venta::getMetodosPagoPorVentas()` (sin N+1 por fila), no consultando pagos por venta individual.
 

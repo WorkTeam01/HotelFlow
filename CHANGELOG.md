@@ -5,7 +5,7 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
-## [Sin publicar]
+## [1.4.1] - 2026-09-19
 
 Refactor del módulo Ventas al estándar POS (patrón FlowPOS adaptado): folio de cobro con pago único/mixto, creación y detalle en dos columnas con modales, recibo térmico PDF, listado con pago mixto y exports corregidos. El reporte por fechas se eliminó — lo cubren los exports de la DataTable.
 
@@ -15,6 +15,7 @@ Refactor del módulo Ventas al estándar POS (patrón FlowPOS adaptado): folio d
 - **`create.php` en dos columnas POS** (`col-lg-8` carrito con scroll + `col-lg-4` sidebar sticky): agregar producto y cliente por **modales** con búsqueda en vivo, pago **único o mixto** (tarjetas `metodo-pago-item` re-numerables), total pagado con "Falta por pagar / Sobrepago / Pago completo" (`aria-live`), empty-state de carrito, observaciones, `removeAttribute('id')` al clonar filas, `aria-invalid`/`aria-describedby` por fila, moneda `Bs.`, `$skip_datatables`.
 - **Helpers únicos** `calcularTotales()`, `calcularInfoMetodoPago()`, `obtenerIconoMetodoPago()`, `esPagoMixto()`, `calcularDesgloseDetalles()`, `calcularResumenPagos()` en `VentaController`; el listado adjunta `info_metodo_pago` en batch (`Venta::getMetodosPagoPorVentas()`, sin N+1 por fila).
 - **`views/ventas/recibo.php`**: ticket térmico TCPDF 80mm con doble pasada de altura (patrón `recepcion/recibo.php`) — detalle itemizado, bloque **PAGO** desglosado del ledger, total, moneda `Bs.`, "SON:" literal, QR, y estado visible (incl. anulada con aviso). Auth + permiso `ventas` + propiedad (admin OR dueño).
+- **Cliente opcional en ventas**: `venta.idcliente` ahora es nullable; ventas sin cliente se muestran como "Consumidor Final" en listado, detalle y recibo.
 - **`index.php`**: columna "Nro" eliminada, badge/tooltip de pago mixto (`badge-purple` + desglose), botón Imprimir (solo `estado==1`), `aria-label`/tooltips en acciones.
 - **`show.php` en dos columnas**: tarjeta **Métodos de Pago** con desglose por pago y "Total Pagado" si mixto, tabla con Subtotal/Descuento/Total en el tfoot, observaciones y aviso de anulación. Anulación unificada en `public/js/modules/ventas/anular-venta.js` (compartida con el listado, sin `accion=anular`).
 
@@ -24,6 +25,8 @@ Refactor del módulo Ventas al estándar POS (patrón FlowPOS adaptado): folio d
 - **Pago mixto que no creaba el primer método**: el guard que decidía si ya había `metodo-pago-item` contaba la plantilla oculta y dejaba la sección vacía sin error (el conteo pasa a escoparse al contenedor real).
 - **Tooltips del listado muertos al paginar/buscar**: DataTable recrea las filas en cada redraw; los `data-toggle="tooltip"` se re-vinculan en `drawCallback`.
 - **IDs de fila duplicados** al clonar en el carrito y moneda `$` → `Bs.` en confirmaciones y recibo.
+- **Auditoría accesibilidad del módulo Ventas**: score 16/20 → 19/20. Labels con `for` en todos los campos de pago, `aria-label` en inputs del carrito clonados, `role="status"` en badges de estado, label accesible para `idcliente`, tooltips del paginador DataTables inicializados correctamente.
+- **"Cliente Top" en el index crasheaba** cuando había ventas sin cliente (`htmlspecialchars(NULL)`); ahora muestra "Sin cliente".
 
 ### Changed
 
@@ -394,6 +397,7 @@ Primera versión pública de HotelFlow.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
 [1.2.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.4...1.2.0
+[1.4.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.4.0...1.4.1
 [1.1.4]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.3...1.1.4
 [1.1.3]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.2...1.1.3
 [1.1.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.1...1.1.2
