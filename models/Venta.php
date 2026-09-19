@@ -176,7 +176,7 @@ class Venta
 
             $stmt = $this->conexion->prepare($query);
 
-            $stmt->bindParam(':idcliente', $datos['idcliente'], PDO::PARAM_INT);
+            $this->bindOptionalParam($stmt, ':idcliente', $datos['idcliente'] ?? null, PDO::PARAM_INT);
             $stmt->bindParam(':idusuario', $datos['idusuario'], PDO::PARAM_INT);
             $stmt->bindParam(':totalventa', $datos['totalventa'], PDO::PARAM_STR);
             $stmt->bindParam(':fechaventa', $datos['fechaventa'], PDO::PARAM_STR);

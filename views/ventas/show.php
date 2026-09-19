@@ -118,7 +118,7 @@ include_once '../layouts/header.php';
                                 <li class="list-group-item">
                                     <b><i class="fas fa-toggle-on mr-2"></i>Estado</b>
                                     <span class="float-right">
-                                        <span class="badge <?= $esActiva ? 'badge-success' : 'badge-danger'; ?>">
+                                        <span class="badge <?= $esActiva ? 'badge-success' : 'badge-danger'; ?>" role="status">
                                             <?= $esActiva ? 'Activa' : 'Anulada'; ?>
                                         </span>
                                     </span>

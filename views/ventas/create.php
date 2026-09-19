@@ -31,7 +31,7 @@ $clientes = $personaController->index();
 
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-sm-6">
                 <h1>Registrar Nueva Venta</h1>
             </div>
@@ -89,7 +89,7 @@ $clientes = $personaController->index();
                                                 <input type="text" class="form-control form-control-sm text-muted codigo-producto border-0 px-0" readonly style="font-size: 0.75rem; height: auto;">
                                             </td>
                                             <td data-label="Cantidad">
-                                                <input type="number" class="form-control cantidad" name="cantidades[]" min="1" step="1" value="1" required>
+                                                <input type="number" class="form-control cantidad" name="cantidades[]" min="1" step="1" value="1" required aria-label="Cantidad">
                                                 <div class="invalid-feedback">Ingrese una cantidad válida</div>
                                                 <small class="text-muted stock-disponible">Disponible: 0</small>
                                             </td>
@@ -98,7 +98,7 @@ $clientes = $personaController->index();
                                                     <div class="input-group-prepend">
                                                         <span class="input-group-text">Bs.</span>
                                                     </div>
-                                                    <input type="number" class="form-control precio" name="precios[]" step="0.01" min="0.01" value="0.00" required>
+                                                    <input type="number" class="form-control precio" name="precios[]" step="0.01" min="0.01" value="0.00" required aria-label="Precio unitario">
                                                     <div class="invalid-feedback">Ingrese un precio válido</div>
                                                 </div>
                                             </td>
@@ -107,7 +107,7 @@ $clientes = $personaController->index();
                                                     <div class="input-group-prepend">
                                                         <span class="input-group-text">Bs.</span>
                                                     </div>
-                                                    <input type="number" class="form-control descuento" name="descuentos[]" step="0.01" min="0" value="0.00">
+                                                    <input type="number" class="form-control descuento" name="descuentos[]" step="0.01" min="0" value="0.00" aria-label="Descuento">
                                                 </div>
                                                 <small class="form-text text-muted">Total por línea</small>
                                             </td>
@@ -156,7 +156,7 @@ $clientes = $personaController->index();
                             <div id="seccion-pago-unico">
                                 <div class="row">
                                     <div class="form-group col-md-4">
-                                        <label>Método de Pago <span class="text-danger">*</span></label>
+                                        <label for="metodopago-unico">Método de Pago <span class="text-danger">*</span></label>
                                         <select class="form-control select2" id="metodopago-unico" name="metodopago_unico" required>
                                             <option value="Efectivo" selected>Efectivo</option>
                                             <option value="QR">QR</option>
@@ -164,7 +164,7 @@ $clientes = $personaController->index();
                                         </select>
                                     </div>
                                     <div class="form-group col-md-4">
-                                        <label>Monto <span class="text-danger">*</span></label>
+                                        <label for="monto-unico">Monto <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">Bs.</span>
@@ -173,7 +173,7 @@ $clientes = $personaController->index();
                                         </div>
                                     </div>
                                     <div class="form-group col-md-4" id="div-pago-recibido-unico">
-                                        <label>Pago Recibido</label>
+                                        <label for="pago-recibido-unico">Pago Recibido</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">Bs.</span>
@@ -184,7 +184,7 @@ $clientes = $personaController->index();
                                     </div>
                                 </div>
                                 <div class="form-group" id="div-cambio-unico" style="display: none;">
-                                    <label>Cambio:</label>
+                                    <label for="cambio-unico">Cambio:</label>
                                     <div class="input-group" style="max-width: 250px;">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text">Bs.</span>
@@ -246,7 +246,8 @@ $clientes = $personaController->index();
                                     </button>
                                 </div>
                                 <div id="info-cliente-seleccionado" style="display: none;">
-                                    <input type="hidden" id="idcliente" name="idcliente" required>
+                                    <label for="idcliente" class="sr-only">Cliente seleccionado</label>
+                                    <input type="hidden" id="idcliente" name="idcliente">
                                     <strong id="nombre-cliente"></strong>
                                     <div id="documento-cliente" class="text-muted small"></div>
                                     <button type="button" class="btn btn-outline-secondary btn-sm btn-block mt-2" id="btn-cambiar-cliente">
@@ -346,40 +347,40 @@ $clientes = $personaController->index();
         </div>
         <div class="card-body">
             <div class="form-group">
-                <label>Método de Pago <span class="text-danger">*</span></label>
-                <select class="form-control select2 select-metodo-pago" name="metodopago[]" required>
+                <label for="metodopago-mixto">Método de Pago <span class="text-danger">*</span></label>
+                <select class="form-control select2 select-metodo-pago" id="metodopago-mixto" name="metodopago[]" required>
                     <option value="Efectivo">Efectivo</option>
                     <option value="QR">QR</option>
                     <option value="Otros">Otros</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Monto <span class="text-danger">*</span></label>
+                <label for="monto-mixto">Monto <span class="text-danger">*</span></label>
                 <div class="input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text">Bs.</span>
                     </div>
-                    <input type="number" class="form-control monto-pago" name="montopago[]" step="0.01" min="0" value="0.00" required>
+                    <input type="number" class="form-control monto-pago" id="monto-mixto" name="montopago[]" step="0.01" min="0" value="0.00" required>
                     <div class="invalid-feedback">Ingrese un monto válido</div>
                 </div>
             </div>
             <div class="form-group div-pago-recibido">
-                <label>Pago Recibido</label>
+                <label for="pagorecibido-mixto">Pago Recibido</label>
                 <div class="input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text">Bs.</span>
                     </div>
-                    <input type="number" class="form-control pago-recibido" name="pagorecibido[]" step="0.01" min="0" value="0.00">
+                    <input type="number" class="form-control pago-recibido" id="pagorecibido-mixto" name="pagorecibido[]" step="0.01" min="0" value="0.00">
                     <div class="invalid-feedback">El pago recibido no cubre el monto</div>
                 </div>
             </div>
             <div class="form-group div-cambio" style="display: none;">
-                <label>Cambio:</label>
+                <label for="cambio-mixto">Cambio:</label>
                 <div class="input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text">Bs.</span>
                     </div>
-                    <input type="text" class="form-control cambio-pago" readonly>
+                    <input type="text" class="form-control cambio-pago" id="cambio-mixto" readonly>
                     <input type="hidden" name="cambio[]" class="cambio-hidden" value="0.00">
                 </div>
             </div>

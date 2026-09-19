@@ -245,7 +245,7 @@ class VentaController
     private function prepararDatosVenta($post_data)
     {
         $datos = [
-            'idcliente' => isset($post_data['idcliente']) ? (int)$post_data['idcliente'] : null,
+            'idcliente' => !empty($post_data['idcliente']) ? (int)$post_data['idcliente'] : null,
             'idusuario' => (int)($_SESSION['usuario_id'] ?? 0),
             'totalventa' => isset($post_data['totalventa']) ? (float)$post_data['totalventa'] : 0,
             'fechaventa' => isset($post_data['fechaventa']) ? trim($post_data['fechaventa']) : date('Y-m-d'),

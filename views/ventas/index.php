@@ -73,7 +73,7 @@ $estadisticas = $controller->getEstadisticas();
                     <div class="info-box-content">
                         <span class="info-box-text">Cliente Top</span>
                         <span class="info-box-number">
-                            <?= $estadisticas['cliente_mas_compro'] ? htmlspecialchars($estadisticas['cliente_mas_compro']['nombre_cliente']) : 'N/A'; ?>
+                            <?= htmlspecialchars($estadisticas['cliente_mas_compro']['nombre_cliente'] ?? 'Sin cliente'); ?>
                         </span>
                     </div>
                 </div>
@@ -145,7 +145,7 @@ $estadisticas = $controller->getEstadisticas();
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge <?= $claseEstado; ?>"><?= $textoEstado; ?></span>
+                                            <span class="badge <?= $claseEstado; ?>" role="status"><?= $textoEstado; ?></span>
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group">

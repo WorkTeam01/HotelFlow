@@ -263,22 +263,6 @@ document.addEventListener('DOMContentLoaded', function () {
     formVenta.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        // Verificar específicamente si se seleccionó un cliente
-        if (!document.getElementById('idcliente').value) {
-            Swal.fire({
-                title: 'Cliente requerido',
-                text: 'Por favor, seleccione un cliente antes de continuar',
-                icon: 'warning',
-                timer: 3000,
-                showConfirmButton: false,
-                position: 'top-end',
-                toast: true
-            });
-            document.getElementById('cliente-feedback').style.setProperty('display', 'block', 'important');
-            $('#modal-clientes').modal('show');
-            return false;
-        }
-
         // Verificar fecha de venta
         const fechaventa = document.getElementById('fechaventa');
         if (!fechaventa.value) {
@@ -501,6 +485,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         inputMonto.setAttribute('aria-invalid', 'false');
         inputPagoRecibido.setAttribute('aria-invalid', 'false');
+
+        // Regenerar IDs únicos para select y cambio (evitar duplicados del template)
+        const ts = Date.now();
+        selectMetodo.id = 'metodopago-mixto-' + ts;
+        const labelSelect = nuevoMetodoPago.querySelector('label[for="metodopago-mixto"]');
+        if (labelSelect) labelSelect.setAttribute('for', selectMetodo.id);
+
+        const inputCambio = nuevoMetodoPago.querySelector('.cambio-pago');
+        if (inputCambio) {
+            inputCambio.id = 'cambio-mixto-' + ts;
+            const labelCambio = nuevoMetodoPago.querySelector('label[for="cambio-mixto"]');
+            if (labelCambio) labelCambio.setAttribute('for', inputCambio.id);
+        }
 
         // Inicializar valores: sugerir el saldo pendiente
         const totalPendiente = totalVentaActual - totalPagado;

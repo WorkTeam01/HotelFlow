@@ -1,14 +1,16 @@
 $(document).ready(function () {
-    // Inicializar tooltips (se re-inicializan en cada redraw de la tabla)
-    $('[data-toggle="tooltip"]').tooltip();
-
     // Inicializar DataTable
     $("#tablaVentas").DataTable({
         "responsive": true,
         "autoWidth": false,
         "drawCallback": function () {
             // DataTable recrea las filas al paginar/buscar; re-vincular tooltips
-            $('[data-toggle="tooltip"]').tooltip();
+            // sin destroy previo (dispose en elementos sin instancia corrompe Bootstrap 4)
+            $('[data-toggle="tooltip"]').each(function () {
+                if (!$(this).data('bs.tooltip')) {
+                    $(this).tooltip({ placement: 'top', trigger: 'hover focus', container: 'body' });
+                }
+            });
         },
         buttons: [{
             extend: 'collection',
