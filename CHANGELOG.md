@@ -5,6 +5,52 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.5.0] - 2026-09-21
+
+Refactor del módulo Almacenamiento de equipaje (partials, helpers de estado, folio de pagos y estado "vencido" derivado), mejora de accesibilidad y semántica en Usuarios, y coloreo global de pestañas inactivas por clase de card. Sin cambios de esquema.
+
+### Added
+
+- **Estado derivado "vencido"** en almacenamiento de equipaje: un equipaje `almacenado` con más de `EQUIPAJE_DIAS_ALERTA` días (default `7`, en `.env` + `config/config.php`) se muestra como Vencido — filtro en el listado, KPI "Vencidos" y badge rojo, sin mutar la columna `estado` en BD.
+- **Helpers únicos de estado** `AlmacenamientoEquipajeController::estadoEquipaje()` / `estadosEquipaje()` / `estadoDerivado()` / `decorarEstados()` / `tiempoAlmacenado()` — mismo patrón que `estadoRecepcion()` y `estadoHabitacion()`; eliminan los `switch` de estado de las vistas.
+- **Folio de pagos del equipaje**: `Pago::getByEquipaje()` y `Pago::registrarLineaEquipaje()` (cargo + pago simultáneos al crear, sobre `pagos.idequipaje` ya existente en el esquema); pestaña "Folio" de solo lectura en `show.php` (`partials/folio-equipaje.php`).
+- **Partials de las vistas de equipaje**: `form-registro-equipaje.php`, `resumen-registro-equipaje.php`, `form-actualizar-equipaje.php`, `resumen-actualizar-equipaje.php`, `folio-equipaje.php` — `create.php`/`update.php`/`show.php` pasan a dispatchers delgados.
+- **KPIs "En almacén" y "Vencidos"** en el index de equipaje (reemplazan "Equipajes hoy"/"Almacenados hoy").
+- **Método de pago en el recibo de equipaje** (fila del PDF, tomado de la línea `pago` del folio).
+- **Reglas globales de tabs inactivos** en `public/css/core/styles.css`: `.card-{color} .nav-tabs .nav-link:not(.active)` con variantes oscurecidas de la paleta AdminLTE (≥4.5:1 sobre header blanco); `core/styles.css` gana cache-busting `?v=filemtime` en `header.php`.
+
+### Fixed
+
+- **Autorización del recibo de equipaje**: patrón explícito `esAdministrador() || puedeAccederModulo()` (antes solo el segundo); los errores del PDF ya no filtran `getMessage()`/archivo/línea al usuario (van a `error_log()` + mensaje genérico).
+- **Equipaje retirado** ya no ofrece acciones de cambio de estado (aviso único, sin botones).
+- **`htmlspecialchars(null)`** en las vistas de equipaje (`?? ''` / fallbacks de negocio) — deprecation PHP 8.1+ y posible ruptura de HTML con `display_errors` (select de clientes con `telefono` NULL).
+- **Montos del equipaje fuera del cliente**: el monto al crear se recalcula en el servidor desde el precio real en BD (`getPrecioEquipaje()`); al editar, monto/cantidad/tipo/código salen del formulario (solo descriptivos) — antes eran editables tras el cobro.
+- **Exports de la DataTable de equipaje**: índices de columnas desalineados (`[0..7]` → `[0..6]`) y extracción de badge solo en la columna de estado.
+- **Exports de la DataTable de usuarios**: índices desalineados (`[0..5]` → `[0,1,2,3,4,6,7]`).
+- **Usuarios — accesibilidad y semántica**: `aria-hidden` en 114 iconos decorativos, `role="tablist"/"tab"/"tabpanel"` y `aria-live` en feedback de contraseña, `<a>` sin `href` → `<span>` (correo/teléfono/documento), `src="#"` → `""` en la preview de imagen, enlace WhatsApp que normaliza el número (`preg_replace` quitando no-dígitos y el 0 inicial).
+- **Tabs inactivos con contraste <4.5:1** hardcodeados por módulo (`show-habitaciones.css`, `show-producto.css`, `usuarios.css` con `#detail-tabs`/`#habitacionTabs`) → reglas globales por clase de card.
+
+### Changed
+
+- `views/almacenamiento-equipaje/create.php`/`update.php`/`show.php` reescritos sobre partials (−1438 / +540 líneas en el módulo); `update-equipaje.js` simplificado (sin recálculo de monto en el cliente); `show-equipaje.js` persiste la pestaña activa en `sessionStorage`.
+- `perfil-usuario.js` reestructurado (un solo `DOMContentLoaded`, guards de `null`, validación de contraseña con feedback `aria-live`).
+- Listado de equipaje con `estado_ui` del helper (sin `switch` en la vista).
+
+### Removed
+
+- Overrides de tabs por módulo/ID: archivos completos `show-habitaciones.css` y `show-producto.css`; reglas `#detail-tabs` y variables `--usuarios-info*` de `usuarios.css`.
+
+### Docs
+
+- `CLAUDE.md`: convención de tabs globales por clase de card; cache-busting ampliado a `core/styles.css`; regla de `htmlspecialchars` null-safe en PHP 8.1+; helpers de estado y folio de equipaje.
+- `PROMPTS.md`: restricciones de estado/folio de equipaje en la plantilla base; fecha actualizada.
+- `README.md`: badge a 1.5.0; descripción del equipaje con folio y estados.
+- `.env.example`: `APP_VERSION` sincronizado a `1.5.0`.
+
+### Migración
+
+Ninguna: `pagos.idequipaje` (columna, índice y FK) ya existen en `database/db_hotel_flow.sql`; no hay DDL nuevo. El umbral nuevo es opcional (`EQUIPAJE_DIAS_ALERTA`, default `7`).
+
 ## [1.4.1] - 2026-09-19
 
 Refactor del módulo Ventas al estándar POS (patrón FlowPOS adaptado): folio de cobro con pago único/mixto, creación y detalle en dos columnas con modales, recibo térmico PDF, listado con pago mixto y exports corregidos. El reporte por fechas se eliminó — lo cubren los exports de la DataTable.
@@ -396,6 +442,7 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.5.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.4.1...1.5.0
 [1.2.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.4...1.2.0
 [1.4.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.4.0...1.4.1
 [1.1.4]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.3...1.1.4

@@ -59,10 +59,12 @@ _______________
 - Proyecto single-theme (sin dark-mode): un fix de contraste lleva un solo valor validado >=4.5:1 sobre el fondo claro de AdminLTE, sin bloques prefers-color-scheme
 - Estado y etiqueta de tarifa de recepcion salen de helpers unicos de RecepcionController (estadoRecepcion, estadoDerivado, etiquetaTarifa); ninguna vista repite un switch de estado
 - Igual en habitaciones: HabitacionController::estadoHabitacion / estadosHabitacion / badgeEstadoOcupacion / badgeEstadoLimpieza; el cambio de estado es un flujo unico (cambiar-estado-habitaciones.js, enlace delegado a .cambiar-estado)
+- Almacenamiento de equipaje: el estado (incl. el derivado `vencido` con `EQUIPAJE_DIAS_ALERTA`) sale de AlmacenamientoEquipajeController::estadoEquipaje / estadoDerivado / decorarEstados — ninguna vista escribe un switch de estado; el folio usa Pago::registrarLineaEquipaje / getByEquipaje (UI de solo lectura) y el monto siempre se recalcula en el servidor desde el precio real en BD
 - Ventas = ledger `pagoventa` (append-only) como fuente de verdad del cobro con `venta.metodopago/pagorecibido/cambio` como cache derivado recalculado en la misma transaccion; vocabulario de metodos = Efectivo / QR / Otros (mas 'Mixto'); idusuario siempre de $_SESSION['usuario_id'], nunca del cliente; `venta.idcliente` es nullable — ventas sin cliente se muestran como "Consumidor Final"
 - Helpers unicos de ventas: VentaController::calcularTotales / calcularInfoMetodoPago / obtenerIconoMetodoPago / esPagoMixto / calcularDesgloseDetalles / calcularResumenPagos; el listado adjunta info_metodo_pago en batch (Venta::getMetodosPagoPorVentas), sin N+1
 - Recibo de venta: views/ventas/recibo.php (standalone imprimible TCPDF 80mm, excepcion de <style> embebido aceptada) muestra estado de la venta y exige permiso `ventas` + propiedad (admin OR dueño) ademas de requireLogin()
-- Assets de modulo con cache-busting automatico (?v=filemtime en header.php/footer.php); no versionar a mano ni poner ?v= en la vista
+- Assets de modulo con cache-busting automatico (?v=filemtime en header.php/footer.php, incluido public/css/core/styles.css); no versionar a mano ni poner ?v= en la vista
+- Tabs inactivos coloreados por reglas globales de public/css/core/styles.css (.card-{color} .nav-tabs .nav-link:not(.active)); no recrear overrides por modulo ni por ID
 - Resaltado de sidebar en subpaginas de una seccion: sidebarEnSeccion() (match por prefijo), no sidebarEsActivo() (match exacto)
 
 [Formato de salida]
@@ -278,5 +280,5 @@ Preparar el proyecto para publicacion open source:
 
 ---
 
-_Ultima actualizacion: 2026-09-19_
+_Ultima actualizacion: 2026-09-21_
 _Mantener sincronizado con CLAUDE.md cuando cambie arquitectura o flujo._
