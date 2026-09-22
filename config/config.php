@@ -44,5 +44,8 @@ return [
     ],
     'recepcion' => [
         'noshow_horas' => (int) env('RECEPCION_NOSHOW_HORAS', 6)
+    ],
+    'equipaje' => [
+        'dias_alerta' => (int) env('EQUIPAJE_DIAS_ALERTA', 7)
     ]
 ];
