@@ -54,8 +54,15 @@ class AlmacenamientoEquipaje
 
             // Aplicar filtros si existen
             if (!empty($filtros['estado'])) {
-                $whereConditions[] = "ae.estado = :estado";
-                $params[':estado'] = $filtros['estado'];
+                if ($filtros['estado'] === 'vencido') {
+                    // Estado derivado: almacenado que supera los días de alerta (evaluado en SQL)
+                    $diasAlerta = (int)((require __DIR__ . '/../config/config.php')['equipaje']['dias_alerta'] ?? 7);
+                    $whereConditions[] = "ae.estado = 'almacenado' AND DATEDIFF(NOW(), ae.fechaentrada) > :dias_alerta";
+                    $params[':dias_alerta'] = $diasAlerta;
+                } else {
+                    $whereConditions[] = "ae.estado = :estado";
+                    $params[':estado'] = $filtros['estado'];
+                }
             }
 
             if (!empty($filtros['fecha_inicio']) && !empty($filtros['fecha_fin'])) {
@@ -138,44 +145,80 @@ class AlmacenamientoEquipaje
     }
 
     /**
-     * Crea un nuevo registro de almacenamiento de equipaje
-     * 
-     * @param array $datos Datos del registro de almacenamiento de equipaje
-     * @return bool True si se creó correctamente, False en caso contrario
+     * Obtiene un precio de equipaje activo por ID.
+     *
+     * @param int $id ID del precio de equipaje
+     * @return array|null Datos del precio o null si no existe/inactivo
+     */
+    public function getPrecioEquipaje($id)
+    {
+        try {
+            $query = "SELECT idprecioe, tamano, descripcion, precio
+                      FROM precio_equipaje
+                      WHERE idprecioe = :id AND estado = 1";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return null;
+        }
+    }
+
+    /**
+     * Crea un nuevo registro de almacenamiento de equipaje.
+     * Transacción: lee precio real de BD, calcula monto, inserta equipaje +
+     * líneas de cargo y pago en el folio (ledger pagos).
+     *
+     * @param array $datos Datos del registro (POST sanitizado)
+     * @return int|bool ID insertado o false si falló
      */
     public function crear($datos)
     {
+        require_once __DIR__ . '/Pago.php';
+
         try {
-            $query = "INSERT INTO {$this->tabla} (
-                  idcliente, idusuario, descripcion, cantidad_piezas, 
-                  codigo_ticket, fechaentrada, idpequipaje, monto, 
-                  estado) 
-                  VALUES (
-                  :idcliente, :idusuario, :descripcion, :cantidad_piezas, 
-                  :codigo_ticket, :fechaentrada, :idpequipaje, :monto, 
-                  :estado)";
+            $this->conexion->beginTransaction();
+
+            // 1. Leer precio real de BD (nunca confiar en el POST)
+            $precio = $this->getPrecioEquipaje($datos['idpequipaje']);
+            if (!$precio) {
+                $this->conexion->rollBack();
+                $this->lastError = 'El tipo de equipaje seleccionado no es válido.';
+                return false;
+            }
+
+            $cantidad = max(1, (int)($datos['cantidad_piezas'] ?? 1));
+            $montoCalculado = (float)$precio['precio'] * $cantidad;
+
+            // 2. Generar código de ticket (reintento en caso de colisión UNIQUE)
+            $codigoTicket = $this->generarCodigoTicket();
+
+            // 3. Insertar equipaje
+            $query = "INSERT INTO {$this->tabla}
+                  (idcliente, idusuario, descripcion, cantidad_piezas,
+                   codigo_ticket, fechaentrada, idpequipaje, monto, estado)
+                  VALUES
+                  (:idcliente, :idusuario, :descripcion, :cantidad_piezas,
+                   :codigo_ticket, :fechaentrada, :idpequipaje, :monto, :estado)";
 
             $stmt = $this->conexion->prepare($query);
 
-            // Parámetros obligatorios
             $stmt->bindParam(':idcliente', $datos['idcliente'], PDO::PARAM_INT);
             $stmt->bindParam(':idusuario', $datos['idusuario'], PDO::PARAM_INT);
             $stmt->bindParam(':idpequipaje', $datos['idpequipaje'], PDO::PARAM_INT);
-            $stmt->bindParam(':monto', $datos['monto'], PDO::PARAM_STR);
+            $stmt->bindValue(':monto', $montoCalculado, PDO::PARAM_STR);
 
-            // Descripción puede ser NULL
             if (empty($datos['descripcion'])) {
                 $stmt->bindValue(':descripcion', null, PDO::PARAM_NULL);
             } else {
                 $stmt->bindParam(':descripcion', $datos['descripcion'], PDO::PARAM_STR);
             }
 
-            // Valores con defaults
-            $cantidad_piezas = !empty($datos['cantidad_piezas']) ? $datos['cantidad_piezas'] : 1;
-            $stmt->bindParam(':cantidad_piezas', $cantidad_piezas, PDO::PARAM_INT);
-
-            $codigo_ticket = !empty($datos['codigo_ticket']) ? $datos['codigo_ticket'] : $this->generarCodigoTicket();
-            $stmt->bindParam(':codigo_ticket', $codigo_ticket, PDO::PARAM_STR);
+            $stmt->bindParam(':cantidad_piezas', $cantidad, PDO::PARAM_INT);
+            $stmt->bindParam(':codigo_ticket', $codigoTicket, PDO::PARAM_STR);
 
             $fechaentrada = !empty($datos['fechaentrada']) ? $datos['fechaentrada'] : date('Y-m-d H:i:s');
             $stmt->bindParam(':fechaentrada', $fechaentrada, PDO::PARAM_STR);
@@ -183,14 +226,41 @@ class AlmacenamientoEquipaje
             $estado = !empty($datos['estado']) ? $datos['estado'] : 'almacenado';
             $stmt->bindParam(':estado', $estado, PDO::PARAM_STR);
 
-            $resultado = $stmt->execute();
-
-            if ($resultado) {
-                return $this->conexion->lastInsertId();
-            } else {
+            if (!$stmt->execute()) {
+                $this->conexion->rollBack();
+                error_log('[' . static::class . '] ' . implode(' ', $stmt->errorInfo()));
+                $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
                 return false;
             }
+
+            $idEquipaje = $this->conexion->lastInsertId();
+
+            // 4. Línea de cargo en el folio
+            $pago = new Pago();
+            $conceptoCargo = 'Almacenamiento de equipaje - ' . $precio['tamano'] . ' (' . $cantidad . ' pieza' . ($cantidad > 1 ? 's' : '') . ')';
+            $idCargo = $pago->registrarLineaEquipaje($idEquipaje, 'cargo', $conceptoCargo, $montoCalculado, 'OTROS', $datos['idusuario']);
+
+            if (!$idCargo) {
+                $this->conexion->rollBack();
+                $this->lastError = 'Error al registrar el cargo: ' . $pago->getLastError();
+                return false;
+            }
+
+            // 5. Línea de pago en el folio
+            $metodopago = $datos['metodopago'] ?? 'Efectivo';
+            $conceptoPago = 'Pago almacenamiento - ' . $codigoTicket;
+            $idPago = $pago->registrarLineaEquipaje($idEquipaje, 'pago', $conceptoPago, $montoCalculado, $metodopago, $datos['idusuario']);
+
+            if (!$idPago) {
+                $this->conexion->rollBack();
+                $this->lastError = 'Error al registrar el pago: ' . $pago->getLastError();
+                return false;
+            }
+
+            $this->conexion->commit();
+            return $idEquipaje;
         } catch (PDOException $e) {
+            $this->conexion->rollBack();
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
@@ -212,13 +282,10 @@ class AlmacenamientoEquipaje
             $params = [':id' => $id];
 
             // Mapeo de campos permitidos para actualización
+            // Solo descriptivos: monto/cantidad/tipo/ticket quedan fijos tras el cobro
             $campos_permitidos = [
                 'idcliente' => PDO::PARAM_INT,
                 'descripcion' => PDO::PARAM_STR,
-                'cantidad_piezas' => PDO::PARAM_INT,
-                'codigo_ticket' => PDO::PARAM_STR,
-                'idpequipaje' => PDO::PARAM_INT,
-                'monto' => PDO::PARAM_STR,
                 'estado' => PDO::PARAM_STR
             ];
 
@@ -402,27 +469,18 @@ class AlmacenamientoEquipaje
     {
         $errores = [];
 
-        // Validar cliente
         if (empty($datos['idcliente'])) {
             $errores[] = 'El cliente es obligatorio.';
         }
 
-        // Validar precio de equipaje
-        if (empty($datos['idpequipaje'])) {
+        if (isset($datos['idpequipaje']) && empty($datos['idpequipaje'])) {
             $errores[] = 'El tipo/precio de equipaje es obligatorio.';
         }
 
-        // Validar monto
-        if (!isset($datos['monto']) || $datos['monto'] <= 0) {
-            $errores[] = 'El monto debe ser mayor que cero.';
-        }
-
-        // Validar cantidad de piezas si se proporciona
         if (isset($datos['cantidad_piezas']) && $datos['cantidad_piezas'] < 1) {
             $errores[] = 'La cantidad de piezas debe ser al menos 1.';
         }
 
-        // Validar estado si se proporciona
         if (isset($datos['estado']) && !in_array($datos['estado'], ['almacenado', 'retirado', 'perdido', 'dañado'])) {
             $errores[] = 'El estado debe ser almacenado, retirado, perdido o dañado.';
         }
@@ -478,15 +536,18 @@ class AlmacenamientoEquipaje
     }
 
     /**
-     * Obtiene estadísticas de almacenamiento de equipaje solo para el día actual
-     * 
-     * @return array Estadísticas del día actual
+     * Obtiene estadísticas de almacenamiento de equipaje.
+     * Incluye totales del día y estado actual (en almacén, vencidos).
+     *
+     * @return array Estadísticas
      */
     public function getEstadisticas()
     {
         try {
+            $diasAlerta = $this->getDiasAlerta();
+
             // Total de registros de hoy
-            $queryTotalHoy = "SELECT COUNT(*) as total 
+            $queryTotalHoy = "SELECT COUNT(*) as total
                          FROM {$this->tabla}
                          WHERE DATE(fechaentrada) = CURDATE()";
             $stmtTotalHoy = $this->conexion->prepare($queryTotalHoy);
@@ -494,15 +555,14 @@ class AlmacenamientoEquipaje
             $totalHoy = $stmtTotalHoy->fetch(PDO::FETCH_ASSOC)['total'];
 
             // Registros por estado de hoy
-            $queryPorEstadoHoy = "SELECT estado, COUNT(*) as cantidad 
-                             FROM {$this->tabla} 
+            $queryPorEstadoHoy = "SELECT estado, COUNT(*) as cantidad
+                             FROM {$this->tabla}
                              WHERE DATE(fechaentrada) = CURDATE()
                              GROUP BY estado";
             $stmtPorEstadoHoy = $this->conexion->prepare($queryPorEstadoHoy);
             $stmtPorEstadoHoy->execute();
             $porEstadoHoy = $stmtPorEstadoHoy->fetchAll(PDO::FETCH_ASSOC);
 
-            // Convertir a un array asociativo
             $cantidadPorEstadoHoy = [
                 'almacenado' => 0,
                 'retirado' => 0,
@@ -514,13 +574,31 @@ class AlmacenamientoEquipaje
                 $cantidadPorEstadoHoy[$estado['estado']] = (int)$estado['cantidad'];
             }
 
-            // Ingresos de hoy
-            $queryIngresosHoy = "SELECT SUM(monto) as ingresos_hoy 
+            // Ingresos de hoy (del ledger pagos)
+            $queryIngresosHoy = "SELECT SUM(monto) as ingresos_hoy
                            FROM {$this->tabla}
                            WHERE DATE(fechaentrada) = CURDATE()";
             $stmtIngresosHoy = $this->conexion->prepare($queryIngresosHoy);
             $stmtIngresosHoy->execute();
             $ingresosHoy = $stmtIngresosHoy->fetch(PDO::FETCH_ASSOC)['ingresos_hoy'] ?? 0;
+
+            // En almacén actualmente (almacenado, sin importar cuándo entró)
+            $queryEnAlmacen = "SELECT COUNT(*) as total
+                          FROM {$this->tabla}
+                          WHERE estado = 'almacenado'";
+            $stmtEnAlmacen = $this->conexion->prepare($queryEnAlmacen);
+            $stmtEnAlmacen->execute();
+            $enAlmacen = $stmtEnAlmacen->fetch(PDO::FETCH_ASSOC)['total'];
+
+            // Vencidos (almacenado + supera días de alerta)
+            $queryVencidos = "SELECT COUNT(*) as total
+                          FROM {$this->tabla}
+                          WHERE estado = 'almacenado'
+                            AND DATEDIFF(NOW(), fechaentrada) > :dias";
+            $stmtVencidos = $this->conexion->prepare($queryVencidos);
+            $stmtVencidos->bindParam(':dias', $diasAlerta, PDO::PARAM_INT);
+            $stmtVencidos->execute();
+            $vencidos = $stmtVencidos->fetch(PDO::FETCH_ASSOC)['total'];
 
             return [
                 'total_hoy' => $totalHoy,
@@ -528,7 +606,9 @@ class AlmacenamientoEquipaje
                 'retirados_hoy' => $cantidadPorEstadoHoy['retirado'],
                 'perdidos_hoy' => $cantidadPorEstadoHoy['perdido'],
                 'danados_hoy' => $cantidadPorEstadoHoy['dañado'],
-                'ingresos_hoy' => $ingresosHoy
+                'ingresos_hoy' => $ingresosHoy,
+                'en_almacen' => (int)$enAlmacen,
+                'vencidos' => (int)$vencidos
             ];
         } catch (PDOException $e) {
             error_log('[' . static::class . '] ' . $e->getMessage());
@@ -539,9 +619,22 @@ class AlmacenamientoEquipaje
                 'retirados_hoy' => 0,
                 'perdidos_hoy' => 0,
                 'danados_hoy' => 0,
-                'ingresos_hoy' => 0
+                'ingresos_hoy' => 0,
+                'en_almacen' => 0,
+                'vencidos' => 0
             ];
         }
+    }
+
+    /**
+     * Obtiene la cantidad de días configurada para alerta de vencimiento.
+     *
+     * @return int
+     */
+    private function getDiasAlerta()
+    {
+        $config = require __DIR__ . '/../config/config.php';
+        return (int)($config['equipaje']['dias_alerta'] ?? 7);
     }
     /**
      * Obtiene los datos completos de un equipaje para generar el recibo
@@ -654,7 +747,8 @@ class AlmacenamientoEquipaje
                 // Datos calculados para el recibo
                 'monto_formateado' => number_format($resultado['monto'], 2, ',', '.'),
                 'estado_formateado' => $this->formatearEstado($resultado['estado']),
-                'tiempo_almacenado' => $this->calcularTiempoAlmacenado($resultado['fechaentrada'], $resultado['fechasalida'])
+                'tiempo_almacenado' => $this->calcularTiempoAlmacenado($resultado['fechaentrada'], $resultado['fechasalida']),
+                'metodopago' => $this->obtenerMetodoPago($id)
             ];
 
             return $datos_recibo;
@@ -733,6 +827,28 @@ class AlmacenamientoEquipaje
         }
 
         return implode(', ', $partes);
+    }
+
+    /**
+     * Obtiene el método de pago de las líneas del folio de un equipaje.
+     *
+     * @param int $idequipaje
+     * @return string Método de pago ('Efectivo', 'QR', 'OTROS')
+     */
+    private function obtenerMetodoPago($idequipaje)
+    {
+        try {
+            $query = "SELECT metodopago FROM pagos
+                      WHERE idequipaje = :idequipaje AND tipo = 'pago'
+                      ORDER BY id_pago ASC LIMIT 1";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->bindParam(':idequipaje', $idequipaje, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchColumn() ?: 'Efectivo';
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            return 'Efectivo';
+        }
     }
 
     /**

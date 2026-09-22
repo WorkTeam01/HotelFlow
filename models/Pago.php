@@ -56,6 +56,81 @@ class Pago
     }
 
     /**
+     * Líneas del folio de un equipaje, en orden cronológico.
+     *
+     * @param int $idequipaje
+     * @return array
+     */
+    public function getByEquipaje($idequipaje)
+    {
+        try {
+            $query = "SELECT p.*, u.nombre as nombre_usuario
+                      FROM {$this->tabla} p
+                      LEFT JOIN usuarios u ON p.idusuario = u.idusuario
+                      WHERE p.idequipaje = :idequipaje
+                      ORDER BY p.fechacreacion ASC, p.id_pago ASC";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->bindParam(':idequipaje', $idequipaje, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
+     * Registra una línea de folio para equipaje (cargo + pago simultáneos).
+     * Se llama desde AlmacenamientoEquipaje::crear() dentro de su propia transacción.
+     *
+     * @param int $idequipaje
+     * @param string $tipo 'cargo'|'pago'
+     * @param string $concepto
+     * @param float $monto Siempre positivo
+     * @param string $metodopago 'Efectivo'|'QR'|'OTROS'
+     * @param int $idusuario
+     * @return bool|int ID de la línea creada o false si falló
+     */
+    public function registrarLineaEquipaje($idequipaje, $tipo, $concepto, $monto, $metodopago, $idusuario)
+    {
+        if (!in_array($tipo, ['cargo', 'pago'], true)) {
+            $this->lastError = 'Tipo de línea de folio no válido.';
+            return false;
+        }
+
+        if ($monto <= 0) {
+            $this->lastError = 'El monto debe ser mayor que cero.';
+            return false;
+        }
+
+        try {
+            $query = "INSERT INTO {$this->tabla}
+                      (idequipaje, tipo, concepto, montototal, metodopago, idusuario)
+                      VALUES (:idequipaje, :tipo, :concepto, :monto, :metodopago, :idusuario)";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->bindParam(':idequipaje', $idequipaje, PDO::PARAM_INT);
+            $stmt->bindParam(':tipo', $tipo, PDO::PARAM_STR);
+            $stmt->bindParam(':concepto', $concepto, PDO::PARAM_STR);
+            $stmt->bindParam(':monto', $monto, PDO::PARAM_STR);
+            $stmt->bindParam(':metodopago', $metodopago, PDO::PARAM_STR);
+            $stmt->bindParam(':idusuario', $idusuario, PDO::PARAM_INT);
+
+            if (!$stmt->execute()) {
+                error_log('[' . static::class . '] ' . implode(' ', $stmt->errorInfo()));
+                $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+                return false;
+            }
+
+            return $this->conexion->lastInsertId();
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return false;
+        }
+    }
+
+    /**
      * Calcula cargos/pagos/saldo reales a partir de las líneas del folio.
      * Los reversos restan del tipo de línea que reversan (join contra sí misma).
      *

@@ -32,6 +32,153 @@ class AlmacenamientoEquipajeController
         $this->modelo = new AlmacenamientoEquipaje();
     }
 
+    // ─── Helpers únicos de estado (fuente única, ninguna vista escribe switch) ───
+
+    /**
+     * Presentación de un estado de equipaje (bd o derivado).
+     * Misma interfaz que estadoRecepcion() / estadoHabitacion().
+     *
+     * @return array{label:string,clase:string,badge:string,icono:string,orden:int}
+     */
+    public static function estadoEquipaje(string $estado): array
+    {
+        switch ($estado) {
+            case 'almacenado':
+                $ui = ['label' => 'Almacenado', 'clase' => 'warning', 'icono' => 'clock', 'orden' => 1];
+                break;
+            case 'retirado':
+                $ui = ['label' => 'Retirado', 'clase' => 'success', 'icono' => 'check-circle', 'orden' => 2];
+                break;
+            case 'perdido':
+                $ui = ['label' => 'Perdido', 'clase' => 'danger', 'icono' => 'exclamation-triangle', 'orden' => 3];
+                break;
+            case 'dañado':
+                $ui = ['label' => 'Dañado', 'clase' => 'dark', 'icono' => 'times-circle', 'orden' => 4];
+                break;
+            case 'vencido':
+                $ui = ['label' => 'Vencido', 'clase' => 'danger', 'icono' => 'hourglass-half', 'orden' => 5];
+                break;
+            default:
+                $ui = ['label' => ucfirst($estado), 'clase' => 'secondary', 'icono' => 'question-circle', 'orden' => 99];
+                break;
+        }
+
+        $ui['badge'] = 'badge-' . $ui['clase'];
+        return $ui;
+    }
+
+    /**
+     * Lista de estados operables (no incluye 'vencido' ni 'retirado' — son derivados o finales).
+     * Para filtros y dropdowns.
+     *
+     * @return array<string,array{label:string,clase:string,badge:string,icono:string,orden:int}>
+     */
+    public static function estadosEquipaje(): array
+    {
+        $estados = [];
+        foreach (['almacenado', 'perdido', 'dañado'] as $estado) {
+            $estados[$estado] = self::estadoEquipaje($estado);
+        }
+        return $estados;
+    }
+
+    /**
+     * Estado derivado calculado: 'almacenado' supera dias_alerta → 'vencido'.
+     * Lee la config directamente (mismo patrón que estadoDerivado de RecepcionController).
+     *
+     * @param array $equipaje Fila con al menos 'estado' y 'fechaentrada'
+     * @return string Estado real o derivado
+     */
+    public static function estadoDerivado(array $equipaje): string
+    {
+        $estado = $equipaje['estado'] ?? '';
+
+        if ($estado !== 'almacenado') {
+            return $estado;
+        }
+
+        $fechaEntrada = $equipaje['fechaentrada'] ?? null;
+        if (empty($fechaEntrada)) {
+            return $estado;
+        }
+
+        $config = require __DIR__ . '/../../config/config.php';
+        $diasAlerta = $config['equipaje']['dias_alerta'] ?? 7;
+
+        $timestampEntrada = strtotime($fechaEntrada);
+        if ($timestampEntrada === false) {
+            return $estado;
+        }
+
+        if (time() > $timestampEntrada + ($diasAlerta * 86400)) {
+            return 'vencido';
+        }
+
+        return $estado;
+    }
+
+    /**
+     * Calcula el tiempo de almacenamiento de un equipaje.
+     *
+     * @param string $fechaEntrada Fecha de entrada (formato datetime de BD)
+     * @param string|null $fechaSalida Fecha de salida (null si aún está almacenado)
+     * @return array{texto:string,horas:float,porcentaje:float}
+     */
+    public static function tiempoAlmacenado(string $fechaEntrada, ?string $fechaSalida = null): array
+    {
+        $inicio = new DateTime($fechaEntrada);
+        $fin = !empty($fechaSalida) ? new DateTime($fechaSalida) : new DateTime();
+        $intervalo = $inicio->diff($fin);
+
+        // Texto legible
+        $texto = '';
+        if ($intervalo->days > 0) {
+            $texto .= $intervalo->days . ' día(s) ';
+        }
+        if ($intervalo->h > 0) {
+            $texto .= $intervalo->h . ' hora(s) ';
+        }
+        if ($intervalo->i > 0) {
+            $texto .= $intervalo->i . ' minuto(s)';
+        }
+        if (empty($texto)) {
+            $texto = 'Menos de un minuto';
+        }
+
+        $horas = $intervalo->days * 24 + $intervalo->h + ($intervalo->i / 60);
+        // 7 días = 100% (configurable vía dias_alerta, pero aquí usamos un máximo fijo razonable)
+        $porcentaje = min(100, ($horas / 168) * 100);
+
+        return [
+            'texto' => trim($texto),
+            'horas' => round($horas, 1),
+            'porcentaje' => round($porcentaje, 1),
+        ];
+    }
+
+    /**
+     * Agrega estado_ui (con vencido derivado) y tiempo_almacenado a cada fila.
+     *
+     * @param array $filas Filas del modelo (getAll)
+     * @return array Mismas filas con campo extra 'estado_ui'
+     */
+    public static function decorarEstados(array $filas): array
+    {
+        return array_map(function ($fila) {
+            $estadoReal = $fila['estado'] ?? '';
+            $estadoCalculado = self::estadoDerivado($fila);
+            $ui = self::estadoEquipaje($estadoCalculado);
+
+            $fila['estado_derivado'] = $estadoCalculado;
+            $fila['estado_ui'] = $ui;
+            $fila['tiempo_almacenado'] = self::tiempoAlmacenado(
+                $fila['fechaentrada'] ?? date('Y-m-d H:i:s'),
+                $fila['fechasalida'] ?? null
+            );
+            return $fila;
+        }, $filas);
+    }
+
     /**
      * Obtiene los errores acumulados
      * 
@@ -68,8 +215,8 @@ class AlmacenamientoEquipajeController
      */
     public function index($filtros = [])
     {
-        // Obtener todos los registros de almacenamiento de equipaje
-        return $this->modelo->getAll($filtros);
+        $filas = $this->modelo->getAll($filtros);
+        return self::decorarEstados($filas);
     }
 
     /**
@@ -99,14 +246,15 @@ class AlmacenamientoEquipajeController
     {
         $datos = [
             'idcliente' => isset($post_data['idcliente']) ? (int)$post_data['idcliente'] : 0,
-            'idusuario' => $_SESSION['usuario_id'], // Usuario actual que registra el servicio
+            'idusuario' => $_SESSION['usuario_id'],
             'descripcion' => isset($post_data['descripcion']) ? trim($post_data['descripcion']) : null,
             'cantidad_piezas' => isset($post_data['cantidad_piezas']) ? (int)$post_data['cantidad_piezas'] : 1,
             'codigo_ticket' => isset($post_data['codigo_ticket']) ? trim($post_data['codigo_ticket']) : '',
             'idpequipaje' => isset($post_data['idpequipaje']) ? (int)$post_data['idpequipaje'] : 0,
-            'monto' => isset($post_data['monto']) ? (float)$post_data['monto'] : 0,
+            'monto' => 0, // Ignorado: se calcula server-side desde precio_equipaje
             'fechaentrada' => isset($post_data['fechaentrada']) ? $post_data['fechaentrada'] : date('Y-m-d H:i:s'),
-            'estado' => isset($post_data['estado']) ? $post_data['estado'] : 'almacenado'
+            'estado' => isset($post_data['estado']) ? $post_data['estado'] : 'almacenado',
+            'metodopago' => isset($post_data['metodopago']) ? $post_data['metodopago'] : 'Efectivo'
         ];
 
         return $datos;
@@ -119,22 +267,36 @@ class AlmacenamientoEquipajeController
      */
     public function guardar()
     {
-        // Verificar si se envió el formulario
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
             return ['success' => false, 'message' => 'Acceso no permitido.', 'icon' => 'warning', 'redirect' => 'index.php'];
         }
 
-        // Preparar datos del registro
         $datos = $this->modelo->sanitizarDatos($this->prepararDatos($_POST));
 
-        // Validar datos en el modelo
+        // Validar método de pago
+        $metodosValidos = ['Efectivo', 'QR', 'OTROS'];
+        if (!in_array($datos['metodopago'], $metodosValidos, true)) {
+            $datos['metodopago'] = 'Efectivo';
+        }
+
+        // Validar idpequipaje antes de que el modelo lo lea de BD
+        if (empty($datos['idpequipaje']) || $datos['idpequipaje'] <= 0) {
+            return ['success' => false, 'message' => 'El tipo de equipaje es obligatorio.', 'icon' => 'error', 'redirect' => 'create.php'];
+        }
+
+        $precio = $this->modelo->getPrecioEquipaje($datos['idpequipaje']);
+        if (!$precio) {
+            return ['success' => false, 'message' => 'El tipo de equipaje seleccionado no es válido.', 'icon' => 'error', 'redirect' => 'create.php'];
+        }
+
+        // Quitar monto de la validación del modelo (ya no viene del POST)
+        unset($datos['monto']);
         $errores = $this->modelo->validarDatos($datos);
 
         if (!empty($errores)) {
             return ['success' => false, 'message' => $errores[0], 'icon' => 'error', 'redirect' => 'create.php'];
         }
 
-        // Guardar registro usando el modelo
         $id_guardado = $this->modelo->crear($datos);
 
         if ($id_guardado) {
@@ -163,7 +325,6 @@ class AlmacenamientoEquipajeController
      */
     public function editar($id = null)
     {
-        // Verificar si se proporcionó un ID
         if (!$id) {
             global $URL;
             $_SESSION['mensaje'] = 'ID de equipaje no válido';
@@ -172,7 +333,6 @@ class AlmacenamientoEquipajeController
             exit;
         }
 
-        // Obtener datos del registro
         $equipaje = $this->modelo->getById($id);
 
         if (!$equipaje) {
@@ -183,11 +343,23 @@ class AlmacenamientoEquipajeController
             exit;
         }
 
-        // Obtener clientes y precios de equipaje para los selectores
+        $estadoCalculado = self::estadoDerivado($equipaje);
+        $equipaje['estado_ui'] = self::estadoEquipaje($estadoCalculado);
+        $equipaje['estado_derivado'] = $estadoCalculado;
+        $equipaje['tiempo_almacenado'] = self::tiempoAlmacenado(
+            $equipaje['fechaentrada'] ?? date('Y-m-d H:i:s'),
+            $equipaje['fechasalida'] ?? null
+        );
+
+        // Método de pago del folio
+        require_once __DIR__ . '/../../models/Pago.php';
+        $pagoModel = new Pago();
+        $pagos = $pagoModel->getByEquipaje($id);
+        $equipaje['metodopago'] = $this->obtenerMetodoPago($pagos);
+
         $clientes = $this->modelo->getClientes();
         $precios_equipaje = $this->modelo->getPreciosEquipaje();
 
-        // Devolver los datos para la vista
         return [
             'equipaje' => $equipaje,
             'clientes' => $clientes,
@@ -202,43 +374,40 @@ class AlmacenamientoEquipajeController
      */
     public function actualizar()
     {
-        // Verificar si se envió el formulario
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
             return ['success' => false, 'message' => 'Acceso no permitido.', 'icon' => 'warning', 'redirect' => 'index.php'];
         }
 
-        // Obtener ID del registro
         $id = isset($_POST['idalmacen']) ? (int)$_POST['idalmacen'] : 0;
 
         if (!$id) {
             return ['success' => false, 'message' => 'ID de equipaje no válido', 'icon' => 'error', 'redirect' => 'index.php'];
         }
 
-        // Obtener datos actuales del registro
         $equipaje_actual = $this->modelo->getById($id);
         if (!$equipaje_actual) {
             return ['success' => false, 'message' => 'Registro de equipaje no encontrado para actualizar', 'icon' => 'error', 'redirect' => 'index.php'];
         }
 
-        // Si el equipaje ya está retirado, no permitir su actualización
         if ($equipaje_actual['estado'] === 'retirado') {
             return ['success' => false, 'message' => 'No se puede modificar un equipaje ya retirado', 'icon' => 'warning', 'redirect' => 'index.php'];
         }
 
-        // Preparar datos del registro
-        $datos = $this->prepararDatos($_POST);
+        // Solo pasar campos editables (monto/cantidad/tipo/ticket quedan fijos)
+        $datos = [
+            'idcliente' => isset($_POST['idcliente']) ? (int)$_POST['idcliente'] : $equipaje_actual['idcliente'],
+            'descripcion' => isset($_POST['descripcion']) ? trim($_POST['descripcion']) : null,
+            'estado' => isset($_POST['estado']) ? $_POST['estado'] : $equipaje_actual['estado']
+        ];
 
-        // Sanitizar los datos
         $datos = $this->modelo->sanitizarDatos($datos);
 
-        // Validar datos en el modelo
         $errores = $this->modelo->validarDatos($datos);
 
         if (!empty($errores)) {
             return ['success' => false, 'message' => $errores[0], 'icon' => 'error', 'redirect' => "update.php?id=$id"];
         }
 
-        // Actualizar registro
         if ($this->modelo->actualizar($id, $datos)) {
             return ['success' => true, 'message' => 'Registro de equipaje actualizado correctamente', 'icon' => 'success', 'redirect' => 'index.php'];
         } else {
@@ -255,7 +424,6 @@ class AlmacenamientoEquipajeController
      */
     public function mostrar($id = null)
     {
-        // Verificar si se proporcionó un ID
         if (!$id) {
             global $URL;
             $_SESSION['mensaje'] = 'ID de equipaje no válido';
@@ -264,7 +432,6 @@ class AlmacenamientoEquipajeController
             exit;
         }
 
-        // Obtener datos del registro
         $equipaje = $this->modelo->getById($id);
 
         if (!$equipaje) {
@@ -275,8 +442,37 @@ class AlmacenamientoEquipajeController
             exit;
         }
 
-        // Devolver los datos para la vista
+        $estadoCalculado = self::estadoDerivado($equipaje);
+        $equipaje['estado_ui'] = self::estadoEquipaje($estadoCalculado);
+        $equipaje['estado_derivado'] = $estadoCalculado;
+        $equipaje['tiempo_almacenado'] = self::tiempoAlmacenado(
+            $equipaje['fechaentrada'] ?? date('Y-m-d H:i:s'),
+            $equipaje['fechasalida'] ?? null
+        );
+
+        // Folio de pagos del equipaje
+        require_once __DIR__ . '/../../models/Pago.php';
+        $pagoModel = new Pago();
+        $equipaje['pagos'] = $pagoModel->getByEquipaje($id);
+        $equipaje['metodopago'] = $this->obtenerMetodoPago($equipaje['pagos']);
+
         return $equipaje;
+    }
+
+    /**
+     * Obtiene el método de pago de las líneas del folio de un equipaje.
+     *
+     * @param array $pagos Líneas del folio
+     * @return string Método de pago principal ('Efectivo', 'QR', 'OTROS')
+     */
+    private function obtenerMetodoPago($pagos)
+    {
+        foreach ($pagos as $pago) {
+            if ($pago['tipo'] === 'pago' && !empty($pago['metodopago'])) {
+                return $pago['metodopago'];
+            }
+        }
+        return 'Efectivo';
     }
 
     /**
