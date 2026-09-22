@@ -11,7 +11,7 @@ $(document).ready(function () {
                 text: 'Copiar',
                 extend: 'copy',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 }
             }, {
                 extend: 'pdf',
@@ -20,7 +20,7 @@ $(document).ready(function () {
                 pageSize: 'LETTER',
                 orientation: 'landscape',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 },
                 customize: function (doc) {
                     // Estilo básico
@@ -90,11 +90,11 @@ $(document).ready(function () {
                 messageTop: 'Registro de equipajes almacenados',
                 messageBottom: 'Documento generado el ' + new Date().toLocaleDateString('es-BO'),
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7],
+                    columns: [0, 1, 2, 3, 4, 5, 6],
                     format: {
                         body: function (data, row, column, node) {
-                            // Para las columnas con badges, extraer solo el texto
-                            if (column === 1 || column === 7) {
+                            // Extraer texto limpio de badges (columna 6 = Estado)
+                            if (column === 6) {
                                 return $(node).find('.badge').text() || data;
                             }
                             return data;
@@ -105,7 +105,7 @@ $(document).ready(function () {
                 extend: 'csv',
                 text: 'CSV',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 }
             }, {
                 extend: 'print',
@@ -113,7 +113,7 @@ $(document).ready(function () {
                 title: 'Almacenamiento de Equipaje' + ' - ' + APP_NAME,
                 messageTop: 'Reporte generado el ' + new Date().toLocaleDateString('es-BO'),
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7]
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 },
                 customize: function (win) {
                     $(win.document.body).find('table')
@@ -183,14 +183,7 @@ $(document).ready(function () {
     });
 
     // Inicializar Select2 para el filtro de clientes
-    $('.select2').select2({
-        theme: "bootstrap4",
-        width: 'resolve',
-        allowClear: false,
-        minimumResultsForSearch: 7,
-        closeOnSelect: true,
-        dropdownAutoWidth: true
-    });
+    initializeSelect2();
 
     // Limpiar fechas cuando se hace clic en limpiar filtros
     $('.btn-secondary').on('click', function () {

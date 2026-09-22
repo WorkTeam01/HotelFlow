@@ -7,10 +7,10 @@ $(document).ready(function () {
         var selectedOption = $(this).find('option:selected');
 
         if (selectedOption.val()) {
-            var tipodoc = selectedOption.data('tipodoc');
-            var numdoc = selectedOption.data('numdoc');
-            var telefono = selectedOption.data('telefono');
-            var nombreCliente = selectedOption.text();
+            var tipodoc = selectedOption.attr('data-tipodoc') || '';
+            var numdoc = selectedOption.attr('data-numdoc') || '';
+            var telefono = selectedOption.attr('data-telefono') || '';
+            var nombreCliente = $.trim(selectedOption.text());
 
             $('#cliente-tipodoc').text(tipodoc || 'N/A');
             $('#cliente-numdoc').text(numdoc || 'N/A');
@@ -30,6 +30,11 @@ $(document).ready(function () {
     // Actualizar monto cuando cambia el tipo de equipaje o cantidad
     $('#idpequipaje, #cantidad_piezas').on('change', function () {
         calcularMonto();
+        actualizarResumen();
+    });
+
+    // Actualizar resumen cuando cambia el método de pago
+    $('#metodopago').on('change', function () {
         actualizarResumen();
     });
 
@@ -91,6 +96,10 @@ $(document).ready(function () {
         // Monto
         var monto = parseFloat($('#monto').val()) || 0;
         $('#resumen-monto').text(`Bs. ${monto.toFixed(2)}`);
+
+        // Método de pago
+        var metodopago = $('#metodopago').val();
+        $('#resumen-metodopago').text(metodopago || 'Efectivo');
     }
 
     // Validar formulario antes de enviar
@@ -143,6 +152,7 @@ $(document).ready(function () {
                 <p><strong><i class="fas fa-luggage-cart"></i> Tipo de equipaje:</strong> ${tipoEquipaje}</p>
                 <p><strong><i class="fas fa-box"></i> Cantidad:</strong> ${cantidad} pieza(s)</p>
                 <p><strong><i class="fas fa-money-bill"></i> Monto total:</strong> Bs. ${monto.toFixed(2)}</p>
+                <p><strong><i class="fas fa-credit-card"></i> Método de pago:</strong> ${$('#metodopago').val()}</p>
                 <p><strong><i class="fas fa-ticket-alt"></i> Código de ticket:</strong> ${$('#codigo_ticket').val()}</p>
             </div>
         `;

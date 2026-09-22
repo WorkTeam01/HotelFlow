@@ -56,19 +56,19 @@ $clientes = $datos_formulario['clientes'];
         <div class="row">
             <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box">
-                    <span class="info-box-icon bg-info elevation-1"><i class="fas fa-suitcase"></i></span>
+                    <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-warehouse"></i></span>
                     <div class="info-box-content">
-                        <span class="info-box-text">Equipajes hoy</span>
-                        <span class="info-box-number"><?= $estadisticas['total_hoy']; ?></span>
+                        <span class="info-box-text">En almacén</span>
+                        <span class="info-box-number"><?= $estadisticas['en_almacen']; ?></span>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box">
-                    <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-warehouse"></i></span>
+                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-exclamation-triangle"></i></span>
                     <div class="info-box-content">
-                        <span class="info-box-text">Almacenados hoy</span>
-                        <span class="info-box-number"><?= $estadisticas['almacenados_hoy']; ?></span>
+                        <span class="info-box-text">Vencidos</span>
+                        <span class="info-box-number"><?= $estadisticas['vencidos']; ?></span>
                     </div>
                 </div>
             </div>
@@ -113,6 +113,7 @@ $clientes = $datos_formulario['clientes'];
                                         <select class="form-control select2" id="estado" name="estado">
                                             <option value="">Todos los estados</option>
                                             <option value="almacenado" <?= isset($filtros['estado']) && $filtros['estado'] == 'almacenado' ? 'selected' : ''; ?>>Almacenado</option>
+                                            <option value="vencido" <?= isset($filtros['estado']) && $filtros['estado'] == 'vencido' ? 'selected' : ''; ?>>Vencido</option>
                                             <option value="retirado" <?= isset($filtros['estado']) && $filtros['estado'] == 'retirado' ? 'selected' : ''; ?>>Retirado</option>
                                             <option value="perdido" <?= isset($filtros['estado']) && $filtros['estado'] == 'perdido' ? 'selected' : ''; ?>>Perdido</option>
                                             <option value="dañado" <?= isset($filtros['estado']) && $filtros['estado'] == 'dañado' ? 'selected' : ''; ?>>Dañado</option>
@@ -205,32 +206,7 @@ $clientes = $datos_formulario['clientes'];
                                     <?php
                                     $contador = 1;
                                     foreach ($equipajes as $equipaje) :
-                                        $estado_actual = $equipaje['estado'];
-                                        $clase_estado = '';
-                                        $texto_estado = '';
-
-                                        switch ($estado_actual) {
-                                            case 'almacenado':
-                                                $clase_estado = 'badge-warning';
-                                                $texto_estado = 'Almacenado';
-                                                break;
-                                            case 'retirado':
-                                                $clase_estado = 'badge-success';
-                                                $texto_estado = 'Retirado';
-                                                break;
-                                            case 'perdido':
-                                                $clase_estado = 'badge-danger';
-                                                $texto_estado = 'Perdido';
-                                                break;
-                                            case 'dañado':
-                                                $clase_estado = 'badge-dark';
-                                                $texto_estado = 'Dañado';
-                                                break;
-                                            default:
-                                                $clase_estado = 'badge-secondary';
-                                                $texto_estado = 'Desconocido';
-                                                break;
-                                        }
+                                        $ui = $equipaje['estado_ui'];
                                     ?>
                                         <tr>
                                             <td class="text-center"><?= $contador++; ?></td>
@@ -242,7 +218,7 @@ $clientes = $datos_formulario['clientes'];
                                             <td class="text-center"><?= date('d/m/Y H:i', strtotime($equipaje['fechaentrada'])); ?></td>
                                             <td class="text-right">Bs. <?= number_format($equipaje['monto'], 2); ?></td>
                                             <td class="text-center">
-                                                <span class="badge <?= $clase_estado; ?>"><?= $texto_estado; ?></span>
+                                                <span class="badge <?= $ui['badge']; ?>"><?= $ui['label']; ?></span>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
@@ -257,7 +233,7 @@ $clientes = $datos_formulario['clientes'];
                                                         <i class="fas fa-file-pdf"></i>
                                                     </a>
 
-                                                    <?php if ($estado_actual !== 'retirado'): ?>
+                                                    <?php if ($equipaje['estado'] !== 'retirado'): ?>
                                                         <!-- Botón Editar - Solo visible si no está retirado -->
                                                         <a href="<?= $URL; ?>views/almacenamiento-equipaje/update.php?id=<?= $equipaje['idalmacen']; ?>"
                                                             class="btn btn-warning btn-sm" title="Editar">
@@ -272,7 +248,7 @@ $clientes = $datos_formulario['clientes'];
                                                                 <i class="fas fa-sync-alt"></i>
                                                             </button>
                                                             <div class="dropdown-menu">
-                                                                <?php if ($estado_actual !== 'retirado'): ?>
+                                                                <?php if ($equipaje['estado'] !== 'retirado'): ?>
                                                                     <a class="dropdown-item text-success cambiar-estado"
                                                                         href="#"
                                                                         data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=retirado&csrf_token=<?= generateCSRFToken(); ?>"
@@ -282,7 +258,7 @@ $clientes = $datos_formulario['clientes'];
                                                                     </a>
                                                                 <?php endif; ?>
 
-                                                                <?php if ($estado_actual !== 'perdido'): ?>
+                                                                <?php if ($equipaje['estado'] !== 'perdido'): ?>
                                                                     <a class="dropdown-item text-danger cambiar-estado"
                                                                         href="#"
                                                                         data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=perdido&csrf_token=<?= generateCSRFToken(); ?>"
@@ -292,7 +268,7 @@ $clientes = $datos_formulario['clientes'];
                                                                     </a>
                                                                 <?php endif; ?>
 
-                                                                <?php if ($estado_actual !== 'dañado'): ?>
+                                                                <?php if ($equipaje['estado'] !== 'dañado'): ?>
                                                                     <a class="dropdown-item text-warning cambiar-estado"
                                                                         href="#"
                                                                         data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=dañado&csrf_token=<?= generateCSRFToken(); ?>"
