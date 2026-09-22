@@ -41,7 +41,8 @@ global $URL;
     <!-- Theme style -->
     <link rel="stylesheet" href="<?= $URL; ?>public/css/lib/adminlte/adminlte.min.css">
     <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="<?= $URL; ?>public/css/core/styles.css">
+    <?php $__styles_core_path = __DIR__ . '/../../public/css/core/styles.css'; ?>
+    <link rel="stylesheet" href="<?= $URL; ?>public/css/core/styles.css?v=<?= @filemtime($__styles_core_path) ?: ($APP_VERSION ?? '1'); ?>">
     <!-- Font Awesome Webfonts -->
     <link rel="stylesheet" href="<?= $URL; ?>public/css/core/webfonts.css">
     <link rel="icon" type="image/svg+xml" href="<?= $URL; ?>public/img/hotel-logo.svg">

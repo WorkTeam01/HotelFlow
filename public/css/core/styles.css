@@ -41,3 +41,87 @@ a .info-btn {
     align-items: center;
     justify-content: center;
 }
+
+/*
+ * Pestañas inactivas heredan la familia de color de la card
+ * (card-primary, card-info, card-success, …), tanto en card-outline-tabs
+ * como en card-tabs. AdminLTE solo pinta el border-top del tab activo;
+ * el texto inactivo quedaba en el azul por defecto de Bootstrap o se
+ * hardcodeaba por módulo — aquí se centraliza.
+ *
+ * Se usan variantes oscurecidas de la paleta AdminLTE (misma familia de
+ * tono) para cumplir contraste ≥4.5:1 sobre el header blanco (#fff):
+ * los colores crudos (#17a2b8, #007bff, #28a745, #ffc107) no llegan a AA.
+ */
+.card-primary .nav-tabs .nav-link:not(.active) {
+    color: #0056b3;
+}
+
+.card-primary .nav-tabs .nav-link:not(.active):hover,
+.card-primary .nav-tabs .nav-link:not(.active):focus {
+    color: #004085;
+}
+
+.card-secondary .nav-tabs .nav-link:not(.active) {
+    color: #6c757d;
+}
+
+.card-secondary .nav-tabs .nav-link:not(.active):hover,
+.card-secondary .nav-tabs .nav-link:not(.active):focus {
+    color: #495057;
+}
+
+.card-success .nav-tabs .nav-link:not(.active) {
+    color: #1e7e34;
+}
+
+.card-success .nav-tabs .nav-link:not(.active):hover,
+.card-success .nav-tabs .nav-link:not(.active):focus {
+    color: #155724;
+}
+
+.card-info .nav-tabs .nav-link:not(.active) {
+    color: #117a8b;
+}
+
+.card-info .nav-tabs .nav-link:not(.active):hover,
+.card-info .nav-tabs .nav-link:not(.active):focus {
+    color: #0f6674;
+}
+
+.card-warning .nav-tabs .nav-link:not(.active) {
+    color: #856404;
+}
+
+.card-warning .nav-tabs .nav-link:not(.active):hover,
+.card-warning .nav-tabs .nav-link:not(.active):focus {
+    color: #664d03;
+}
+
+.card-danger .nav-tabs .nav-link:not(.active) {
+    color: #dc3545;
+}
+
+.card-danger .nav-tabs .nav-link:not(.active):hover,
+.card-danger .nav-tabs .nav-link:not(.active):focus {
+    color: #bd2130;
+}
+
+/* card-light es casi blanco: el texto no puede ser "light", se usa gris medio */
+.card-light .nav-tabs .nav-link:not(.active) {
+    color: #6c757d;
+}
+
+.card-light .nav-tabs .nav-link:not(.active):hover,
+.card-light .nav-tabs .nav-link:not(.active):focus {
+    color: #495057;
+}
+
+.card-dark .nav-tabs .nav-link:not(.active) {
+    color: #343a40;
+}
+
+.card-dark .nav-tabs .nav-link:not(.active):hover,
+.card-dark .nav-tabs .nav-link:not(.active):focus {
+    color: #212529;
+}

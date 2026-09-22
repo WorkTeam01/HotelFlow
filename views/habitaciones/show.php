@@ -48,7 +48,6 @@ $historial_limpieza = $controller->getHistorialLimpieza($id);
 // Incluir el encabezado después de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
-$module_styles = ['habitaciones/show-habitaciones'];
 $module_scripts = ['habitaciones/cambiar-estado-habitaciones'];
 include_once '../layouts/header.php';
 

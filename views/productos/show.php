@@ -18,7 +18,6 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
 // Incluir el encabezado
 $skip_select2 = true;
 $skip_chartjs = true;
-$module_styles = ['productos/show-producto'];
 $module_scripts = ['productos/show-producto'];
 include_once '../layouts/header.php';
 // Verificar si se proporcionó un ID

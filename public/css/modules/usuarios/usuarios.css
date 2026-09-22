@@ -10,8 +10,6 @@
      * depender de cuál gana, este módulo fija sus propios valores una sola vez.
      */
     --usuarios-brand-blue: #3c8dbc;
-    --usuarios-info: #17a2b8;
-    --usuarios-info-hover: #138496;
     --usuarios-border-muted: #dee2e6;
     /* #6c757d (Bootstrap .text-muted) da ~4.69:1 sobre blanco, al límite de AA;
        se usa un gris más oscuro aquí para tener margen cómodo (~8.2:1) */
@@ -48,15 +46,6 @@
     width: 100px;
     height: 100px;
     object-fit: cover;
-}
-
-/* Color info para el texto de las pestañas no activas (show.php) */
-#detail-tabs .nav-link:not(.active) {
-    color: var(--usuarios-info);
-}
-
-#detail-tabs .nav-link:not(.active):hover {
-    color: var(--usuarios-info-hover);
 }
 
 /* Guía rápida en formato timeline (col-md-4 de create.php/update.php) */
