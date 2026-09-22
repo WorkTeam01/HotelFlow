@@ -67,7 +67,7 @@ try {
     $idusuario = $_SESSION['usuario_id'];
     $authService = new AuthorizationService();
 
-    if (!($authService->puedeAccederModulo($idusuario, 'equipajes'))) {
+    if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'equipajes')) {
         die("Error: No tiene permisos para generar este recibo");
     }
 
@@ -117,6 +117,7 @@ try {
     $fecha_entrada = $equipaje['fecha_entrada_formateada'] ?? $fecha_actual;
     $estado = $equipaje['estado_formateado'] ?? 'Almacenado';
     $tiempo_almacenado = $equipaje['tiempo_almacenado']['texto'] ?? 'No calculado';
+    $metodopago = $equipaje['metodopago'] ?? 'Efectivo';
 
     // Datos de la empresa - FUENTE: Configurado en el controlador
     $empresa = $equipaje['empresa'] ?? [
@@ -212,6 +213,10 @@ EOD;
         <td width="50%"><strong>Tiempo almacenado:</strong></td>
         <td width="50%">$tiempo_almacenado</td>
     </tr>
+    <tr>
+        <td width="50%"><strong>Método de pago:</strong></td>
+        <td width="50%">$metodopago</td>
+    </tr>
 </table>
 <hr style="margin: 5px 0 3px 0;">
 <table style="margin: 3px 0;">
@@ -277,9 +282,9 @@ EOD;
     // Output PDF
     $pdf->Output('Equipaje_' . $codigo_ticket . '.pdf', $is_mobile ? 'D' : 'I');
 } catch (Exception $e) {
-    // Capturar cualquier error y mostrarlo
-    die("Error al generar el PDF: " . $e->getMessage() . "\nArchivo: " . $e->getFile() . "\nLínea: " . $e->getLine());
+    error_log('[AlmacenamientoEquipaje] Error generando recibo PDF: ' . $e->getMessage());
+    die("Ocurrió un error al generar el PDF. Intente nuevamente.");
 } catch (Error $e) {
-    // Capturar errores fatales
-    die("Error fatal al generar el PDF: " . $e->getMessage() . "\nArchivo: " . $e->getFile() . "\nLínea: " . $e->getLine());
+    error_log('[AlmacenamientoEquipaje] Error fatal generando recibo PDF: ' . $e->getMessage());
+    die("Ocurrió un error al generar el PDF. Intente nuevamente.");
 }
