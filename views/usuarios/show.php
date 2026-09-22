@@ -53,8 +53,8 @@ if (!$usuario) {
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/usuarios"><i class="fas fa-users"></i> Usuarios</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home" aria-hidden="true"></i> Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/usuarios"><i class="fas fa-users" aria-hidden="true"></i> Usuarios</a></li>
                     <li class="breadcrumb-item active">Detalle de Usuario</li>
                 </ol>
             </div>
@@ -71,22 +71,23 @@ if (!$usuario) {
                 <!-- Tarjeta de perfil con imagen -->
                 <div class="card card-info card-outline">
                     <div class="card-body box-profile">
-                        <div class="text-center position-relative mb-4">
-                            <?php if (isset($usuario['imagen']) && !empty($usuario['imagen'])): ?>
-                                <img class="profile-user-img img-fluid img-circle usuario-avatar-perfil"
-                                    src="<?= $URL; ?>public/uploads/usuarios/<?= htmlspecialchars($usuario['imagen']); ?>"
-                                    alt="Imagen de perfil">
-                            <?php else: ?>
-                                <img class="profile-user-img img-fluid img-circle usuario-avatar-perfil"
-                                    src="<?= $URL; ?>public/uploads/usuarios/user_default.jpg"
-                                    alt="Imagen de perfil">
-                            <?php endif; ?>
+                        <div class="text-center mb-4">
+                            <div class="d-inline-block position-relative">
+                                <?php if (isset($usuario['imagen']) && !empty($usuario['imagen'])): ?>
+                                    <img class="profile-user-img img-fluid img-circle usuario-avatar-perfil"
+                                        src="<?= $URL; ?>public/uploads/usuarios/<?= htmlspecialchars($usuario['imagen']); ?>"
+                                        alt="Foto de <?= htmlspecialchars($usuario['nombre']); ?>">
+                                <?php else: ?>
+                                    <img class="profile-user-img img-fluid img-circle usuario-avatar-perfil"
+                                        src="<?= $URL; ?>public/uploads/usuarios/user_default.jpg"
+                                        alt="Foto de perfil por defecto">
+                                <?php endif; ?>
 
-                            <!-- Indicador de estado sobre la imagen -->
-                            <span id="avatarEstadoBadge" class="position-absolute badge <?= $usuario['estado'] == 1 ? 'badge-success' : 'badge-danger'; ?>"
-                                style="top: 0; right: 50%; transform: translateX(60px);">
-                                <i class="fas <?= $usuario['estado'] == 1 ? 'fa-check' : 'fa-times'; ?>"></i>
-                            </span>
+                                <span id="avatarEstadoBadge" class="badge <?= $usuario['estado'] == 1 ? 'badge-success' : 'badge-danger'; ?>"
+                                    style="position: absolute; top: -4px; right: -4px;">
+                                    <i class="fas <?= $usuario['estado'] == 1 ? 'fa-check' : 'fa-times'; ?>" aria-hidden="true"></i>
+                                </span>
+                            </div>
                         </div>
 
                         <h3 class="profile-username text-center">
@@ -99,18 +100,18 @@ if (!$usuario) {
 
                         <ul class="list-group list-group-unbordered mb-4">
                             <li class="list-group-item">
-                                <b><i class="fas fa-id-card mr-2"></i><?= htmlspecialchars($usuario['tipodocumento']); ?></b>
+                                <b><i class="fas fa-id-card mr-2" aria-hidden="true"></i><?= htmlspecialchars($usuario['tipodocumento']); ?></b>
                                 <span class="float-right"><?= htmlspecialchars($usuario['numdocumento']); ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b><i class="fas fa-envelope mr-2"></i>Correo</b>
+                                <b><i class="fas fa-envelope mr-2" aria-hidden="true"></i>Correo</b>
                                 <span class="float-right"><?= htmlspecialchars($usuario['correo']); ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b><i class="fas fa-phone mr-2"></i>Teléfono</b>
+                                <b><i class="fas fa-phone mr-2" aria-hidden="true"></i>Teléfono</b>
                                 <span class="float-right">
                                     <?php if (!empty($usuario['telefono'])): ?>
-                                        <a href="https://wa.me/591<?= htmlspecialchars($usuario['telefono']); ?>"
+                                        <a href="https://wa.me/591<?= htmlspecialchars(preg_replace('/[^0-9]/', '', ltrim($usuario['telefono'], '0'))); ?>"
                                             target="_blank" class="badge badge-success p-1">
                                             <i class="fab fa-whatsapp"></i>
                                             <?= htmlspecialchars($usuario['telefono']); ?>
@@ -121,7 +122,7 @@ if (!$usuario) {
                                 </span>
                             </li>
                             <li class="list-group-item">
-                                <b><i class="fas fa-calendar-alt mr-2"></i>Fecha Registro</b>
+                                <b><i class="fas fa-calendar-alt mr-2" aria-hidden="true"></i>Fecha Registro</b>
                                 <span class="float-right">
                                     <?= date('d/m/Y', strtotime($usuario['fechacreacion'])); ?>
                                 </span>
@@ -130,10 +131,10 @@ if (!$usuario) {
 
                         <div class="d-flex justify-content-between">
                             <a href="<?= $URL; ?>views/usuarios/update.php?id=<?= $usuario['idusuario']; ?>" class="btn btn-warning">
-                                <i class="fas fa-edit"></i> Editar
+                                <i class="fas fa-edit" aria-hidden="true"></i> Editar
                             </a>
                             <a href="<?= $URL; ?>views/usuarios/index.php" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Volver
+                                <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
                             </a>
                         </div>
                     </div>
@@ -142,7 +143,7 @@ if (!$usuario) {
                 <!-- Tarjeta de acciones adicionales -->
                 <div class="card card-info">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-cogs mr-2"></i>Acciones</h3>
+                        <h3 class="card-title"><i class="fas fa-cogs mr-2" aria-hidden="true"></i>Acciones</h3>
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
@@ -150,7 +151,7 @@ if (!$usuario) {
                                 data-id="<?= $usuario['idusuario']; ?>"
                                 data-estado="<?= $usuario['estado']; ?>"
                                 data-nombre="<?= htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellidop']); ?>">
-                                <i class="fas <?= $usuario['estado'] == 1 ? 'fa-user-slash text-danger' : 'fa-user-check text-success'; ?> mr-2"></i>
+                                <i class="fas <?= $usuario['estado'] == 1 ? 'fa-user-slash text-danger' : 'fa-user-check text-success'; ?> mr-2" aria-hidden="true"></i>
                                 <span id="btnCambiarEstadoTexto"><?= $usuario['estado'] == 1 ? 'Desactivar usuario' : 'Activar usuario'; ?></span>
                             </a>
                         </div>
@@ -166,17 +167,17 @@ if (!$usuario) {
                         <ul class="nav nav-tabs" id="detail-tabs" role="tablist">
                             <li class="nav-item">
                                 <a class="nav-link active" id="tab-personal" data-toggle="pill" href="#personal" role="tab" aria-controls="personal" aria-selected="true">
-                                    <i class="fas fa-user mr-1"></i> Información Personal
+                                    <i class="fas fa-user mr-1" aria-hidden="true"></i> Información Personal
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" id="tab-contacto" data-toggle="pill" href="#contacto" role="tab" aria-controls="contacto" aria-selected="false">
-                                    <i class="fas fa-address-book mr-1"></i> Contacto
+                                    <i class="fas fa-address-book mr-1" aria-hidden="true"></i> Contacto
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" id="tab-sistema" data-toggle="pill" href="#sistema" role="tab" aria-controls="sistema" aria-selected="false">
-                                    <i class="fas fa-cogs mr-1"></i> Sistema
+                                    <i class="fas fa-cogs mr-1" aria-hidden="true"></i> Sistema
                                 </a>
                             </li>
                         </ul>
@@ -202,15 +203,15 @@ if (!$usuario) {
                                     <table class="table table-hover table-striped">
                                         <tbody>
                                             <tr>
-                                                <th style="width: 30%"><i class="fas fa-id-badge mr-2"></i>Tipo Documento</th>
+                                                <th style="width: 30%"><i class="fas fa-id-badge mr-2" aria-hidden="true"></i>Tipo Documento</th>
                                                 <td><?= htmlspecialchars($usuario['tipodocumento']); ?></td>
                                             </tr>
                                             <tr>
-                                                <th><i class="fas fa-hashtag mr-2"></i>Número Documento</th>
+                                                <th><i class="fas fa-hashtag mr-2" aria-hidden="true"></i>Número Documento</th>
                                                 <td><?= htmlspecialchars($usuario['numdocumento']); ?></td>
                                             </tr>
                                             <tr>
-                                                <th><i class="fas fa-map-marker-alt mr-2"></i>Dirección</th>
+                                                <th><i class="fas fa-map-marker-alt mr-2" aria-hidden="true"></i>Dirección</th>
                                                 <td>
                                                     <?php if (!empty($usuario['direccion'])): ?>
                                                         <?= htmlspecialchars($usuario['direccion']); ?>
@@ -229,7 +230,7 @@ if (!$usuario) {
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="info-box">
-                                            <span class="info-box-icon bg-info"><i class="fas fa-envelope"></i></span>
+                                            <span class="info-box-icon bg-info"><i class="fas fa-envelope" aria-hidden="true"></i></span>
                                             <div class="info-box-content">
                                                 <span class="info-box-text">Correo Electrónico</span>
                                                 <span class="info-box-number">
@@ -243,12 +244,12 @@ if (!$usuario) {
                                     </div>
                                     <div class="col-md-6">
                                         <div class="info-box">
-                                            <span class="info-box-icon bg-success"><i class="fas fa-phone"></i></span>
+                                            <span class="info-box-icon bg-success"><i class="fas fa-phone" aria-hidden="true"></i></span>
                                             <div class="info-box-content">
                                                 <span class="info-box-text">Teléfono</span>
                                                 <span class="info-box-number">
                                                     <?php if (!empty($usuario['telefono'])): ?>
-                                                        <a href="https://wa.me/591<?= htmlspecialchars($usuario['telefono']); ?>"
+                                                        <a href="https://wa.me/591<?= htmlspecialchars(preg_replace('/[^0-9]/', '', ltrim($usuario['telefono'], '0'))); ?>"
                                                             target="_blank" class="text-success">
                                                             <?= htmlspecialchars($usuario['telefono']); ?>
                                                         </a>
@@ -269,7 +270,7 @@ if (!$usuario) {
                                             </div>
                                             <div class="card-body">
                                                 <p class="text-muted">
-                                                    <i class="fas fa-info-circle mr-1"></i>
+                                                    <i class="fas fa-info-circle mr-1" aria-hidden="true"></i>
                                                     Para contactar a este usuario, puede utilizar cualquiera de los medios
                                                     de comunicación proporcionados anteriormente.
                                                 </p>
@@ -284,9 +285,9 @@ if (!$usuario) {
                                 <div class="timeline">
                                     <!-- Fecha de Creación -->
                                     <div>
-                                        <i class="fas fa-user-plus bg-primary"></i>
+                                        <i class="fas fa-user-plus bg-primary" aria-hidden="true"></i>
                                         <div class="timeline-item">
-                                            <span class="time"><i class="fas fa-clock"></i> <?= date('H:i', strtotime($usuario['fechacreacion'])); ?></span>
+                                            <span class="time"><i class="fas fa-clock" aria-hidden="true"></i> <?= date('H:i', strtotime($usuario['fechacreacion'])); ?></span>
                                             <h3 class="timeline-header"><strong>Registro en el Sistema</strong></h3>
                                             <div class="timeline-body">
                                                 Este usuario fue registrado el <?= date('d/m/Y', strtotime($usuario['fechacreacion'])); ?>
@@ -297,9 +298,9 @@ if (!$usuario) {
                                     <!-- Última Actualización -->
                                     <?php if (!empty($usuario['fechaactualizacion'])): ?>
                                         <div>
-                                            <i class="fas fa-edit bg-warning"></i>
+                                            <i class="fas fa-edit bg-warning" aria-hidden="true"></i>
                                             <div class="timeline-item">
-                                                <span class="time"><i class="fas fa-clock"></i> <?= date('H:i', strtotime($usuario['fechaactualizacion'])); ?></span>
+                                                <span class="time"><i class="fas fa-clock" aria-hidden="true"></i> <?= date('H:i', strtotime($usuario['fechaactualizacion'])); ?></span>
                                                 <h3 class="timeline-header"><strong>Última Actualización</strong></h3>
                                                 <div class="timeline-body">
                                                     La información fue actualizada por última vez el <?= date('d/m/Y', strtotime($usuario['fechaactualizacion'])); ?>
@@ -324,7 +325,7 @@ if (!$usuario) {
 
                                     <!-- Cargo del Usuario -->
                                     <div>
-                                        <i class="fas fa-user-tag bg-info"></i>
+                                        <i class="fas fa-user-tag bg-info" aria-hidden="true"></i>
                                         <div class="timeline-item">
                                             <h3 class="timeline-header"><strong>Cargo en el Sistema</strong></h3>
                                             <div class="timeline-body">
@@ -354,7 +355,7 @@ if (!$usuario) {
                                     </div>
 
                                     <div>
-                                        <i class="fas fa-clock bg-gray"></i>
+                                        <i class="fas fa-clock bg-gray" aria-hidden="true"></i>
                                     </div>
                                 </div>
                             </div>

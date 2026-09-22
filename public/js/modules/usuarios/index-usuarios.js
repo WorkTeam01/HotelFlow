@@ -11,7 +11,7 @@ $(document).ready(function () {
                 text: 'Copiar',
                 extend: 'copy',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5]
+                    columns: [0, 1, 2, 3, 4, 6, 7]
                 }
             }, {
                 extend: 'pdf',
@@ -19,7 +19,7 @@ $(document).ready(function () {
                 filename: 'usuarios_sistema_' + new Date().toISOString().slice(0, 10),
                 pageSize: 'LETTER',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5]
+                    columns: [0, 1, 2, 3, 4, 6, 7]
                 },
                 customize: function (doc) {
 
@@ -92,21 +92,13 @@ $(document).ready(function () {
                 messageTop: 'Registro de usuarios del sistema',
                 messageBottom: 'Documento generado el ' + new Date().toLocaleDateString('es-BO'),
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5],
-                    format: {
-                        body: function (data, row, column, node) {
-                            if (column === 5) {
-                                return $(node).find('span').text();
-                            }
-                            return data;
-                        }
-                    }
+                    columns: [0, 1, 2, 3, 4, 6, 7]
                 }
             }, {
                 extend: 'csv',
                 text: 'CSV',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5]
+                    columns: [0, 1, 2, 3, 4, 6, 7]
                 }
             }, {
                 extend: 'print',

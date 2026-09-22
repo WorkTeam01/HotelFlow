@@ -34,7 +34,7 @@ $usuarios = $controller->index();
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home" aria-hidden="true"></i> Inicio</a></li>
                     <li class="breadcrumb-item active">Usuarios</li>
                 </ol>
             </div>
@@ -52,10 +52,10 @@ $usuarios = $controller->index();
                         <h3 class="card-title">Listado de Usuarios</h3>
                         <div class="card-tools">
                             <a href="<?= $URL; ?>views/usuarios/create.php" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus"></i> Nuevo Usuario
+                                <i class="fas fa-plus" aria-hidden="true"></i> Nuevo Usuario
                             </a>
                             <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir esta sección">
-                                <i class="fas fa-minus"></i>
+                                <i class="fas fa-minus" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -92,9 +92,9 @@ $usuarios = $controller->index();
                                             <td><?= htmlspecialchars($usuario['correo']); ?></td>
                                             <td class="text-center">
                                                 <?php if (isset($usuario['imagen'])): ?>
-                                                    <img src="<?= $URL; ?>public/uploads/usuarios/<?= htmlspecialchars($usuario['imagen']); ?>" loading="lazy" alt="Imagen" class="img-thumbnail" width="40">
+                                                    <img src="<?= $URL; ?>public/uploads/usuarios/<?= htmlspecialchars($usuario['imagen']); ?>" loading="lazy" alt="Foto de <?= htmlspecialchars($usuario['nombre']); ?>" class="img-thumbnail" width="40">
                                                 <?php else : ?>
-                                                    <img src="<?= $URL; ?>public/uploads/usuarios/user_default.jpg" loading="lazy" alt="Imagen" class="img-thumbnail" width="40">
+                                                    <img src="<?= $URL; ?>public/uploads/usuarios/user_default.jpg" loading="lazy" alt="Foto de perfil por defecto" class="img-thumbnail" width="40">
                                                 <?php endif; ?>
                                             </td>
                                             <td><?= (!empty($usuario['cargo'])) ? htmlspecialchars($usuario['cargo']) : 'N/A'; ?></td>
@@ -108,17 +108,17 @@ $usuarios = $controller->index();
                                             <td class="text-center">
                                                 <div class="btn-group">
                                                     <a href="<?= $URL; ?>views/usuarios/show.php?id=<?= $usuario['idusuario']; ?>" class="btn btn-info btn-sm" aria-label="Ver usuario">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="fas fa-eye" aria-hidden="true"></i>
                                                     </a>
                                                     <a href="<?= $URL; ?>views/usuarios/update.php?id=<?= $usuario['idusuario']; ?>" class="btn btn-warning btn-sm" aria-label="Editar usuario">
-                                                        <i class="fas fa-edit"></i>
+                                                        <i class="fas fa-edit" aria-hidden="true"></i>
                                                     </a>
                                                     <button type="button" class="btn <?= $clase_boton_estado; ?> btn-sm btn-cambiar-estado"
                                                         data-id="<?= $usuario['idusuario']; ?>"
                                                         data-estado="<?= $estado_actual; ?>"
                                                         data-nombre="<?= htmlspecialchars($usuario['nombre']); ?>"
                                                         aria-label="<?= $estado_actual == 1 ? 'Desactivar usuario' : 'Activar usuario'; ?>">
-                                                        <i class="fas <?= $icono_boton_estado; ?>"></i>
+                                                        <i class="fas <?= $icono_boton_estado; ?>" aria-hidden="true"></i>
                                                     </button>
                                                 </div>
                                             </td>

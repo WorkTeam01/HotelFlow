@@ -30,8 +30,8 @@ include_once '../layouts/header.php';
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/usuarios"><i class="fas fa-users"></i> Usuarios</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home" aria-hidden="true"></i> Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/usuarios"><i class="fas fa-users" aria-hidden="true"></i> Usuarios</a></li>
                     <li class="breadcrumb-item active">Crear Usuario</li>
                 </ol>
             </div>
@@ -48,14 +48,14 @@ include_once '../layouts/header.php';
                 <!-- Columna del formulario (8/12) -->
                 <div class="col-md-8">
                     <div class="callout callout-info">
-                        <h5><i class="fas fa-info-circle"></i> Información importante</h5>
+                        <h5><i class="fas fa-info-circle" aria-hidden="true"></i> Información importante</h5>
                         <p class="mb-0">Los campos marcados con <span class="text-danger">*</span> son obligatorios. Asegúrese de completar todos los datos requeridos.</p>
                     </div>
 
                     <!-- Información Personal -->
                     <div class="card card-outline card-primary mb-3">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-id-card mr-2"></i>Información Personal</h3>
+                            <h3 class="card-title"><i class="fas fa-id-card mr-2" aria-hidden="true"></i>Información Personal</h3>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -65,7 +65,7 @@ include_once '../layouts/header.php';
                                         <label for="nombre">Nombre <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-user" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="text" class="form-control" id="nombre" name="nombre"
                                                 placeholder="Ingrese el nombre" required>
@@ -79,7 +79,7 @@ include_once '../layouts/header.php';
                                         <label for="apellidop">Apellido Paterno <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-user" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="text" class="form-control" id="apellidop" name="apellidop"
                                                 placeholder="Ingrese el apellido paterno" required>
@@ -93,7 +93,7 @@ include_once '../layouts/header.php';
                                         <label for="apellidom">Apellido Materno</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-user" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="text" class="form-control" id="apellidom" name="apellidom"
                                                 placeholder="Ingrese el apellido materno">
@@ -124,7 +124,7 @@ include_once '../layouts/header.php';
                                         <label for="numdocumento">Número de Documento <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-hashtag" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="text" class="form-control" id="numdocumento" name="numdocumento"
                                                 placeholder="Ingrese el número de documento" required>
@@ -141,7 +141,7 @@ include_once '../layouts/header.php';
                                         <label for="direccion">Dirección</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-map-marker-alt" aria-hidden="true"></i></span>
                                             </div>
                                             <textarea class="form-control" id="direccion" name="direccion" rows="2"
                                                 placeholder="Ingrese la dirección"></textarea>
@@ -156,7 +156,7 @@ include_once '../layouts/header.php';
                     <!-- Información de Contacto -->
                     <div class="card card-outline card-primary mb-3">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-address-book mr-2"></i>Información de Contacto</h3>
+                            <h3 class="card-title"><i class="fas fa-address-book mr-2" aria-hidden="true"></i>Información de Contacto</h3>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -166,7 +166,7 @@ include_once '../layouts/header.php';
                                         <label for="telefono">Teléfono</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-phone" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="tel" class="form-control" id="telefono" name="telefono"
                                                 placeholder="Ingrese el teléfono">
@@ -180,7 +180,7 @@ include_once '../layouts/header.php';
                                         <label for="correo">Correo Electrónico <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-envelope" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="email" class="form-control" id="correo" name="correo"
                                                 placeholder="Ingrese el correo electrónico" required>
@@ -195,7 +195,7 @@ include_once '../layouts/header.php';
                     <!-- Información de Acceso -->
                     <div class="card card-outline card-primary mb-3">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-key mr-2"></i>Información de Acceso</h3>
+                            <h3 class="card-title"><i class="fas fa-key mr-2" aria-hidden="true"></i>Información de Acceso</h3>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -232,13 +232,13 @@ include_once '../layouts/header.php';
                                         <label for="clave">Contraseña <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-lock" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="password" class="form-control" id="clave" name="clave"
                                                 placeholder="Ingrese la contraseña" required>
                                             <div class="input-group-append">
                                                 <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#clave" aria-label="Mostrar contraseña" aria-pressed="false">
-                                                    <i class="fas fa-eye"></i>
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -252,17 +252,17 @@ include_once '../layouts/header.php';
                                         <label for="confirmar_clave">Confirmar Contraseña <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-lock" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="password" class="form-control" id="confirmar_clave" name="confirmar_clave"
                                                 placeholder="Confirme la contraseña" required>
                                             <div class="input-group-append">
                                                 <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#confirmar_clave" aria-label="Mostrar contraseña" aria-pressed="false">
-                                                    <i class="fas fa-eye"></i>
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                                 </button>
                                             </div>
                                         </div>
-                                        <div class="password-feedback mt-1"></div>
+                                        <div class="password-feedback mt-1" role="status" aria-live="polite"></div>
                                     </div>
                                 </div>
                             </div>
@@ -274,7 +274,7 @@ include_once '../layouts/header.php';
                                         <label for="imagen">Imagen de Perfil</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-image"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-image" aria-hidden="true"></i></span>
                                             </div>
                                             <div class="custom-file">
                                                 <input type="file" class="custom-file-input" id="imagen" name="imagen"
@@ -291,7 +291,7 @@ include_once '../layouts/header.php';
                                     <div id="preview-container" style="display: none;">
                                         <label>Vista Previa:</label>
                                         <div class="text-center">
-                                            <img id="preview-image" src="#" alt="Vista previa" class="img-thumbnail usuario-avatar-preview-sm">
+                                            <img id="preview-image" src="" alt="Vista previa de imagen" class="img-thumbnail usuario-avatar-preview-sm">
                                         </div>
                                     </div>
                                 </div>
@@ -303,20 +303,20 @@ include_once '../layouts/header.php';
                     <!-- Asignación de Permisos -->
                     <div class="card card-outline card-primary">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-lock mr-2"></i>Asignación de Permisos</h3>
+                            <h3 class="card-title"><i class="fas fa-lock mr-2" aria-hidden="true"></i>Asignación de Permisos</h3>
                         </div>
                         <div class="card-body">
                             <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> Los permisos se asignan automáticamente según el cargo seleccionado. Puede personalizar los permisos si es necesario.
+                                <i class="fas fa-info-circle" aria-hidden="true"></i> Los permisos se asignan automáticamente según el cargo seleccionado. Puede personalizar los permisos si es necesario.
                             </div>
 
                             <!-- Botones para seleccionar/deseleccionar todos -->
                             <div class="mb-3">
                                 <button type="button" class="btn btn-outline-primary btn-sm" id="selectAllPermissions">
-                                    <i class="fas fa-check-square"></i> Seleccionar Todos
+                                    <i class="fas fa-check-square" aria-hidden="true"></i> Seleccionar Todos
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary btn-sm ml-2" id="deselectAllPermissions">
-                                    <i class="fas fa-square"></i> Deseleccionar Todos
+                                    <i class="fas fa-square" aria-hidden="true"></i> Deseleccionar Todos
                                 </button>
                             </div>
 
@@ -380,12 +380,12 @@ include_once '../layouts/header.php';
                             <div class="row">
                                 <div class="col-12 col-sm-auto mb-2 mb-sm-0">
                                     <button type="submit" class="btn btn-primary w-100">
-                                        <i class="fas fa-save mr-2"></i> Guardar Usuario
+                                        <i class="fas fa-save mr-2" aria-hidden="true"></i> Guardar Usuario
                                     </button>
                                 </div>
                                 <div class="col-12 col-sm-auto">
                                     <a href="<?= $URL; ?>views/usuarios/index.php" class="btn btn-secondary w-100">
-                                        <i class="fas fa-times mr-2"></i> Cancelar
+                                        <i class="fas fa-times mr-2" aria-hidden="true"></i> Cancelar
                                     </a>
                                 </div>
                             </div>
@@ -399,10 +399,10 @@ include_once '../layouts/header.php';
                 <div class="col-md-4">
                     <div class="card card-outline card-info usuario-guia-card">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-route mr-2"></i>Guía rápida</h3>
+                            <h3 class="card-title"><i class="fas fa-route mr-2" aria-hidden="true"></i>Guía rápida</h3>
                             <div class="card-tools">
                                 <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir esta sección">
-                                    <i class="fas fa-minus"></i>
+                                    <i class="fas fa-minus" aria-hidden="true"></i>
                                 </button>
                             </div>
                         </div>
@@ -411,7 +411,7 @@ include_once '../layouts/header.php';
 
                             <ul class="usuario-timeline">
                                 <li class="usuario-timeline-item">
-                                    <span class="usuario-timeline-icon bg-primary"><i class="fas fa-id-card"></i></span>
+                                    <span class="usuario-timeline-icon bg-primary"><i class="fas fa-id-card" aria-hidden="true"></i></span>
                                     <div class="usuario-timeline-content">
                                         <h6>Datos personales</h6>
                                         <p>Nombre completo y documento de identidad. El apellido materno y la dirección son opcionales.</p>
@@ -419,14 +419,14 @@ include_once '../layouts/header.php';
                                     </div>
                                 </li>
                                 <li class="usuario-timeline-item">
-                                    <span class="usuario-timeline-icon bg-primary"><i class="fas fa-envelope"></i></span>
+                                    <span class="usuario-timeline-icon bg-primary"><i class="fas fa-envelope" aria-hidden="true"></i></span>
                                     <div class="usuario-timeline-content">
                                         <h6>Contacto</h6>
                                         <p>El correo debe ser único: se usará para iniciar sesión en el sistema.</p>
                                     </div>
                                 </li>
                                 <li class="usuario-timeline-item">
-                                    <span class="usuario-timeline-icon bg-primary"><i class="fas fa-user-tag"></i></span>
+                                    <span class="usuario-timeline-icon bg-primary"><i class="fas fa-user-tag" aria-hidden="true"></i></span>
                                     <div class="usuario-timeline-content">
                                         <h6>Cargo y permisos</h6>
                                         <p>El cargo define los permisos iniciales; puedes ajustarlos manualmente en la pestaña correspondiente.</p>
@@ -434,14 +434,14 @@ include_once '../layouts/header.php';
                                     </div>
                                 </li>
                                 <li class="usuario-timeline-item">
-                                    <span class="usuario-timeline-icon bg-warning"><i class="fas fa-lock"></i></span>
+                                    <span class="usuario-timeline-icon bg-warning"><i class="fas fa-lock" aria-hidden="true"></i></span>
                                     <div class="usuario-timeline-content">
                                         <h6>Contraseña segura</h6>
                                         <p>Mínimo 6 caracteres. Combina mayúsculas, números y símbolos. Ej: <code>Aloja@2023</code></p>
                                     </div>
                                 </li>
                                 <li class="usuario-timeline-item usuario-timeline-item-last">
-                                    <span class="usuario-timeline-icon bg-success"><i class="fas fa-image"></i></span>
+                                    <span class="usuario-timeline-icon bg-success"><i class="fas fa-image" aria-hidden="true"></i></span>
                                     <div class="usuario-timeline-content">
                                         <h6>Imagen de perfil</h6>
                                         <p>Opcional. Usa una imagen cuadrada de al menos 200x200 px; si no subes ninguna, se asigna una por defecto.</p>
@@ -450,7 +450,7 @@ include_once '../layouts/header.php';
                             </ul>
 
                             <div class="alert alert-secondary mb-0 mt-3">
-                                <i class="fas fa-check-double mr-1"></i> Revisa los datos antes de guardar: el correo y el número de documento deben ser únicos.
+                                <i class="fas fa-check-double mr-1" aria-hidden="true"></i> Revisa los datos antes de guardar: el correo y el número de documento deben ser únicos.
                             </div>
                         </div>
                     </div>

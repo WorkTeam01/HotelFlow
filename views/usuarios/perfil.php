@@ -54,7 +54,7 @@ if (!$usuario) {
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home" aria-hidden="true"></i> Inicio</a></li>
                     <li class="breadcrumb-item active">Perfil de Usuario</li>
                 </ol>
             </div>
@@ -74,20 +74,20 @@ if (!$usuario) {
                         <div class="text-center">
                             <img class="profile-user-img img-fluid img-circle usuario-avatar-mini"
                                 src="<?= $URL . 'public/uploads/usuarios/' . (!empty($usuario['imagen']) && file_exists(__DIR__ . '/../../public/uploads/usuarios/' . $usuario['imagen']) ? htmlspecialchars($usuario['imagen']) : 'user_default.jpg'); ?>"
-                                alt="User profile picture">
+                                alt="Foto de perfil">
                         </div>
                         <h3 class="profile-username text-center"><?= htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellidop']); ?></h3>
                         <p class="text-muted text-center"><?= htmlspecialchars($usuario['cargo'] ?? 'N/A'); ?></p>
 
                         <ul class="list-group list-group-unbordered mb-3">
                             <li class="list-group-item">
-                                <b>Correo</b> <a class="float-right"><?= htmlspecialchars($usuario['correo'] ?? 'N/A'); ?></a>
+                                <b>Correo</b> <span class="float-right"><?= htmlspecialchars($usuario['correo'] ?? 'N/A'); ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b>Teléfono</b> <a class="float-right"><?= htmlspecialchars($usuario['telefono'] ?? 'N/A'); ?></a>
+                                <b>Teléfono</b> <span class="float-right"><?= htmlspecialchars($usuario['telefono'] ?? 'N/A'); ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b>Documento</b> <a class="float-right"><?= htmlspecialchars($usuario['tipodocumento'] . ': ' . $usuario['numdocumento']); ?></a>
+                                <b>Documento</b> <span class="float-right"><?= htmlspecialchars($usuario['tipodocumento'] . ': ' . $usuario['numdocumento']); ?></span>
                             </li>
                         </ul>
                     </div>
@@ -98,15 +98,25 @@ if (!$usuario) {
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header p-2">
-                        <ul class="nav nav-pills">
-                            <li class="nav-item"><a class="nav-link active" href="#actualizarImagen" data-toggle="tab">Actualizar Imagen</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#cambiarPassword" data-toggle="tab">Cambiar Contraseña</a></li>
+                        <ul class="nav nav-pills" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link active" id="tab-actualizar-imagen" href="#actualizarImagen"
+                                    data-toggle="tab" role="tab" aria-controls="actualizarImagen" aria-selected="true">
+                                    Actualizar Imagen
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="tab-cambiar-password" href="#cambiarPassword"
+                                    data-toggle="tab" role="tab" aria-controls="cambiarPassword" aria-selected="false">
+                                    Cambiar Contraseña
+                                </a>
+                            </li>
                         </ul>
                     </div><!-- /.card-header -->
                     <div class="card-body">
                         <div class="tab-content">
                             <!-- Tab Actualizar Imagen -->
-                            <div class="active tab-pane" id="actualizarImagen">
+                            <div class="active tab-pane" id="actualizarImagen" role="tabpanel" aria-labelledby="tab-actualizar-imagen">
                                 <form action="<?= $URL; ?>controllers/usuarios/procesar_actualizar_imagen.php" method="POST" enctype="multipart/form-data">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()); ?>">
                                     <div class="row">
@@ -144,7 +154,7 @@ if (!$usuario) {
                                         <div class="col-md-12">
                                             <div class="form-group">
                                                 <label>Vista Previa Nueva Imagen:</label><br>
-                                                <img id="preview-image" src="#" alt="Vista previa" class="img-thumbnail usuario-avatar-preview">
+                                                <img id="preview-image" src="" alt="Vista previa de imagen" class="img-thumbnail usuario-avatar-preview">
                                             </div>
                                         </div>
                                     </div>
@@ -157,11 +167,11 @@ if (!$usuario) {
                             </div>
 
                             <!-- Tab Cambiar Contraseña -->
-                            <div class="tab-pane" id="cambiarPassword">
+                            <div class="tab-pane" id="cambiarPassword" role="tabpanel" aria-labelledby="tab-cambiar-password">
                                 <form id="formCambiarPassword" action="javascript:void(0)">
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generateCSRFToken()); ?>">
                                     <div class="alert alert-info">
-                                        <i class="fas fa-info-circle"></i> Al cambiar su contraseña, se cerrará su sesión y deberá iniciar sesión nuevamente.
+                                        <i class="fas fa-info-circle" aria-hidden="true"></i> Al cambiar su contraseña, se cerrará su sesión y deberá iniciar sesión nuevamente.
                                     </div>
 
                                     <div class="form-group row">
@@ -171,7 +181,7 @@ if (!$usuario) {
                                                 <input type="password" class="form-control" id="clave_actual" name="clave_actual" placeholder="Contraseña Actual" required>
                                                 <div class="input-group-append">
                                                     <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#clave_actual" aria-label="Mostrar contraseña" aria-pressed="false">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="fas fa-eye" aria-hidden="true"></i>
                                                     </button>
                                                 </div>
                                             </div>
@@ -184,7 +194,7 @@ if (!$usuario) {
                                                 <input type="password" class="form-control" id="nueva_clave" name="nueva_clave" placeholder="Nueva Contraseña" required minlength="6">
                                                 <div class="input-group-append">
                                                     <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#nueva_clave" aria-label="Mostrar contraseña" aria-pressed="false">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="fas fa-eye" aria-hidden="true"></i>
                                                     </button>
                                                 </div>
                                             </div>
@@ -197,7 +207,7 @@ if (!$usuario) {
                                                 <input type="password" class="form-control" id="confirmar_nueva_clave" name="confirmar_nueva_clave" placeholder="Confirmar Nueva Contraseña" required minlength="6">
                                                 <div class="input-group-append">
                                                     <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#confirmar_nueva_clave" aria-label="Mostrar contraseña" aria-pressed="false">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="fas fa-eye" aria-hidden="true"></i>
                                                     </button>
                                                 </div>
                                             </div>

@@ -53,9 +53,9 @@ if (!$usuario) {
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/usuarios"><i class="fas fa-users"></i> Usuarios</a></li>
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/usuarios/show.php?id=<?= $usuario['idusuario']; ?>"><i class="fas fa-user"></i> Ver Usuario</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home" aria-hidden="true"></i> Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/usuarios"><i class="fas fa-users" aria-hidden="true"></i> Usuarios</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/usuarios/show.php?id=<?= $usuario['idusuario']; ?>"><i class="fas fa-user" aria-hidden="true"></i> Ver Usuario</a></li>
                     <li class="breadcrumb-item active">Editar Usuario</li>
                 </ol>
             </div>
@@ -73,14 +73,14 @@ if (!$usuario) {
                 <!-- Columna del formulario (8/12) -->
                 <div class="col-md-8">
                     <div class="callout callout-warning">
-                        <h5><i class="fas fa-info-circle"></i> Editando usuario ID: <?= $usuario['idusuario']; ?></h5>
+                        <h5><i class="fas fa-info-circle" aria-hidden="true"></i> Editando usuario ID: <?= $usuario['idusuario']; ?></h5>
                         <p class="mb-0">Los campos marcados con <span class="text-danger">*</span> son obligatorios. Los campos sin modificar mantendrán su valor actual.</p>
                     </div>
 
                     <!-- Información Personal -->
                     <div class="card card-outline card-warning mb-3">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-id-card mr-2"></i>Información Personal</h3>
+                            <h3 class="card-title"><i class="fas fa-id-card mr-2" aria-hidden="true"></i>Información Personal</h3>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -90,7 +90,7 @@ if (!$usuario) {
                                         <label for="nombre">Nombre <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-user" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="text" class="form-control" id="nombre" name="nombre"
                                                 placeholder="Ingrese el nombre" value="<?= htmlspecialchars($usuario['nombre']); ?>" required>
@@ -104,7 +104,7 @@ if (!$usuario) {
                                         <label for="apellidop">Apellido Paterno <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-user" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="text" class="form-control" id="apellidop" name="apellidop"
                                                 placeholder="Ingrese el apellido paterno" value="<?= htmlspecialchars($usuario['apellidop']); ?>" required>
@@ -118,7 +118,7 @@ if (!$usuario) {
                                         <label for="apellidom">Apellido Materno</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-user" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="text" class="form-control" id="apellidom" name="apellidom"
                                                 placeholder="Ingrese el apellido materno" value="<?= htmlspecialchars($usuario['apellidom'] ?? ''); ?>">
@@ -149,7 +149,7 @@ if (!$usuario) {
                                         <label for="numdocumento">Número de Documento <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-hashtag" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="text" class="form-control" id="numdocumento" name="numdocumento"
                                                 placeholder="Ingrese el número de documento" value="<?= htmlspecialchars($usuario['numdocumento']); ?>"
@@ -167,7 +167,7 @@ if (!$usuario) {
                                         <label for="direccion">Dirección</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-map-marker-alt" aria-hidden="true"></i></span>
                                             </div>
                                             <textarea class="form-control" id="direccion" name="direccion" rows="2"
                                                 placeholder="Ingrese la dirección"><?= htmlspecialchars($usuario['direccion'] ?? ''); ?></textarea>
@@ -182,7 +182,7 @@ if (!$usuario) {
                     <!-- Información de Contacto -->
                     <div class="card card-outline card-warning mb-3">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-address-book mr-2"></i>Información de Contacto</h3>
+                            <h3 class="card-title"><i class="fas fa-address-book mr-2" aria-hidden="true"></i>Información de Contacto</h3>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -192,7 +192,7 @@ if (!$usuario) {
                                         <label for="telefono">Teléfono</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-phone" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="tel" class="form-control" id="telefono" name="telefono"
                                                 placeholder="Ingrese el teléfono" value="<?= htmlspecialchars($usuario['telefono'] ?? ''); ?>"
@@ -207,7 +207,7 @@ if (!$usuario) {
                                         <label for="correo">Correo Electrónico <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-envelope" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="email" class="form-control" id="correo" name="correo"
                                                 placeholder="Ingrese el correo electrónico" value="<?= htmlspecialchars($usuario['correo']); ?>"
@@ -223,7 +223,7 @@ if (!$usuario) {
                     <!-- Información de Acceso -->
                     <div class="card card-outline card-warning mb-3">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-cogs mr-2"></i>Información de Acceso</h3>
+                            <h3 class="card-title"><i class="fas fa-cogs mr-2" aria-hidden="true"></i>Información de Acceso</h3>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -261,7 +261,7 @@ if (!$usuario) {
                                         <label for="imagen">Imagen de Perfil</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-image"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-image" aria-hidden="true"></i></span>
                                             </div>
                                             <div class="custom-file">
                                                 <input type="file" class="custom-file-input" id="imagen" name="imagen"
@@ -297,7 +297,7 @@ if (!$usuario) {
                                 <div class="col-md-12">
                                     <div class="form-group mb-0">
                                         <label>Vista Previa Nueva Imagen:</label><br>
-                                        <img id="preview-image" src="#" alt="Vista previa" class="img-thumbnail usuario-avatar-preview">
+                                        <img id="preview-image" src="" alt="Vista previa de imagen" class="img-thumbnail usuario-avatar-preview">
                                     </div>
                                 </div>
                             </div>
@@ -308,16 +308,16 @@ if (!$usuario) {
                     <!-- Cambiar Contraseña -->
                     <div class="card card-outline card-warning collapsed-card mb-3">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-key mr-2"></i>Cambiar Contraseña (opcional)</h3>
+                            <h3 class="card-title"><i class="fas fa-key mr-2" aria-hidden="true"></i>Cambiar Contraseña (opcional)</h3>
                             <div class="card-tools">
                                 <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir la sección de cambio de contraseña">
-                                    <i class="fas fa-plus"></i>
+                                    <i class="fas fa-plus" aria-hidden="true"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                <i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i>
                                 Complete estos campos <strong>solo si desea cambiar la contraseña</strong> del usuario.
                                 Si los deja en blanco, se mantendrá la contraseña actual.
                             </div>
@@ -329,13 +329,13 @@ if (!$usuario) {
                                         <label for="clave">Nueva Contraseña</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-lock" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="password" class="form-control" id="clave" name="clave"
                                                 placeholder="Dejar en blanco para mantener la actual">
                                             <div class="input-group-append">
                                                 <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#clave" aria-label="Mostrar contraseña" aria-pressed="false">
-                                                    <i class="fas fa-eye"></i>
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -349,17 +349,17 @@ if (!$usuario) {
                                         <label for="confirmar_clave">Confirmar Nueva Contraseña</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                                <span class="input-group-text"><i class="fas fa-lock" aria-hidden="true"></i></span>
                                             </div>
                                             <input type="password" class="form-control" id="confirmar_clave" name="confirmar_clave"
                                                 placeholder="Confirme la nueva contraseña">
                                             <div class="input-group-append">
                                                 <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#confirmar_clave" aria-label="Mostrar contraseña" aria-pressed="false">
-                                                    <i class="fas fa-eye"></i>
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                                 </button>
                                             </div>
                                         </div>
-                                        <div class="password-feedback mt-1"></div>
+                                        <div class="password-feedback mt-1" role="status" aria-live="polite"></div>
                                     </div>
                                 </div>
                             </div>
@@ -370,20 +370,20 @@ if (!$usuario) {
                     <!-- Asignación de Permisos -->
                     <div class="card card-outline card-warning mb-3">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-lock mr-2"></i>Asignación de Permisos</h3>
+                            <h3 class="card-title"><i class="fas fa-lock mr-2" aria-hidden="true"></i>Asignación de Permisos</h3>
                         </div>
                         <div class="card-body">
                             <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> Los permisos se asignan automáticamente según el cargo seleccionado. Puede personalizar los permisos si es necesario.
+                                <i class="fas fa-info-circle" aria-hidden="true"></i> Los permisos se asignan automáticamente según el cargo seleccionado. Puede personalizar los permisos si es necesario.
                             </div>
 
                             <!-- Botones para seleccionar/deseleccionar todos -->
                             <div class="mb-3">
                                 <button type="button" class="btn btn-outline-primary btn-sm" id="selectAllPermissions">
-                                    <i class="fas fa-check-square"></i> Seleccionar Todos
+                                    <i class="fas fa-check-square" aria-hidden="true"></i> Seleccionar Todos
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary btn-sm ml-2" id="deselectAllPermissions">
-                                    <i class="fas fa-square"></i> Deseleccionar Todos
+                                    <i class="fas fa-square" aria-hidden="true"></i> Deseleccionar Todos
                                 </button>
                             </div>
 
@@ -450,7 +450,7 @@ if (!$usuario) {
                     <!-- Información del Sistema -->
                     <div class="card card-outline card-secondary">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-clock mr-2"></i>Información del Sistema</h3>
+                            <h3 class="card-title"><i class="fas fa-clock mr-2" aria-hidden="true"></i>Información del Sistema</h3>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -468,12 +468,12 @@ if (!$usuario) {
                             <div class="row">
                                 <div class="col-12 col-sm-auto mb-2 mb-sm-0">
                                     <button type="submit" class="btn btn-warning w-100">
-                                        <i class="fas fa-save mr-2"></i> Actualizar Usuario
+                                        <i class="fas fa-save mr-2" aria-hidden="true"></i> Actualizar Usuario
                                     </button>
                                 </div>
                                 <div class="col-12 col-sm-auto">
                                     <a href="<?= $URL; ?>views/usuarios/index.php" class="btn btn-secondary w-100">
-                                        <i class="fas fa-times mr-2"></i> Cancelar
+                                        <i class="fas fa-times mr-2" aria-hidden="true"></i> Cancelar
                                     </a>
                                 </div>
                             </div>
@@ -487,10 +487,10 @@ if (!$usuario) {
                 <div class="col-md-4">
                     <div class="card card-outline card-info">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-route mr-2"></i>Guía de edición</h3>
+                            <h3 class="card-title"><i class="fas fa-route mr-2" aria-hidden="true"></i>Guía de edición</h3>
                             <div class="card-tools">
                                 <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir esta sección">
-                                    <i class="fas fa-minus"></i>
+                                    <i class="fas fa-minus" aria-hidden="true"></i>
                                 </button>
                             </div>
                         </div>
@@ -499,35 +499,35 @@ if (!$usuario) {
 
                             <ul class="usuario-timeline">
                                 <li class="usuario-timeline-item">
-                                    <span class="usuario-timeline-icon bg-warning"><i class="fas fa-id-card"></i></span>
+                                    <span class="usuario-timeline-icon bg-warning"><i class="fas fa-id-card" aria-hidden="true"></i></span>
                                     <div class="usuario-timeline-content">
                                         <h6>Datos y documento</h6>
                                         <p>Si cambia el número de documento, verifique que siga siendo único en el sistema.</p>
                                     </div>
                                 </li>
                                 <li class="usuario-timeline-item">
-                                    <span class="usuario-timeline-icon bg-warning"><i class="fas fa-envelope"></i></span>
+                                    <span class="usuario-timeline-icon bg-warning"><i class="fas fa-envelope" aria-hidden="true"></i></span>
                                     <div class="usuario-timeline-content">
                                         <h6>Correo electrónico</h6>
                                         <p>Se usa para iniciar sesión: si lo cambia, el usuario deberá acceder con el nuevo correo.</p>
                                     </div>
                                 </li>
                                 <li class="usuario-timeline-item">
-                                    <span class="usuario-timeline-icon bg-warning"><i class="fas fa-user-tag"></i></span>
+                                    <span class="usuario-timeline-icon bg-warning"><i class="fas fa-user-tag" aria-hidden="true"></i></span>
                                     <div class="usuario-timeline-content">
                                         <h6>Cargo y estado</h6>
                                         <p>Cambiar el cargo actualiza los permisos por defecto. Prefiera "Inactivo" antes que eliminar al usuario: conserva su historial.</p>
                                     </div>
                                 </li>
                                 <li class="usuario-timeline-item">
-                                    <span class="usuario-timeline-icon bg-danger"><i class="fas fa-key"></i></span>
+                                    <span class="usuario-timeline-icon bg-danger"><i class="fas fa-key" aria-hidden="true"></i></span>
                                     <div class="usuario-timeline-content">
                                         <h6>Contraseña</h6>
                                         <p>Deje ambos campos vacíos para mantener la actual, o complete los dos para establecer una nueva (mín. 6 caracteres).</p>
                                     </div>
                                 </li>
                                 <li class="usuario-timeline-item usuario-timeline-item-last">
-                                    <span class="usuario-timeline-icon bg-success"><i class="fas fa-shield-alt"></i></span>
+                                    <span class="usuario-timeline-icon bg-success"><i class="fas fa-shield-alt" aria-hidden="true"></i></span>
                                     <div class="usuario-timeline-content">
                                         <h6>Permisos</h6>
                                         <p>Los permisos actuales ya están marcados; use "Seleccionar/Deseleccionar Todos" para ajustes rápidos.</p>
@@ -540,25 +540,25 @@ if (!$usuario) {
                     <!-- Tarjeta de resumen del usuario -->
                     <div class="card card-success mt-3">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-user-check mr-2"></i>Resumen del Usuario</h3>
+                            <h3 class="card-title"><i class="fas fa-user-check mr-2" aria-hidden="true"></i>Resumen del Usuario</h3>
                             <div class="card-tools">
                                 <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir esta sección">
-                                    <i class="fas fa-minus"></i>
+                                    <i class="fas fa-minus" aria-hidden="true"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="card-body p-0">
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-id-badge mr-2"></i>ID de Usuario</span>
+                                    <span><i class="fas fa-id-badge mr-2" aria-hidden="true"></i>ID de Usuario</span>
                                     <span class="badge badge-primary"><?= $usuario['idusuario']; ?></span>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-user-tag mr-2"></i>Cargo Actual</span>
+                                    <span><i class="fas fa-user-tag mr-2" aria-hidden="true"></i>Cargo Actual</span>
                                     <span class="badge badge-info"><?= htmlspecialchars($usuario['cargo']); ?></span>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-toggle-on mr-2"></i>Estado Actual</span>
+                                    <span><i class="fas fa-toggle-on mr-2" aria-hidden="true"></i>Estado Actual</span>
                                     <span id="resumenEstadoBadge" class="badge <?= $usuario['estado'] == 1 ? 'badge-success' : 'badge-danger'; ?>">
                                         <?= $usuario['estado'] == 1 ? 'Activo' : 'Inactivo'; ?>
                                     </span>
@@ -580,22 +580,22 @@ if (!$usuario) {
                     <!-- Tarjeta de acciones rápidas -->
                     <div class="card card-outline card-secondary mt-3">
                         <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-bolt mr-2"></i>Acciones Rápidas</h3>
+                            <h3 class="card-title"><i class="fas fa-bolt mr-2" aria-hidden="true"></i>Acciones Rápidas</h3>
                         </div>
                         <div class="card-body p-0">
                             <div class="list-group list-group-flush">
                                 <a href="<?= $URL; ?>views/usuarios/show.php?id=<?= $usuario['idusuario']; ?>" class="list-group-item list-group-item-action">
-                                    <i class="fas fa-eye mr-2 text-info"></i> Ver detalles del usuario
+                                    <i class="fas fa-eye mr-2 text-info" aria-hidden="true"></i> Ver detalles del usuario
                                 </a>
                                 <a href="#" class="list-group-item list-group-item-action cambiar-estado-link"
                                     data-id="<?= $usuario['idusuario']; ?>"
                                     data-estado="<?= $usuario['estado']; ?>"
                                     data-nombre="<?= htmlspecialchars($usuario['nombre'] . ' ' . $usuario['apellidop']); ?>">
-                                    <i class="fas <?= $usuario['estado'] == 1 ? 'fa-user-slash text-danger' : 'fa-user-check text-success'; ?> mr-2" id="cambiarEstadoLinkIcono"></i>
+                                    <i class="fas <?= $usuario['estado'] == 1 ? 'fa-user-slash text-danger' : 'fa-user-check text-success'; ?> mr-2" aria-hidden="true" id="cambiarEstadoLinkIcono"></i>
                                     <span id="cambiarEstadoLinkTexto"><?= $usuario['estado'] == 1 ? 'Desactivar usuario' : 'Activar usuario'; ?></span>
                                 </a>
                                 <a href="<?= $URL; ?>views/usuarios/index.php" class="list-group-item list-group-item-action">
-                                    <i class="fas fa-list mr-2 text-primary"></i> Volver a la lista de usuarios
+                                    <i class="fas fa-list mr-2 text-primary" aria-hidden="true"></i> Volver a la lista de usuarios
                                 </a>
                             </div>
                         </div>
