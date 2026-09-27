@@ -9,14 +9,14 @@
     'use strict';
 
     var META = {
-        disponible: { label: 'Disponible', color: '#28a745', badge: 'badge-success' },
-        ocupada: { label: 'Ocupada', color: '#ffc107', badge: 'badge-warning' },
-        limpieza: { label: 'Por limpiar', color: '#6c757d', badge: 'badge-secondary' },
-        mantenimiento: { label: 'Mantenimiento', color: '#dc3545', badge: 'badge-danger' }
+        disponible: { label: 'Disponible', color: themeColor('success'), badge: 'badge-success' },
+        ocupada: { label: 'Ocupada', color: themeColor('warning-dark'), badge: 'badge-warning' },
+        limpieza: { label: 'Por limpiar', color: themeColor('secondary'), badge: 'badge-secondary' },
+        mantenimiento: { label: 'Mantenimiento', color: themeColor('danger'), badge: 'badge-danger' }
     };
 
     function metaEstado(estado) {
-        return META[estado] || { label: estado, color: '#6c757d', badge: 'badge-secondary' };
+        return META[estado] || { label: estado, color: themeColor('secondary'), badge: 'badge-secondary' };
     }
 
     /**
@@ -32,7 +32,7 @@
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: destino.color,
-            cancelButtonColor: '#6c757d',
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Sí, cambiar',
             cancelButtonText: 'Cancelar'
         }).then(function (result) {
@@ -41,6 +41,7 @@
             }
 
             Swal.fire({
+confirmButtonColor: themeColor('primary'),
                 title: 'Procesando...',
                 text: 'Espere un momento mientras se actualiza el estado.',
                 allowOutsideClick: false,
@@ -70,12 +71,13 @@
                             }
                         });
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: response.message });
+                        Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error', text: response.message });
                     }
                 },
                 error: function () {
                     Swal.fire({
                         icon: 'error',
+                        confirmButtonColor: themeColor('danger'),
                         title: 'Error',
                         text: 'Ocurrió un error en la comunicación con el servidor'
                     });

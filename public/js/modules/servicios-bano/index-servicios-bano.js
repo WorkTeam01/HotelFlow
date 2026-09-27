@@ -166,12 +166,12 @@ document.addEventListener('DOMContentLoaded', function () {
             tituloAlerta = '¿Reactivar este servicio?';
             textoAlerta = 'El servicio se marcará como iniciado.';
             confirmButtonText = 'Sí, reactivar';
-            confirmButtonColor = '#28a745';
+            confirmButtonColor = themeColor('success');
         } else {
             tituloAlerta = '¿Cancelar este servicio?';
             textoAlerta = 'El servicio se marcará como cancelado.';
             confirmButtonText = 'Sí, cancelar';
-            confirmButtonColor = '#dc3545';
+            confirmButtonColor = themeColor('danger');
         }
 
         // Asegurarnos que Swal esté definido
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: confirmButtonColor,
-                    cancelButtonColor: '#6c757d',
+                    cancelButtonColor: themeColor('secondary'),
                     confirmButtonText: confirmButtonText,
                     cancelButtonText: 'No, volver',
                     allowOutsideClick: false

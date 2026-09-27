@@ -213,8 +213,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 text: textoAlerta,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: estadoActual == 1 ? '#d33' : '#3085d6',
-                cancelButtonColor: '#6c757d',
+                confirmButtonColor: estadoActual == 1 ? themeColor('danger') : themeColor('success'),
+                cancelButtonColor: themeColor('secondary'),
                 confirmButtonText: confirmButtonText,
                 cancelButtonText: cancelButtonText
             }).then((result) => {

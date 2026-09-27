@@ -97,7 +97,7 @@ $(document).ready(function () {
                 icon: 'error',
                 title: 'Error en Precios',
                 text: 'El precio de venta no puede ser menor al precio de compra',
-                confirmButtonColor: '#3085d6'
+                confirmButtonColor: themeColor('primary')
             });
             return false;
         }
@@ -109,7 +109,7 @@ $(document).ready(function () {
                 icon: 'error',
                 title: 'Error en Stock',
                 text: 'El stock máximo no puede ser menor al stock mínimo',
-                confirmButtonColor: '#3085d6'
+                confirmButtonColor: themeColor('primary')
             });
             return false;
         }
@@ -121,13 +121,14 @@ $(document).ready(function () {
                 icon: 'error',
                 title: 'Categoría Requerida',
                 text: 'Debe seleccionar una categoría para el producto',
-                confirmButtonColor: '#3085d6'
+                confirmButtonColor: themeColor('primary')
             });
             return false;
         }
 
         // Si todo es válido, mostrar mensaje de carga
         Swal.fire({
+confirmButtonColor: themeColor('primary'),
             title: 'Guardando producto...',
             html: 'Por favor espere mientras se guarda la información',
             allowOutsideClick: false,

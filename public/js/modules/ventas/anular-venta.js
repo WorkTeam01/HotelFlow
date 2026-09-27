@@ -21,8 +21,8 @@ document.addEventListener('click', function (event) {
         text: 'La venta será anulada y el stock de productos será revertido.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
+        confirmButtonColor: themeColor('danger'),
+        cancelButtonColor: themeColor('secondary'),
         confirmButtonText: 'Sí, anular',
         cancelButtonText: 'Cancelar'
     }).then(function (result) {

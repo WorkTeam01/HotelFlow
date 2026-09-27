@@ -97,17 +97,18 @@ $(function () {
             text: 'La reserva pasará a "Ocupada".',
             icon: 'question',
             showCancelButton: true,
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Sí, check-in',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#28a745'
+            confirmButtonColor: themeColor('success')
         }).then(function (r) {
             if (!r.isConfirmed) return;
             postAccion('transicion_ajax.php', { idrecepcion: id, nuevo_estado: 'en_curso' })
                 .done(function (res) {
                     if (res.success) { window.location.reload(); }
-                    else { Swal.fire({ icon: 'error', title: 'No se pudo', text: res.message }); }
+                    else { Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'No se pudo', text: res.message }); }
                 })
-                .fail(function () { Swal.fire({ icon: 'error', title: 'Error', text: 'Fallo de comunicación con el servidor' }); });
+                .fail(function () { Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error', text: 'Fallo de comunicación con el servidor' }); });
         });
     });
 
@@ -118,17 +119,18 @@ $(function () {
             text: 'Esta acción no se puede deshacer.',
             icon: 'warning',
             showCancelButton: true,
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Sí, cancelar',
             cancelButtonText: 'No',
-            confirmButtonColor: '#dc3545'
+            confirmButtonColor: themeColor('danger')
         }).then(function (r) {
             if (!r.isConfirmed) return;
             postAccion('transicion_ajax.php', { idrecepcion: id, nuevo_estado: 'cancelado' })
                 .done(function (res) {
                     if (res.success) { window.location.reload(); }
-                    else { Swal.fire({ icon: 'error', title: 'No se pudo', text: res.message }); }
+                    else { Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'No se pudo', text: res.message }); }
                 })
-                .fail(function () { Swal.fire({ icon: 'error', title: 'Error', text: 'Fallo de comunicación con el servidor' }); });
+                .fail(function () { Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error', text: 'Fallo de comunicación con el servidor' }); });
         });
     });
 
@@ -145,9 +147,10 @@ $(function () {
                 '<p>Se validará que el folio esté saldado antes de finalizar.</p></div>',
             icon: 'question',
             showCancelButton: true,
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Confirmar check-out',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ffc107'
+            confirmButtonColor: themeColor('primary')
         }).then(function (r) {
             if (!r.isConfirmed) return;
             $btn.prop('disabled', true);
@@ -157,6 +160,7 @@ $(function () {
                     if (res.requiere_pago) {
                         Swal.fire({
                             icon: 'warning',
+                            confirmButtonColor: themeColor('warning-dark'),
                             title: 'Saldo pendiente',
                             text: 'Bs ' + (parseFloat(res.saldo) || 0).toFixed(2) + '. Regístralo en el folio antes del check-out.',
                             confirmButtonText: 'Ir al folio'
@@ -165,9 +169,9 @@ $(function () {
                         });
                         return;
                     }
-                    Swal.fire({ icon: 'error', title: 'No se pudo hacer el check-out', text: res.message });
+                    Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'No se pudo hacer el check-out', text: res.message });
                 })
-                .fail(function () { Swal.fire({ icon: 'error', title: 'Error', text: 'Fallo de comunicación con el servidor' }); })
+                .fail(function () { Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error', text: 'Fallo de comunicación con el servidor' }); })
                 .always(function () { $btn.prop('disabled', false); });
         });
     });

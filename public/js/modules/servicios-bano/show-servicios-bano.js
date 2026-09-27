@@ -16,12 +16,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 tituloAlerta = '¿Activar este servicio?';
                 textoAlerta = 'El servicio se marcará como activo.';
                 confirmButtonText = 'Sí, activar';
-                confirmButtonColor = '#28a745';
+                confirmButtonColor = themeColor('success');
             } else {
                 tituloAlerta = '¿Desactivar este servicio?';
                 textoAlerta = 'El servicio se marcará como inactivo.';
                 confirmButtonText = 'Sí, desactivar';
-                confirmButtonColor = '#dc3545';
+                confirmButtonColor = themeColor('danger');
             }
 
             Swal.fire({
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: confirmButtonColor,
-                cancelButtonColor: '#6c757d',
+                cancelButtonColor: themeColor('secondary'),
                 confirmButtonText: confirmButtonText,
                 cancelButtonText: 'No, volver'
             }).then((result) => {

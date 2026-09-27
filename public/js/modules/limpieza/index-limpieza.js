@@ -400,21 +400,14 @@ $(document).ready(function () {
             'verificada': 'verificada'
         };
 
-        // Colores para diferentes estados
-        const colores = {
-            'pendiente': '#ffc107',
-            'enprogreso': '#007bff',
-            'completada': '#28a745',
-            'verificada': '#6c757d'
-        };
 
         Swal.fire({
             title: `¿Marcar como ${textos[estado]}?`,
             text: `La asignación de limpieza se marcará como ${textos[estado]}.`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: colores[estado],
-            cancelButtonColor: '#6c757d',
+            confirmButtonColor: themeColorEstado(estado),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: `Sí, marcar como ${textos[estado]}`,
             cancelButtonText: 'Cancelar'
         }).then((result) => {
@@ -449,8 +442,8 @@ $(document).ready(function () {
             text: 'Esta acción no se puede deshacer.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
+            confirmButtonColor: themeColor('danger'),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar'
         }).then((result) => {

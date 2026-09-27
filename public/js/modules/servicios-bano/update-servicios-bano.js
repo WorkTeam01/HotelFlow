@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 text: `¿Desea actualizar el precio a ${precio.toFixed(2)} Bs.?`,
                 icon: 'question',
                 showCancelButton: true,
+                confirmButtonColor: themeColor('primary'),
+                cancelButtonColor: themeColor('secondary'),
                 confirmButtonText: 'Sí, actualizar',
                 cancelButtonText: 'No, mantener'
             }).then((result) => {
@@ -72,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 icon: 'error',
                 title: 'Error en el total',
                 text: 'El total debe ser mayor que cero',
-                confirmButtonColor: '#3085d6'
+                confirmButtonColor: themeColor('primary')
             });
             totalInput.focus();
             return false;
@@ -84,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 icon: 'error',
                 title: 'Pago insuficiente',
                 text: 'El pago recibido debe ser mayor o igual al total',
-                confirmButtonColor: '#3085d6'
+                confirmButtonColor: themeColor('primary')
             });
             pagoRecibidoInput.focus();
             return false;

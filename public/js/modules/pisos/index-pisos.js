@@ -264,6 +264,7 @@ $(document).ready(function () {
                     // Mostrar mensaje de error
                     Swal.fire({
                         icon: 'error',
+                        confirmButtonColor: themeColor('danger'),
                         title: 'Error',
                         text: response.message
                     });
@@ -274,6 +275,7 @@ $(document).ready(function () {
                 console.error(xhr.responseText);
                 Swal.fire({
                     icon: 'error',
+                    confirmButtonColor: themeColor('danger'),
                     title: 'Error',
                     text: 'Ocurrió un error en la comunicación con el servidor'
                 });
@@ -297,8 +299,8 @@ $(document).ready(function () {
             text: `El piso será ${textoEstado}do.`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: estadoActual == 1 ? '#d33' : '#3085d6',
-            cancelButtonColor: '#6c757d',
+            confirmButtonColor: estadoActual == 1 ? themeColor('danger') : themeColor('success'),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: `Sí, ${textoEstado}`,
             cancelButtonText: 'Cancelar'
         }).then((result) => {
@@ -319,6 +321,7 @@ $(document).ready(function () {
                         } else {
                             Swal.fire({
                                 icon: 'error',
+                                confirmButtonColor: themeColor('danger'),
                                 title: 'Error',
                                 text: response.message
                             });
@@ -328,6 +331,7 @@ $(document).ready(function () {
                         console.error(xhr.responseText);
                         Swal.fire({
                             icon: 'error',
+                            confirmButtonColor: themeColor('danger'),
                             title: 'Error',
                             text: 'Ocurrió un error en la comunicación con el servidor'
                         });

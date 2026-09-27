@@ -54,7 +54,7 @@ $(document).ready(function () {
                 title: 'Información',
                 text: 'Para marcar como retirado, use las opciones de cambio de estado en la página de detalles',
                 confirmButtonText: 'Entendido',
-                confirmButtonColor: '#3085d6'
+                confirmButtonColor: themeColor('primary')
             });
             $(this).val($(this).data('original-value'));
             $('#resumen-estado')
@@ -73,7 +73,7 @@ $(document).ready(function () {
                 icon: 'error',
                 title: 'Error de validación',
                 text: 'Debe seleccionar un cliente',
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: themeColor('primary'),
                 confirmButtonText: 'Entendido'
             });
             return false;
@@ -96,13 +96,14 @@ $(document).ready(function () {
             html: mensaje,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#ffc107',
-            cancelButtonColor: '#6c757d',
+            confirmButtonColor: themeColor('primary'),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Sí, actualizar',
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({
+confirmButtonColor: themeColor('primary'),
                     title: 'Procesando...',
                     html: 'Actualizando información del equipaje',
                     allowOutsideClick: false,

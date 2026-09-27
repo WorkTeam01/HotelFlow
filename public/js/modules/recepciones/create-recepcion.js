@@ -186,7 +186,7 @@ window.RecepcionModule.Create = (function ($) {
     function onSubmit(e) {
         e.preventDefault();
         if (!validar()) {
-            Swal.fire({ icon: 'error', title: 'Faltan datos', text: 'Complete habitación, huésped, tarifa y fechas.' });
+            Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Faltan datos', text: 'Complete habitación, huésped, tarifa y fechas.' });
             return;
         }
         var $room = selectedRoom();
@@ -199,7 +199,8 @@ window.RecepcionModule.Create = (function ($) {
                 '<p><strong>Saldo:</strong> ' + $('#rs-saldo').text() + '</p></div>',
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#28a745',
+            cancelButtonColor: themeColor('secondary'),
+            confirmButtonColor: themeColor('success'),
             confirmButtonText: 'Sí, confirmar',
             cancelButtonText: 'Revisar'
         }).then(function (r) {

@@ -171,8 +171,8 @@ $(document).ready(function () {
             text: "Esta acción marcará el equipaje como " + accion,
             icon: icono,
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
+            confirmButtonColor: themeColor('primary'),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Sí, confirmar',
             cancelButtonText: 'Cancelar'
         }).then((result) => {

@@ -136,7 +136,7 @@ $(document).ready(function () {
                 icon: 'error',
                 title: 'Error de validación',
                 html: errores.join('<br>'),
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: themeColor('primary'),
                 confirmButtonText: 'Entendido'
             });
             return false;
@@ -162,14 +162,15 @@ $(document).ready(function () {
             html: mensaje,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d',
+            confirmButtonColor: themeColor('success'),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Sí, registrar',
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
                 // Mostrar indicador de carga
                 Swal.fire({
+confirmButtonColor: themeColor('primary'),
                     title: 'Procesando...',
                     html: 'Registrando almacenamiento de equipaje',
                     allowOutsideClick: false,

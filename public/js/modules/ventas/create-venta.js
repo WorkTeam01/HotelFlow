@@ -328,8 +328,8 @@ document.addEventListener('DOMContentLoaded', function () {
               </div>`,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
+            confirmButtonColor: themeColor('primary'),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Sí, registrar',
             cancelButtonText: 'Cancelar'
         }).then((result) => {

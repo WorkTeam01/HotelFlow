@@ -99,18 +99,18 @@ function inicializarGraficoActividad() {
             datasets: [{
                 label: 'Servicios Baño',
                 data: datosGraficos.serviciosBano,
-                borderColor: '#007bff',
+                borderColor: themeColor('primary'),
                 backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                pointBackgroundColor: '#007bff',
+                pointBackgroundColor: themeColor('primary'),
                 tension: 0.4,
                 fill: true
             },
             {
                 label: 'Equipajes',
                 data: datosGraficos.equipajes,
-                borderColor: '#ffc107',
+                borderColor: themeColor('warning'),
                 backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                pointBackgroundColor: '#ffc107',
+                pointBackgroundColor: themeColor('warning'),
                 tension: 0.4,
                 fill: true
             }]
@@ -209,18 +209,18 @@ function actualizarGraficoActividad(metrica, datosGraficos) {
                 {
                     label: 'Servicios Baño',
                     data: datosGraficos.serviciosBano,
-                    borderColor: '#007bff',
+                    borderColor: themeColor('primary'),
                     backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                    pointBackgroundColor: '#007bff',
+                    pointBackgroundColor: themeColor('primary'),
                     tension: 0.4,
                     fill: true
                 },
                 {
                     label: 'Equipajes',
                     data: datosGraficos.equipajes,
-                    borderColor: '#ffc107',
+                    borderColor: themeColor('warning'),
                     backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                    pointBackgroundColor: '#ffc107',
+                    pointBackgroundColor: themeColor('warning'),
                     tension: 0.4,
                     fill: true
                 }
@@ -238,9 +238,9 @@ function actualizarGraficoActividad(metrica, datosGraficos) {
                 {
                     label: 'Habitaciones Ocupadas',
                     data: datosGraficos.ocupacion,
-                    borderColor: '#28a745',
+                    borderColor: themeColor('success'),
                     backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    pointBackgroundColor: '#28a745',
+                    pointBackgroundColor: themeColor('success'),
                     tension: 0.4,
                     fill: true
                 }
@@ -257,9 +257,9 @@ function actualizarGraficoActividad(metrica, datosGraficos) {
                 {
                     label: 'Ingresos',
                     data: datosGraficos.ingresos,
-                    borderColor: '#dc3545',
+                    borderColor: themeColor('danger'),
                     backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    pointBackgroundColor: '#dc3545',
+                    pointBackgroundColor: themeColor('danger'),
                     tension: 0.4,
                     fill: true
                 }
@@ -312,9 +312,9 @@ function inicializarGraficoEstadoBanos() {
             datasets: [{
                 data: [disponibles, mantenimiento, fuera_servicio],
                 backgroundColor: [
-                    '#28a745', // Verde - Disponibles
-                    '#6c757d', // Gris - Mantenimiento
-                    '#343a40'  // Negro - Fuera de servicio
+                    themeColor('success'), // Verde - Disponibles
+                    themeColor('secondary'), // Gris - Mantenimiento
+                    themeColor('dark')  // Negro - Fuera de servicio
                 ],
                 borderWidth: 0
             }]

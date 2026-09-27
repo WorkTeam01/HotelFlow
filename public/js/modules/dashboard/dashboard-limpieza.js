@@ -51,21 +51,14 @@ $(document).ready(function () {
             'verificada': 'verificada'
         };
 
-        // Colores para diferentes estados
-        const colores = {
-            'pendiente': '#ffc107',
-            'enprogreso': '#17a2b8',
-            'completada': '#28a745',
-            'verificada': '#6c757d'
-        };
 
         Swal.fire({
             title: `¿Marcar como ${textos[estado]}?`,
             text: `La asignación se marcará como ${textos[estado]}.`,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: colores[estado],
-            cancelButtonColor: '#6c757d',
+            confirmButtonColor: themeColorEstado(estado),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: `Sí, marcar como ${textos[estado]}`,
             cancelButtonText: 'Cancelar'
         }).then((result) => {
@@ -105,7 +98,8 @@ $(document).ready(function () {
                             Swal.fire({
                                 title: 'Error',
                                 text: response.message,
-                                icon: 'error'
+                                icon: 'error',
+                                confirmButtonColor: themeColor('danger'),
                             });
                         }
                     },
@@ -116,7 +110,8 @@ $(document).ready(function () {
                         Swal.fire({
                             title: 'Error',
                             text: 'Ocurrió un error en la comunicación con el servidor',
-                            icon: 'error'
+                            icon: 'error',
+                            confirmButtonColor: themeColor('danger'),
                         });
                     }
                 });

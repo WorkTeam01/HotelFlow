@@ -198,12 +198,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 tituloAlerta = `¿Marcar compra ${tituloCompra} como completada?`;
                 textoAlerta = 'La compra se marcará como finalizada y no podrá ser modificada.';
                 confirmButtonText = 'Sí, completar';
-                confirmButtonColor = '#28a745';
+                confirmButtonColor = themeColor('success');
             } else if (accion === 'cancelar') {
                 tituloAlerta = `¿Cancelar compra ${tituloCompra}?`;
                 textoAlerta = 'La compra será cancelada y el stock de productos será revertido.';
                 confirmButtonText = 'Sí, cancelar';
-                confirmButtonColor = '#dc3545';
+                confirmButtonColor = themeColor('danger');
             }
 
             Swal.fire({
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: confirmButtonColor,
-                cancelButtonColor: '#6c757d',
+                cancelButtonColor: themeColor('secondary'),
                 confirmButtonText: confirmButtonText,
                 cancelButtonText: 'Cancelar',
                 allowOutsideClick: false,

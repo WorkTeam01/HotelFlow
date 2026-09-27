@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (formServicioBano.dataset.stockBajo !== undefined) {
         Swal.fire({
             icon: 'warning',
+            confirmButtonColor: themeColor('warning-dark'),
             title: 'Stock Bajo',
             text: 'El stock de papel higiénico está bajo (' + formServicioBano.dataset.stockBajo + ' unidades). Considere reponer pronto.',
             showConfirmButton: true,
@@ -87,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 icon: 'error',
                 title: 'Error en el pago',
                 text: 'El pago recibido debe ser igual o mayor al total',
-                confirmButtonColor: '#3085d6'
+                confirmButtonColor: themeColor('primary')
             });
             pagoRecibidoInput.focus();
             return false;

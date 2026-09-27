@@ -288,6 +288,7 @@ function validarFormulario() {
 function mostrarMensajeError(mensaje) {
     Swal.fire({
         icon: 'error',
+        confirmButtonColor: themeColor('danger'),
         title: 'Error de validación',
         text: mensaje
     });
@@ -300,6 +301,7 @@ function mostrarMensajeError(mensaje) {
 function mostrarAdvertencia(mensaje) {
     Swal.fire({
         icon: 'warning',
+        confirmButtonColor: themeColor('warning-dark'),
         title: 'Atención',
         text: mensaje
     });
@@ -312,6 +314,7 @@ function mostrarAdvertencia(mensaje) {
 function mostrarExito(mensaje) {
     Swal.fire({
         icon: 'success',
+        confirmButtonColor: themeColor('success'),
         title: 'Éxito',
         text: mensaje
     });

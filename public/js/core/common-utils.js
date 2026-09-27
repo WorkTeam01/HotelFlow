@@ -8,6 +8,50 @@
  */
 
 /**
+ * Devuelve el color de un tono de la paleta definida en css/core/tokens.css.
+ * Único camino para que el JS use colores (SweetAlert, charts, mapas de estado):
+ * nunca escribir valores hexadecimales directamente en los módulos.
+ *
+ * @param {string} tone - Nombre del tono sin el prefijo (ej. 'primary', 'danger-dark')
+ * @returns {string} Color en formato hex (ej. '#007bff'); '' si no existe el tono
+ */
+function themeColor(tone) {
+    // Respaldo por si la página no cargó tokens.css (misma paleta)
+    const fallbacks = {
+        primary: '#007bff',
+        secondary: '#6c757d',
+        success: '#28a745',
+        warning: '#ffc107',
+        danger: '#dc3545',
+        info: '#17a2b8',
+        dark: '#343a40'
+    };
+    const valor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--color-' + tone)
+        .trim();
+    return valor || fallbacks[tone] || '';
+}
+
+/**
+ * Devuelve el color de botón del confirm de un cambio de estado, con el mismo
+ * vocabulario de badges que las vistas (amarillo=pendiente, azul=en progreso,
+ * verde=completada, gris=verificada). 'pendiente' usa el paso oscuro del
+ * amarillo porque el amarillo puro con texto blanco no alcanza contraste AA.
+ *
+ * @param {string} estado - Nombre del estado (ej. 'pendiente', 'completada')
+ * @returns {string} Color en formato hex
+ */
+function themeColorEstado(estado) {
+    const tonos = {
+        pendiente: 'warning-dark',
+        enprogreso: 'primary',
+        completada: 'success',
+        verificada: 'secondary'
+    };
+    return themeColor(tonos[estado] || 'primary');
+}
+
+/**
  * Inicializa Select2 en los elementos seleccionados sin modificar sus opciones
  * 
  * @param {string} selector - Selector de los elementos a inicializar (opcional)

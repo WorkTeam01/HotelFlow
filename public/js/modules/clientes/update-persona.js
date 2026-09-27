@@ -126,6 +126,8 @@ function confirmarSalir(destino) {
         text: 'Hay cambios sin guardar. ¿Está seguro de que desea salir sin guardar?',
         icon: 'warning',
         showCancelButton: true,
+        confirmButtonColor: themeColor('primary'),
+        cancelButtonColor: themeColor('secondary'),
         confirmButtonText: 'Sí, salir',
         cancelButtonText: 'No, permanecer'
     }).then((result) => {

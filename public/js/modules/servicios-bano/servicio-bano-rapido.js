@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 showCancelButton: true,
                 confirmButtonText: 'Sí, registrar',
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#dc3545'
+                confirmButtonColor: themeColor('primary'),
+                cancelButtonColor: themeColor('secondary')
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Mostrar indicador de carga con toast

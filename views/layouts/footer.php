@@ -54,7 +54,8 @@ $cargar_datatables = !(isset($skip_datatables) && $skip_datatables === true);
     <script src="<?php echo $URL; ?>public/js/plugins/datatables/buttons.colVis.min.js"></script>
 <?php endif; ?>
 <!-- Scripts principales de la aplicación -->
-<script src="<?php echo $URL; ?>public/js/core/common-utils.js"></script>
+<?php $__core_common_utils = __DIR__ . '/../../public/js/core/common-utils.js'; ?>
+<script src="<?php echo $URL; ?>public/js/core/common-utils.js?v=<?= @filemtime($__core_common_utils) ?: ($APP_VERSION ?? '1'); ?>"></script>
 <!-- Scripts específicos por módulo -->
 <?php if (isset($module_scripts) && is_array($module_scripts)): ?>
     <?php foreach ($module_scripts as $script): ?>

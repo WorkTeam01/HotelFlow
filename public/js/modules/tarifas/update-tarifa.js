@@ -120,12 +120,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Mostrar alerta
                 Swal.fire({
                     icon: 'error',
+                    confirmButtonColor: themeColor('danger'),
                     title: 'Error de validación',
                     text: 'Por favor revise los campos marcados en rojo'
                 });
             } else {
                 // Mostrar indicador de carga
                 Swal.fire({
+confirmButtonColor: themeColor('primary'),
                     title: 'Actualizando...',
                     text: 'Procesando la información',
                     allowOutsideClick: false,
@@ -193,6 +195,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     text: 'Hay cambios sin guardar. ¿Está seguro de que desea salir sin guardar?',
                     icon: 'warning',
                     showCancelButton: true,
+                    confirmButtonColor: themeColor('primary'),
+                    cancelButtonColor: themeColor('secondary'),
                     confirmButtonText: 'Sí, salir',
                     cancelButtonText: 'No, permanecer'
                 }).then((result) => {

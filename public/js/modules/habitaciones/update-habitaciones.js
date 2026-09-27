@@ -18,8 +18,8 @@ $(document).ready(function() {
                 text: `¿Desea actualizar la capacidad de ${capacidadActual} a ${capacidadNueva} personas?`,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
+                confirmButtonColor: themeColor('primary'),
+                cancelButtonColor: themeColor('secondary'),
                 confirmButtonText: 'Sí, actualizar',
                 cancelButtonText: 'No, mantener actual'
             }).then((result) => {
@@ -45,6 +45,7 @@ $(document).ready(function() {
             e.preventDefault();
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Error',
                 text: 'El número de habitación es obligatorio'
             });
@@ -55,6 +56,7 @@ $(document).ready(function() {
             e.preventDefault();
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Error',
                 text: 'Debe seleccionar un tipo de habitación'
             });
@@ -65,6 +67,7 @@ $(document).ready(function() {
             e.preventDefault();
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Error',
                 text: 'Debe seleccionar un piso'
             });
@@ -75,6 +78,7 @@ $(document).ready(function() {
             e.preventDefault();
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Error',
                 text: 'La capacidad actual debe ser un número mayor o igual a cero'
             });
@@ -85,6 +89,7 @@ $(document).ready(function() {
             e.preventDefault();
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Error',
                 text: 'El precio base debe ser un número mayor que cero'
             });

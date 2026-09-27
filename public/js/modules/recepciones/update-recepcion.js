@@ -42,14 +42,14 @@ $(document).ready(function () {
         if (!form.checkValidity()) {
             e.stopPropagation();
             $(form).addClass('was-validated');
-            Swal.fire({ icon: 'error', title: 'Error de validación', text: 'Por favor complete todos los campos requeridos.' });
+            Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error de validación', text: 'Por favor complete todos los campos requeridos.' });
             return false;
         }
 
         var entrada = new Date($('#fechaentrada').val());
         var salida = new Date($('#fechasalida_prevista').val());
         if (!isNaN(entrada.getTime()) && !isNaN(salida.getTime()) && salida <= entrada) {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'La fecha de salida prevista debe ser posterior a la de entrada.' });
+            Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error', text: 'La fecha de salida prevista debe ser posterior a la de entrada.' });
             return false;
         }
 
@@ -61,8 +61,8 @@ $(document).ready(function () {
                 '</div>',
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#ffc107',
-            cancelButtonColor: '#6c757d',
+            confirmButtonColor: themeColor('primary'),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Sí, actualizar',
             cancelButtonText: 'Cancelar'
         }).then(function (result) {

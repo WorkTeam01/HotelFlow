@@ -16,8 +16,8 @@ function cambiarEstado(tipoId, estadoActual) {
         text: texto,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: estadoActual == 1 ? '#d33' : '#28a745',
-        cancelButtonColor: '#6c757d',
+        confirmButtonColor: estadoActual == 1 ? themeColor('danger') : themeColor('success'),
+        cancelButtonColor: themeColor('secondary'),
         confirmButtonText: `Sí, ${accion}`,
         cancelButtonText: 'Cancelar'
     }).then((result) => {

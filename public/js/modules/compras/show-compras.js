@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'La compra será cancelada y el stock de productos será revertido.';
 
         const confirmButtonText = accion === 'completar' ? 'Sí, completar' : 'Sí, cancelar';
-        const confirmButtonColor = accion === 'completar' ? '#28a745' : '#dc3545';
+        const confirmButtonColor = accion === 'completar' ? themeColor('success') : themeColor('danger');
 
         Swal.fire({
             title: titulo,
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: confirmButtonColor,
-            cancelButtonColor: '#6c757d',
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: confirmButtonText,
             cancelButtonText: 'Cancelar'
         }).then((result) => {

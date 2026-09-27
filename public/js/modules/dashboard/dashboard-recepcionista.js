@@ -57,8 +57,8 @@ $(document).ready(function () {
             text: `Confirme que ha revisado y aprueba la limpieza realizada.`,
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#6c757d',
-            cancelButtonColor: '#dc3545',
+            confirmButtonColor: themeColor('secondary'),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: `Sí, verificar`,
             cancelButtonText: 'Cancelar'
         }).then((result) => {
@@ -98,7 +98,8 @@ $(document).ready(function () {
                             Swal.fire({
                                 title: 'Error',
                                 text: response.message,
-                                icon: 'error'
+                                icon: 'error',
+                                confirmButtonColor: themeColor('danger'),
                             });
                         }
                     },
@@ -110,7 +111,8 @@ $(document).ready(function () {
                         Swal.fire({
                             title: 'Error',
                             text: 'Ocurrió un error en la comunicación con el servidor',
-                            icon: 'error'
+                            icon: 'error',
+                            confirmButtonColor: themeColor('danger'),
                         });
                     }
                 });

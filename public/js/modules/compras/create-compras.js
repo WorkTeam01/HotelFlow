@@ -116,6 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!codigo) {
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Error',
                 text: 'Por favor ingrese un código de producto',
             });
@@ -134,6 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Producto no encontrado',
                 text: 'No se encontró un producto activo con ese código',
             });
@@ -175,6 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Error',
                 text: 'Debe agregar al menos un producto',
             });
@@ -204,6 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Error',
                 text: 'Por favor complete todos los campos requeridos correctamente',
             });
@@ -215,6 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (total <= 0) {
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Error',
                 text: 'El total de la compra debe ser mayor que cero',
             });
@@ -227,8 +232,8 @@ document.addEventListener('DOMContentLoaded', function() {
             text: "¿Está seguro de registrar esta compra?",
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
+            confirmButtonColor: themeColor('primary'),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Sí, registrar',
             cancelButtonText: 'Cancelar'
         }).then((result) => {

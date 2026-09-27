@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (file.size > 2 * 1024 * 1024) {
                 Swal.fire({
                     icon: 'error',
+                    confirmButtonColor: themeColor('danger'),
                     title: 'Archivo muy grande',
                     text: 'El archivo no debe superar los 2MB'
                 });
@@ -29,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!allowedTypes.includes(file.type)) {
                 Swal.fire({
                     icon: 'error',
+                    confirmButtonColor: themeColor('danger'),
                     title: 'Tipo de archivo no válido',
                     text: 'Solo se permiten archivos JPG, PNG, GIF y WEBP'
                 });
@@ -61,17 +63,17 @@ document.addEventListener('DOMContentLoaded', function () {
             var confirmarClave = document.getElementById('confirmar_nueva_clave').value;
 
             if (!claveActual || !nuevaClave || !confirmarClave) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Todos los campos son obligatorios' });
+                Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error', text: 'Todos los campos son obligatorios' });
                 return;
             }
 
             if (nuevaClave !== confirmarClave) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Las contraseñas no coinciden' });
+                Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error', text: 'Las contraseñas no coinciden' });
                 return;
             }
 
             if (nuevaClave.length < 6) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'La contraseña debe tener al menos 6 caracteres' });
+                Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error', text: 'La contraseña debe tener al menos 6 caracteres' });
                 return;
             }
 
@@ -92,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (data.success) {
                         Swal.fire({
                             icon: 'success',
+                            confirmButtonColor: themeColor('success'),
                             title: 'Éxito',
                             text: data.message,
                             allowOutsideClick: false,
@@ -102,13 +105,13 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         });
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+                        Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error', text: data.message });
                     }
                 })
                 .catch(function () {
                     btn.disabled = false;
                     btn.textContent = 'Cambiar Contraseña';
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Ocurrió un error al procesar la solicitud' });
+                    Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error', text: 'Ocurrió un error al procesar la solicitud' });
                 });
         });
     }

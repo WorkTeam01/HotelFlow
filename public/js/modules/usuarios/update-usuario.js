@@ -32,6 +32,7 @@ $(document).ready(function () {
             if (clave !== confirmar) {
                 Swal.fire({
                     icon: 'warning',
+                    confirmButtonColor: themeColor('warning-dark'),
                     title: 'Las contraseñas no coinciden',
                     text: 'Por favor, verifique que ambas contraseñas sean iguales'
                 });
@@ -49,6 +50,7 @@ $(document).ready(function () {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'error',
+                    confirmButtonColor: themeColor('danger'),
                     title: 'Error en las contraseñas',
                     text: 'Las contraseñas no coinciden'
                 });
@@ -59,6 +61,7 @@ $(document).ready(function () {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'error',
+                    confirmButtonColor: themeColor('danger'),
                     title: 'Contraseña muy corta',
                     text: 'La contraseña debe tener al menos 6 caracteres'
                 });
@@ -135,8 +138,8 @@ $(document).ready(function () {
             text: textoAlerta,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: estadoActual == 1 ? '#d33' : '#3085d6',
-            cancelButtonColor: '#6c757d',
+            confirmButtonColor: estadoActual == 1 ? themeColor('danger') : themeColor('success'),
+            cancelButtonColor: themeColor('secondary'),
             confirmButtonText: confirmButtonText,
             cancelButtonText: cancelButtonText
         }).then((result) => {

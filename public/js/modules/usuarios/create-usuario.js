@@ -47,6 +47,7 @@ $(document).ready(function () {
             e.preventDefault();
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Error de validación',
                 text: 'Las contraseñas no coinciden'
             });
@@ -57,6 +58,7 @@ $(document).ready(function () {
             e.preventDefault();
             Swal.fire({
                 icon: 'error',
+                confirmButtonColor: themeColor('danger'),
                 title: 'Error de validación',
                 text: 'La contraseña debe tener al menos 6 caracteres'
             });
