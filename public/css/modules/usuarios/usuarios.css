@@ -10,10 +10,10 @@
      * depender de cuál gana, este módulo fija sus propios valores una sola vez.
      */
     --usuarios-brand-blue: #3c8dbc;
-    --usuarios-border-muted: #dee2e6;
+    --usuarios-border-muted: var(--color-border);
     /* #6c757d (Bootstrap .text-muted) da ~4.69:1 sobre blanco, al límite de AA;
        se usa un gris más oscuro aquí para tener margen cómodo (~8.2:1) */
-    --usuarios-text-muted: #495057;
+    --usuarios-text-muted: var(--color-text-secondary);
 }
 
 /* Avatar de perfil (show.php, update.php) */
@@ -85,14 +85,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: var(--color-white);
     font-size: .8rem;
     z-index: 1;
 }
 
 /* bg-warning (#ffc107) no cumple 3:1 con ícono blanco; oscurecer el ícono en ese caso */
 .usuario-timeline-icon.bg-warning {
-    color: #1f1300;
+    color: var(--color-warning-ink);
 }
 
 .usuario-timeline-content h6 {
@@ -141,7 +141,7 @@
  * teclado; se restaura aquí con el mismo patrón que login.css.
  */
 .password-toggle:focus {
-    outline: 2px solid #80bdff;
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: -2px;
     z-index: 3;
 }

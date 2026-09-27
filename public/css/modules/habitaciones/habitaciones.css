@@ -22,7 +22,7 @@ a.filtro-estado.info-box:focus-visible {
 }
 
 a.filtro-estado--activo.info-box {
-    box-shadow: 0 0 0 2px #007bff;
+    box-shadow: 0 0 0 2px var(--color-primary);
 }
 
 /* El nombre del estado se ve completo (envuelve si hace falta) sin romper la

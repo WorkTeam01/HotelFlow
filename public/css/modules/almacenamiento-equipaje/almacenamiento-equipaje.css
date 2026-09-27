@@ -5,63 +5,63 @@
 
 /* Estilos para tarjetas de equipaje */
 .equipaje-card.estado-almacenado {
-    border-left-color: #ffc107;
+    border-left-color: var(--color-warning);
 }
 
 .equipaje-card.estado-retirado {
-    border-left-color: #28a745;
+    border-left-color: var(--color-success);
 }
 
 .equipaje-card.estado-perdido {
-    border-left-color: #dc3545;
+    border-left-color: var(--color-danger);
 }
 
 .equipaje-card.estado-dañado {
-    border-left-color: #6c757d;
+    border-left-color: var(--color-secondary);
 }
 
 .equipaje-card.estado-vencido {
-    border-left-color: #dc3545;
+    border-left-color: var(--color-danger);
 }
 
 /* Mejorar la visualización de los formularios */
 .form-group label {
     font-weight: 600;
-    color: #555;
+    color: var(--color-text-soft);
 }
 
 .required-field::after {
     content: " *";
-    color: #dc3545;
+    color: var(--color-danger);
 }
 
 /* Mejora visual para campos de moneda */
 .input-group-text {
-    background-color: #f8f9fa;
+    background-color: var(--color-surface-alt);
     font-weight: 600;
 }
 
 /* Estilos para botones de acción */
 .btn-retirar {
-    background-color: #28a745;
-    border-color: #28a745;
+    background-color: var(--color-success);
+    border-color: var(--color-success);
     color: white;
 }
 
 .btn-retirar:hover {
-    background-color: #218838;
-    border-color: #1e7e34;
+    background-color: var(--color-success-hover);
+    border-color: var(--color-success-dark);
 }
 
 .btn-marcar-perdido {
-    background-color: #dc3545;
-    border-color: #dc3545;
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
     color: white;
 }
 
 .btn-marcar-perdido:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
+    background-color: var(--color-danger-hover);
+    border-color: var(--color-danger-dark);
 }
 
 /* Estilos para la vista de detalle */
@@ -96,7 +96,7 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.02em;
-    color: #6c757d;
+    color: var(--color-secondary);
     font-weight: 600;
 }
 
@@ -149,8 +149,8 @@
     font-family: monospace;
     font-size: 1.2rem;
     padding: 8px 15px;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
+    background-color: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
     border-radius: 3px;
     display: inline-block;
 }
@@ -160,7 +160,7 @@
     position: absolute;
     right: 10px;
     top: 10px;
-    color: #aaa;
+    color: var(--color-text-light);
 }
 
 /* Ajustes responsive */
@@ -182,14 +182,14 @@
 /* Estilos para las imágenes de tipos de equipaje */
 .equipaje-icon {
     font-size: 2rem;
-    color: #17a2b8;
+    color: var(--color-info);
     margin-right: 10px;
 }
 
 /* Estilos para el generador de ticket */
 .ticket-generator {
-    background-color: #f8f9fa;
-    border: 1px dashed #ddd;
+    background-color: var(--color-surface-alt);
+    border: 1px dashed var(--color-border-soft);
     padding: 15px;
     border-radius: 5px;
     text-align: center;
@@ -198,15 +198,15 @@
 }
 
 .ticket-generator:hover {
-    background-color: #e9ecef;
-    border-color: #adb5bd;
+    background-color: var(--color-surface-hover);
+    border-color: var(--color-border-strong);
 }
 
 /* Destacar información del cliente */
 .cliente-info {
     padding: 10px;
-    background-color: #f0f7fa;
-    border-left: 3px solid #17a2b8;
+    background-color: var(--color-info-soft);
+    border-left: 3px solid var(--color-info);
     margin-bottom: 15px;
 }
 /* Timeline de AdminLTE mejorado (vista de detalle) */
@@ -223,7 +223,7 @@
     top: 0;
     bottom: 0;
     width: 4px;
-    background: #ddd;
+    background: var(--color-border-soft);
     left: 31px;
     margin: 0;
     border-radius: 2px;
@@ -243,7 +243,7 @@
     font-weight: 600;
     padding: 5px 10px;
     display: inline-block;
-    background-color: #fff;
+    background-color: var(--color-white);
     border-radius: 4px;
     color: white;
 }
@@ -253,8 +253,8 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border-radius: 3px;
     margin-top: 0;
-    background-color: #fff;
-    color: #444;
+    background-color: var(--color-white);
+    color: var(--color-text-strong);
     margin-left: 60px;
     margin-right: 0;
     padding: 0;
@@ -265,13 +265,13 @@
     float: right;
     padding: 10px;
     font-size: 12px;
-    color: #999;
+    color: var(--color-text-subtle);
 }
 
 .timeline>div>.timeline-item>.timeline-header {
     margin: 0;
-    color: #555;
-    border-bottom: 1px solid #f4f4f4;
+    color: var(--color-text-soft);
+    border-bottom: 1px solid var(--color-surface-muted);
     padding: 10px;
     font-size: 16px;
     line-height: 1.1;
@@ -283,10 +283,10 @@
 }
 
 .timeline>div>.timeline-item>.timeline-footer {
-    border-top: 1px solid #f4f4f4;
-    background-color: #f8f9fa;
+    border-top: 1px solid var(--color-surface-muted);
+    background-color: var(--color-surface-alt);
     font-size: 12px;
-    color: #777;
+    color: var(--color-text-faint);
 }
 
 .timeline>div>i {
@@ -295,8 +295,8 @@
     font-size: 15px;
     line-height: 30px;
     position: absolute;
-    color: #fff;
-    background-color: #007bff;
+    color: var(--color-white);
+    background-color: var(--color-primary);
     border-radius: 50%;
     text-align: center;
     left: 18px;
@@ -305,11 +305,11 @@
 
 /* Colores para estados */
 .bg-blue {
-    background-color: #007bff !important;
+    background-color: var(--color-primary) !important;
 }
 
 .bg-yellow {
-    background-color: #ffc107 !important;
+    background-color: var(--color-warning) !important;
 }
 
 /* Responsive */

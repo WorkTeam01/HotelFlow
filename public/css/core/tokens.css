@@ -1,0 +1,81 @@
+/*
+ * tokens.css - Fuente unica de la paleta de colores del sistema.
+ *
+ * Todas las reglas CSS propias (core y modules) y todo JS que necesite un color
+ * (Swal, mapas de estado, charts) deben referenciar estos tokens via
+ * var(--color-...) en lugar de valores hexadecimales. Ver common-utils.js
+ * (themeColor / themeColorEstado) para el lado JavaScript.
+ *
+ * Orden de carga: este archivo se incluye antes de styles.css y de cualquier
+ * CSS de modulo, tambien en paginas standalone (login) que no usan header.php.
+ * En public/css/plugins/ y public/css/lib/ (codigo de terceros) NO se toca nada.
+ */
+:root {
+    /* Paleta semantica (estados del sistema) */
+    --color-primary:   #007bff;
+    --color-secondary: #6c757d;
+    --color-success:   #28a745;
+    --color-warning:   #ffc107;
+    --color-danger:    #dc3545;
+    --color-info:      #17a2b8;
+    --color-dark:      #343a40;
+
+    /* Pasos de interaccion (botones) */
+    --color-primary-hover:   #0069d9;
+    --color-primary-active:  #0062cc;
+    --color-success-hover:   #218838;
+    --color-danger-hover:    #c82333;
+
+    /* Pasos oscuros: texto legible sobre fondos claros (tabs inactivas,
+       textos de alerta, hover de enlaces de color) */
+    --color-primary-dark:    #0056b3;
+    --color-primary-darker:  #004085;
+    --color-success-dark:    #1e7e34;
+    --color-success-darker:  #155724;
+    --color-warning-dark:    #856404;
+    --color-warning-darker:  #664d03;
+    --color-danger-dark:     #bd2130;
+    --color-danger-darker:   #721c24;
+    --color-info-dark:       #117a8b;
+    --color-info-darker:     #0f6674;
+
+    /* Tintas de alerta / estado */
+    --color-warning-bg:      #fff3cd;
+    --color-warning-border:  #ffeeba;
+    --color-warning-soft:    #fff8e1;
+    --color-warning-ink:     #1f1300;
+    --color-success-bg:      #d4edda;
+    --color-success-border:  #c3e6cb;
+    --color-danger-bg:       #f8d7da;
+    --color-danger-border:   #f5c6cb;
+    --color-danger-soft:     #fff5f5;
+    --color-info-soft:       #f0f7fa;
+
+    /* Neutros */
+    --color-white:           #fff;
+    --color-text:            #212529;
+    --color-text-secondary:  #495057;
+    --color-text-strong:     #444444;
+    --color-text-soft:       #555555;
+    --color-text-faint:      #777777;
+    --color-text-subtle:     #999999;
+    --color-text-light:      #aaaaaa;
+    --color-text-help:       #858796;
+    --color-surface-alt:     #f8f9fa;
+    --color-surface-hover:   #e9ecef;
+    --color-surface-muted:   #f4f4f4;
+    --color-border:          #dee2e6;
+    --color-border-input:    #ced4da;
+    --color-border-soft:     #dddddd;
+    --color-border-faint:    #eeeeee;
+    --color-border-dashed:   #cccccc;
+    --color-border-strong:   #adb5bd;
+    --color-focus-ring:      #80bdff;
+
+    /* Marca heredada de AdminLTE (uso puntual, no forma parte de la paleta) */
+    --color-adminlte-blue:   #4e73df;
+    --color-adminlte-red:    #e74a3b;
+    --color-adminlte-green:  #1cc88a;
+    --color-adminlte-purple: #6f42c1;
+    --color-badge-purple:    #605ca8;
+}

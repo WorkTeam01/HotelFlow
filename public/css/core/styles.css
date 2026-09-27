@@ -54,74 +54,74 @@ a .info-btn {
  * los colores crudos (#17a2b8, #007bff, #28a745, #ffc107) no llegan a AA.
  */
 .card-primary .nav-tabs .nav-link:not(.active) {
-    color: #0056b3;
+    color: var(--color-primary-dark);
 }
 
 .card-primary .nav-tabs .nav-link:not(.active):hover,
 .card-primary .nav-tabs .nav-link:not(.active):focus {
-    color: #004085;
+    color: var(--color-primary-darker);
 }
 
 .card-secondary .nav-tabs .nav-link:not(.active) {
-    color: #6c757d;
+    color: var(--color-secondary);
 }
 
 .card-secondary .nav-tabs .nav-link:not(.active):hover,
 .card-secondary .nav-tabs .nav-link:not(.active):focus {
-    color: #495057;
+    color: var(--color-text-secondary);
 }
 
 .card-success .nav-tabs .nav-link:not(.active) {
-    color: #1e7e34;
+    color: var(--color-success-dark);
 }
 
 .card-success .nav-tabs .nav-link:not(.active):hover,
 .card-success .nav-tabs .nav-link:not(.active):focus {
-    color: #155724;
+    color: var(--color-success-darker);
 }
 
 .card-info .nav-tabs .nav-link:not(.active) {
-    color: #117a8b;
+    color: var(--color-info-dark);
 }
 
 .card-info .nav-tabs .nav-link:not(.active):hover,
 .card-info .nav-tabs .nav-link:not(.active):focus {
-    color: #0f6674;
+    color: var(--color-info-darker);
 }
 
 .card-warning .nav-tabs .nav-link:not(.active) {
-    color: #856404;
+    color: var(--color-warning-dark);
 }
 
 .card-warning .nav-tabs .nav-link:not(.active):hover,
 .card-warning .nav-tabs .nav-link:not(.active):focus {
-    color: #664d03;
+    color: var(--color-warning-darker);
 }
 
 .card-danger .nav-tabs .nav-link:not(.active) {
-    color: #dc3545;
+    color: var(--color-danger);
 }
 
 .card-danger .nav-tabs .nav-link:not(.active):hover,
 .card-danger .nav-tabs .nav-link:not(.active):focus {
-    color: #bd2130;
+    color: var(--color-danger-dark);
 }
 
 /* card-light es casi blanco: el texto no puede ser "light", se usa gris medio */
 .card-light .nav-tabs .nav-link:not(.active) {
-    color: #6c757d;
+    color: var(--color-secondary);
 }
 
 .card-light .nav-tabs .nav-link:not(.active):hover,
 .card-light .nav-tabs .nav-link:not(.active):focus {
-    color: #495057;
+    color: var(--color-text-secondary);
 }
 
 .card-dark .nav-tabs .nav-link:not(.active) {
-    color: #343a40;
+    color: var(--color-dark);
 }
 
 .card-dark .nav-tabs .nav-link:not(.active):hover,
 .card-dark .nav-tabs .nav-link:not(.active):focus {
-    color: #212529;
+    color: var(--color-text);
 }

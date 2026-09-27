@@ -1,23 +1,23 @@
 /* Estilos personalizados para la página de login */
 
 :root {
-    --login-color-primary: #007bff;
-    --login-color-primary-hover: #0069d9;
-    --login-color-primary-active: #0062cc;
+    --login-color-primary: var(--color-primary);
+    --login-color-primary-hover: var(--color-primary-hover);
+    --login-color-primary-active: var(--color-primary-active);
     --login-color-primary-deep: #0b2a4a;
     --login-color-primary-mid: #0f3d73;
     --login-color-bg: #f4f6f9;
     --login-color-ink: #2c3e50;
-    --login-color-muted: #6c757d;
-    --login-color-footer: #495057;
-    --login-color-border: #ced4da;
-    --login-color-surface-alt: #f8f9fa;
-    --login-color-surface-hover: #e9ecef;
-    --login-color-focus-ring: #80bdff;
-    --login-color-danger: #dc3545;
-    --login-color-success: #28a745;
-    --login-color-warning: #ffc107;
-    --login-color-info: #17a2b8;
+    --login-color-muted: var(--color-secondary);
+    --login-color-footer: var(--color-text-secondary);
+    --login-color-border: var(--color-border-input);
+    --login-color-surface-alt: var(--color-surface-alt);
+    --login-color-surface-hover: var(--color-surface-hover);
+    --login-color-focus-ring: var(--color-focus-ring);
+    --login-color-danger: var(--color-danger);
+    --login-color-success: var(--color-success);
+    --login-color-warning: var(--color-warning);
+    --login-color-info: var(--color-info);
 }
 
 /* Fondo claro (AdminLTE default) */

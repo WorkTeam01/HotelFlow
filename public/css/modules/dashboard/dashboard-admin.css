@@ -1,15 +1,15 @@
 .bg-purple {
-    background-color: #6f42c1 !important;
-    color: #fff !important;
+    background-color: var(--color-adminlte-purple) !important;
+    color: var(--color-white) !important;
 }
 
 .text-purple {
-    color: #6f42c1 !important;
+    color: var(--color-adminlte-purple) !important;
 }
 
 .badge-purple {
-    background-color: #6f42c1 !important;
-    color: #fff !important;
+    background-color: var(--color-adminlte-purple) !important;
+    color: var(--color-white) !important;
 }
 
 .users-list {
@@ -33,7 +33,7 @@
 
 .users-list-name {
     font-weight: 600;
-    color: #444;
+    color: var(--color-text-strong);
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -41,7 +41,7 @@
 }
 
 .users-list-date {
-    color: #999;
+    color: var(--color-text-subtle);
     font-size: 12px;
     display: block;
 }
@@ -86,12 +86,12 @@
 
 .list-group-item:hover {
     transform: translateX(5px);
-    background-color: #f8f9fa;
+    background-color: var(--color-surface-alt);
 }
 
 .mapa-habitaciones {
     padding: 10px;
-    background-color: #f8f9fa;
+    background-color: var(--color-surface-alt);
 }
 
 .clearfix::after {
@@ -257,7 +257,7 @@
 
 .users-list-name {
     font-weight: 600;
-    color: #444;
+    color: var(--color-text-strong);
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -265,7 +265,7 @@
 }
 
 .users-list-date {
-    color: #999;
+    color: var(--color-text-subtle);
     font-size: 12px;
     display: block;
 }
@@ -273,7 +273,7 @@
 /* Estilo para la lista de usuarios en móviles */
 .list-group-item img.img-circle {
     object-fit: cover;
-    border: 1px solid #eee;
+    border: 1px solid var(--color-border-faint);
 }
 
 /* Mejora la visualización en la versión lista */
@@ -318,10 +318,10 @@
 .piso-divider {
     width: 100%;
     margin: 10px 0;
-    border-bottom: 1px dashed #ccc;
+    border-bottom: 1px dashed var(--color-border-dashed);
     text-align: left;
     padding-left: 15px;
     font-size: 0.9rem;
-    color: #6c757d;
+    color: var(--color-secondary);
     font-weight: 600;
 }

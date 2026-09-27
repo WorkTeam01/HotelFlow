@@ -40,6 +40,9 @@ global $URL;
     <link rel="stylesheet" href="<?= $URL; ?>public/css/lib/fontawesome/all.min.css">
     <!-- Theme style -->
     <link rel="stylesheet" href="<?= $URL; ?>public/css/lib/adminlte/adminlte.min.css">
+    <!-- Tokens de color (siempre antes de styles.css y de los CSS de modulo) -->
+    <?php $__tokens_core_path = __DIR__ . '/../../public/css/core/tokens.css'; ?>
+    <link rel="stylesheet" href="<?= $URL; ?>public/css/core/tokens.css?v=<?= @filemtime($__tokens_core_path) ?: ($APP_VERSION ?? '1'); ?>">
     <!-- Estilos personalizados -->
     <?php $__styles_core_path = __DIR__ . '/../../public/css/core/styles.css'; ?>
     <link rel="stylesheet" href="<?= $URL; ?>public/css/core/styles.css?v=<?= @filemtime($__styles_core_path) ?: ($APP_VERSION ?? '1'); ?>">

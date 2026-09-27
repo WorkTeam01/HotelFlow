@@ -33,6 +33,8 @@ require_once __DIR__ . '/../../config/config.php';
     <link rel="icon" type="image/svg+xml" href="<?= $URL; ?>public/img/hotel-logo.svg">
     <!-- iCheck -->
     <link rel="stylesheet" href="<?= $URL; ?>public/css/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- Tokens de color (login no usa header.php, pero login.css depende de ellos) -->
+    <link rel="stylesheet" href="<?= $URL; ?>public/css/core/tokens.css">
     <!-- Custom login styles -->
     <link rel="stylesheet" href="<?= $URL; ?>public/css/modules/login/login.css">
     <!-- Sweetalert2 -->

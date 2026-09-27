@@ -1,7 +1,7 @@
 .habitacion-card-pendiente .card,
 .habitacion-card-completada .card {
     transition: all 0.3s ease;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border-soft);
 }
 
 .habitacion-card-pendiente .card:hover,
@@ -16,7 +16,7 @@
 }
 
 .bg-warning {
-    color: #212529;
+    color: var(--color-text);
 }
 
 .btn-group .btn {

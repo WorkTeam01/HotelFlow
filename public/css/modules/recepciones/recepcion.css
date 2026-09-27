@@ -9,13 +9,13 @@
     --rec-gap: 0.5rem;
 
     /* Paleta del módulo (equivalentes a Bootstrap; centralizadas para consistencia) */
-    --rec-ink: #495057;          /* texto primario (body ink de Bootstrap) */
-    --rec-muted: #6c757d;        /* texto secundario sobre fondo blanco */
+    --rec-ink: var(--color-text-secondary);          /* texto primario (body ink de Bootstrap) */
+    --rec-muted: var(--color-secondary);        /* texto secundario sobre fondo blanco */
     --rec-muted-strong: #58606a; /* texto secundario AA sobre filas zebra */
-    --rec-focus-ring: #004085;   /* outline de foco por teclado */
-    --rec-ok: #28a745;
-    --rec-alert: #dc3545;
-    --rec-surface: #fff;         /* fondo de tarjetas/tiles */
+    --rec-focus-ring: var(--color-primary-darker);   /* outline de foco por teclado */
+    --rec-ok: var(--color-success);
+    --rec-alert: var(--color-danger);
+    --rec-surface: var(--color-white);         /* fondo de tarjetas/tiles */
 
     /* Tinte de fondo por estado de ocupación en el room rack (mismos colores, con alfa) */
     --rec-tint-success: rgba(40, 167, 69, 0.06);
