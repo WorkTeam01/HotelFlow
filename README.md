@@ -65,14 +65,6 @@ Registro de ventas en dos columnas con catálogo por modales, pago único o mixt
 
 ![Ventas](public/img/screenshots/ventas.png)
 
----
-
-### Reportes
-
-Exportación de reportes de ventas y estadísticas del negocio.
-
-![Reportes](public/img/screenshots/reportes.png)
-
 ## Características
 
 | Módulo           | Funcionalidades                                                                                                                                                                                                           |
