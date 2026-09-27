@@ -63,7 +63,8 @@ _______________
 - Ventas = ledger `pagoventa` (append-only) como fuente de verdad del cobro con `venta.metodopago/pagorecibido/cambio` como cache derivado recalculado en la misma transaccion; vocabulario de metodos = Efectivo / QR / Otros (mas 'Mixto'); idusuario siempre de $_SESSION['usuario_id'], nunca del cliente; `venta.idcliente` es nullable — ventas sin cliente se muestran como "Consumidor Final"
 - Helpers unicos de ventas: VentaController::calcularTotales / calcularInfoMetodoPago / obtenerIconoMetodoPago / esPagoMixto / calcularDesgloseDetalles / calcularResumenPagos; el listado adjunta info_metodo_pago en batch (Venta::getMetodosPagoPorVentas), sin N+1
 - Recibo de venta: views/ventas/recibo.php (standalone imprimible TCPDF 80mm, excepcion de <style> embebido aceptada) muestra estado de la venta y exige permiso `ventas` + propiedad (admin OR dueño) ademas de requireLogin()
-- Assets de modulo con cache-busting automatico (?v=filemtime en header.php/footer.php, incluido public/css/core/styles.css); no versionar a mano ni poner ?v= en la vista
+- Assets de modulo con cache-busting automatico (?v=filemtime en header.php/footer.php para $module_styles/$module_scripts y para todos los assets de primer party del layout: styles.css, tokens.css y common-utils.js); no versionar a mano ni poner ?v= en la vista
+- Colores de UI desde una sola fuente: public/css/core/tokens.css (var(--color-*)) en CSS propio — sin hex en modulos — y themeColor()/themeColorEstado() de common-utils.js en JS (Swal.fire, charts, estados); ver reglas de tono y contraste en CLAUDE.md
 - Tabs inactivos coloreados por reglas globales de public/css/core/styles.css (.card-{color} .nav-tabs .nav-link:not(.active)); no recrear overrides por modulo ni por ID
 - Resaltado de sidebar en subpaginas de una seccion: sidebarEnSeccion() (match por prefijo), no sidebarEsActivo() (match exacto)
 

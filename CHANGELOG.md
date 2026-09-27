@@ -5,6 +5,23 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.6.0] - 2026-09-27
+
+### Added
+
+- **`public/css/core/tokens.css`**: paleta de la app como variables CSS (`--color-*`), enlazada en `header.php` (con `?v=filemtime`) y en `login.php`. Helpers **`themeColor()` / `themeColorEstado()`** en `public/js/core/common-utils.js` como única fuente de colores para JS (SweetAlert2, Chart.js, estados).
+- **Documentación de la convención de colores** en `CLAUDE.md` y `PROMPTS.md` (tokens, reglas de tono, contraste ≥4.5:1).
+
+### Changed
+
+- **155 hex → `var(--color-*)`** en 15 archivos CSS propios. Sin cambio visual: verificado con hash de estilos computados A/B (antes/después, `git stash`, 8 vistas) idéntico byte a byte.
+- **144 diálogos SweetAlert con color explícito** (antes 88 heredaban el morado default `#7066e0` de SweetAlert2): cancels rojos → gris `secondary`, activar → verde `success`, estados → `themeColorEstado()`; colores de los gráficos del dashboard → tokens. Los colores de estado (`pendiente`, acción sobre amarillo) usan `warning-dark` por contraste AA (blanco sobre `#ffc107` = 1.63:1).
+- **Capturas y secciones del README sincronizadas** con la UI actual (habitaciones y ventas regeneradas; se elimina la sección de Reportes, módulo eliminado en 1.4.0).
+
+### Fixed
+
+- **`common-utils.js` se servía sin `?v=filemtime`** en `footer.php` (tag hardcodeado fuera del loop de `$module_scripts`): el navegador ejecutaba una copia cacheada y los módulos fallaban con `ReferenceError: themeColor is not defined` aunque el archivo en disco estaba correcto.
+
 ## [1.5.0] - 2026-09-21
 
 Refactor del módulo Almacenamiento de equipaje (partials, helpers de estado, folio de pagos y estado "vencido" derivado), mejora de accesibilidad y semántica en Usuarios, y coloreo global de pestañas inactivas por clase de card. Sin cambios de esquema.
