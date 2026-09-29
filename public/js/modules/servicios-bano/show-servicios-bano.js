@@ -1,28 +1,23 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Manejar cambio de estado de servicio
-    const botonesCambiarEstado = document.querySelectorAll('.btn-cambiar-estado');
-    botonesCambiarEstado.forEach(boton => {
+    document.querySelectorAll('.btn-cambiar-estado').forEach(boton => {
         boton.addEventListener('click', function () {
             const servicioId = this.dataset.id;
-            const estadoActual = this.dataset.estado;
             const accion = this.dataset.accion;
+            const nombreServicio = this.dataset.nombre || 'este servicio';
 
-            let tituloAlerta = '';
-            let textoAlerta = '';
-            let confirmButtonText = '';
-            let confirmButtonColor = '';
+            const reactivar = accion === 'iniciado';
 
-            if (accion === '1' || accion === 1) {
-                tituloAlerta = '¿Activar este servicio?';
-                textoAlerta = 'El servicio se marcará como activo.';
-                confirmButtonText = 'Sí, activar';
-                confirmButtonColor = themeColor('success');
-            } else {
-                tituloAlerta = '¿Desactivar este servicio?';
-                textoAlerta = 'El servicio se marcará como inactivo.';
-                confirmButtonText = 'Sí, desactivar';
-                confirmButtonColor = themeColor('danger');
-            }
+            const tituloAlerta = reactivar
+                ? `¿Reactivar ${nombreServicio}?`
+                : `¿Cancelar ${nombreServicio}?`;
+            const textoAlerta = reactivar
+                ? 'El servicio se marcará como iniciado.'
+                : 'El servicio se marcará como cancelado.';
+            const confirmButtonText = reactivar ? 'Sí, reactivar' : 'Sí, cancelar';
+            const confirmButtonColor = reactivar ? themeColor('success') : themeColor('danger');
+
+            const url = `${BASE_URL}controllers/servicios-bano/cambiar_estado_servicio.php`
+                + `?id=${servicioId}&nuevo_estado=${encodeURIComponent(accion)}&csrf_token=${encodeURIComponent(CSRF_TOKEN)}`;
 
             Swal.fire({
                 title: tituloAlerta,
@@ -32,10 +27,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 confirmButtonColor: confirmButtonColor,
                 cancelButtonColor: themeColor('secondary'),
                 confirmButtonText: confirmButtonText,
-                cancelButtonText: 'No, volver'
+                cancelButtonText: 'No, volver',
+                allowOutsideClick: false
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `${BASE_URL}controllers/servicios-bano/cambiar_estado_servicio.php?id=${servicioId}&estado_actual=${estadoActual}&nuevo_estado=${accion}`;
+                    window.location.href = url;
                 }
             });
         });

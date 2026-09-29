@@ -52,14 +52,27 @@ $servicio = $datos['servicio'];
 $banos_disponibles = $datos['banos_disponibles'];
 $clientes = $datos['clientes'];
 
-// Determinar estado
-if ($servicio['estado'] == 1) {
-    $clase_estado = 'badge-success';
-    $texto_estado = 'Activo';
-} else {
-    $clase_estado = 'badge-danger';
-    $texto_estado = 'Inactivo';
+// Vocabulario de estado del módulo: `estado` es un enum de texto
+// (iniciado | finalizado | cancelado), no un booleano.
+switch ($servicio['estado']) {
+    case 'cancelado':
+        $clase_estado = 'badge-danger';
+        $texto_estado = 'Cancelado';
+        $card_estado = 'card-danger';
+        break;
+    case 'finalizado':
+        $clase_estado = 'badge-info';
+        $texto_estado = 'Finalizado';
+        $card_estado = 'card-primary';
+        break;
+    case 'iniciado':
+    default:
+        $clase_estado = 'badge-success';
+        $texto_estado = 'Iniciado';
+        $card_estado = 'card-primary';
+        break;
 }
+$esCancelado = $servicio['estado'] === 'cancelado';
 ?>
 
 <!-- Content Header (Page header) -->
@@ -130,26 +143,28 @@ if ($servicio['estado'] == 1) {
                     </div>
                 </div>
                 <!-- Acciones adicionales -->
-                <div class="card card-<?= $servicio['estado'] == 1 ? 'danger' : 'success'; ?>">
+                <div class="card <?= $card_estado; ?>">
                     <div class="card-header">
                         <h3 class="card-title">Cambiar Estado del Servicio</h3>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-12">
-                                <?php if ($servicio['estado'] == 1): ?>
+                                <?php if (!$esCancelado): ?>
                                     <button type="button" class="btn btn-danger btn-block btn-cambiar-estado"
                                         data-id="<?= $servicio['idservicio']; ?>"
-                                        data-estado="<?= $servicio['estado']; ?>"
-                                        data-accion="0">
-                                        <i class="fas fa-times-circle"></i> Desactivar Servicio
+                                        data-estado="<?= htmlspecialchars($servicio['estado']); ?>"
+                                        data-accion="cancelado"
+                                        data-nombre="<?= htmlspecialchars($servicio['nombre_bano'] ?? ''); ?>">
+                                        <i class="fas fa-times-circle"></i> Cancelar Servicio
                                     </button>
                                 <?php else: ?>
                                     <button type="button" class="btn btn-success btn-block btn-cambiar-estado"
                                         data-id="<?= $servicio['idservicio']; ?>"
-                                        data-estado="<?= $servicio['estado']; ?>"
-                                        data-accion="1">
-                                        <i class="fas fa-check-circle"></i> Activar Servicio
+                                        data-estado="<?= htmlspecialchars($servicio['estado']); ?>"
+                                        data-accion="iniciado"
+                                        data-nombre="<?= htmlspecialchars($servicio['nombre_bano'] ?? ''); ?>">
+                                        <i class="fas fa-check-circle"></i> Reactivar Servicio
                                     </button>
                                 <?php endif; ?>
                             </div>

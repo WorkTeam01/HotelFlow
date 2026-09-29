@@ -539,11 +539,11 @@ class AlmacenamientoEquipajeController
         }
 
         if (isset($_GET['fecha_inicio']) && !empty($_GET['fecha_inicio'])) {
-            $filtros['fecha_inicio'] = $_GET['fecha_inicio'];
+            $filtros['fecha_inicio'] = static::normalizarFechaFiltro($_GET['fecha_inicio']);
         }
 
         if (isset($_GET['fecha_fin']) && !empty($_GET['fecha_fin'])) {
-            $filtros['fecha_fin'] = $_GET['fecha_fin'];
+            $filtros['fecha_fin'] = static::normalizarFechaFiltro($_GET['fecha_fin']);
         }
 
         if (isset($_GET['idcliente']) && !empty($_GET['idcliente'])) {
@@ -551,6 +551,23 @@ class AlmacenamientoEquipajeController
         }
 
         return $filtros;
+    }
+
+    /**
+     * Normaliza un valor de fecha recibido del cliente.
+     *
+     * Solo se acepta el formato AAAA-MM-DD que envía el input[type=date]; cualquier
+     * otro valor se descarta. Así el valor que llega a la vista y a la query es
+     * siempre una fecha, nunca texto arbitrario del usuario.
+     */
+    private static function normalizarFechaFiltro(string $valor): string
+    {
+        $valor = trim($valor);
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $valor) !== 1 || !DateTime::createFromFormat('!Y-m-d', $valor)) {
+            return '';
+        }
+
+        return $valor;
     }
 
     /**

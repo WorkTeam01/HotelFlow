@@ -138,14 +138,14 @@ $clientes = $datos_formulario['clientes'];
                                     <div class="form-group">
                                         <label for="fecha_inicio">Fecha Inicio</label>
                                         <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio"
-                                            value="<?= isset($filtros['fecha_inicio']) ? $filtros['fecha_inicio'] : ''; ?>">
+                                            value="<?= htmlspecialchars($filtros['fecha_inicio'] ?? '', ENT_QUOTES); ?>">
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
                                         <label for="fecha_fin">Fecha Fin</label>
                                         <input type="date" class="form-control" id="fecha_fin" name="fecha_fin"
-                                            value="<?= isset($filtros['fecha_fin']) ? $filtros['fecha_fin'] : ''; ?>">
+                                            value="<?= htmlspecialchars($filtros['fecha_fin'] ?? '', ENT_QUOTES); ?>">
                                     </div>
                                 </div>
                                 <div class="col-md-2">

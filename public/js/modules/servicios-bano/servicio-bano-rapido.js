@@ -53,12 +53,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /**
      * Registra un servicio de baño de forma rápida
-     * 
+     *
      * @param {number} idBano ID del baño
      * @param {string} nombreBano Nombre del baño para mostrar en la notificación
      * @param {HTMLElement} boton Elemento botón para manejar estado de carga
      */
-    function registrarServicioRapido(idBano, boton) {
+    function registrarServicioRapido(idBano, nombreBano, boton) {
         $.ajax({
             url: BASE_URL + 'controllers/servicios-bano/crear_servicio_rapido.php',
             type: 'POST',
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     Toast.fire({
                         icon: 'success',
-                        title: 'Servicio registrado correctamente'
+                        title: `Servicio de ${nombreBano} registrado correctamente`
                     }).then(() => {
                         // Recargar la página para actualizar la lista
                         location.reload();
