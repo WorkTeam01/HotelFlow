@@ -607,8 +607,6 @@ class Producto
 
             // Añadir las ventas al array de movimientos
             foreach ($ventas as $venta) {
-                $venta['icono'] = 'fa-shopping-cart';
-                $venta['color'] = 'success';
                 $venta['operacion'] = '-'; // Resta de stock
                 $movimientos[] = $venta;
             }
@@ -638,8 +636,6 @@ class Producto
 
             // Añadir las compras al array de movimientos
             foreach ($compras as $compra) {
-                $compra['icono'] = 'fa-truck';
-                $compra['color'] = 'primary';
                 $compra['operacion'] = '+'; // Suma de stock
                 $movimientos[] = $compra;
             }
@@ -693,8 +689,6 @@ class Producto
 
                 // Añadir los servicios al array de movimientos
                 foreach ($servicios as $servicio) {
-                    $servicio['icono'] = 'fa-toilet-paper';
-                    $servicio['color'] = 'warning';
                     $servicio['operacion'] = '-'; // Resta de stock
                     $movimientos[] = $servicio;
                 }

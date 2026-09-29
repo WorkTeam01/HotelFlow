@@ -283,7 +283,7 @@ class ProductoController
      */
     public function getUltimosMovimientos($idproducto, $limite = 5)
     {
-        return $this->modelo->getUltimosMovimientos($idproducto, $limite);
+        return static::decorarMovimientos($this->modelo->getUltimosMovimientos($idproducto, $limite));
     }
 
     /**
@@ -305,5 +305,193 @@ class ProductoController
         $producto = $this->modelo->getByCodigo($codigo);
 
         return $producto;
+    }
+
+    /**
+     * Mapa completo de estados de producto.
+     *
+     * Fuente única de verdad para etiqueta, badge, icono y acción de cada estado:
+     * ninguna vista ni JS del módulo vuelve a escribir un `switch`/ternario sobre
+     * `$producto['estado']` ni a hardcodear un `badge-*`.
+     *
+     * @return array<string,array> Indexado por clave de estado
+     */
+    public static function estadosProducto(): array
+    {
+        return [
+            'activo' => [
+                'valor' => 1,
+                'label' => 'Activo',
+                'badge' => 'badge-success',
+                'clase' => 'success',
+                'icono' => 'fa-check',
+                'accion_label' => 'Desactivar Producto',
+                'accion_icono' => 'fa-ban',
+                'accion_clase' => 'btn-danger',
+                'accion_texto' => 'text-danger'
+            ],
+            'inactivo' => [
+                'valor' => 0,
+                'label' => 'Inactivo',
+                'badge' => 'badge-secondary',
+                'clase' => 'secondary',
+                'icono' => 'fa-times',
+                'accion_label' => 'Activar Producto',
+                'accion_icono' => 'fa-check',
+                'accion_clase' => 'btn-success',
+                'accion_texto' => 'text-success'
+            ]
+        ];
+    }
+
+    /**
+     * Resuelve la presentación de un estado de producto (1 = activo, cualquier otro = inactivo).
+     *
+     * @param mixed $estado Estado almacenado en BD
+     * @return array Datos de presentación del estado
+     */
+    public static function estadoProducto($estado): array
+    {
+        $estados = static::estadosProducto();
+
+        return ((int) $estado === 1) ? $estados['activo'] : $estados['inactivo'];
+    }
+
+    /**
+     * Etiqueta legible y presentación de un tipo de movimiento de stock.
+     *
+     * El modelo solo devuelve el dato crudo (`tipo_movimiento`); el color, el icono
+     * y la etiqueta son presentación y se resuelven aquí.
+     *
+     * @param string $tipoMovimiento Tipo de movimiento (venta, compra, servicio_baño, ...)
+     * @return array{label:string,icono:string,color:string}
+     */
+    public static function estadoMovimiento(string $tipoMovimiento): array
+    {
+        $mapa = [
+            'venta' => ['label' => 'Venta', 'icono' => 'fa-shopping-cart', 'color' => 'success'],
+            'compra' => ['label' => 'Compra', 'icono' => 'fa-truck', 'color' => 'primary'],
+            'servicio_baño' => ['label' => 'Servicio Baño', 'icono' => 'fa-toilet-paper', 'color' => 'warning']
+        ];
+
+        return $mapa[$tipoMovimiento] ?? [
+            'label' => ucfirst($tipoMovimiento),
+            'icono' => 'fa-question',
+            'color' => 'secondary'
+        ];
+    }
+
+    /**
+     * Añade label/icono/color a cada movimiento de stock.
+     *
+     * @param array $movimientos Movimientos crudos devueltos por el modelo
+     * @return array Movimientos decorados para su presentación
+     */
+    public static function decorarMovimientos(array $movimientos): array
+    {
+        foreach ($movimientos as $indice => $movimiento) {
+            $movimientos[$indice] = array_merge(
+                $movimiento,
+                static::estadoMovimiento((string) ($movimiento['tipo_movimiento'] ?? ''))
+            );
+        }
+
+        return $movimientos;
+    }
+
+    /**
+     * Calcula el estado del inventario de un producto (barra de progreso y alertas).
+     *
+     * @param array $producto Datos del producto
+     * @return array{porcentaje:int,barra:string,alerta:string,bajo_minimo:bool,sobre_maximo:bool}
+     */
+    public static function calcularInventario(array $producto): array
+    {
+        $stock = (int) ($producto['stock'] ?? 0);
+        $minimo = (int) ($producto['stock_minimo'] ?? 0);
+        $maximo = isset($producto['stock_maximo']) && $producto['stock_maximo'] !== ''
+            ? (int) $producto['stock_maximo']
+            : null;
+
+        $porcentaje = $minimo > 0 ? min(100, round(($stock / $minimo) * 100)) : 100;
+
+        $barra = 'success';
+        if ($porcentaje <= 25) {
+            $barra = 'danger';
+        } elseif ($porcentaje <= 50) {
+            $barra = 'warning';
+        } elseif ($porcentaje <= 75) {
+            $barra = 'info';
+        }
+
+        if ($stock < $minimo) {
+            $alerta = 'bajo';
+        } elseif ($stock < $minimo * 1.5) {
+            $alerta = 'cercano';
+        } else {
+            $alerta = 'saludable';
+        }
+
+        return [
+            'porcentaje' => (int) $porcentaje,
+            'barra' => $barra,
+            'alerta' => $alerta,
+            'bajo_minimo' => $stock < $minimo,
+            'sobre_maximo' => ($maximo !== null && $stock > $maximo)
+        ];
+    }
+
+    /**
+     * Umbrales de margen de ganancia (fuente única: config `productos`).
+     *
+     * Los consumen el cálculo de rentabilidad de la vista de detalle y el
+     * feedback en vivo de los formularios, para que ambos usen siempre los
+     * mismos números.
+     *
+     * @return array{alerta:int,bueno:int}
+     */
+    public static function umbralesMargen(): array
+    {
+        $config = require __DIR__ . '/../../config/config.php';
+
+        return [
+            'alerta' => (int) ($config['productos']['margen_alerta'] ?? 10),
+            'bueno' => (int) ($config['productos']['margen_bueno'] ?? 20)
+        ];
+    }
+
+    /**
+     * Calcula la rentabilidad de un producto frente a los umbrales de config/productos.
+     *
+     * @param array $producto Datos del producto
+     * @return array{ganancia:float,margen:int,nivel:string,umbral_alerta:int,umbral_bueno:int}
+     */
+    public static function calcularRentabilidad(array $producto): array
+    {
+        $umbrales = static::umbralesMargen();
+        $umbralAlerta = $umbrales['alerta'];
+        $umbralBueno = $umbrales['bueno'];
+
+        $precioVenta = (float) ($producto['precioventa'] ?? 0);
+        $precioCompra = (float) ($producto['preciocompra'] ?? 0);
+
+        $ganancia = $precioVenta - $precioCompra;
+        $margen = $precioCompra > 0 ? round(($ganancia / $precioCompra) * 100) : 0;
+
+        if ($margen < $umbralAlerta) {
+            $nivel = 'bajo';
+        } elseif ($margen < $umbralBueno) {
+            $nivel = 'moderado';
+        } else {
+            $nivel = 'bueno';
+        }
+
+        return [
+            'ganancia' => $ganancia,
+            'margen' => (int) $margen,
+            'nivel' => $nivel,
+            'umbral_alerta' => $umbralAlerta,
+            'umbral_bueno' => $umbralBueno
+        ];
     }
 }

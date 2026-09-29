@@ -15,11 +15,6 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
     exit;
 }
 
-// Incluir el encabezado
-$skip_select2 = true;
-$skip_chartjs = true;
-$module_scripts = ['productos/show-producto'];
-include_once '../layouts/header.php';
 // Verificar si se proporcionó un ID
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -41,6 +36,21 @@ if (!$producto) {
     header('Location: index.php');
     exit;
 }
+
+// Datos derivados del producto: el controlador resuelve el estado, el inventario,
+// la rentabilidad y los movimientos antes de emitir HTML.
+$estado_ui = ProductoController::estadoProducto($producto['estado']);
+$inventario = ProductoController::calcularInventario($producto);
+$rentabilidad = ProductoController::calcularRentabilidad($producto);
+$movimientos = $controller->getUltimosMovimientos($producto['idproducto']);
+
+// Incluir el encabezado DESPUÉS de todas las validaciones que puedan redirigir
+$module_styles = ['productos/productos'];
+$skip_datatables = true;
+$skip_select2 = true;
+$skip_chartjs = true;
+$module_scripts = ['productos/cambiar-estado-productos', 'productos/show-producto'];
+include_once '../layouts/header.php';
 ?>
 
 <!-- Content Header (Page header) -->
@@ -49,7 +59,6 @@ if (!$producto) {
         <div class="row">
             <div class="col-sm-6">
                 <h1>Detalle de Producto</h1>
-                <p class="text-muted">Información completa del producto seleccionado</p>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
@@ -72,21 +81,16 @@ if (!$producto) {
                 <div class="card card-info card-outline">
                     <div class="card-body box-profile">
                         <div class="text-center position-relative mb-4">
-                            <?php if (isset($producto['imagen']) && !empty($producto['imagen'])): ?>
-                                <img class="img-fluid rounded"
-                                    src="<?= $URL; ?>public/uploads/productos/<?= $producto['imagen']; ?>"
-                                    alt="Imagen del producto" style="max-height: 250px;">
-                            <?php else: ?>
-                                <img class="img-fluid rounded"
-                                    src="<?= $URL; ?>public/uploads/productos/producto_default.png"
-                                    alt="Imagen por defecto" style="max-height: 250px;">
-                            <?php endif; ?>
+                            <?php
+                            $clase_img = 'img-fluid rounded prod-img-perfil';
+                            $alt = 'Imagen del producto';
+                            include __DIR__ . '/partials/imagen-producto.php';
+                            ?>
 
                             <!-- Indicador de estado sobre la imagen -->
-                            <span class="position-absolute badge <?= $producto['estado'] == 1 ? 'badge-success' : 'badge-danger'; ?>"
-                                style="top: 0; right: 0;">
-                                <i class="fas <?= $producto['estado'] == 1 ? 'fa-check' : 'fa-times'; ?>"></i>
-                                <?= $producto['estado'] == 1 ? 'Activo' : 'Inactivo'; ?>
+                            <span class="position-absolute badge prod-badge-estado <?= $estado_ui['badge']; ?>">
+                                <i class="fas <?= $estado_ui['icono']; ?>"></i>
+                                <?= $estado_ui['label']; ?>
                             </span>
                         </div>
 
@@ -125,11 +129,7 @@ if (!$producto) {
                             <li class="list-group-item">
                                 <b><i class="fas fa-toggle-on mr-2"></i>Estado</b>
                                 <span class="float-right">
-                                    <?php if ($producto['estado'] == 1): ?>
-                                        <span class="badge badge-success">Activo</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-danger">Inactivo</span>
-                                    <?php endif; ?>
+                                    <span class="badge <?= $estado_ui['badge']; ?>"><?= $estado_ui['label']; ?></span>
                                 </span>
                             </li>
                         </ul>
@@ -151,12 +151,12 @@ if (!$producto) {
                         <h3 class="card-title"><i class="fas fa-cogs mr-2"></i>Acciones</h3>
                     </div>
                     <div class="card-body">
-                        <button type="button" class="btn btn-block <?= $producto['estado'] == 1 ? 'btn-danger' : 'btn-success'; ?>" id="btnCambiarEstado"
+                        <button type="button" class="btn btn-block <?= $estado_ui['accion_clase']; ?> cambiar-estado-producto" id="btnCambiarEstado"
                             data-id="<?= (int)$producto['idproducto']; ?>"
                             data-estado="<?= (int)$producto['estado']; ?>"
                             data-nombre="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>">
-                            <i class="fas <?= $producto['estado'] == 1 ? 'fa-ban' : 'fa-check'; ?> mr-2"></i>
-                            <?= $producto['estado'] == 1 ? 'Desactivar Producto' : 'Activar Producto'; ?>
+                            <i class="fas <?= $estado_ui['accion_icono']; ?> mr-2"></i>
+                            <?= $estado_ui['accion_label']; ?>
                         </button>
                     </div>
                 </div>
@@ -165,7 +165,7 @@ if (!$producto) {
             <!-- Columna derecha - Información detallada en tabs -->
             <div class="col-md-8">
                 <!-- Información detallada en pestañas -->
-                <div class="card card-info card-outline card-tabs">
+                <div class="card card-info card-outline card-outline-tabs">
                     <div class="card-header p-0 border-bottom-0">
                         <ul class="nav nav-tabs" id="detail-tabs" role="tablist">
                             <li class="nav-item">
@@ -192,354 +192,17 @@ if (!$producto) {
                         <div class="tab-content" id="detail-tabs-content">
                             <!-- Tab Información General -->
                             <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="tab-general">
-                                <div class="row">
-                                    <div class="col-12">
-                                        <div class="info-box bg-light">
-                                            <div class="info-box-content">
-                                                <h5 class="info-box-text text-center text-muted">Descripción del Producto</h5>
-                                                <div class="info-box-number text-center text-muted mb-0">
-                                                    <?php if (!empty($producto['descripcion'])): ?>
-                                                        <?= nl2br(htmlspecialchars($producto['descripcion'])); ?>
-                                                    <?php else: ?>
-                                                        <span class="text-muted">No hay descripción disponible</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header bg-light">
-                                                <h3 class="card-title">Datos Básicos</h3>
-                                            </div>
-                                            <div class="card-body p-0">
-                                                <table class="table table-hover">
-                                                    <tbody>
-                                                        <tr>
-                                                            <td><i class="fas fa-signature mr-2"></i>Nombre:</td>
-                                                            <td><?= htmlspecialchars($producto['nombre']); ?></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><i class="fas fa-list-alt mr-2"></i>Categoría:</td>
-                                                            <td><?= htmlspecialchars($producto['categoria_nombre'] ?? 'Sin categoría'); ?></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><i class="fas fa-barcode mr-2"></i>Código:</td>
-                                                            <td><?= !empty($producto['codigo']) ? htmlspecialchars($producto['codigo']) : 'N/A'; ?></td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header bg-light">
-                                                <h3 class="card-title">Información del Sistema</h3>
-                                            </div>
-                                            <div class="card-body p-0">
-                                                <table class="table table-hover">
-                                                    <tbody>
-                                                        <tr>
-                                                            <td><i class="fas fa-calendar-plus mr-2"></i>Fecha Creación:</td>
-                                                            <td><?= isset($producto['fechacreacion']) ? date('d/m/Y', strtotime($producto['fechacreacion'])) : 'N/A'; ?></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><i class="fas fa-calendar-check mr-2"></i>Última Actualización:</td>
-                                                            <td><?= isset($producto['fechaactualizacion']) ? date('d/m/Y', strtotime($producto['fechaactualizacion'])) : 'N/A'; ?></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><i class="fas fa-toggle-on mr-2"></i>Estado:</td>
-                                                            <td>
-                                                                <?php if ($producto['estado'] == 1): ?>
-                                                                    <span class="badge badge-success">Activo</span>
-                                                                <?php else: ?>
-                                                                    <span class="badge badge-danger">Inactivo</span>
-                                                                <?php endif; ?>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <?php include __DIR__ . '/partials/tab-general.php'; ?>
                             </div>
 
                             <!-- Tab Inventario -->
                             <div class="tab-pane fade" id="inventario" role="tabpanel" aria-labelledby="tab-inventario">
-                                <div class="row">
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="small-box bg-info">
-                                            <div class="inner">
-                                                <h3><?= $producto['stock']; ?></h3>
-                                                <p>Unidades en Stock</p>
-                                            </div>
-                                            <div class="icon">
-                                                <i class="fas fa-boxes"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="small-box bg-warning">
-                                            <div class="inner">
-                                                <h3><?= $producto['stock_minimo']; ?></h3>
-                                                <p>Stock Mínimo</p>
-                                            </div>
-                                            <div class="icon">
-                                                <i class="fas fa-exclamation-triangle"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-4 col-md-6">
-                                        <div class="small-box bg-success">
-                                            <div class="inner">
-                                                <h3><?= !empty($producto['stock_maximo']) ? $producto['stock_maximo'] : 'N/A'; ?></h3>
-                                                <p>Stock Máximo</p>
-                                            </div>
-                                            <div class="icon">
-                                                <i class="fas fa-warehouse"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Estado de Inventario -->
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h3 class="card-title">Estado de Inventario</h3>
-                                    </div>
-                                    <div class="card-body">
-                                        <?php
-                                        // Calcular porcentaje de stock en relación al mínimo
-                                        $porcentaje = ($producto['stock_minimo'] > 0) ?
-                                            min(100, round(($producto['stock'] / $producto['stock_minimo']) * 100)) : 100;
-
-                                        // Determinar clase de la barra de progreso
-                                        $barraClase = 'bg-success';
-                                        if ($porcentaje <= 25) {
-                                            $barraClase = 'bg-danger';
-                                        } elseif ($porcentaje <= 50) {
-                                            $barraClase = 'bg-warning';
-                                        } elseif ($porcentaje <= 75) {
-                                            $barraClase = 'bg-info';
-                                        }
-                                        ?>
-
-                                        <div class="progress">
-                                            <div class="progress-bar <?= $barraClase; ?>" role="progressbar"
-                                                aria-valuenow="<?= $porcentaje; ?>" aria-valuemin="0" aria-valuemax="100"
-                                                style="width: <?= $porcentaje; ?>%">
-                                                <?= $porcentaje; ?>%
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-3">
-                                            <?php if ($producto['stock'] < $producto['stock_minimo']): ?>
-                                                <div class="alert alert-danger">
-                                                    <i class="fas fa-exclamation-circle mr-2"></i>
-                                                    <strong>¡Alerta de stock bajo!</strong> El stock actual está por debajo del mínimo recomendado.
-                                                    Se recomienda realizar una compra pronto.
-                                                </div>
-                                            <?php elseif ($producto['stock'] < ($producto['stock_minimo'] * 1.5)): ?>
-                                                <div class="alert alert-warning">
-                                                    <i class="fas fa-exclamation-triangle mr-2"></i>
-                                                    <strong>Stock cercano al mínimo.</strong> El stock actual se está acercando al nivel mínimo recomendado.
-                                                </div>
-                                            <?php else: ?>
-                                                <div class="alert alert-success">
-                                                    <i class="fas fa-check-circle mr-2"></i>
-                                                    <strong>Stock saludable.</strong> El nivel de inventario está en un nivel óptimo.
-                                                </div>
-                                            <?php endif; ?>
-
-                                            <?php if (!empty($producto['stock_maximo']) && $producto['stock'] > $producto['stock_maximo']): ?>
-                                                <div class="alert alert-info">
-                                                    <i class="fas fa-info-circle mr-2"></i>
-                                                    <strong>Stock sobre el máximo.</strong> El inventario actual supera el nivel máximo recomendado.
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Últimos Movimientos -->
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h3 class="card-title">Últimos Movimientos</h3>
-                                    </div>
-                                    <div class="card-body">
-                                        <?php
-                                        // Obtener los últimos movimientos del producto
-                                        $movimientos = $controller->getUltimosMovimientos($producto['idproducto']);
-
-                                        if (!empty($movimientos)): ?>
-                                            <div class="table-responsive">
-                                                <table class="table table-striped table-hover">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Fecha</th>
-                                                            <th>Tipo</th>
-                                                            <th>Cantidad</th>
-                                                            <th>Precio</th>
-                                                            <th>Total</th>
-                                                            <th>Referencia</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <?php foreach ($movimientos as $movimiento): ?>
-                                                            <tr>
-                                                                <td><?= date('d/m/Y', strtotime($movimiento['fecha'])); ?></td>
-                                                                <td>
-                                                                    <span class="badge badge-<?= $movimiento['color']; ?>">
-                                                                        <i class="fas <?= $movimiento['icono']; ?> mr-1"></i>
-                                                                        <?php
-                                                                        switch ($movimiento['tipo_movimiento']) {
-                                                                            case 'venta':
-                                                                                echo 'Venta';
-                                                                                break;
-                                                                            case 'compra':
-                                                                                echo 'Compra';
-                                                                                break;
-                                                                            case 'servicio_baño':
-                                                                                echo 'Servicio Baño';
-                                                                                break;
-                                                                            default:
-                                                                                echo ucfirst($movimiento['tipo_movimiento']);
-                                                                        }
-                                                                        ?>
-                                                                    </span>
-                                                                </td>
-                                                                <td>
-                                                                    <span class="<?= $movimiento['tipo_movimiento'] == 'compra' ? 'text-success' : 'text-danger'; ?>">
-                                                                        <?= $movimiento['operacion']; ?><?= $movimiento['cantidad']; ?>
-                                                                    </span>
-                                                                </td>
-                                                                <td>
-                                                                    <?php if ($movimiento['tipo_movimiento'] != 'servicio_baño'): ?>
-                                                                        Bs <?= number_format($movimiento['precio'], 2); ?>
-                                                                    <?php else: ?>
-                                                                        <span class="text-muted">N/A</span>
-                                                                    <?php endif; ?>
-                                                                </td>
-                                                                <td>
-                                                                    <?php if ($movimiento['tipo_movimiento'] != 'servicio_baño'): ?>
-                                                                        Bs <?= number_format($movimiento['total'], 2); ?>
-                                                                    <?php else: ?>
-                                                                        <span class="text-muted">Consumo interno</span>
-                                                                    <?php endif; ?>
-                                                                </td>
-                                                                <td>
-                                                                    <?php if ($movimiento['tipo_movimiento'] == 'venta'): ?>
-                                                                        <?= !empty($movimiento['referencia']) ? htmlspecialchars($movimiento['referencia']) : 'Cliente no registrado'; ?>
-                                                                    <?php elseif ($movimiento['tipo_movimiento'] == 'servicio_baño'): ?>
-                                                                        <?= htmlspecialchars($movimiento['referencia']); ?>
-                                                                        <small class="d-block text-muted">Por: <?= htmlspecialchars($movimiento['usuario']); ?></small>
-                                                                    <?php else: ?>
-                                                                        <?= htmlspecialchars($movimiento['referencia']); ?>
-                                                                    <?php endif; ?>
-                                                                </td>
-                                                            </tr>
-                                                        <?php endforeach; ?>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        <?php else: ?>
-                                            <p class="text-muted">No hay movimientos registrados para este producto.</p>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
+                                <?php include __DIR__ . '/partials/tab-inventario.php'; ?>
                             </div>
 
                             <!-- Tab Precios -->
                             <div class="tab-pane fade" id="precios" role="tabpanel" aria-labelledby="tab-precios">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="info-box bg-success">
-                                            <span class="info-box-icon"><i class="fas fa-tag"></i></span>
-                                            <div class="info-box-content">
-                                                <span class="info-box-text">Precio de Venta</span>
-                                                <span class="info-box-number">Bs <?= number_format($producto['precioventa'], 2); ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="info-box bg-warning">
-                                            <span class="info-box-icon"><i class="fas fa-shopping-cart"></i></span>
-                                            <div class="info-box-content">
-                                                <span class="info-box-text">Precio de Compra</span>
-                                                <span class="info-box-number">Bs <?= number_format($producto['preciocompra'], 2); ?></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h3 class="card-title">Análisis de Rentabilidad</h3>
-                                    </div>
-                                    <div class="card-body">
-                                        <?php
-                                        // Calcular margen y ganancia
-                                        $ganancia = $producto['precioventa'] - $producto['preciocompra'];
-                                        $margenPorcentaje = ($producto['preciocompra'] > 0) ?
-                                            round(($ganancia / $producto['preciocompra']) * 100) : 0;
-                                        ?>
-
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label>Ganancia por unidad:</label>
-                                                    <p class="text-success font-weight-bold">
-                                                        Bs <?= number_format($ganancia, 2); ?>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label>Margen de ganancia:</label>
-                                                    <p class="text-success font-weight-bold">
-                                                        <?= $margenPorcentaje; ?>%
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="progress">
-                                            <div class="progress-bar bg-success" role="progressbar"
-                                                aria-valuenow="<?= $margenPorcentaje; ?>" aria-valuemin="0" aria-valuemax="100"
-                                                style="width: <?= min(100, $margenPorcentaje); ?>%">
-                                                <?= $margenPorcentaje; ?>%
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-3">
-                                            <?php if ($margenPorcentaje < 10): ?>
-                                                <div class="alert alert-danger">
-                                                    <i class="fas fa-exclamation-circle mr-2"></i>
-                                                    <strong>Margen bajo.</strong> El margen de ganancia está por debajo del 10%.
-                                                </div>
-                                            <?php elseif ($margenPorcentaje < 20): ?>
-                                                <div class="alert alert-warning">
-                                                    <i class="fas fa-exclamation-triangle mr-2"></i>
-                                                    <strong>Margen moderado.</strong> El margen de ganancia está entre 10% y 20%.
-                                                </div>
-                                            <?php else: ?>
-                                                <div class="alert alert-success">
-                                                    <i class="fas fa-check-circle mr-2"></i>
-                                                    <strong>Buen margen.</strong> El margen de ganancia es superior al 20%.
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                </div>
+                                <?php include __DIR__ . '/partials/tab-precios.php'; ?>
                             </div>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../../controllers/categoria/CategoriaController.php';
+require_once __DIR__ . '/../../controllers/productos/ProductoController.php';
 require_once __DIR__ . '/../layouts/session.php';
 
 requireLogin();
@@ -20,8 +21,12 @@ $categoriaController = new CategoriaController();
 $categorias = $categoriaController->index();
 
 // Incluir el encabezado
+$umbrales = ProductoController::umbralesMargen();
+$estados = ProductoController::estadosProducto();
+$module_styles = ['productos/productos'];
+$skip_datatables = true;
 $skip_chartjs = true;
-$module_scripts = ['productos/create-producto'];
+$module_scripts = ['productos/producto-form', 'productos/create-producto'];
 include_once '../layouts/header.php';
 ?>
 
@@ -31,7 +36,6 @@ include_once '../layouts/header.php';
         <div class="row">
             <div class="col-sm-6">
                 <h1>Crear Producto</h1>
-                <p class="text-muted">Complete el formulario para registrar un nuevo producto en el sistema</p>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
@@ -50,24 +54,17 @@ include_once '../layouts/header.php';
         <div class="row">
             <!-- Columna del formulario (8/12) -->
             <div class="col-md-8">
-                <div class="card card-primary sticky-top">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-plus-circle mr-2"></i>Formulario de Nuevo Producto</h3>
-                    </div>
-                    <!-- /.card-header -->
-                    <!-- form start -->
-                    <form action="<?= $URL; ?>controllers/productos/crear_producto.php" method="POST" enctype="multipart/form-data" id="formCrearProducto">
-                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
+                <form action="<?= $URL; ?>controllers/productos/crear_producto.php" method="POST" enctype="multipart/form-data" id="formCrearProducto"
+                    data-margen-alerta="<?= $umbrales['alerta']; ?>" data-margen-bueno="<?= $umbrales['bueno']; ?>">
+                    <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
+
+
+                    <!-- Sección de Información Básica -->
+                    <div class="card card-outline card-primary mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>Información Básica</h3>
+                        </div>
                         <div class="card-body">
-                            <!-- Instrucciones -->
-                            <div class="callout callout-info mb-4">
-                                <h5><i class="fas fa-info-circle"></i> Información importante:</h5>
-                                <p>Los campos marcados con <span class="text-danger">*</span> son obligatorios. Asegúrese de completar todos los datos requeridos.</p>
-                            </div>
-
-                            <!-- Sección de Información Básica -->
-                            <h5 class="border-bottom border-primary pb-2 mb-3"><i class="fas fa-info-circle mr-2"></i>Información Básica</h5>
-
                             <div class="row">
                                 <!-- Categoría -->
                                 <div class="col-md-6">
@@ -110,7 +107,7 @@ include_once '../layouts/header.php';
                             <div class="row">
                                 <!-- Nombre -->
                                 <div class="col-md-12">
-                                    <div class="form-group">
+                                    <div class="form-group mb-md-0">
                                         <label for="nombre">Nombre del Producto <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
@@ -119,31 +116,31 @@ include_once '../layouts/header.php';
                                             <input type="text" class="form-control" id="nombre" name="nombre"
                                                 placeholder="Ingrese el nombre del producto" required>
                                         </div>
-                                        <small class="form-text text-muted">Nombre completo y descriptivo del producto</small>
+                                        <small class="form-text text-muted mb-0">Nombre completo y descriptivo del producto</small>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="row">
+                            <div class="row mt-3">
                                 <!-- Descripción -->
                                 <div class="col-md-12">
-                                    <div class="form-group">
+                                    <div class="form-group mb-0">
                                         <label for="descripcion">Descripción</label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text"><i class="fas fa-align-left"></i></span>
-                                            </div>
-                                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3"
-                                                placeholder="Ingrese una descripción detallada del producto"></textarea>
-                                        </div>
-                                        <small class="form-text text-muted">Características, usos, dimensiones u otra información relevante</small>
+                                        <textarea class="form-control" id="descripcion" name="descripcion" rows="3"
+                                            placeholder="Ingrese una descripción detallada del producto"></textarea>
+                                        <small class="form-text text-muted mb-0">Características, usos, dimensiones u otra información relevante</small>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <!-- Sección de Precios -->
-                            <h5 class="border-bottom border-primary pb-2 mb-3 mt-4"><i class="fas fa-money-bill-wave mr-2"></i>Información de Precios</h5>
-
+                    <!-- Sección de Precios -->
+                    <div class="card card-outline card-primary mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-money-bill-wave mr-2"></i>Información de Precios</h3>
+                        </div>
+                        <div class="card-body">
                             <div class="row">
                                 <!-- Precio de Compra -->
                                 <div class="col-md-6">
@@ -162,7 +159,7 @@ include_once '../layouts/header.php';
 
                                 <!-- Precio de Venta -->
                                 <div class="col-md-6">
-                                    <div class="form-group">
+                                    <div class="form-group mb-0">
                                         <label for="precioventa">Precio de Venta <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
@@ -176,10 +173,15 @@ include_once '../layouts/header.php';
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <!-- Sección de Inventario -->
-                            <h5 class="border-bottom border-primary pb-2 mb-3 mt-4"><i class="fas fa-warehouse mr-2"></i>Información de Inventario</h5>
-
+                    <!-- Sección de Inventario -->
+                    <div class="card card-outline card-primary mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-warehouse mr-2"></i>Información de Inventario</h3>
+                        </div>
+                        <div class="card-body">
                             <div class="row">
                                 <!-- Stock Inicial -->
                                 <div class="col-md-4">
@@ -199,7 +201,7 @@ include_once '../layouts/header.php';
                                 <!-- Stock Mínimo -->
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="stock_minimo">Stock Mínimo <span class="text-danger">*</span></label>
+                                        <label for="stock_minimo">Stock Mínimo</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text"><i class="fas fa-level-down-alt"></i></span>
@@ -213,7 +215,7 @@ include_once '../layouts/header.php';
 
                                 <!-- Stock Máximo -->
                                 <div class="col-md-4">
-                                    <div class="form-group">
+                                    <div class="form-group mb-0">
                                         <label for="stock_maximo">Stock Máximo</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
@@ -228,14 +230,19 @@ include_once '../layouts/header.php';
                             </div>
 
                             <div id="stock-validation-feedback"></div>
+                        </div>
+                    </div>
 
-                            <!-- Sección de Imagen -->
-                            <h5 class="border-bottom border-primary pb-2 mb-3 mt-4"><i class="fas fa-image mr-2"></i>Imagen del Producto</h5>
-
+                    <!-- Sección de Imagen -->
+                    <div class="card card-outline card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-image mr-2"></i>Imagen y Estado</h3>
+                        </div>
+                        <div class="card-body">
                             <div class="row">
                                 <!-- Imagen -->
-                                <div class="col-md-6">
-                                    <div class="form-group">
+                                <div class="col-md-7">
+                                    <div class="form-group mb-0">
                                         <label for="imagen">Imagen del Producto</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
@@ -247,36 +254,27 @@ include_once '../layouts/header.php';
                                                 <label class="custom-file-label" for="imagen">Seleccionar archivo</label>
                                             </div>
                                         </div>
-                                        <small class="form-text text-muted">Formatos permitidos: JPG, PNG, GIF, WEBP. Máximo 2MB</small>
+                                        <small class="form-text text-muted mb-0">Formatos permitidos: JPG, PNG, GIF, WEBP. Máximo 2MB</small>
                                     </div>
                                 </div>
 
                                 <!-- Estado -->
-                                <div class="col-md-6">
-                                    <div class="form-group">
+                                <div class="col-md-5">
+                                    <div class="form-group mb-0">
                                         <label for="estado">Estado</label>
                                         <select class="form-control select2" id="estado" name="estado">
-                                            <option value="1" selected>Activo</option>
-                                            <option value="0">Inactivo</option>
+                                            <?php foreach ($estados as $estado) : ?>
+                                                <option value="<?= (int) $estado['valor']; ?>"
+                                                    <?= (int) $estado['valor'] === 1 ? 'selected' : ''; ?>>
+                                                    <?= htmlspecialchars($estado['label']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
                                         </select>
-                                        <small class="form-text text-muted">Un producto inactivo no aparecerá en las ventas</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Vista previa de imagen -->
-                            <div class="row" id="preview-container" style="display: none;">
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label>Vista Previa:</label><br>
-                                        <div class="text-center">
-                                            <img id="preview-image" src="#" alt="Vista previa" class="img-thumbnail" style="max-width: 300px; max-height: 300px;">
-                                        </div>
+                                        <small class="form-text text-muted mb-0">Un producto inactivo no aparecerá en las ventas</small>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.card-body -->
 
                         <div class="card-footer">
                             <div class="row">
@@ -292,225 +290,69 @@ include_once '../layouts/header.php';
                                 </div>
                             </div>
                         </div>
-                    </form>
-                </div>
-                <!-- /.card -->
+                    </div>
+                </form>
             </div>
 
-            <!-- Nueva columna para la guía (4/12) -->
+            <!-- Columna lateral (4/12) -->
             <div class="col-md-4">
-                <!-- Tarjeta de guía principal -->
+                <!-- Resumen en vivo del producto que se está creando -->
                 <div class="card card-outline card-info">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-question-circle mr-2"></i>Guía de Producto</h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
+                        <h3 class="card-title"><i class="fas fa-clipboard-list mr-2"></i>Resumen</h3>
                     </div>
-                    <div class="card-body">
-                        <h5 class="text-info"><i class="fas fa-info-circle"></i> Cómo completar este formulario</h5>
-                        <div class="callout callout-info">
-                            <p>Complete todos los campos marcados con <span class="text-danger">*</span> ya que son obligatorios para registrar un nuevo producto.</p>
-                        </div>
-
-                        <div class="accordion" id="accordionHelp">
-                            <!-- Sección de Información Básica -->
-                            <div class="card">
-                                <div class="card-header" id="headingBasic">
-                                    <h2 class="mb-0">
-                                        <button class="btn btn-link btn-block text-left text-info" type="button" data-toggle="collapse" data-target="#collapseBasic" aria-expanded="true" aria-controls="collapseBasic">
-                                            <i class="fas fa-info-circle mr-2"></i>Información Básica
-                                        </button>
-                                    </h2>
-                                </div>
-                                <div id="collapseBasic" class="collapse show" aria-labelledby="headingBasic" data-parent="#accordionHelp">
-                                    <div class="card-body">
-                                        <p><strong>Categoría:</strong> Seleccione la categoría a la que pertenece el producto.</p>
-                                        <div class="alert alert-secondary">
-                                            <small><i class="fas fa-lightbulb mr-1"></i> Consejo: Una correcta categorización facilita la búsqueda y organización de los productos.</small>
-                                        </div>
-                                        <p><strong>Código:</strong> Puede ser un código de barras, SKU o cualquier identificador único para el producto.</p>
-                                        <ul class="pl-3">
-                                            <li><small>Es opcional pero recomendable para mejor organización</small></li>
-                                            <li><small>Útil para búsquedas rápidas e inventarios</small></li>
-                                        </ul>
-                                        <p><strong>Nombre:</strong> Debe ser descriptivo y contener información clave del producto.</p>
-                                        <p><strong>Descripción:</strong> Incluya características, dimensiones, materiales, usos o cualquier información relevante.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Sección de Precios -->
-                            <div class="card">
-                                <div class="card-header" id="headingPrices">
-                                    <h2 class="mb-0">
-                                        <button class="btn btn-link btn-block text-left collapsed text-info" type="button" data-toggle="collapse" data-target="#collapsePrices" aria-expanded="false" aria-controls="collapsePrices">
-                                            <i class="fas fa-money-bill-wave mr-2"></i>Información de Precios
-                                        </button>
-                                    </h2>
-                                </div>
-                                <div id="collapsePrices" class="collapse" aria-labelledby="headingPrices" data-parent="#accordionHelp">
-                                    <div class="card-body">
-                                        <p><strong>Precio de Compra:</strong> Es el costo al que se adquiere el producto. Es importante para cálculos de rentabilidad.</p>
-                                        <p><strong>Precio de Venta:</strong> Es el precio al que se ofrecerá el producto a los clientes.</p>
-                                        <div class="alert alert-warning">
-                                            <small><i class="fas fa-exclamation-triangle mr-1"></i> Importante: El precio de venta debe ser mayor al precio de compra para garantizar un margen de ganancia.</small>
-                                        </div>
-                                        <div class="alert alert-secondary">
-                                            <small><i class="fas fa-lightbulb mr-1"></i> Consejo: Para calcular un precio de venta adecuado, considere añadir al menos un 20-30% sobre el precio de compra.</small>
-                                        </div>
-                                        <p><strong>Ejemplo de cálculo:</strong></p>
-                                        <ul>
-                                            <li><small>Precio de compra: Bs 100</small></li>
-                                            <li><small>Margen deseado: 30%</small></li>
-                                            <li><small>Precio de venta = 100 + (100 × 0.3) = Bs 130</small></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Sección de Inventario -->
-                            <div class="card">
-                                <div class="card-header" id="headingInventory">
-                                    <h2 class="mb-0">
-                                        <button class="btn btn-link btn-block text-left collapsed text-info" type="button" data-toggle="collapse" data-target="#collapseInventory" aria-expanded="false" aria-controls="collapseInventory">
-                                            <i class="fas fa-warehouse mr-2"></i>Información de Inventario
-                                        </button>
-                                    </h2>
-                                </div>
-                                <div id="collapseInventory" class="collapse" aria-labelledby="headingInventory" data-parent="#accordionHelp">
-                                    <div class="card-body">
-                                        <p><strong>Stock Inicial:</strong> Cantidad con la que se empieza a controlar el inventario del producto.</p>
-                                        <p><strong>Stock Mínimo:</strong> Nivel mínimo de existencias antes de generar alertas para reposición.</p>
-                                        <div class="alert alert-secondary">
-                                            <small><i class="fas fa-lightbulb mr-1"></i> Consejo: Establezca el stock mínimo considerando el tiempo de reposición y la demanda promedio.</small>
-                                        </div>
-                                        <p><strong>Stock Máximo:</strong> Nivel máximo recomendado para evitar sobrestock.</p>
-                                        <div class="alert alert-warning">
-                                            <small><i class="fas fa-exclamation-triangle mr-1"></i> Importante: El stock máximo debe ser mayor que el stock mínimo y adecuado a la capacidad de almacenamiento.</small>
-                                        </div>
-                                        <p><strong>Recomendaciones:</strong></p>
-                                        <ul>
-                                            <li><small>Para productos de alta rotación: stock mínimo más alto</small></li>
-                                            <li><small>Para productos perecederos: stock máximo más bajo</small></li>
-                                            <li><small>Para productos voluminosos: considerar espacio de almacenamiento</small></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Sección de Imagen -->
-                            <div class="card">
-                                <div class="card-header" id="headingImage">
-                                    <h2 class="mb-0">
-                                        <button class="btn btn-link btn-block text-left collapsed text-info" type="button" data-toggle="collapse" data-target="#collapseImage" aria-expanded="false" aria-controls="collapseImage">
-                                            <i class="fas fa-image mr-2"></i>Imagen del Producto
-                                        </button>
-                                    </h2>
-                                </div>
-                                <div id="collapseImage" class="collapse" aria-labelledby="headingImage" data-parent="#accordionHelp">
-                                    <div class="card-body">
-                                        <p><strong>Imagen:</strong> Ayuda a identificar visualmente el producto en el sistema.</p>
-                                        <div class="alert alert-secondary">
-                                            <small><i class="fas fa-lightbulb mr-1"></i> Consejo: Utilice imágenes claras, con buena iluminación y preferiblemente sobre fondo blanco.</small>
-                                        </div>
-                                        <p><strong>Recomendaciones:</strong></p>
-                                        <ul>
-                                            <li><small>Dimensiones recomendadas: 600×600 píxeles</small></li>
-                                            <li><small>Formatos permitidos: JPG, PNG, GIF, WEBP</small></li>
-                                            <li><small>Tamaño máximo: 2MB</small></li>
-                                        </ul>
-                                        <p><strong>Estado:</strong> Determina si el producto estará disponible para venta.</p>
-                                        <ul>
-                                            <li><small><strong>Activo:</strong> Aparecerá en las búsquedas y puede venderse</small></li>
-                                            <li><small><strong>Inactivo:</strong> No aparecerá en las búsquedas ni podrá venderse</small></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tarjeta de ejemplo de producto bien configurado -->
-                <div class="card card-outline card-success mt-3">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-check-circle mr-2"></i>Ejemplo de Producto</h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="text-center mb-3">
-                            <img src="<?= $URL; ?>public/uploads/productos/producto_default.png" alt="Ejemplo de producto" class="img-fluid rounded" style="max-height: 150px;">
-                        </div>
-                        <h5 class="text-center">Agua Mineral 500ml</h5>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><strong>Categoría:</strong></span>
-                                <span>Bebidas</span>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush" id="resumen-vivo"
+                            data-estados='<?= htmlspecialchars(json_encode($estados), ENT_QUOTES); ?>'>
+                            <li class="list-group-item">
+                                <div class="small text-muted mb-1">Nombre</div>
+                                <div id="rv-nombre" class="font-weight-bold">Sin nombre</div>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><strong>Código:</strong></span>
-                                <span>BEB001</span>
+                                <span class="text-muted">Categoría</span>
+                                <span id="rv-categoria" class="font-weight-bold text-right">—</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><strong>Precio Compra:</strong></span>
-                                <span>Bs 3.00</span>
+                                <span class="text-muted">Código</span>
+                                <span id="rv-codigo" class="font-weight-bold text-right">—</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><strong>Precio Venta:</strong></span>
-                                <span>Bs 5.00</span>
+                                <span class="text-muted">Precio de compra</span>
+                                <span id="rv-compra" class="font-weight-bold">Bs 0.00</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><strong>Stock Mínimo:</strong></span>
-                                <span>10 unidades</span>
+                                <span class="text-muted">Precio de venta</span>
+                                <span id="rv-venta" class="font-weight-bold">Bs 0.00</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><strong>Stock Máximo:</strong></span>
-                                <span>100 unidades</span>
+                                <span class="text-muted">Margen</span>
+                                <span id="rv-margen" class="font-weight-bold">—</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Stock inicial</span>
+                                <span id="rv-stock" class="font-weight-bold">0</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Estado</span>
+                                <span id="rv-estado" class="badge badge-success font-weight-bold">Activo</span>
                             </li>
                         </ul>
                     </div>
                 </div>
 
-                <!-- Tarjeta de consejos para la creación de productos -->
-                <div class="card card-outline card-warning mt-3">
+                <!-- Vista previa de la imagen -->
+                <div class="card card-outline card-secondary mt-3">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-lightbulb mr-2"></i>Consejos y Buenas Prácticas</h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
+                        <h3 class="card-title"><i class="fas fa-image mr-2"></i>Vista previa</h3>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="list-group list-group-flush">
-                            <div class="list-group-item">
-                                <i class="fas fa-tag text-warning mr-2"></i> <strong>Nombres descriptivos</strong>
-                                <p class="mb-0 small">Use nombres claros que incluyan características clave como marca, modelo y tamaño.</p>
-                            </div>
-                            <div class="list-group-item">
-                                <i class="fas fa-barcode text-info mr-2"></i> <strong>Códigos consistentes</strong>
-                                <p class="mb-0 small">Establezca un sistema coherente para asignar códigos (ej: categoría + número secuencial).</p>
-                            </div>
-                            <div class="list-group-item">
-                                <i class="fas fa-image text-success mr-2"></i> <strong>Imágenes de calidad</strong>
-                                <p class="mb-0 small">Las buenas imágenes facilitan la identificación rápida de productos.</p>
-                            </div>
-                            <div class="list-group-item">
-                                <i class="fas fa-balance-scale text-primary mr-2"></i> <strong>Precios adecuados</strong>
-                                <p class="mb-0 small">Verifique que los precios ofrezcan un margen de ganancia sostenible.</p>
-                            </div>
-                            <div class="list-group-item">
-                                <i class="fas fa-search text-danger mr-2"></i> <strong>Evite duplicados</strong>
-                                <p class="mb-0 small">Antes de crear un producto, verifique que no exista uno similar en el sistema.</p>
-                            </div>
+                    <div class="card-body text-center">
+                        <div id="preview-container" style="display: none;">
+                            <img id="preview-image" src="#" alt="Vista previa de la imagen del producto"
+                                class="img-thumbnail prod-img-preview">
                         </div>
+                        <p id="preview-placeholder" class="text-muted mb-0">
+                            Seleccione un archivo para ver la imagen aquí
+                        </p>
                     </div>
                 </div>
             </div>

@@ -17,9 +17,10 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
 }
 
 // Incluir el encabezado DESPUÉS de verificar permisos
+$module_styles = ['productos/productos'];
 $skip_select2 = true;
 $skip_chartjs = true;
-$module_scripts = ['productos/index-productos'];
+$module_scripts = ['productos/cambiar-estado-productos', 'productos/index-productos'];
 include_once '../layouts/header.php';
 
 $controller = new ProductoController();
@@ -82,11 +83,7 @@ $productos = $controller->index();
                                     $contador = 1;
                                     foreach ($productos as $producto) :
                                         $estado_actual = $producto['estado'];
-                                        $clase_boton_estado = $estado_actual == 1 ? 'btn-danger' : 'btn-success';
-                                        $icono_boton_estado = $estado_actual == 1 ? 'fa-ban' : 'fa-check';
-                                        $titulo_alerta = $estado_actual == 1 ? '¿Desactivar Producto?' : '¿Activar Producto?';
-                                        $texto_alerta = $estado_actual == 1 ? 'El producto no estará disponible para venta.' : 'El producto estará disponible para venta.';
-                                        $confirm_button_text = $estado_actual == 1 ? 'Sí, desactivar' : 'Sí, activar';
+                                        $estado_ui = ProductoController::estadoProducto($estado_actual);
                                     ?>
                                         <tr>
                                             <td><?= $contador++; ?></td>
@@ -94,11 +91,11 @@ $productos = $controller->index();
                                             <td><?= htmlspecialchars($producto['nombre']); ?></td>
                                             <td><?= htmlspecialchars($producto['categoria_nombre']); ?></td>
                                             <td class="text-center">
-                                                <?php if (!empty($producto['imagen'])): ?>
-                                                    <img src="<?= $URL; ?>public/uploads/productos/<?= $producto['imagen']; ?>" loading="lazy" alt="Imagen" class="img-thumbnail" width="50">
-                                                <?php else : ?>
-                                                    <img src="<?= $URL; ?>public/uploads/productos/producto_default.png" loading="lazy" alt="Imagen" class="img-thumbnail" width="50">
-                                                <?php endif; ?>
+                                                <?php
+                                                $clase_img = 'img-thumbnail prod-img-miniatura';
+                                                $alt = 'Imagen';
+                                                include __DIR__ . '/partials/imagen-producto.php';
+                                                ?>
                                             </td>
                                             <td class="text-right"><?= number_format($producto['precioventa'], 2); ?></td>
                                             <td class="text-center <?= $producto['stock'] < $producto['stock_minimo'] ? 'text-danger font-weight-bold' : '' ?>">
@@ -108,25 +105,21 @@ $productos = $controller->index();
                                                 <?php endif; ?>
                                             </td>
                                             <td class="text-center">
-                                                <?php if ($estado_actual == 1) : ?>
-                                                    <span class="badge badge-success">Activo</span>
-                                                <?php else : ?>
-                                                    <span class="badge badge-danger">Inactivo</span>
-                                                <?php endif; ?>
+                                                <span class="badge <?= $estado_ui['badge']; ?>"><?= $estado_ui['label']; ?></span>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="<?= $URL; ?>views/productos/show.php?id=<?= $producto['idproducto']; ?>" class="btn btn-info btn-sm">
+                                                    <a href="<?= $URL; ?>views/productos/show.php?id=<?= $producto['idproducto']; ?>" class="btn btn-info btn-sm btn-touch">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="<?= $URL; ?>views/productos/update.php?id=<?= $producto['idproducto']; ?>" class="btn btn-warning btn-sm">
+                                                    <a href="<?= $URL; ?>views/productos/update.php?id=<?= $producto['idproducto']; ?>" class="btn btn-warning btn-sm btn-touch">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <button type="button" class="btn <?= $clase_boton_estado; ?> btn-sm btn-cambiar-estado"
+                                                    <button type="button" class="btn <?= $estado_ui['accion_clase']; ?> btn-sm btn-touch cambiar-estado-producto"
                                                         data-id="<?= $producto['idproducto']; ?>"
                                                         data-estado="<?= $estado_actual; ?>"
-                                                        data-nombre="<?= htmlspecialchars($producto['nombre']); ?>">
-                                                        <i class="fas <?= $icono_boton_estado; ?>"></i>
+                                                        data-nombre="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>">
+                                                        <i class="fas <?= $estado_ui['accion_icono']; ?>"></i>
                                                     </button>
                                                 </div>
                                             </td>
