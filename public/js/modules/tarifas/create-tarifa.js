@@ -117,15 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             } else {
                 // Mostrar indicador de carga
-                Swal.fire({
-confirmButtonColor: themeColor('primary'),
-                    title: 'Guardando...',
-                    text: 'Procesando la información',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                mostrarCarga('Guardando...', 'Procesando la información');
             }
         });
 

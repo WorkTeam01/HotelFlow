@@ -27,6 +27,7 @@ document.addEventListener('click', function (event) {
         cancelButtonText: 'Cancelar'
     }).then(function (result) {
         if (result.isConfirmed) {
+            mostrarCarga('Anulando...', 'Anulando la venta');
             window.location.href = BASE_URL + 'controllers/ventas/anular_venta.php?id=' + ventaId + '&csrf_token=' + CSRF_TOKEN;
         }
     });

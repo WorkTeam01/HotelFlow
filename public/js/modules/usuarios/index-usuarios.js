@@ -178,6 +178,7 @@ $(document).ready(function () {
 
             boton.prop('disabled', true);
 
+            mostrarCarga('Procesando...', 'Actualizando el estado');
             ajaxRequest(
                 `${BASE_URL}controllers/usuarios/desactivar_usuario.php`,
                 'GET',

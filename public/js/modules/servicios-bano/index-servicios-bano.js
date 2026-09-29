@@ -178,6 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (typeof Swal === 'undefined') {
             console.error('SweetAlert2 no está disponible');
             if (confirm(textoAlerta)) {
+                mostrarCarga('Procesando...', 'Actualizando el estado del servicio');
                 window.location.href = `${BASE_URL}controllers/servicios-bano/cambiar_estado_servicio.php?id=${id}&nuevo_estado=${accion}&csrf_token=${CSRF_TOKEN}`;
             }
             return;
@@ -198,6 +199,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     allowOutsideClick: false
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        mostrarCarga('Procesando...', 'Actualizando el estado del servicio');
                         window.location.href = `${BASE_URL}controllers/servicios-bano/cambiar_estado_servicio.php?id=${id}&nuevo_estado=${accion}&csrf_token=${CSRF_TOKEN}`;
                     }
                 });
@@ -205,6 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Error al mostrar SweetAlert:', error);
                 // Fallback al diálogo nativo en caso de error
                 if (confirm(textoAlerta)) {
+                    mostrarCarga('Procesando...', 'Actualizando el estado del servicio');
                     window.location.href = `${BASE_URL}controllers/servicios-bano/cambiar_estado_servicio.php?id=${id}&nuevo_estado=${accion}&csrf_token=${CSRF_TOKEN}`;
                 }
             }

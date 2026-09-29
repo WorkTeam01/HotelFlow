@@ -253,6 +253,7 @@ $(document).ready(function () {
             data: formData,
             beforeSend: function () {
                 $('#btnGuardarPrecio').prop('disabled', true).html(loadingMsg);
+                mostrarCarga(loadingMsg.replace(/<[^>]+>/g, '').trim(), 'Procesando la información');
             },
             success: function (response) {
                 if (response.success) {

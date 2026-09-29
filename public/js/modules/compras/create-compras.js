@@ -238,6 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
+                mostrarCarga('Guardando...', 'Registrando la compra');
                 this.submit();
             }
         });

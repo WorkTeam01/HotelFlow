@@ -364,6 +364,7 @@ $(document).ready(function () {
             data: formData,
             beforeSend: function () {
                 $('#btnGuardarAsignacion').prop('disabled', true).html(loadingMsg);
+                mostrarCarga(loadingMsg.replace(/<[^>]+>/g, '').trim(), 'Procesando la información');
             },
             success: function (response) {
                 if (response.success) {
@@ -412,6 +413,7 @@ $(document).ready(function () {
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
+                mostrarCarga('Procesando...', 'Actualizando el estado');
                 ajaxRequest(
                     `${BASE_URL}controllers/limpieza/cambiar_estado_ajax.php`,
                     'POST',
@@ -448,6 +450,7 @@ $(document).ready(function () {
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
+                mostrarCarga('Eliminando...', 'Eliminando la asignación');
                 ajaxRequest(
                     `${BASE_URL}controllers/limpieza/eliminar_asignacion_ajax.php`,
                     'POST',

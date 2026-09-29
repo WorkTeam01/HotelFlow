@@ -68,6 +68,8 @@ $(document).ready(function () {
                 return false;
             }
         }
+
+        mostrarCarga('Actualizando...', 'Actualizando el usuario');
     });
 
     // Nota: mostrar/ocultar contraseña (.password-toggle) se maneja de forma
@@ -145,6 +147,7 @@ $(document).ready(function () {
         }).then((result) => {
             if (!result.isConfirmed) return;
 
+            mostrarCarga('Procesando...', 'Actualizando el estado');
             ajaxRequest(
                 `${BASE_URL}controllers/usuarios/desactivar_usuario.php`,
                 'GET',

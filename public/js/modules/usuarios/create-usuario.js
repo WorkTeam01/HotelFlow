@@ -64,6 +64,8 @@ $(document).ready(function () {
             });
             return false;
         }
+
+        mostrarCarga('Guardando...', 'Registrando el usuario');
     });
 
     // Nota: mostrar/ocultar contraseña (.password-toggle) se maneja de forma

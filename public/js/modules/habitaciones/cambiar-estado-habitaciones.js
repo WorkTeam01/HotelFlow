@@ -40,16 +40,7 @@
                 return;
             }
 
-            Swal.fire({
-confirmButtonColor: themeColor('primary'),
-                title: 'Procesando...',
-                text: 'Espere un momento mientras se actualiza el estado.',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: function () {
-                    Swal.showLoading();
-                }
-            });
+            mostrarCarga('Procesando...', 'Espere un momento mientras se actualiza el estado.');
 
             $.ajax({
                 url: BASE_URL + 'controllers/habitaciones/cambiar_estado.php',

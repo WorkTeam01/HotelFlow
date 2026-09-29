@@ -248,6 +248,7 @@ $(document).ready(function () {
             data: formData,
             beforeSend: function () {
                 $('#btnGuardarCategoria').prop('disabled', true).html(loadingMsg);
+                mostrarCarga(loadingMsg.replace(/<[^>]+>/g, '').trim(), 'Procesando la información');
             },
             success: function (response) {
                 if (response.success) {

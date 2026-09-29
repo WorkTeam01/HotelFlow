@@ -182,6 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 cancelButtonText: cancelButtonText
             }).then((result) => {
                 if (result.isConfirmed) {
+                    mostrarCarga('Procesando...', 'Actualizando el estado del cliente');
                     window.location.href = `${BASE_URL}controllers/personas/desactivar_persona.php?id=${personaId}&estado=${estadoActual}&csrf_token=${CSRF_TOKEN}`;
                 }
             });

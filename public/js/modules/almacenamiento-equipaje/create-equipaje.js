@@ -169,15 +169,7 @@ $(document).ready(function () {
         }).then((result) => {
             if (result.isConfirmed) {
                 // Mostrar indicador de carga
-                Swal.fire({
-confirmButtonColor: themeColor('primary'),
-                    title: 'Procesando...',
-                    html: 'Registrando almacenamiento de equipaje',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                mostrarCarga('Procesando...', 'Registrando almacenamiento de equipaje');
 
                 // Enviar formulario
                 $(this)[0].submit();

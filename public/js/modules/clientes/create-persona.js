@@ -47,6 +47,8 @@ $(document).ready(function () {
         if (!validarFormulario()) {
             e.preventDefault();
             mostrarMensajeError('Por favor, revise los campos marcados en rojo antes de continuar.');
+        } else {
+            mostrarCarga('Guardando...', 'Registrando al cliente');
         }
     });
 });

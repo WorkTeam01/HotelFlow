@@ -33,6 +33,35 @@ function themeColor(tone) {
 }
 
 /**
+ * Muestra un diálogo modal de carga (spinner) que bloquea la pantalla mientras
+ * corre una acción CRUD (guardar, cambiar estado, anular...). Se cierra solo al
+ * mostrar el siguiente Swal (éxito/error) o al navegar/recargar.
+ *
+ * @param {string} titulo - Título del diálogo (ej. 'Guardando...')
+ * @param {string} [texto] - Detalle opcional (admite HTML)
+ */
+function mostrarCarga(titulo, texto) {
+    Swal.fire({
+        title: titulo || 'Procesando...',
+        html: texto || 'Espere un momento por favor.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+}
+
+// Al volver con "Atrás" (bfcache) la página se restaura tal cual estaba: si el
+// spinner de carga seguía abierto, quedaría bloqueando la pantalla.
+window.addEventListener('pageshow', (e) => {
+    if (e.persisted && typeof Swal !== 'undefined' && Swal.isVisible() && Swal.isLoading()) {
+        Swal.close();
+    }
+});
+
+/**
  * Devuelve el color de botón del confirm de un cambio de estado, con el mismo
  * vocabulario de badges que las vistas (amarillo=pendiente, azul=en progreso,
  * verde=completada, gris=verificada). 'pendiente' usa el paso oscuro del

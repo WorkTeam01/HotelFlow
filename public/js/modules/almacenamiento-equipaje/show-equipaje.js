@@ -45,15 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Mostrar indicador de carga
-                    Swal.fire({
-confirmButtonColor: themeColor('primary'),
-                        title: 'Procesando...',
-                        html: 'Por favor espere mientras se actualiza el estado',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
+                    mostrarCarga('Procesando...', 'Por favor espere mientras se actualiza el estado');
 
                     // Redireccionar a la página de cambio de estado
                     window.location.href = url;

@@ -63,7 +63,7 @@ $(document).ready(function () {
             mostrarMensajeError('Por favor, revise los campos marcados en rojo antes de continuar.');
         } else {
             // Mostrar indicador de carga
-            mostrarCargando('Actualizando la información del cliente...');
+            mostrarCarga('Actualizando...', 'Actualizando la información del cliente');
         }
     });
 

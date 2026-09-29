@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
+                mostrarCarga('Procesando...', 'Actualizando la compra');
                 window.location.href = `${BASE_URL}controllers/compras/cambiar_estado_compra.php?id=${id}&accion=${accion}&csrf_token=${CSRF_TOKEN}`;
             }
         });

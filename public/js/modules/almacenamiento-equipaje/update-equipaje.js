@@ -102,15 +102,7 @@ $(document).ready(function () {
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire({
-confirmButtonColor: themeColor('primary'),
-                    title: 'Procesando...',
-                    html: 'Actualizando información del equipaje',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                mostrarCarga('Procesando...', 'Actualizando información del equipaje');
 
                 $(this)[0].submit();
             }

@@ -234,6 +234,7 @@ $(document).ready(function () {
             data: formData,
             beforeSend: function () {
                 $('#btnGuardarBano').prop('disabled', true).html(loadingMsg);
+                mostrarCarga(loadingMsg.replace(/<[^>]+>/g, '').trim(), 'Procesando la información');
             },
             success: function (response) {
                 if (response.success) {
