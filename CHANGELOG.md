@@ -5,6 +5,52 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.6.1] - 2026-09-29
+
+Refactor del frontend del módulo Productos para alinearlo con los patrones ya establecidos en Recepción y Habitaciones (helpers únicos de estado, partials, flujo único de cambio de estado y CSS propio), y extensión a todo el proyecto de la clase de área táctil `.btn-touch` y del helper de loading `mostrarCarga()`. Sin cambios de esquema.
+
+### Added
+
+- **`public/css/modules/productos/productos.css`**: clases de imagen (`prod-img-perfil/miniatura/sm/preview/ejemplo`) y badge de estado (`prod-badge-estado`). Cero hex: todo sale de `tokens.css`.
+- **Partials de productos** (`views/productos/partials/`): `imagen-producto.php`, `tab-general.php`, `tab-inventario.php`, `tab-precios.php`. `show.php` pasa de 515 a 223 líneas.
+- **Helpers únicos de `ProductoController`**: `estadoProducto()` / `estadosProducto()` (etiqueta, `badge`, icono y claves de acción, incl. `accion_texto`), `estadoMovimiento()` / `decorarMovimientos()` (presentación de `tipo_movimiento`), `calcularInventario()`, `calcularRentabilidad()` y `umbralesMargen()`.
+- **Config `productos`** (`PRODUCTOS_MARGEN_ALERTA`, `PRODUCTOS_MARGEN_BUENO`) en `config/config.php` + `.env.example`: los umbrales de margen dejan de estar hardcodeados tanto en PHP como en JS (el form los recibe por `data-margen-*`).
+- **`cambiar-estado-productos.js`**: flujo único de activación/desactivación (confirmación → `POST` → `reload()`), compartido por listado, detalle y formulario.
+- **`producto-form.js`**: Select2, preview de imagen, validación en vivo de precios/stock y guardas de submit compartidos por `create.php` y `update.php`.
+- **`.btn-touch`** en `public/css/core/styles.css`: clase global de área táctil ≥44px (`::before` absoluto con `max(100%,44px)`; en `.btn-group > .btn-touch` añade `min-width:44px`, AAA 2.5.5) sin alterar la caja visible. Aplicada a los botones de acción de 14 listados (usuarios, categorías, tipos de habitación, servicios de baño, pisos, limpieza, ventas, tarifas, compras, baños, clientes, precios de equipaje, equipaje y dashboard del recepcionista) además de productos, habitaciones y recepción.
+- **`mostrarCarga(titulo, texto)`** en `public/js/core/common-utils.js`: modal de loading con spinner (sin botón, no se cierra por clic fuera/Esc) y listener `pageshow` que lo cierra al volver con «Atrás». Añadido a los guardados de clientes y usuarios, registro de compra/venta, anulación de venta, cambios de estado (usuarios, clientes, tarifas, tipos de habitación, servicios de baño, compras, limpieza) y los modales + AJAX de baños, categorías, pisos, precios de equipaje y limpieza (en `beforeSend`).
+
+### Changed
+
+- **`.rec-touch`, `.hab-touch` y `.prod-touch` unificadas en `.btn-touch`**; se eliminan las copias por módulo de `recepcion.css` y `habitaciones.css`. Los 10 loaders manuales con `Swal.showLoading()` pasan a `mostrarCarga()`.
+- **`desactivar_producto.php` pasa de GET + redirect a POST + contrato dual** (JSON con `X-Requested-With`, redirect + mensaje en sesión si no), con `csrf_token` en el body; el nuevo estado se recalcula siempre en el servidor.
+- **Vocabulario de estado de producto**: `inactivo` pasa de `badge-danger` a `badge-secondary` (gris), alineado con recepción/habitaciones/equipaje.
+- **Tres copias del bloque de cambio de estado** (en `index-productos.js`, `show-producto.js` y `update-productos.js`) → un solo flujo delegado; los tres disparadores pasan a la clase común `.cambiar-estado-producto` y `update.php` usa `$estado_ui['accion_*']` en lugar de su propio `if (estado == 1)`.
+- **JS de formularios deduplicado**: `create-producto.js` (140 → 11 líneas) y `update-productos.js` (184 → 11) delegan en `producto-form.js`.
+- **Estilos inline estáticos de las vistas de productos** → clases de `productos.css`; quedan solo los dinámicos (ancho de barras de progreso y `display:none` de previews).
+- **`$skip_datatables = true`** en `create.php`, `show.php` y `update.php` (ninguna de las tres usa DataTables).
+
+### Fixed
+
+- **`clientes/update-persona.js`** llamaba a `mostrarCargando()`, función inexistente: cada submit válido lanzaba `ReferenceError`. Ahora usa `mostrarCarga()`.
+- **`.hab-touch` sin definir**: las vistas de habitaciones la seguían usando tras borrarse del CSS, y `.prod-touch` nunca llegó a definirse, por lo que esos botones quedaban sin área táctil de 44px.
+
+### Removed
+
+- **`views/productos/buscar_codigo.php`** y **`public/js/modules/productos/buscar-codigo.js`**: no tenían ningún enlace ni referencia desde el resto de la aplicación.
+- Variables muertas en `views/productos/index.php`.
+
+### Docs
+
+- **`CLAUDE.md`**: convenciones de productos añadidas (helper único de estado, flujo único de cambio de estado, lógica de formulario compartida), partials de `productos` sumados al patrón de partials, `.btn-touch` reemplaza a `.rec-touch`/`.hab-touch` y nueva regla de `mostrarCarga()`.
+- **`README.md`**: nueva sección **Productos** bajo _Módulos_; badge de versión a 1.6.1.
+- **`PROMPTS.md`**: restricciones de productos, `.btn-touch` y `mostrarCarga()` en la plantilla base; fecha actualizada.
+- **`.env.example`**: `APP_VERSION` sincronizado a `1.6.1`; documentadas `PRODUCTOS_MARGEN_ALERTA` y `PRODUCTOS_MARGEN_BUENO`.
+
+### Migración
+
+Ninguna: sin cambios de esquema. Las variables `PRODUCTOS_MARGEN_*` son opcionales (defaults `10` / `20`).
+
 ## [1.6.0] - 2026-09-27
 
 ### Added
@@ -459,6 +505,8 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.6.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.6.0...1.6.1
+[1.6.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.5.0...1.6.0
 [1.5.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.4.1...1.5.0
 [1.2.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.1.4...1.2.0
 [1.4.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.4.0...1.4.1

@@ -66,6 +66,9 @@ _______________
 - Assets de modulo con cache-busting automatico (?v=filemtime en header.php/footer.php para $module_styles/$module_scripts y para todos los assets de primer party del layout: styles.css, tokens.css y common-utils.js); no versionar a mano ni poner ?v= en la vista
 - Colores de UI desde una sola fuente: public/css/core/tokens.css (var(--color-*)) en CSS propio — sin hex en modulos — y themeColor()/themeColorEstado() de common-utils.js en JS (Swal.fire, charts, estados); ver reglas de tono y contraste en CLAUDE.md
 - Tabs inactivos coloreados por reglas globales de public/css/core/styles.css (.card-{color} .nav-tabs .nav-link:not(.active)); no recrear overrides por modulo ni por ID
+- Productos: el estado sale de ProductoController::estadoProducto / estadosProducto (y estadoMovimiento / decorarMovimientos, calcularInventario, calcularRentabilidad, umbralesMargen); activar/desactivar es un flujo unico (cambiar-estado-productos.js, .cambiar-estado-producto) por POST + CSRF a desactivar_producto.php, con el estado recalculado desde la BD; la logica de formulario vive en producto-form.js y los umbrales de margen llegan por data-margen-* (PRODUCTOS_MARGEN_*), nunca hardcodeados
+- Areas tactiles >=44px en botones de accion: clase global .btn-touch de public/css/core/styles.css; no crear copias por modulo (.rec-touch/.hab-touch/.prod-touch ya no existen)
+- Loading de acciones CRUD: mostrarCarga(titulo, texto) de common-utils.js antes de disparar la peticion (todo camino de respuesta termina en Swal/showToast); no escribir Swal.showLoading() a mano ni inventar helpers locales
 - Resaltado de sidebar en subpaginas de una seccion: sidebarEnSeccion() (match por prefijo), no sidebarEsActivo() (match exacto)
 
 [Formato de salida]
@@ -281,5 +284,5 @@ Preparar el proyecto para publicacion open source:
 
 ---
 
-_Ultima actualizacion: 2026-09-21_
+_Ultima actualizacion: 2026-09-29_
 _Mantener sincronizado con CLAUDE.md cuando cambie arquitectura o flujo._

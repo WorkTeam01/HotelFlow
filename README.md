@@ -4,7 +4,7 @@
 
 **Sistema integral para la administración de establecimientos hoteleros**
 
-[![Versión](https://img.shields.io/badge/Versión-1.5.0-blue?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/Versión-1.6.1-blue?style=flat-square)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.4+-003545?style=flat-square&logo=mariadb&logoColor=white)](https://mariadb.org)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-4-7952B3?style=flat-square&logo=bootstrap&logoColor=white)](https://getbootstrap.com)
@@ -193,6 +193,14 @@ HotelFlow/
 
 - **Baño y Limpieza:** Asignación de tareas, precios dinámicos
 - **Equipaje:** Control de entrada/salida con folio de pagos (cargo + pago al registrar), estados (almacenado, vencido, retirado, perdido, dañado), alerta de permanencia configurable (`EQUIPAJE_DIAS_ALERTA`) y recibos PDF
+
+### Productos
+
+- Catálogo con código, categoría, precios de compra/venta, stock y rangos de inventario (mínimo/máximo)
+- Estados **Activo / Inactivo** con activación o desactivación desde el listado, el detalle o las acciones rápidas del formulario
+- Detalle en tres tabs: información general, inventario (stock, alertas y movimientos) y precios (rentabilidad frente a umbrales configurables `PRODUCTOS_MARGEN_*`)
+- Movimientos de stock trazados (ventas, compras, servicios) con etiqueta e icono por tipo
+- Reportes exportables desde el listado (PDF, Excel, CSV, imprimir)
 
 ### Sistema Comercial
 
