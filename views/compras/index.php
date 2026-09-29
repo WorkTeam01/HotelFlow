@@ -112,19 +112,19 @@ $compras = $esAdmin ? $controller->index() : $controller->obtenerPorUsuario($idu
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="<?= $URL; ?>views/compras/show.php?id=<?= $compra['idcompra']; ?>" class="btn btn-info btn-sm">
+                                                    <a href="<?= $URL; ?>views/compras/show.php?id=<?= $compra['idcompra']; ?>" class="btn btn-touch btn-info btn-sm">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
 
                                                     <?php if ($estado_actual == 'pendiente' && $esAdmin): ?>
-                                                        <button type="button" class="btn btn-success btn-sm btn-cambiar-estado"
+                                                        <button type="button" class="btn btn-touch btn-success btn-sm btn-cambiar-estado"
                                                             data-id="<?= $compra['idcompra']; ?>"
                                                             data-accion="completar"
                                                             data-titulo="COMP-<?= str_pad($compra['idcompra'], 6, '0', STR_PAD_LEFT); ?>">
                                                             <i class="fas fa-check"></i>
                                                         </button>
 
-                                                        <button type="button" class="btn btn-danger btn-sm btn-cambiar-estado"
+                                                        <button type="button" class="btn btn-touch btn-danger btn-sm btn-cambiar-estado"
                                                             data-id="<?= $compra['idcompra']; ?>"
                                                             data-accion="cancelar"
                                                             data-titulo="COMP-<?= str_pad($compra['idcompra'], 6, '0', STR_PAD_LEFT); ?>">

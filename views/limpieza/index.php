@@ -198,7 +198,7 @@ $estadisticas = $controller->getEstadisticas();
                                             <td class="text-center">
                                                 <div class="btn-group">
                                                     <?php if ($asignacion['estado'] !== 'verificada'): ?>
-                                                        <button type="button" class="btn btn-warning btn-sm btn-editar"
+                                                        <button type="button" class="btn btn-touch btn-warning btn-sm btn-editar"
                                                             data-id="<?= $asignacion['idasignacion']; ?>"
                                                             data-usuario="<?= $asignacion['idusuario']; ?>"
                                                             data-habitacion="<?= $asignacion['idhabitacion']; ?>"
@@ -209,13 +209,13 @@ $estadisticas = $controller->getEstadisticas();
                                                             <i class="fas fa-edit"></i>
                                                         </button>
                                                     <?php else: ?>
-                                                        <button type="button" class="btn btn-warning btn-sm" disabled title="Las asignaciones verificadas no se pueden editar">
+                                                        <button type="button" class="btn btn-touch btn-warning btn-sm" disabled title="Las asignaciones verificadas no se pueden editar">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
                                                     <?php endif; ?>
 
                                                     <?php if ($estado == 'pendiente'): ?>
-                                                        <button type="button" class="btn btn-primary btn-sm cambiar-estado"
+                                                        <button type="button" class="btn btn-touch btn-primary btn-sm cambiar-estado"
                                                             data-id="<?= $asignacion['idasignacion']; ?>"
                                                             data-estado="enprogreso"
                                                             data-toggle="tooltip"
@@ -225,7 +225,7 @@ $estadisticas = $controller->getEstadisticas();
                                                     <?php endif; ?>
 
                                                     <?php if ($estado == 'enprogreso'): ?>
-                                                        <button type="button" class="btn btn-success btn-sm cambiar-estado"
+                                                        <button type="button" class="btn btn-touch btn-success btn-sm cambiar-estado"
                                                             data-id="<?= $asignacion['idasignacion']; ?>"
                                                             data-estado="completada"
                                                             data-toggle="tooltip"
@@ -235,7 +235,7 @@ $estadisticas = $controller->getEstadisticas();
                                                     <?php endif; ?>
 
                                                     <?php if ($estado == 'completada'): ?>
-                                                        <button type="button" class="btn btn-secondary btn-sm cambiar-estado"
+                                                        <button type="button" class="btn btn-touch btn-secondary btn-sm cambiar-estado"
                                                             data-id="<?= $asignacion['idasignacion']; ?>"
                                                             data-estado="verificada"
                                                             data-toggle="tooltip"

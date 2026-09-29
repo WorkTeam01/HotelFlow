@@ -151,13 +151,13 @@ $estadisticas = $controller->getEstadisticas();
                                         <td class="text-center">
                                             <div class="btn-group">
                                                 <a href="<?= $URL; ?>views/ventas/show.php?id=<?= (int)$venta['idventa']; ?>"
-                                                    class="btn btn-info btn-sm"
+                                                    class="btn btn-touch btn-info btn-sm"
                                                     title="Ver detalle" data-toggle="tooltip"
                                                     aria-label="Ver detalle de <?= $codigoVenta; ?>">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="<?= $URL; ?>views/ventas/recibo.php?id=<?= (int)$venta['idventa']; ?>"
-                                                    class="btn btn-secondary btn-sm<?= $esActiva ? '' : ' disabled'; ?>"
+                                                    class="btn btn-touch btn-secondary btn-sm<?= $esActiva ? '' : ' disabled'; ?>"
                                                     <?= $esActiva ? '' : 'disabled tabindex="-1" aria-disabled="true"'; ?>
                                                     title="<?= $esActiva ? 'Imprimir recibo' : 'Recibo no disponible (venta anulada)'; ?>"
                                                     data-toggle="tooltip" target="_blank" rel="noopener"
@@ -166,7 +166,7 @@ $estadisticas = $controller->getEstadisticas();
                                                 </a>
 
                                                 <?php if ($esActiva && $esAdmin) : ?>
-                                                    <button type="button" class="btn btn-danger btn-sm btn-anular-venta"
+                                                    <button type="button" class="btn btn-touch btn-danger btn-sm btn-anular-venta"
                                                         data-id="<?= (int)$venta['idventa']; ?>"
                                                         data-titulo="<?= $codigoVenta; ?>"
                                                         title="Anular venta" data-toggle="tooltip"

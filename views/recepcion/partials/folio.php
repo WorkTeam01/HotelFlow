@@ -89,7 +89,7 @@ $puedeRegistrarMovimientos = !in_array($recepcion['estado'], ['finalizado', 'can
                                 <option value="OTROS">Otros</option>
                             </select>
                             <div class="input-group-append">
-                                <button type="submit" class="btn btn-success rec-touch">
+                                <button type="submit" class="btn btn-success btn-touch">
                                     <i class="fas fa-hand-holding-usd mr-1"></i> Registrar pago
                                 </button>
                             </div>
@@ -107,7 +107,7 @@ $puedeRegistrarMovimientos = !in_array($recepcion['estado'], ['finalizado', 'can
                             <input type="number" step="0.01" min="0.01" name="monto"
                                 class="form-control" placeholder="Monto" required>
                             <div class="input-group-append">
-                                <button type="submit" class="btn btn-warning rec-touch">
+                                <button type="submit" class="btn btn-warning btn-touch">
                                     <i class="fas fa-plus-circle mr-1"></i> Agregar cargo
                                 </button>
                             </div>

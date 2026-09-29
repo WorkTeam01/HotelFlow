@@ -97,13 +97,13 @@ $tiposHabitacion = $controller->index();
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="<?= $URL; ?>views/tipohabitacion/show.php?id=<?= $tipo['id_tipo']; ?>" class="btn btn-info btn-sm">
+                                                    <a href="<?= $URL; ?>views/tipohabitacion/show.php?id=<?= $tipo['id_tipo']; ?>" class="btn btn-touch btn-info btn-sm">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="<?= $URL; ?>views/tipohabitacion/update.php?id=<?= $tipo['id_tipo']; ?>" class="btn btn-warning btn-sm">
+                                                    <a href="<?= $URL; ?>views/tipohabitacion/update.php?id=<?= $tipo['id_tipo']; ?>" class="btn btn-touch btn-warning btn-sm">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <button type="button" class="btn <?= $clase_boton_estado; ?> btn-sm btn-cambiar-estado"
+                                                    <button type="button" class="btn btn-touch <?= $clase_boton_estado; ?> btn-sm btn-cambiar-estado"
                                                         data-id="<?= $tipo['id_tipo']; ?>"
                                                         data-estado="<?= $estado_actual; ?>"
                                                         data-nombre="<?= htmlspecialchars($tipo['nombre']); ?>">

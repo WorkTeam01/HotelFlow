@@ -248,14 +248,14 @@ requireLogin();
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="<?= $URL; ?>views/servicios-bano/show.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-info btn-sm">
+                                                    <a href="<?= $URL; ?>views/servicios-bano/show.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-touch btn-info btn-sm">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="<?= $URL; ?>views/servicios-bano/update.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-warning btn-sm">
+                                                    <a href="<?= $URL; ?>views/servicios-bano/update.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-touch btn-warning btn-sm">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                     <?php if ($servicio['estado'] !== 'cancelado'): ?>
-                                                        <button type="button" class="btn btn-danger btn-sm btn-cambiar-estado"
+                                                        <button type="button" class="btn btn-touch btn-danger btn-sm btn-cambiar-estado"
                                                             data-id="<?= $servicio['idservicio']; ?>"
                                                             data-estado="<?= $servicio['estado']; ?>"
                                                             data-accion="cancelado"
@@ -263,7 +263,7 @@ requireLogin();
                                                             <i class="fas fa-times"></i>
                                                         </button>
                                                     <?php else: ?>
-                                                        <button type="button" class="btn btn-success btn-sm btn-cambiar-estado"
+                                                        <button type="button" class="btn btn-touch btn-success btn-sm btn-cambiar-estado"
                                                             data-id="<?= $servicio['idservicio']; ?>"
                                                             data-estado="<?= $servicio['estado']; ?>"
                                                             data-accion="iniciado"

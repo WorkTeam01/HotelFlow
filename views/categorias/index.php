@@ -122,14 +122,14 @@ $estadisticas = $controller->getEstadisticas();
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <button type="button" class="btn btn-warning btn-sm btn-editar"
+                                                    <button type="button" class="btn btn-touch btn-warning btn-sm btn-editar"
                                                         data-id="<?= $categoria['idcategoria']; ?>"
                                                         data-nombre="<?= htmlspecialchars($categoria['nombre']); ?>"
                                                         data-descripcion="<?= htmlspecialchars($categoria['descripcion'] ?? ''); ?>"
                                                         data-estado="<?= $categoria['estado']; ?>">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
-                                                    <button type="button" class="btn <?= $estado_actual == 1 ? 'btn-danger' : 'btn-success'; ?> btn-sm cambiar-estado"
+                                                    <button type="button" class="btn btn-touch <?= $estado_actual == 1 ? 'btn-danger' : 'btn-success'; ?> btn-sm cambiar-estado"
                                                         data-id="<?= $categoria['idcategoria']; ?>"
                                                         data-estado-actual="<?= $estado_actual; ?>"
                                                         data-toggle="tooltip"

@@ -154,7 +154,7 @@ $estadisticas = $controller->getEstadisticas();
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <button type="button" class="btn btn-warning btn-sm btn-editar"
+                                                    <button type="button" class="btn btn-touch btn-warning btn-sm btn-editar"
                                                         data-id="<?= $bano['idbano']; ?>"
                                                         data-nombre="<?= htmlspecialchars($bano['nombre']); ?>"
                                                         data-ubicacion="<?= htmlspecialchars($bano['ubicacion']); ?>"
@@ -162,7 +162,7 @@ $estadisticas = $controller->getEstadisticas();
                                                         data-estado="<?= $bano['estado']; ?>">
                                                         <i class="fas fa-edit"></i> Editar
                                                     </button>
-                                                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown">
+                                                    <button type="button" class="btn btn-touch btn-primary btn-sm dropdown-toggle" data-toggle="dropdown">
                                                         <i class="fas fa-sync-alt"></i> Estado
                                                     </button>
                                                     <div class="dropdown-menu">

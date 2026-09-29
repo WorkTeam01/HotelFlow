@@ -239,11 +239,11 @@
                                         <td>
                                             <div class="btn-group">
                                                 <a href="<?= $URL; ?>views/limpieza/index.php"
-                                                    class="btn btn-info btn-sm" data-toggle="tooltip" title="Ver detalles" aria-label="Ver detalles">
+                                                    class="btn btn-touch btn-info btn-sm" data-toggle="tooltip" title="Ver detalles" aria-label="Ver detalles">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <?php if ($estado == 'completada'): ?>
-                                                    <button type="button" class="btn btn-secondary btn-sm cambiar-estado-asignacion"
+                                                    <button type="button" class="btn btn-touch btn-secondary btn-sm cambiar-estado-asignacion"
                                                         data-id="<?= $asignacion['idasignacion']; ?>"
                                                         data-estado="verificada"
                                                         data-toggle="tooltip"

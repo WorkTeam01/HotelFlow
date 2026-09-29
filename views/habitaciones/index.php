@@ -226,16 +226,16 @@ $estados_ui = HabitacionController::estadosHabitacion();
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="<?= $URL; ?>views/habitaciones/show.php?id=<?= $habitacion['id_habitacion']; ?>" class="btn btn-info btn-sm hab-touch" title="Ver detalle" aria-label="Ver detalle de la habitación <?= $numero; ?>">
+                                                    <a href="<?= $URL; ?>views/habitaciones/show.php?id=<?= $habitacion['id_habitacion']; ?>" class="btn btn-info btn-sm btn-touch" title="Ver detalle" aria-label="Ver detalle de la habitación <?= $numero; ?>">
                                                         <i class="fas fa-eye" aria-hidden="true"></i>
                                                     </a>
-                                                    <a href="<?= $URL; ?>views/habitaciones/update.php?id=<?= $habitacion['id_habitacion']; ?>" class="btn btn-warning btn-sm hab-touch" title="Editar" aria-label="Editar la habitación <?= $numero; ?>">
+                                                    <a href="<?= $URL; ?>views/habitaciones/update.php?id=<?= $habitacion['id_habitacion']; ?>" class="btn btn-warning btn-sm btn-touch" title="Editar" aria-label="Editar la habitación <?= $numero; ?>">
                                                         <i class="fas fa-edit" aria-hidden="true"></i>
                                                     </a>
                                                     <?php foreach ($acciones_estado as $destino) :
                                                         $destino_ui = HabitacionController::estadoHabitacion($destino);
                                                     ?>
-                                                        <button type="button" class="btn btn-<?= $destino_ui['clase']; ?> btn-sm hab-touch cambiar-estado"
+                                                        <button type="button" class="btn btn-<?= $destino_ui['clase']; ?> btn-sm btn-touch cambiar-estado"
                                                             data-id="<?= $habitacion['id_habitacion']; ?>"
                                                             data-estado="<?= $destino; ?>"
                                                             data-estado-actual="<?= $estado; ?>"

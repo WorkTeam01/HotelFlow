@@ -130,14 +130,9 @@
     }
 }
 
-/* ── Área táctil ≥44px de alto en botones de acción de listas/folio ──── */
-/* Patrón ::before (mismo que .rec-tile__action / .rec-actionbar): expande
-   la zona clicable sin alterar la caja visible ni romper input-groups. */
-.rec-touch {
-    position: relative;
-}
-.rec-mov__accion .btn::before,
-.rec-touch::before {
+/* Área táctil ≥44px de los botones de .rec-mov__accion (::before, sin tocar la
+   caja visible). Los botones de historial/folio usan la clase global .btn-touch. */
+.rec-mov__accion .btn::before {
     content: "";
     position: absolute;
     left: 0;
@@ -145,12 +140,6 @@
     top: 50%;
     height: max(100%, 44px);
     transform: translateY(-50%);
-}
-
-/* Botones de acción del Historial (btn-group, no input-group): se puede
-   ensanchar la caja visible sin el problema de alineación de los input-group. */
-#tablaRecepciones .btn-group .rec-touch {
-    min-width: 2.5rem;
 }
 
 /* Texto secundario del Historial: clase propia en vez de `.text-muted`

@@ -104,13 +104,13 @@ $tarifas = $controller->index();
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="<?= $URL; ?>views/tarifas/show.php?id=<?= $tarifa['idtarifa']; ?>" class="btn btn-info btn-sm">
+                                                    <a href="<?= $URL; ?>views/tarifas/show.php?id=<?= $tarifa['idtarifa']; ?>" class="btn btn-touch btn-info btn-sm">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="<?= $URL; ?>views/tarifas/update.php?id=<?= $tarifa['idtarifa']; ?>" class="btn btn-warning btn-sm">
+                                                    <a href="<?= $URL; ?>views/tarifas/update.php?id=<?= $tarifa['idtarifa']; ?>" class="btn btn-touch btn-warning btn-sm">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <button type="button" class="btn <?= $clase_boton_estado; ?> btn-sm btn-cambiar-estado"
+                                                    <button type="button" class="btn btn-touch <?= $clase_boton_estado; ?> btn-sm btn-cambiar-estado"
                                                         data-id="<?= $tarifa['idtarifa']; ?>"
                                                         data-estado="<?= $estado_actual; ?>"
                                                         data-nombre="<?= htmlspecialchars($tarifa['tipo_habitacion'] . ' (' . $tarifa['duracion'] . ' ' . $tarifa['tipo_estancia'] . ')'); ?>">

@@ -125,3 +125,29 @@ a .info-btn {
 .card-dark .nav-tabs .nav-link:not(.active):focus {
     color: var(--color-text);
 }
+
+/* --- Área táctil ≥44x44px (WCAG 2.5.5) en botones de acción -------------
+ * El pseudo-elemento amplía la zona clicable sin forzar min-height en la caja
+ * visible: dentro de un .btn-group un min-height explícito desalinea los
+ * botones entre sí, y en un .input-group rompe la alineación con sus hermanos.
+ * Por eso el ancho visible solo se ensancha en botones de un .btn-group, donde
+ * sí se puede sin efectos secundarios.
+ * Reemplaza a las copias por módulo (.rec-touch, .hab-touch, .prod-touch).
+ */
+.btn-touch {
+    position: relative;
+}
+
+.btn-touch::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+}
+
+.btn-group > .btn-touch {
+    min-width: 44px;
+}

@@ -40,25 +40,3 @@ a.filtro-estado--activo.info-box {
     width: 48px;
     font-size: 1.4rem;
 }
-
-/* ── Área táctil ≥44px en botones de acción del listado (btn-group) ───── */
-/* Mismo patrón ::before que recepción: expande la zona clicable sin tocar
-   la caja visible ni romper la alineación del btn-group. */
-.hab-touch {
-    position: relative;
-}
-
-.hab-touch::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: max(100%, 44px);
-    height: max(100%, 44px);
-    transform: translate(-50%, -50%);
-}
-
-/* 44px de ancho visible → área táctil AAA (WCAG 2.5.5) sin romper el btn-group */
-#tablaHabitaciones .btn-group .hab-touch {
-    min-width: 44px;
-}

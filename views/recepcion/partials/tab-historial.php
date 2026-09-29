@@ -75,13 +75,13 @@ $recepciones = $historial['recepciones'] ?? [];
                         <?php $tieneAcciones = in_array($estado, ['reservado', 'en_curso'], true); ?>
                         <div class="btn-group">
                             <a href="<?= $URL; ?>views/recepcion/show.php?id=<?= $recepcion['idrecepcion']; ?>"
-                                class="btn btn-info btn-sm rec-touch" title="Ver detalles" aria-label="Ver detalles"><i class="fas fa-eye"></i></a>
+                                class="btn btn-info btn-sm btn-touch" title="Ver detalles" aria-label="Ver detalles"><i class="fas fa-eye"></i></a>
 
                             <a href="<?= $URL; ?>views/recepcion/recibo.php?id=<?= $recepcion['idrecepcion']; ?>"
-                                class="btn btn-secondary btn-sm rec-touch" target="_blank" title="Imprimir comprobante" aria-label="Imprimir comprobante"><i class="fas fa-print"></i></a>
+                                class="btn btn-secondary btn-sm btn-touch" target="_blank" title="Imprimir comprobante" aria-label="Imprimir comprobante"><i class="fas fa-print"></i></a>
 
                             <?php if ($tieneAcciones): ?>
-                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split rec-touch"
+                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split btn-touch"
                                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Más acciones">
                                     <span class="sr-only">Más acciones</span>
                                 </button>

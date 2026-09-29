@@ -107,13 +107,13 @@ $usuarios = $controller->index();
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="<?= $URL; ?>views/usuarios/show.php?id=<?= $usuario['idusuario']; ?>" class="btn btn-info btn-sm" aria-label="Ver usuario">
+                                                    <a href="<?= $URL; ?>views/usuarios/show.php?id=<?= $usuario['idusuario']; ?>" class="btn btn-touch btn-info btn-sm" aria-label="Ver usuario">
                                                         <i class="fas fa-eye" aria-hidden="true"></i>
                                                     </a>
-                                                    <a href="<?= $URL; ?>views/usuarios/update.php?id=<?= $usuario['idusuario']; ?>" class="btn btn-warning btn-sm" aria-label="Editar usuario">
+                                                    <a href="<?= $URL; ?>views/usuarios/update.php?id=<?= $usuario['idusuario']; ?>" class="btn btn-touch btn-warning btn-sm" aria-label="Editar usuario">
                                                         <i class="fas fa-edit" aria-hidden="true"></i>
                                                     </a>
-                                                    <button type="button" class="btn <?= $clase_boton_estado; ?> btn-sm btn-cambiar-estado"
+                                                    <button type="button" class="btn btn-touch <?= $clase_boton_estado; ?> btn-sm btn-cambiar-estado"
                                                         data-id="<?= $usuario['idusuario']; ?>"
                                                         data-estado="<?= $estado_actual; ?>"
                                                         data-nombre="<?= htmlspecialchars($usuario['nombre']); ?>"

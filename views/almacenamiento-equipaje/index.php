@@ -224,25 +224,25 @@ $clientes = $datos_formulario['clientes'];
                                                 <div class="btn-group">
                                                     <!-- Botón Ver detalles - Siempre visible -->
                                                     <a href="<?= $URL; ?>views/almacenamiento-equipaje/show.php?id=<?= $equipaje['idalmacen']; ?>"
-                                                        class="btn btn-info btn-sm" title="Ver detalles">
+                                                        class="btn btn-touch btn-info btn-sm" title="Ver detalles">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                     <!-- NUEVO: Botón Imprimir recibo -->
                                                     <a href="<?= $URL; ?>views/almacenamiento-equipaje/recibo.php?id=<?= $equipaje['idalmacen']; ?>"
-                                                        class="btn btn-primary btn-sm" title="Imprimir recibo" target="_blank">
+                                                        class="btn btn-touch btn-primary btn-sm" title="Imprimir recibo" target="_blank">
                                                         <i class="fas fa-file-pdf"></i>
                                                     </a>
 
                                                     <?php if ($equipaje['estado'] !== 'retirado'): ?>
                                                         <!-- Botón Editar - Solo visible si no está retirado -->
                                                         <a href="<?= $URL; ?>views/almacenamiento-equipaje/update.php?id=<?= $equipaje['idalmacen']; ?>"
-                                                            class="btn btn-warning btn-sm" title="Editar">
+                                                            class="btn btn-touch btn-warning btn-sm" title="Editar">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
 
                                                         <!-- Dropdown para cambiar estado - Solo visible si no está retirado -->
                                                         <div class="btn-group">
-                                                            <button type="button" class="btn btn-success btn-sm dropdown-toggle"
+                                                            <button type="button" class="btn btn-touch btn-success btn-sm dropdown-toggle"
                                                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                                                                 title="Cambiar estado">
                                                                 <i class="fas fa-sync-alt"></i>
