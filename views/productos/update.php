@@ -222,9 +222,9 @@ include_once '../layouts/header.php';
                                                 <span class="input-group-text"><i class="fas fa-boxes"></i></span>
                                             </div>
                                             <input type="number" class="form-control" id="stock" name="stock"
-                                                min="0" value="<?= $producto['stock']; ?>" required>
+                                                min="0" value="<?= $producto['stock']; ?>" readonly required>
                                         </div>
-                                        <small class="form-text text-muted">Cantidad actual disponible del producto</small>
+                                        <small class="form-text text-muted">Se actualiza con compras y ventas; no se edita aquí</small>
                                     </div>
                                 </div>
 

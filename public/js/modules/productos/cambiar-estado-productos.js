@@ -27,8 +27,8 @@
 
         Swal.fire({
             title: activo ?
-                '¿Desactivar producto "' + opts.nombre + '"?' :
-                '¿Activar producto "' + opts.nombre + '"?',
+                '¿Desactivar producto "' + escapeHtml(opts.nombre) + '"?' :
+                '¿Activar producto "' + escapeHtml(opts.nombre) + '"?',
             text: activo ?
                 'El producto no estará disponible para venta hasta que sea activado nuevamente.' :
                 'El producto estará disponible nuevamente para venta.',

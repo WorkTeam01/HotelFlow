@@ -207,18 +207,17 @@ class ProductoController
             $nueva_imagen_path = $this->imagenService->procesarImagen($_FILES['imagen']);
             if ($nueva_imagen_path) {
                 $datos['imagen'] = $nueva_imagen_path;
-
-                // Eliminar imagen anterior si existe
-                if ($imagen_antigua) {
-                    $this->imagenService->eliminarImagen($imagen_antigua);
-                }
+                $eliminar_imagen_antigua = (bool) $imagen_antigua;
             } else {
                 return ['success' => false, 'message' => 'Error al procesar la nueva imagen. Verifique el formato y tamaño.', 'icon' => 'error', 'redirect' => "update.php?id=$id"];
             }
         }
 
-        // Actualizar producto
+        // Actualizar producto; la imagen anterior se borra solo si el UPDATE tuvo éxito
         if ($this->modelo->actualizar($id, $datos)) {
+            if (!empty($eliminar_imagen_antigua)) {
+                $this->imagenService->eliminarImagen($imagen_antigua);
+            }
             return ['success' => true, 'message' => 'Producto actualizado correctamente', 'icon' => 'success', 'redirect' => 'index.php'];
         } else {
             $error_message = 'Error al actualizar el producto: ' . $this->modelo->getLastError();

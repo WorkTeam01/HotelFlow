@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <td>
             <div class="input-group">
                 <div class="input-group-prepend">
-                    <span class="input-group-text">$</span>
+                    <span class="input-group-text">Bs.</span>
                 </div>
                 <input type="number" class="form-control precio" name="precios[]"
                     step="0.01" min="0.01" value="${parseFloat(producto.preciocompra).toFixed(2)}" required>

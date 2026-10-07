@@ -27,7 +27,7 @@ $accion = null;
 if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id']) && isset($_GET['accion']) && isset($_GET['csrf_token']) && verifyCSRFToken($_GET['csrf_token'])) {
     // Filtrar y validar los parámetros
     $id_compra = filter_var($_GET['id'], FILTER_VALIDATE_INT);
-    $accion = filter_var($_GET['accion'], FILTER_SANITIZE_STRING);
+    $accion = (string) $_GET['accion'];
 
     // Verificar si los parámetros son válidos
     if ($id_compra === false || !in_array($accion, ['completar', 'cancelar'])) {

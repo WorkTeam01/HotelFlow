@@ -66,7 +66,7 @@ class Compra
         $sanitized = [];
         foreach ($datos as $key => $value) {
             if (is_string($value)) {
-                $sanitized[$key] = trim(htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
+                $sanitized[$key] = trim($value);
             } else {
                 $sanitized[$key] = $value;
             }
@@ -235,6 +235,46 @@ class Compra
     }
 
     /**
+     * Marca una compra como completada, solo si sigue pendiente (bloquea la fila para
+     * que una cancelación concurrente no sea sobrescrita).
+     *
+     * @param int $id ID de la compra
+     * @return bool
+     */
+    public function completar($id)
+    {
+        try {
+            $this->conexion->beginTransaction();
+
+            $stmtLock = $this->conexion->prepare("SELECT estado FROM {$this->tabla} WHERE idcompra = :id FOR UPDATE");
+            $stmtLock->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmtLock->execute();
+            $estadoActual = $stmtLock->fetchColumn();
+
+            if ($estadoActual !== 'pendiente') {
+                $this->conexion->rollBack();
+                $this->lastError = 'Solo se puede completar una compra pendiente.';
+                return false;
+            }
+
+            if (!$this->actualizarEstado($id, 'completada')) {
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            $this->conexion->commit();
+            return true;
+        } catch (PDOException $e) {
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return false;
+        }
+    }
+
+    /**
      * Cancela una compra y revierte el stock de productos
      * 
      * @param int $id ID de la compra
@@ -258,8 +298,18 @@ class Compra
             // Obtener los detalles de la compra
             $compra = $this->getById($id);
 
-            // Revertir el stock de cada producto
+            // Revertir el stock de cada producto, bloqueando la fila para no dejarlo negativo
+            // si esas unidades ya se vendieron
+            $stmtStock = $this->conexion->prepare("SELECT nombre, stock FROM productos WHERE idproducto = :id FOR UPDATE");
             foreach ($compra['detalles'] as $detalle) {
+                $stmtStock->bindValue(':id', (int)$detalle['idproducto'], PDO::PARAM_INT);
+                $stmtStock->execute();
+                $producto = $stmtStock->fetch(PDO::FETCH_ASSOC);
+                if ($producto && (int)$producto['stock'] < (int)$detalle['cantidad']) {
+                    $this->conexion->rollBack();
+                    $this->lastError = 'No se puede cancelar: el stock actual de "' . $producto['nombre'] . '" es menor a la cantidad comprada (ya se vendieron unidades).';
+                    return false;
+                }
                 $this->actualizarStockProducto($detalle['idproducto'], -$detalle['cantidad']);
             }
 

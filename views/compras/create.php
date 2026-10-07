@@ -4,6 +4,8 @@ require_once __DIR__ . '/../../controllers/usuarios/UsuarioController.php';
 require_once __DIR__ . '/../../controllers/productos/ProductoController.php';
 require_once __DIR__ . '/../layouts/session.php';
 
+requireLogin();
+
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
@@ -88,7 +90,9 @@ $productos = $productoController->index();
                                         <label for="estado">Estado <span class="text-danger">*</span></label>
                                         <select class="form-control select2" id="estado" name="estado" required>
                                             <option value="pendiente" selected>Pendiente</option>
+                                            <?php if ($authService->esAdministrador($idusuario)) : ?>
                                             <option value="completada">Completada</option>
+                                            <?php endif; ?>
                                         </select>
                                     </div>
                                 </div>

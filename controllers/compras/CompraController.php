@@ -58,6 +58,17 @@ class CompraController
     }
 
     /**
+     * Solo un administrador puede registrar la compra ya completada; cualquier otro
+     * valor (incluida 'cancelada') se reduce a 'pendiente'.
+     */
+    private function estadoInicialPermitido($estado)
+    {
+        require_once __DIR__ . '/../../services/AuthorizationService.php';
+        $esAdmin = (new AuthorizationService())->esAdministrador($_SESSION['usuario_id'] ?? 0);
+        return ($esAdmin && trim((string)$estado) === 'completada') ? 'completada' : 'pendiente';
+    }
+
+    /**
      * Prepara los datos de la compra desde $_POST
      * 
      * @param array $post_data Datos del formulario
@@ -66,10 +77,10 @@ class CompraController
     private function prepararDatosCompra($post_data)
     {
         $datos = [
-            'idusuario' => isset($post_data['idusuario']) ? (int)$post_data['idusuario'] : 0,
+            'idusuario' => (int)($_SESSION['usuario_id'] ?? 0),
             'totalcompra' => isset($post_data['totalcompra']) ? (float)$post_data['totalcompra'] : 0,
             'fechacompra' => isset($post_data['fechacompra']) ? trim($post_data['fechacompra']) : date('Y-m-d'),
-            'estado' => isset($post_data['estado']) ? trim($post_data['estado']) : 'pendiente',
+            'estado' => $this->estadoInicialPermitido($post_data['estado'] ?? 'pendiente'),
             'observaciones' => isset($post_data['observaciones']) && !empty($post_data['observaciones']) ? trim($post_data['observaciones']) : null,
             'detalles' => []
         ];
@@ -182,7 +193,7 @@ class CompraController
             return ['success' => false, 'message' => 'ID de compra no válido', 'icon' => 'error'];
         }
 
-        if ($this->modelo->actualizarEstado($id, 'completada')) {
+        if ($this->modelo->completar($id)) {
             return ['success' => true, 'message' => 'Compra marcada como completada', 'icon' => 'success'];
         } else {
             return ['success' => false, 'message' => 'Error al completar la compra: ' . $this->modelo->getLastError(), 'icon' => 'error'];

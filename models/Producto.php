@@ -60,7 +60,7 @@ class Producto
         $sanitized = [];
         foreach ($datos as $key => $value) {
             if (is_string($value)) {
-                $sanitized[$key] = trim(htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
+                $sanitized[$key] = trim($value);
             } else {
                 $sanitized[$key] = $value;
             }
@@ -141,7 +141,8 @@ class Producto
             // Manejar campos opcionales
             $this->bindOptionalParam($stmt, ':codigo', $datos['codigo'] ?? null);
             $this->bindOptionalParam($stmt, ':descripcion', $datos['descripcion'] ?? null);
-            $this->bindOptionalParam($stmt, ':stock', $datos['stock'] ?? 0, PDO::PARAM_INT);
+            // El stock no se edita aquí: lo mueven ventas/compras, y un valor absoluto del
+            // formulario pisaría las ventas ocurridas mientras estaba abierto
             $this->bindOptionalParam($stmt, ':stock_minimo', $datos['stock_minimo'] ?? 0, PDO::PARAM_INT);
             $this->bindOptionalParam($stmt, ':stock_maximo', $datos['stock_maximo'] ?? null, PDO::PARAM_INT);
             $this->bindOptionalParam($stmt, ':imagen', $datos['imagen'] ?? null);
@@ -169,7 +170,6 @@ class Producto
                      codigo = :codigo, 
                      nombre = :nombre, 
                      descripcion = :descripcion, 
-                     stock = :stock, 
                      stock_minimo = :stock_minimo, 
                      stock_maximo = :stock_maximo, 
                      precioventa = :precioventa, 
