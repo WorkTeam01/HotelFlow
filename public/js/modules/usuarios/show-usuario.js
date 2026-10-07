@@ -23,8 +23,8 @@ $(document).ready(function () {
         const nombreUsuario = boton.data('nombre');
 
         const tituloAlerta = estadoActual == 1 ?
-            `¿Desactivar a ${nombreUsuario}?` :
-            `¿Activar a ${nombreUsuario}?`;
+            `¿Desactivar a ${escapeHtml(nombreUsuario)}?` :
+            `¿Activar a ${escapeHtml(nombreUsuario)}?`;
 
         const textoAlerta = estadoActual == 1 ?
             'El usuario no podrá acceder al sistema hasta que sea activado nuevamente.' :

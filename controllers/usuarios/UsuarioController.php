@@ -12,6 +12,8 @@ require_once __DIR__ . '/../../services/ImagenService.php';
 
 class UsuarioController
 {
+    private const CARGOS_VALIDOS = ['Administrador', 'Recepcionista', 'Limpieza'];
+
     /**
      * Modelo de Usuario
      * @var Usuario
@@ -82,6 +84,50 @@ class UsuarioController
     }
 
     /**
+     * Valida que el usuario en sesión pueda crear/modificar al objetivo con esos datos.
+     * Evita la escalada de privilegios: solo un administrador gestiona administradores,
+     * y nadie edita su propio cargo, estado ni permisos.
+     *
+     * @param array|null $objetivo Usuario existente (null al crear)
+     * @param array $datos Datos ya preparados (cargo/estado)
+     * @return string|null Mensaje de error o null si es válido
+     */
+    private function validarPrivilegios($objetivo, array $datos)
+    {
+        require_once __DIR__ . '/../../services/AuthorizationService.php';
+        $auth = new AuthorizationService();
+        $idSesion = (int)($_SESSION['usuario_id'] ?? 0);
+        $actorEsAdmin = $auth->esAdministrador($idSesion);
+
+        if (!in_array($datos['cargo'], self::CARGOS_VALIDOS, true)) {
+            return 'Cargo no válido.';
+        }
+
+        if ($actorEsAdmin) {
+            if ($objetivo && (int)$objetivo['idusuario'] === $idSesion
+                && ($datos['cargo'] !== $objetivo['cargo'] || (int)$datos['estado'] !== (int)$objetivo['estado'])) {
+                return 'No puede cambiar su propio cargo ni su estado.';
+            }
+            return null;
+        }
+
+        if ($datos['cargo'] === 'Administrador') {
+            return 'No tiene permisos para asignar el cargo de Administrador.';
+        }
+        if ($objetivo) {
+            if ($objetivo['cargo'] === 'Administrador') {
+                return 'No tiene permisos para modificar a un Administrador.';
+            }
+            if ((int)$objetivo['idusuario'] === $idSesion) {
+                if ($datos['cargo'] !== $objetivo['cargo'] || (int)$datos['estado'] !== (int)$objetivo['estado']) {
+                    return 'No puede cambiar su propio cargo ni su estado.';
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Procesa el formulario para guardar un nuevo usuario
      */
     public function guardar()
@@ -92,7 +138,15 @@ class UsuarioController
         }
 
         // Preparar datos del usuario
-        $datos = $this->modelo->sanitizarDatos($this->prepararDatosUsuario($_POST));
+        $datosCrudos = $this->prepararDatosUsuario($_POST);
+        $datos = $this->modelo->sanitizarDatos($datosCrudos);
+        // La contraseña no se escapa: se compara y hashea tal como la escribió el usuario
+        $datos['clave'] = $datosCrudos['clave'];
+
+        $errorPrivilegio = $this->validarPrivilegios(null, $datos);
+        if ($errorPrivilegio) {
+            return ['success' => false, 'message' => $errorPrivilegio, 'icon' => 'error', 'redirect' => 'create.php'];
+        }
 
         // Validar datos en el modelo
         $errores = $this->modelo->validarDatos($datos);
@@ -141,22 +195,14 @@ class UsuarioController
     {
         // Verificar si se proporcionó un ID
         if (!$id) {
-            global $URL;
-            $_SESSION['mensaje'] = 'ID de usuario no válido';
-            $_SESSION['icono'] = 'error';
-            header('Location: ' . $URL . 'views/usuarios');
-            exit;
+            return false;
         }
 
         // Obtener datos del usuario
         $usuario = $this->modelo->getById($id);
 
         if (!$usuario) {
-            global $URL;
-            $_SESSION['mensaje'] = 'Usuario no encontrado';
-            $_SESSION['icono'] = 'error';
-            header('Location: ' . $URL . 'views/usuarios');
-            exit;
+            return false;
         }
 
         // Devolver los datos del usuario
@@ -206,6 +252,11 @@ class UsuarioController
         // Establecer la imagen anterior por defecto
         $datos['imagen'] = $imagen_antigua;
 
+        $errorPrivilegio = $this->validarPrivilegios($usuario_actual, $datos);
+        if ($errorPrivilegio) {
+            return ['success' => false, 'message' => $errorPrivilegio, 'icon' => 'error', 'redirect' => "update.php?id=$id"];
+        }
+
         // Validar datos en el modelo (excluyendo el usuario actual)
         $errores = $this->modelo->validarDatos($datos, $id);
 
@@ -218,11 +269,7 @@ class UsuarioController
             $nueva_imagen_path = $this->imagenService->procesarImagen($_FILES['imagen']);
             if ($nueva_imagen_path) {
                 $datos['imagen'] = $nueva_imagen_path;
-
-                // Eliminar imagen anterior si no es la predeterminada
-                if ($imagen_antigua && $imagen_antigua !== 'user_default.jpg') {
-                    $this->imagenService->eliminarImagen($imagen_antigua);
-                }
+                $eliminar_imagen_antigua = $imagen_antigua && $imagen_antigua !== 'user_default.jpg';
             } else {
                 return ['success' => false, 'message' => 'Error al procesar la nueva imagen. Verifique el formato y tamaño.', 'icon' => 'error', 'redirect' => "update.php?id=$id"];
             }
@@ -230,6 +277,11 @@ class UsuarioController
 
         // Actualizar usuario
         $actualizado = $this->modelo->actualizar($id, $datos);
+
+        // La imagen anterior se borra solo si el UPDATE tuvo éxito
+        if ($actualizado && !empty($eliminar_imagen_antigua)) {
+            $this->imagenService->eliminarImagen($imagen_antigua);
+        }
 
         // Procesar cambio de contraseña si se proporcionó
         $clave = isset($_POST['clave']) ? trim($_POST['clave']) : '';
@@ -258,8 +310,10 @@ class UsuarioController
         }
 
         if ($actualizado && $clave_actualizada) {
-            // Procesar permisos seleccionados
-            $this->procesarPermisos($id, $_POST);
+            // Nadie edita sus propios permisos
+            if ($id !== (int)($_SESSION['usuario_id'] ?? 0)) {
+                $this->procesarPermisos($id, $_POST);
+            }
 
             return ['success' => true, 'message' => 'Usuario actualizado correctamente', 'icon' => 'success', 'redirect' => 'index.php'];
         } else {
@@ -296,6 +350,11 @@ class UsuarioController
         }
 
         $nuevo_estado = $usuario['estado'] == 1 ? 0 : 1; // Cambia el estado
+
+        $errorPrivilegio = $this->validarPrivilegios($usuario, ['cargo' => $usuario['cargo'], 'estado' => $nuevo_estado]);
+        if ($errorPrivilegio) {
+            return ['success' => false, 'message' => $errorPrivilegio, 'icon' => 'error'];
+        }
 
         if ($this->modelo->actualizarEstado($id, $nuevo_estado)) {
             $accion = $nuevo_estado == 1 ? 'activado' : 'desactivado';

@@ -3,6 +3,8 @@ require_once __DIR__ . '/../../controllers/usuarios/PerfilController.php';
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
+requireLogin();
+
 $idusuario_session = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
@@ -23,14 +25,6 @@ if (!isset($idusuario_session)) {
     exit;
 }
 
-// Incluir el encabezado
-$module_styles = ['usuarios/usuarios'];
-$module_scripts = ['usuarios/perfil-usuario'];
-$skip_datatables = true; // Esta vista no usa tabla; evita cargar DataTables/pdfmake/vfs_fonts (~2.8MB)
-$skip_select2 = true;
-$skip_chartjs = true;
-include_once '../layouts/header.php';
-
 // Instanciar el controlador y obtener los datos del usuario
 $perfil_controller = new PerfilController();
 $usuario = $perfil_controller->obtenerPerfil();
@@ -43,6 +37,14 @@ if (!$usuario) {
     header('Location: ' . $URL . 'index.php');
     exit;
 }
+
+// Incluir el encabezado
+$module_styles = ['usuarios/usuarios'];
+$module_scripts = ['usuarios/perfil-usuario'];
+$skip_datatables = true; // Esta vista no usa tabla; evita cargar DataTables/pdfmake/vfs_fonts (~2.8MB)
+$skip_select2 = true;
+$skip_chartjs = true;
+include_once '../layouts/header.php';
 ?>
 
 <!-- Content Header (Page header) -->

@@ -69,7 +69,7 @@ class Usuario
         foreach ($datos as $key => $value) {
             if (is_string($value)) {
                 // Eliminar espacios adicionales y caracteres potencialmente peligrosos
-                $sanitized[$key] = trim(htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
+                $sanitized[$key] = trim($value);
             } else {
                 $sanitized[$key] = $value;
             }
@@ -541,15 +541,13 @@ class Usuario
     {
         try {
             if ($id_excluir) {
-                $query = "SELECT COUNT(*) FROM {$this->tabla} WHERE tipodocumento = :tipodocumento AND numdocumento = :numdocumento AND idusuario != :id";
+                $query = "SELECT COUNT(*) FROM {$this->tabla} WHERE numdocumento = :numdocumento AND idusuario != :id";
                 $stmt = $this->conexion->prepare($query);
-                $stmt->bindParam(':tipodocumento', $tipodocumento, PDO::PARAM_STR);
                 $stmt->bindParam(':numdocumento', $numdocumento, PDO::PARAM_STR);
                 $stmt->bindParam(':id', $id_excluir, PDO::PARAM_INT);
             } else {
-                $query = "SELECT COUNT(*) FROM {$this->tabla} WHERE tipodocumento = :tipodocumento AND numdocumento = :numdocumento";
+                $query = "SELECT COUNT(*) FROM {$this->tabla} WHERE numdocumento = :numdocumento";
                 $stmt = $this->conexion->prepare($query);
-                $stmt->bindParam(':tipodocumento', $tipodocumento, PDO::PARAM_STR);
                 $stmt->bindParam(':numdocumento', $numdocumento, PDO::PARAM_STR);
             }
 

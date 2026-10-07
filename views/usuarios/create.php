@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
+requireLogin();
+
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 

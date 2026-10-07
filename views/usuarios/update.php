@@ -3,6 +3,8 @@ require_once __DIR__ . '/../../controllers/usuarios/UsuarioController.php';
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
+requireLogin();
+
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
@@ -13,13 +15,6 @@ if (!$authService->puedeAccederModulo($idusuario, 'usuarios') && !$authService->
     header('Location: index.php');
     exit;
 }
-
-// Incluir el encabezado
-$module_styles = ['usuarios/usuarios'];
-$module_scripts = ['usuarios/update-usuario', 'usuarios/permisos'];
-$skip_datatables = true; // Esta vista no usa tabla; evita cargar DataTables/pdfmake/vfs_fonts (~2.8MB)
-$skip_chartjs = true;
-include_once '../layouts/header.php';
 
 // Verificar si se proporcionó un ID
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -42,6 +37,13 @@ if (!$usuario) {
     header('Location: index.php');
     exit;
 }
+
+// Incluir el encabezado
+$module_styles = ['usuarios/usuarios'];
+$module_scripts = ['usuarios/update-usuario', 'usuarios/permisos'];
+$skip_datatables = true; // Esta vista no usa tabla; evita cargar DataTables/pdfmake/vfs_fonts (~2.8MB)
+$skip_chartjs = true;
+include_once '../layouts/header.php';
 ?>
 
 <!-- Content Header (Page header) -->
