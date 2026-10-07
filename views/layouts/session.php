@@ -11,6 +11,7 @@
 
 // Iniciar sesión si no está iniciada
 if (session_status() == PHP_SESSION_NONE) {
+    ini_set('session.use_strict_mode', '1');
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',
@@ -31,21 +32,9 @@ try {
         die("Error: Archivo .env no encontrado. Por favor, configure el archivo .env con APP_URL y otras variables necesarias.");
     }
 
-    $env_lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($env_lines as $line) {
-        // Ignorar comentarios y líneas vacías
-        if (strpos(trim($line), '#') === 0 || empty(trim($line))) {
-            continue;
-        }
-
-        if (strpos($line, '=') !== false) {
-            list($name, $value) = explode('=', $line, 2);
-            $name = trim($name);
-            $value = trim($value, " \t\n\r\0\x0B\"'");
-            $_ENV[$name] = $value;
-            putenv("$name=$value");
-        }
-    }
+    // Misma lectura del .env que el resto de la app (config/env.php)
+    require_once __DIR__ . '/../../config/env.php';
+    loadEnv($env_file);
 
     // Obtener URL de la aplicación desde .env
     $app_url = $_ENV['APP_URL'] ?? getenv('APP_URL');
@@ -132,6 +121,35 @@ function checkSessionSecurity()
 }
 
 /**
+ * Verifica contra la BD que el usuario de la sesión siga activo. Si fue desactivado
+ * mientras tenía sesión abierta, la destruye para que no conserve acceso.
+ *
+ * @return bool
+ */
+function usuarioSigueActivo()
+{
+    if (!isset($_SESSION['usuario_id'])) {
+        return true; // lo resuelve isAuthenticated()
+    }
+    try {
+        require_once __DIR__ . '/../../config/conexion.php';
+        $stmt = Conexion::getInstance()->getConnection()->prepare('SELECT estado FROM usuarios WHERE idusuario = :id');
+        $stmt->bindValue(':id', (int)$_SESSION['usuario_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        $estado = $stmt->fetchColumn();
+    } catch (Throwable $e) {
+        error_log('[session] No se pudo verificar el estado del usuario: ' . $e->getMessage());
+        return true; // fail-open ante fallo de infraestructura, como el rate-limit de login
+    }
+    if ((int)$estado !== 1) {
+        session_unset();
+        session_destroy();
+        return false;
+    }
+    return true;
+}
+
+/**
  * Requerir inicio de sesión para acceder a una página
  * 
  * @param string $redirect_url URL a la que redirigir si no hay sesión
@@ -144,7 +162,7 @@ function requireLogin($redirect_url = null)
         $redirect_url = $URL . 'views/login/login.php';
     }
 
-    if (!isAuthenticated() || !checkSessionTimeout() || !checkSessionSecurity()) {
+    if (!isAuthenticated() || !checkSessionTimeout() || !checkSessionSecurity() || !usuarioSigueActivo()) {
         // Guardar mensaje de sesión expirada
         if (isset($_SESSION)) {
             if (!isAuthenticated()) {

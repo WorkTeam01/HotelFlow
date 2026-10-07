@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             confirmButtonText: 'Aceptar'
                         }).then(function (result) {
                             if (result.isConfirmed) {
-                                window.location.href = BASE_URL + 'controllers/auth/logout.php';
+                                window.location.href = BASE_URL + 'controllers/auth/logout.php?csrf_token=' + CSRF_TOKEN;
                             }
                         });
                     } else {

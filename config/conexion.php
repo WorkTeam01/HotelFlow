@@ -56,8 +56,8 @@ class Conexion
                 throw new Exception("Faltan parámetros de configuración de la base de datos");
             }
 
-            // Usar utf8 en lugar de utf8mb4 para evitar problemas de compatibilidad
-            $dsn = "mysql:host={$db_config['host']};dbname={$db_config['name']};charset=utf8";
+            // utf8mb4 coincide con las tablas y admite caracteres de 4 bytes
+            $dsn = "mysql:host={$db_config['host']};dbname={$db_config['name']};charset=utf8mb4";
 
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

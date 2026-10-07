@@ -40,6 +40,18 @@ function themeColor(tone) {
  * @param {string} titulo - Título del diálogo (ej. 'Guardando...')
  * @param {string} [texto] - Detalle opcional (admite HTML)
  */
+/**
+ * Escapa texto de BD/usuario antes de interpolarlo en HTML (títulos y html de SweetAlert,
+ * .html() de jQuery). Los datos se guardan crudos, así que toda salida HTML debe escaparse.
+ * @param {*} valor
+ * @returns {string}
+ */
+function escapeHtml(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c];
+    });
+}
+
 function mostrarCarga(titulo, texto) {
     Swal.fire({
         title: titulo || 'Procesando...',
@@ -269,7 +281,7 @@ function showToast(message, icon = 'success', timer = 3000) {
 
         Toast.fire({
             icon: icon,
-            title: message
+            titleText: message
         });
     } else {
         // Fallback si Swal no está disponible

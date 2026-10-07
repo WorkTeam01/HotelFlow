@@ -116,23 +116,24 @@ global $URL;
                         <i class="fas fa-user"></i>
                     </a>
 
-                    <?php if ($authService->puedeAccederModulo($idusuariosesion, 'perfil')) : ?>
-                        <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                            <!-- User image -->
-                            <li class="user-header">
-                                <img src="<?= $URL; ?>public/uploads/usuarios/<?= $currentUser['imagen']; ?>" loading="eager" class="img-circle elevation-2" alt="User Image">
-                                <p>
-                                    <?= $currentUser['nombre']; ?>
-                                    <small><?= $currentUser['cargo']; ?></small>
-                                </p>
-                            </li>
-                            <!-- Menu Footer-->
-                            <li class="user-footer">
+                    <?php $puedeVerPerfil = $authService->puedeAccederModulo($idusuariosesion, 'perfil'); ?>
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                        <!-- User image -->
+                        <li class="user-header">
+                            <img src="<?= $URL; ?>public/uploads/usuarios/<?= htmlspecialchars($currentUser['imagen'] ?? ''); ?>" loading="eager" class="img-circle elevation-2" alt="User Image">
+                            <p>
+                                <?= htmlspecialchars($currentUser['nombre'] ?? ''); ?>
+                                <small><?= htmlspecialchars($currentUser['cargo'] ?? ''); ?></small>
+                            </p>
+                        </li>
+                        <!-- Menu Footer-->
+                        <li class="user-footer">
+                            <?php if ($puedeVerPerfil) : ?>
                                 <a href="<?= $URL; ?>views/usuarios/perfil.php?id=<?= $currentUser['id']; ?>" class="btn btn-default btn-flat">Perfil</a>
-                                <a href="<?= $URL; ?>controllers/auth/logout.php" class="btn btn-default btn-flat float-right">Cerrar Sesión</a>
-                            </li>
-                        </ul>
-                    <?php endif; ?>
+                            <?php endif; ?>
+                            <a href="<?= $URL; ?>controllers/auth/logout.php?csrf_token=<?= generateCSRFToken(); ?>" class="btn btn-default btn-flat float-right">Cerrar Sesión</a>
+                        </li>
+                    </ul>
                 </li>
             </ul>
         </nav>

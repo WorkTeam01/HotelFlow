@@ -582,6 +582,7 @@ ALTER TABLE `permiso`
 --
 ALTER TABLE `permiso_usuario`
   ADD PRIMARY KEY (`idpermisousuario`),
+  ADD UNIQUE KEY `uq_permiso_usuario` (`idusuario`,`idpermiso`),
   ADD KEY `idpermiso` (`idpermiso`),
   ADD KEY `idusuario` (`idusuario`);
 

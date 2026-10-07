@@ -39,6 +39,22 @@ class AuthController
         require_once __DIR__ . '/../../views/layouts/session.php';
     }
 
+    private function urlRaiz()
+    {
+        global $URL;
+        return $URL;
+    }
+
+    /**
+     * URL fija del formulario de login. No se usa HTTP_REFERER: puede faltar (página en
+     * blanco) o ser controlado por un tercero (redirección abierta).
+     */
+    private function urlLogin()
+    {
+        global $URL;
+        return $URL . 'views/login/login.php';
+    }
+
     /**
      * Muestra la página de login
      */
@@ -65,7 +81,7 @@ class AuthController
             if (!verifyCSRFToken($csrf_token)) {
                 $_SESSION['mensaje'] = 'Error de seguridad. Por favor, intente nuevamente.';
                 $_SESSION['icono'] = 'error';
-                header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '../../views/login/index.php'));
+                header('Location: ' . $this->urlLogin());
                 exit;
             }
 
@@ -87,7 +103,7 @@ class AuthController
             if (!empty($errors)) {
                 $_SESSION['mensaje'] = $errors[0];
                 $_SESSION['icono'] = 'error';
-                header('Location: ' . $_SERVER['HTTP_REFERER']);
+                header('Location: ' . $this->urlLogin());
                 exit;
             }
 
@@ -98,7 +114,7 @@ class AuthController
             if ($this->intentoLogin->estaBloqueado($identifier, $ip)) {
                 $_SESSION['mensaje'] = 'Demasiados intentos fallidos. Intente nuevamente en unos minutos.';
                 $_SESSION['icono'] = 'warning';
-                header('Location: ' . $_SERVER['HTTP_REFERER']);
+                header('Location: ' . $this->urlLogin());
                 exit;
             }
 
@@ -133,7 +149,7 @@ class AuthController
                 $this->intentoLogin->registrar($identifier, $ip, false);
                 $_SESSION['mensaje'] = 'Credenciales incorrectas';
                 $_SESSION['icono'] = 'error';
-                header('Location: ' . $_SERVER['HTTP_REFERER']);
+                header('Location: ' . $this->urlLogin());
             }
             exit;
         }
@@ -173,6 +189,13 @@ class AuthController
      */
     public function logout()
     {
+        // Sin token válido cualquier sitio externo podría cerrar la sesión del usuario
+        // (p. ej. con una imagen que apunte a esta URL)
+        if (!empty($_SESSION['usuario_id']) && !verifyCSRFToken($_GET['csrf_token'] ?? '')) {
+            header('Location: ' . $this->urlRaiz());
+            exit;
+        }
+
         // Eliminar todas las variables de sesión
         $_SESSION = array();
 

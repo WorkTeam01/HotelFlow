@@ -1,0 +1,12 @@
+# Bloquea archivos sensibles y código fuente servidos por HTTP.
+# Con Apache >= 2.4 y AllowOverride habilitado.
+Options -Indexes
+
+RedirectMatch 404 /\.(git|env|claude)
+
+<FilesMatch "(\.(sql|md|log|lock|json|sh|yml|yaml)|^\.env.*|^composer\..*|^LICENSE)$">
+    Require all denied
+</FilesMatch>
+
+# Capas internas que nunca se acceden directamente por navegador
+RedirectMatch 404 ^(/[^/]+)?/(config|models|services|database)(/|$)

@@ -41,8 +41,9 @@ class AuthorizationService
             }
 
             // Verificar permiso específico asignado al usuario
-            $query = "SELECT COUNT(*) FROM permiso_usuario 
-                     WHERE idusuario = :idusuario AND idpermiso = :idpermiso AND estado = 1";
+            $query = "SELECT COUNT(*) FROM permiso_usuario pu
+                     INNER JOIN usuarios u ON u.idusuario = pu.idusuario AND u.estado = 1
+                     WHERE pu.idusuario = :idusuario AND pu.idpermiso = :idpermiso AND pu.estado = 1";
 
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':idusuario', $idusuario, PDO::PARAM_INT);
@@ -352,31 +353,15 @@ class AuthorizationService
     public function asignarPermiso($idusuario, $idpermiso)
     {
         try {
-            // Verificar si ya existe la asignación
-            $query = "SELECT COUNT(*) FROM permiso_usuario 
-                     WHERE idusuario = :idusuario AND idpermiso = :idpermiso";
+            // Alta idempotente: la clave única (idusuario, idpermiso) evita duplicados
+            // aunque dos asignaciones lleguen a la vez
+            $query = "INSERT INTO permiso_usuario (idpermiso, idusuario) 
+                     VALUES (:idpermiso, :idusuario)
+                     ON DUPLICATE KEY UPDATE estado = 1";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':idusuario', $idusuario, PDO::PARAM_INT);
             $stmt->bindParam(':idpermiso', $idpermiso, PDO::PARAM_INT);
-            $stmt->execute();
-
-            if ($stmt->fetchColumn() > 0) {
-                // Ya existe, actualizar estado a activo
-                $query = "UPDATE permiso_usuario SET estado = 1 
-                         WHERE idusuario = :idusuario AND idpermiso = :idpermiso";
-                $stmt = $this->conexion->prepare($query);
-                $stmt->bindParam(':idusuario', $idusuario, PDO::PARAM_INT);
-                $stmt->bindParam(':idpermiso', $idpermiso, PDO::PARAM_INT);
-                return $stmt->execute();
-            } else {
-                // No existe, crear nueva asignación
-                $query = "INSERT INTO permiso_usuario (idpermiso, idusuario) 
-                         VALUES (:idpermiso, :idusuario)";
-                $stmt = $this->conexion->prepare($query);
-                $stmt->bindParam(':idusuario', $idusuario, PDO::PARAM_INT);
-                $stmt->bindParam(':idpermiso', $idpermiso, PDO::PARAM_INT);
-                return $stmt->execute();
-            }
+            return $stmt->execute();
         } catch (PDOException $e) {
             error_log('Error al asignar permiso: ' . $e->getMessage());
             return false;

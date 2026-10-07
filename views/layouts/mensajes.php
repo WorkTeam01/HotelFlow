@@ -17,7 +17,7 @@ if ((isset($_SESSION['mensaje'])) && (isset($_SESSION['icono']))) {
         });
         Toast.fire({
             icon: <?php echo json_encode($icono); ?>,
-            title: <?php echo json_encode($respuesta); ?>
+            titleText: <?php echo json_encode($respuesta); ?>
         });
     </script>
 <?php

@@ -9,11 +9,7 @@
  * @version 1.5
  */
 
-// Iniciar sesión si no está iniciada
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
+// La sesión la inicia session.php (vía AuthController) con cookie HttpOnly/SameSite
 // Incluir el controlador de autenticación
 require_once __DIR__ . '/AuthController.php';
 
