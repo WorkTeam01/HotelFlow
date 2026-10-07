@@ -3,6 +3,8 @@ require_once __DIR__ . '/../../controllers/ventas/VentaController.php';
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
+requireLogin();
+
 $idusuario = $_SESSION['usuario_id'] ?? '';
 
 $authService = new AuthorizationService();
@@ -25,7 +27,7 @@ include_once '../layouts/header.php';
 $controller = new VentaController();
 $esAdmin = $authService->esAdministrador($idusuario);
 $ventas = $controller->index($esAdmin ? null : $idusuario);
-$estadisticas = $controller->getEstadisticas();
+$estadisticas = $controller->getEstadisticas($esAdmin ? null : $idusuario);
 ?>
 
 <!-- Content Header (Page header) -->

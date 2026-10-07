@@ -104,10 +104,10 @@ try {
     }
 
     // Extraer datos principales con validación
-    $cliente = trim($venta['cliente_nombre'] ?? '') ?: 'Consumidor Final';
+    $cliente = htmlspecialchars(trim($venta['cliente_nombre'] ?? '') ?: 'Consumidor Final', ENT_QUOTES, 'UTF-8');
     $cliente = htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8');
 
-    $usuario_registro = trim($venta['usuario_nombre'] ?? '') ?: ($_SESSION['usuario_nombre'] ?? 'Usuario no disponible');
+    $usuario_registro = htmlspecialchars(trim($venta['usuario_nombre'] ?? '') ?: ($_SESSION['usuario_nombre'] ?? 'Usuario no disponible'), ENT_QUOTES, 'UTF-8');
     $usuario_registro = htmlspecialchars($usuario_registro, ENT_QUOTES, 'UTF-8');
 
     $observaciones = htmlspecialchars(trim($venta['observacion'] ?? ''), ENT_QUOTES, 'UTF-8');

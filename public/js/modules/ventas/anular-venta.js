@@ -17,7 +17,7 @@ document.addEventListener('click', function (event) {
     $('[data-toggle="tooltip"]').tooltip('hide');
 
     Swal.fire({
-        title: '¿Anular venta ' + tituloVenta + '?',
+        title: '¿Anular venta ' + escapeHtml(tituloVenta) + '?',
         text: 'La venta será anulada y el stock de productos será revertido.',
         icon: 'warning',
         showCancelButton: true,

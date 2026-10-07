@@ -8,6 +8,14 @@
 
 require_once __DIR__ . '/../config/conexion.php';
 
+/**
+ * Error de regla de negocio cuyo mensaje sí puede mostrarse al usuario
+ * (a diferencia de PDOException, que se reemplaza por un mensaje genérico).
+ */
+class VentaNegocioException extends Exception
+{
+}
+
 class Venta
 {
     /**
@@ -69,7 +77,7 @@ class Venta
         $sanitized = [];
         foreach ($datos as $key => $value) {
             if (is_string($value)) {
-                $sanitized[$key] = trim(htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
+                $sanitized[$key] = trim($value);
             } else {
                 $sanitized[$key] = $value;
             }
@@ -197,17 +205,20 @@ class Venta
             foreach ($datos['detalles'] as $detalle) {
                 // Bloquear la fila del producto, verificar stock y tomar el precio real de la BD
                 // (no confiar en el precio enviado por el cliente)
-                $stmtStock = $this->conexion->prepare("SELECT stock, precioventa FROM productos WHERE idproducto = :id FOR UPDATE");
+                $stmtStock = $this->conexion->prepare("SELECT nombre, stock, precioventa FROM productos WHERE idproducto = :id FOR UPDATE");
                 $stmtStock->bindParam(':id', $detalle['idproducto'], PDO::PARAM_INT);
                 $stmtStock->execute();
                 $productoActual = $stmtStock->fetch(PDO::FETCH_ASSOC);
 
                 if ($productoActual === false || $productoActual['stock'] < $detalle['cantidad']) {
-                    throw new PDOException("Stock insuficiente para el producto ID {$detalle['idproducto']}");
+                    throw new VentaNegocioException('Stock insuficiente para el producto' . ($productoActual ? ' "' . $productoActual['nombre'] . '" (disponible: ' . (int)$productoActual['stock'] . ')' : '') . '.');
                 }
 
                 $precioReal = (float)$productoActual['precioventa'];
                 $descuento = (float)($detalle['descuento'] ?? 0.00);
+                if ($descuento < 0 || $descuento > $precioReal * $detalle['cantidad'] + 0.001) {
+                    throw new VentaNegocioException('El descuento de "' . $productoActual['nombre'] . '" debe estar entre 0 y el subtotal de la línea.');
+                }
                 $totalCalculado += ($precioReal * $detalle['cantidad']) - $descuento;
 
                 $queryDetalle = "INSERT INTO {$this->tablaDetalle}
@@ -252,7 +263,7 @@ class Venta
                 $recibido = round((float)($pago['pagorecibido'] ?? 0), 2);
 
                 if ($monto <= 0) {
-                    throw new PDOException("Todos los pagos deben tener un monto mayor que cero");
+                    throw new VentaNegocioException("Todos los pagos deben tener un monto mayor que cero");
                 }
                 $sumaMontos += $monto;
 
@@ -260,7 +271,7 @@ class Venta
                 // recalcula desde la BD (no confiar en el cambio enviado por el cliente).
                 if ($metodo === 'Efectivo') {
                     if ($recibido < $monto) {
-                        throw new PDOException("El pago recibido en efectivo no cubre el monto");
+                        throw new VentaNegocioException("El pago recibido en efectivo no cubre el monto");
                     }
                     $cambio = round($recibido - $monto, 2);
                 } else {
@@ -276,7 +287,7 @@ class Venta
             }
 
             if (abs($sumaMontos - $totalCalculado) > 0.01) {
-                throw new PDOException("El total de los pagos no coincide con el total de la venta");
+                throw new VentaNegocioException("El total de los pagos no coincide con el total de la venta");
             }
 
             // Registrar una línea de pagoventa por cada método de pago (ledger append-only)
@@ -313,6 +324,10 @@ class Venta
 
             $this->conexion->commit();
             return $idVenta;
+        } catch (VentaNegocioException $e) {
+            $this->conexion->rollBack();
+            $this->lastError = $e->getMessage();
+            return false;
         } catch (PDOException $e) {
             $this->conexion->rollBack();
             error_log('[' . static::class . '] ' . $e->getMessage());
@@ -575,8 +590,10 @@ class Venta
      * 
      * @return array Estadísticas de ventas (ventas hoy, cliente que más compró, producto más vendido)
      */
-    public function getEstadisticas()
+    public function getEstadisticas($idUsuario = null)
     {
+        // Un usuario no administrador solo ve las estadísticas de sus propias ventas
+        $filtroUsuario = $idUsuario === null ? '' : ' AND v.idusuario = :idusuario';
         try {
             $estadisticas = [
                 'ventas_hoy' => 0,
@@ -590,10 +607,13 @@ class Venta
 
             // Ventas hoy (cantidad y monto total)
             $query = "SELECT COUNT(*) as cantidad, SUM(totalventa) as total 
-                  FROM {$this->tabla} 
-                  WHERE DATE(fechaventa) = :hoy AND estado = 1";
+                  FROM {$this->tabla} v
+                  WHERE DATE(v.fechaventa) = :hoy AND v.estado = 1{$filtroUsuario}";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':hoy', $hoy, PDO::PARAM_STR);
+            if ($idUsuario !== null) {
+                $stmt->bindValue(':idusuario', (int)$idUsuario, PDO::PARAM_INT);
+            }
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -605,12 +625,15 @@ class Venta
                   COUNT(v.idventa) as compras, SUM(v.totalventa) as total_gastado
                   FROM {$this->tabla} v
                   LEFT JOIN persona p ON v.idcliente = p.idpersona
-                  WHERE DATE(v.fechaventa) = :hoy AND v.estado = 1
+                  WHERE DATE(v.fechaventa) = :hoy AND v.estado = 1{$filtroUsuario}
                   GROUP BY v.idcliente
                   ORDER BY total_gastado DESC
                   LIMIT 1";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':hoy', $hoy, PDO::PARAM_STR);
+            if ($idUsuario !== null) {
+                $stmt->bindValue(':idusuario', (int)$idUsuario, PDO::PARAM_INT);
+            }
             $stmt->execute();
             $estadisticas['cliente_mas_compro'] = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -621,12 +644,15 @@ class Venta
                   FROM {$this->tablaDetalle} dv
                   JOIN {$this->tabla} v ON dv.idventa = v.idventa
                   JOIN productos pr ON dv.idproducto = pr.idproducto
-                  WHERE DATE(v.fechaventa) = :hoy AND v.estado = 1
+                  WHERE DATE(v.fechaventa) = :hoy AND v.estado = 1{$filtroUsuario}
                   GROUP BY dv.idproducto
                   ORDER BY cantidad_vendida DESC
                   LIMIT 1";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':hoy', $hoy, PDO::PARAM_STR);
+            if ($idUsuario !== null) {
+                $stmt->bindValue(':idusuario', (int)$idUsuario, PDO::PARAM_INT);
+            }
             $stmt->execute();
             $estadisticas['producto_mas_vendido'] = $stmt->fetch(PDO::FETCH_ASSOC);
 

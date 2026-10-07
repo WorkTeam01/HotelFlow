@@ -59,14 +59,15 @@ document.addEventListener('DOMContentLoaded', function () {
     actualizarVisibilidadCarritoVacio();
     calcularTotalPagado();
 
-    // Cambiar entre pago único y mixto
-    btnPagoUnico.addEventListener('click', function () {
+    // Cambiar entre pago único y mixto. Se escucha 'change' del radio (no 'click' del label):
+    // Bootstrap marca el radio después del click, y calcularTotalPagado() lee el radio marcado
+    btnPagoUnico.querySelector('input').addEventListener('change', function () {
         seccionPagoUnico.style.display = '';
         seccionPagoMixto.style.display = 'none';
         calcularTotalPagado();
     });
 
-    btnPagoMixto.addEventListener('click', function () {
+    btnPagoMixto.querySelector('input').addEventListener('change', function () {
         seccionPagoUnico.style.display = 'none';
         seccionPagoMixto.style.display = '';
         // Si no hay métodos de pago añadidos, agregar uno
@@ -728,7 +729,7 @@ document.addEventListener('DOMContentLoaded', function () {
             calcularTotalesVenta();
         });
 
-        descuento.addEventListener('input', () => {
+        descuento.addEventListener('input', function () {
             const invalido = !this.checkValidity();
             this.classList.toggle('is-invalid', invalido);
             this.setAttribute('aria-invalid', invalido ? 'true' : 'false');

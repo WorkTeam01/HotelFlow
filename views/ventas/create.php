@@ -4,6 +4,8 @@ require_once __DIR__ . '/../../controllers/productos/ProductoController.php';
 require_once __DIR__ . '/../../controllers/personas/PersonaController.php';
 require_once __DIR__ . '/../layouts/session.php';
 
+requireLogin();
+
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
@@ -26,7 +28,10 @@ $productoController = new ProductoController();
 $productos = $productoController->index();
 
 $personaController = new PersonaController();
-$clientes = $personaController->index();
+// Solo clientes activos pueden comprar
+$clientes = array_values(array_filter($personaController->index(), function ($c) {
+    return $c['estado'] == 1;
+}));
 ?>
 
 <section class="content-header">
@@ -49,9 +54,9 @@ $clientes = $personaController->index();
 <section class="content">
     <div class="container-fluid">
         <form action="<?= $URL; ?>controllers/ventas/crear_venta.php" method="POST" id="form-venta" novalidate
-            data-productos="<?= htmlspecialchars(json_encode(array_filter($productos, function ($p) {
+            data-productos="<?= htmlspecialchars(json_encode(array_values(array_filter($productos, function ($p) {
                 return $p['estado'] == 1 && $p['stock'] > 0;
-            })), ENT_QUOTES) ?>"
+            }))), ENT_QUOTES) ?>"
             data-clientes="<?= htmlspecialchars(json_encode($clientes), ENT_QUOTES) ?>">
             <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
             <input type="hidden" name="totalventa" id="totalventa-hidden" value="0">
@@ -98,7 +103,7 @@ $clientes = $personaController->index();
                                                     <div class="input-group-prepend">
                                                         <span class="input-group-text">Bs.</span>
                                                     </div>
-                                                    <input type="number" class="form-control precio" name="precios[]" step="0.01" min="0.01" value="0.00" required aria-label="Precio unitario">
+                                                    <input type="number" class="form-control precio" name="precios[]" step="0.01" min="0.01" value="0.00" readonly required aria-label="Precio unitario">
                                                     <div class="invalid-feedback">Ingrese un precio válido</div>
                                                 </div>
                                             </td>

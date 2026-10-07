@@ -3,6 +3,8 @@ require_once __DIR__ . '/../../controllers/ventas/VentaController.php';
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
+requireLogin();
+
 if (!isset($URL)) {
     $config = require_once __DIR__ . '/../../config/config.php';
     $URL = $config['app']['url'];
@@ -105,7 +107,7 @@ include_once '../layouts/header.php';
                                 </li>
                                 <li class="list-group-item">
                                     <b><i class="fas fa-calendar-alt mr-2"></i>Fecha Venta</b>
-                                    <span class="float-right"><?= date('d/m/Y H:i', strtotime($venta['fechaventa'])); ?></span>
+                                    <span class="float-right"><?= date('d/m/Y', strtotime($venta['fechaventa'])); ?></span>
                                 </li>
                                 <li class="list-group-item">
                                     <b><i class="fas fa-user mr-2"></i>Cliente</b>

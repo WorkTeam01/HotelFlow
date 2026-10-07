@@ -405,8 +405,8 @@ class VentaController
      * 
      * @return array Estadísticas de ventas
      */
-    public function getEstadisticas()
+    public function getEstadisticas($idUsuario = null)
     {
-        return $this->modelo->getEstadisticas();
+        return $this->modelo->getEstadisticas($idUsuario);
     }
 }
