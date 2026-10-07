@@ -5,6 +5,55 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.7.0] - 2026-10-07
+
+Auditoría de bugs de todo el proyecto (PHP MVC completo) con correcciones en seguridad, integridad de dinero/estados y escape de salida. Un cambio de esquema menor y un paso de datos al desplegar (ver Migración).
+
+### Security
+
+- **`.htaccess` nuevo**: `Options -Indexes`, 404 para `.git`/`.env`/`.claude`, bloqueo de `sql|md|log|lock|json|sh|yml|yaml|composer.*|LICENSE` y de los directorios `config/`, `models/`, `services/`, `database/`.
+- **Sesión**: `session.use_strict_mode`; solo `session.php` inicia sesiones (cookie `HttpOnly` + `SameSite=Lax` también en login/logout); `requireLogin()` destruye la sesión si el usuario fue desactivado (`usuarioSigueActivo()`); `AuthorizationService::tienePermiso()` exige usuario activo.
+- **Logout con CSRF** (`?csrf_token=`) y errores de login que redirigen a la vista de login en vez de `HTTP_REFERER`.
+- **Usuarios**: `UsuarioController::validarPrivilegios()` (cargo válido; solo un Administrador asigna el cargo Administrador o modifica administradores; nadie cambia su propio cargo, estado ni permisos); `clave` ya no se sanitiza; imagen anterior se borra solo tras un UPDATE exitoso.
+- **Compras**: `idusuario` desde la sesión; solo un administrador crea `completada`; completar/cancelar bloquean filas y validan estado y stock (`Compra::completar()`, `cancelar()`); eliminado `actualizar_compra.php`.
+- **Ventas, baño y equipaje**: totales de baño y equipaje desde precio real en BD, método de pago en lista blanca; el estado inicial de equipaje siempre es `almacenado`; descuentos y pagos inválidos se rechazan con mensaje de negocio; estadísticas de ventas filtradas por usuario para no administradores.
+- `requireLogin()` en 16 vistas y en los recibos de recepción y equipaje; permiso `tipohabitaciones` correcto en tipos de habitación; `cambiar_estado.php` valida que el referer empiece por `$URL`.
+
+### Fixed
+
+- **`Recepcion::existeSolape()` fallaba en silencio** (`HY093` por parámetro nombrado repetido): ahora usa `:excluir_nulo`/`:excluir_id` y el overbooking se rechaza de verdad.
+- **Recepción**: tabla de transiciones de estado (`reservado→en_curso|cancelado`, `en_curso→finalizado|cancelado`); check-in bloquea la habitación y exige `disponible`; cancelar una reserva no toca la habitación; `Recepcion::checkout()` atómico (lock → saldo → pago → finalizar); la tarifa debe ser del tipo de la habitación y no se edita en una estancia; `montopagado` inicial según método de pago; `cambiarHabitacion` comprueba solape en destino; reservas futuras sobre habitaciones ocupadas/por limpiar permitidas con control de fechas.
+- **Folio**: `Pago::registrarLinea()` participa de una transacción abierta; recepciones cerradas aceptan solo reversos; `getKpisDia` ya no cuenta pagos de equipaje.
+- **Habitaciones y limpieza**: una habitación con estancia `en_curso` solo puede estar `ocupada`; completar/verificar una limpieza libera la habitación (`limpieza→disponible`); una asignación verificada no se reabre; un usuario no administrador opera solo sus asignaciones y no verifica.
+- **Equipaje**: número de ticket protegido con `GET_LOCK` contra duplicados concurrentes.
+- **Servicio de baño**: descuento de stock y alta del servicio en una sola transacción; el baño debe estar `disponible`.
+- **Productos**: el stock ya no se edita en el formulario (solo por movimientos).
+- **Ventas**: mensajes de stock insuficiente con nombre y disponible; listener de descuento y toggle Único/Mixto corregidos.
+- **Clientes, compras, categorías**: eventos delegados para que los botones funcionen en páginas siguientes del DataTable; `show.php` de clientes sin `onclick` inline; redirecciones de personas a `views/clientes`.
+- `config/conexion.php` con `charset=utf8mb4`; `config/env.php` ignora líneas sin `=`; `session.php` reutiliza `loadEnv()`.
+
+### Changed
+
+- **Los datos de texto se guardan crudos y se escapan al mostrarlos**: los 16 `sanitizarDatos()` solo hacen `trim()` (antes `htmlspecialchars()` escapaba en cada edición: `A &amp;amp; B`, y rompía contraseñas con caracteres especiales). Nuevo `escapeHtml()` en `common-utils.js` aplicado a los diálogos SweetAlert y `.html()` de ~15 módulos; el navbar y los PDF de recepción, equipaje y ventas escapan cliente, usuario y descripción; los toasts usan `titleText`.
+- `AsignacionLimpieza::validarDatos()` captura excepciones de BD en vez de propagarlas.
+- Selector de cliente de ventas solo lista clientes activos; el precio unitario es de solo lectura.
+
+### Docs
+
+- `CLAUDE.md`: convenciones de datos crudos con escape en salida, sesión viva vs. usuario activo, privilegios de usuarios, transiciones y check-out de recepción, y reutilización de parámetros nombrados en PDO; correcciones sobre `ImagenService` (sin redimensionado automático).
+- `README.md`, `PROMPTS.md`, `.env.example`: versión 1.7.0 y notas de seguridad/migración.
+
+### Migración
+
+1. Restricción única de permisos (en BD existentes, comprobar antes que no haya duplicados):
+
+   ```sql
+   ALTER TABLE `permiso_usuario` ADD UNIQUE KEY `uq_permiso_usuario` (`idusuario`,`idpermiso`);
+   ```
+
+2. Si la BD tiene texto guardado con el esquema anterior (`&amp;`, `&#039;`, `&quot;`, `&lt;`, `&gt;`), des-escaparlo **una sola vez** con `html_entity_decode(valor, ENT_QUOTES)` en las columnas de texto (nombres, descripciones, observaciones). No repetir el paso.
+3. Apache debe tener `AllowOverride All` para que el nuevo `.htaccess` se aplique.
+
 ## [1.6.1] - 2026-09-29
 
 Refactor del frontend del módulo Productos para alinearlo con los patrones ya establecidos en Recepción y Habitaciones (helpers únicos de estado, partials, flujo único de cambio de estado y CSS propio), y extensión a todo el proyecto de la clase de área táctil `.btn-touch` y del helper de loading `mostrarCarga()`. Sin cambios de esquema.
@@ -505,6 +554,7 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.7.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.6.1...1.7.0
 [1.6.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.6.0...1.6.1
 [1.6.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.5.0...1.6.0
 [1.5.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.4.1...1.5.0

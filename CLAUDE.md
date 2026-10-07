@@ -60,7 +60,7 @@ $this->conexion = Conexion::getInstance()->getConnection();
 ### Capa de Servicios (`/services/`)
 
 - `AuthorizationService.php` - Verificación de permisos y RBAC
-- `ImagenService.php` - Subida de imágenes, validación (límite 5MB), redimensionado con proporción
+- `ImagenService.php` - Subida de imágenes y validación (límite 5MB). Guarda la imagen tal cual; `redimensionarImagen()` (miniaturas) existe pero ningún flujo la invoca
 - `literal.php` - Conversión de números a letras para moneda boliviana
 
 ### Punto de Entrada
@@ -244,12 +244,21 @@ Tras una pasada de endurecimiento de seguridad en todo el código, todo endpoint
 
 - **`idusuario` en ventas siempre de `$_SESSION['usuario_id']`:** el endpoint de creación (y `anular_venta.php`) no aceptan `idusuario` del cliente. El recibo `views/ventas/recibo.php` (página standalone imprimible TCPDF 80mm, permitida por la excepción de `<style>`) verifica `requireLogin()` + permiso `ventas` **+ propiedad** (admin OR `$venta['idusuario'] === $_SESSION['usuario_id']`) antes de generar el PDF y muestra el estado de la venta (incl. anulada con aviso).
 
+- **Datos de texto se guardan crudos y se escapan al mostrarlos (nunca al guardar):** los `sanitizarDatos()` de los modelos solo hacen `trim()`; guardar `htmlspecialchars()` en BD provocaba escape acumulativo en cada edición (`A &amp;amp; B`) y rompía contraseñas con `& < > " '`. Toda salida HTML escapa: `htmlspecialchars($v ?? '')` en PHP (incluido el navbar y los HTML de TCPDF en los recibos) y `escapeHtml()` de `common-utils.js` en JS cuando un dato de BD/`data-*` entra en `title`/`html` de SweetAlert o en `.html()`/`.append()`. Los toasts usan `titleText` (texto plano). Filas guardadas con el esquema anterior contienen entidades (`&amp;`, `&#039;`…): des-escapar con `html_entity_decode` una sola vez al desplegar en una BD con datos viejos.
+- **Sesión viva ≠ usuario activo:** `requireLogin()` consulta `usuarios.estado` (`usuarioSigueActivo()`) y destruye la sesión si el usuario fue desactivado; `AuthorizationService::tienePermiso()` exige usuario activo. Las sesiones solo las inicia `session.php` (cookie `HttpOnly` + `SameSite=Lax`, `use_strict_mode`); no llamar `session_start()` suelto antes. El logout lleva `csrf_token` en la URL.
+- **Gestión de usuarios (`UsuarioController::validarPrivilegios()`):** `cargo` ∈ {Administrador, Recepcionista, Limpieza}; solo un Administrador asigna el cargo Administrador o modifica a un administrador; nadie cambia su propio cargo, estado ni permisos.
+- **Recepción: transiciones y check-out.** `Recepcion::cambiarEstado()` solo permite `reservado→en_curso|cancelado` y `en_curso→finalizado|cancelado`; el check-in bloquea la habitación y la pasa a `ocupada`; cancelar una reserva no toca la habitación. `finalizado` solo por `Recepcion::checkout()` (una transacción: lock recepción → saldo → pago → finalizar). `Pago::registrarLinea()` y `cambiarEstado()` participan de una transacción abierta si existe. En cambio de habitación y en el alta se comprueba `existeSolape()`, y la tarifa debe ser del tipo de la habitación. La tarifa de una estancia no se edita. Una habitación con estancia `en_curso` solo puede estar `ocupada` (`Habitacion::cambiarEstado()`); completar/verificar una limpieza libera la habitación (`limpieza→disponible`).
+- **Compras, baño y equipaje: dinero y estado desde el servidor.** `CompraController` toma `idusuario` de la sesión; solo un Administrador crea una compra `completada`; `Compra::completar()` (solo desde `pendiente`) y `cancelar()` bloquean filas con `FOR UPDATE` y `cancelar()` rechaza si el stock actual es menor que lo comprado. El stock de `productos` solo cambia por movimientos (venta, compra, servicio), no por el formulario de edición. Servicio de baño: total desde `bano.precio`, `metodopago` en lista blanca, stock y alta del servicio en una transacción. Equipaje: estado inicial siempre `almacenado` y número de ticket serializado con `GET_LOCK('hotelflow_equipaje_ticket')`.
+- **`.htaccess` raíz protege código y secretos:** `Options -Indexes`, 404 para `.git`/`.env`/`.claude`, bloqueo de `sql|md|log|lock|json|sh|yml|yaml|composer.*|LICENSE` y de `config/`, `models/`, `services/`, `database/`. Requiere `AllowOverride All`; al añadir un directorio con código no web, sumarlo a la regla.
+- **`permiso_usuario` tiene `UNIQUE (idusuario, idpermiso)`:** `asignarPermiso()` usa `INSERT ... ON DUPLICATE KEY UPDATE estado = 1`; no insertar permisos sin esa cláusula.
+- **MySQL/PDO sin emulación de prepares:** un parámetro nombrado no puede repetirse en la misma consulta (`HY093`); `existeSolape()` fallaba en silencio por eso. Usar nombres distintos (`:excluir_nulo`/`:excluir_id`).
+
 ## Notas Importantes
 
 - Toda la interfaz está en Español
 - Zona horaria: America/La_Paz (Bolivia)
 - Generación de PDF usa TCPDF en `libs/TCPDF-main/`
-- Subida de imágenes soporta jpg, png, gif, webp con redimensionado automático
+- Subida de imágenes soporta jpg, png, gif, webp (sin redimensionado automático)
 - Manejo de sesión y verificación de auth están en `views/layouts/session.php`
 - Variable global `$URL` contiene la ruta base de la aplicación
 - **README = espejo del código (capturas y secciones), actualizado en el mismo commit:** `README.md` solo puede describir vistas/módulos que existan, y los PNG de `public/img/screenshots/` deben corresponder a la UI actual. Al refactorizar/rediseñar una vista con captura, o al eliminar un módulo, actualizar README de inmediato: regenerar el PNG y borrar la sección/captura de lo que ya no existe (no dejar "docs colgantes" de módulos eliminados). Regeneración con Playwright (`playwright-cli`, viewport 1920px, login `admin@hotelflow.local`/`admin123`; primera vez en una máquina: `playwright-cli install-browser chrome-for-testing`): recorrer la vista en el navegador y **verificar por DOM que los encabezados/estados correspondan al diseño actual** antes de sobrescribir, y conservar la captura existente si la nueva resulta con menos contenido (p. ej. un gráfico que hoy está vacío por falta de datos de prueba). Caso real 2026-09-27: 3 de 6 capturas venían del 03-jul (anteriores a los refactors de habitaciones y ventas) y el README seguía publicando el módulo Reportes, eliminado en 1.4.0.

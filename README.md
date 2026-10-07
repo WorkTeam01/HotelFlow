@@ -4,7 +4,7 @@
 
 **Sistema integral para la administración de establecimientos hoteleros**
 
-[![Versión](https://img.shields.io/badge/Versión-1.6.1-blue?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/Versión-1.7.0-blue?style=flat-square)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.4+-003545?style=flat-square&logo=mariadb&logoColor=white)](https://mariadb.org)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-4-7952B3?style=flat-square&logo=bootstrap&logoColor=white)](https://getbootstrap.com)
@@ -135,6 +135,8 @@ http://localhost/HotelFlow/
 **Credenciales por defecto:** `admin@hotelflow.local` / `admin123` (el campo de login pide correo o número de documento, no un nombre de usuario)
 
 > **Importante:** Cambiar las credenciales inmediatamente después del primer acceso.
+>
+> **Servidor:** el `.htaccess` de la raíz protege `config/`, `models/`, `services/`, `database/` y archivos sensibles; Apache necesita `AllowOverride All`. Al actualizar desde una versión anterior, revisa los pasos de migración en el [CHANGELOG](CHANGELOG.md).
 
 ## Arquitectura
 

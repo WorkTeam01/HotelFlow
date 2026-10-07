@@ -69,6 +69,10 @@ _______________
 - Productos: el estado sale de ProductoController::estadoProducto / estadosProducto (y estadoMovimiento / decorarMovimientos, calcularInventario, calcularRentabilidad, umbralesMargen); activar/desactivar es un flujo unico (cambiar-estado-productos.js, .cambiar-estado-producto) por POST + CSRF a desactivar_producto.php, con el estado recalculado desde la BD; la logica de formulario vive en producto-form.js y los umbrales de margen llegan por data-margen-* (PRODUCTOS_MARGEN_*), nunca hardcodeados
 - Areas tactiles >=44px en botones de accion: clase global .btn-touch de public/css/core/styles.css; no crear copias por modulo (.rec-touch/.hab-touch/.prod-touch ya no existen)
 - Loading de acciones CRUD: mostrarCarga(titulo, texto) de common-utils.js antes de disparar la peticion (todo camino de respuesta termina en Swal/showToast); no escribir Swal.showLoading() a mano ni inventar helpers locales
+- Texto de usuario se guarda crudo (sanitizarDatos solo hace trim) y se escapa al mostrar: htmlspecialchars($v ?? '') en PHP/PDF y escapeHtml() de common-utils.js en JS (title/html de Swal, .html()); toasts con titleText
+- Sesion: solo session.php inicia sesiones; requireLogin() verifica usuario activo; logout y acciones por GET llevan csrf_token. Usuarios: UsuarioController::validarPrivilegios() (solo un admin asigna/modifica administradores; nadie cambia su propio cargo/estado/permisos)
+- Recepcion: transiciones de estado solo via Recepcion::cambiarEstado() y checkout() atomico; existeSolape() en alta y cambio de habitacion; PDO sin emulacion: nunca repetir un parametro nombrado en la misma consulta (HY093)
+- Compras/baño/equipaje: idusuario de la sesion, montos desde precios reales en BD, estados validados contra el valor actual (Compra::completar/cancelar con FOR UPDATE); stock de producto solo por movimientos
 - Resaltado de sidebar en subpaginas de una seccion: sidebarEnSeccion() (match por prefijo), no sidebarEsActivo() (match exacto)
 
 [Formato de salida]
@@ -284,5 +288,5 @@ Preparar el proyecto para publicacion open source:
 
 ---
 
-_Ultima actualizacion: 2026-09-29_
+_Ultima actualizacion: 2026-10-07_
 _Mantener sincronizado con CLAUDE.md cuando cambie arquitectura o flujo._
