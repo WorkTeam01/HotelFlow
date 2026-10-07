@@ -59,9 +59,7 @@ try {
     }
 
     // Verificar sesión
-    if (!isset($_SESSION['usuario_id'])) {
-        die("Error: Sesión no iniciada");
-    }
+    requireLogin();
 
     // Verificar permisos
     $idusuario = $_SESSION['usuario_id'];
@@ -108,9 +106,9 @@ try {
 
     // Extraer datos principales con validación
     // FUENTE: Base de datos tabla almacenamiento_equipaje + persona + usuarios + precio_equipaje
-    $cliente = $equipaje['cliente']['nombre_completo'] ?? 'Cliente no disponible';
+    $cliente = htmlspecialchars($equipaje['cliente']['nombre_completo'] ?? 'Cliente no disponible', ENT_QUOTES, 'UTF-8');
     $codigo_ticket = $equipaje['codigo_ticket'] ?? 'Sin código';
-    $descripcion = $equipaje['descripcion'] ?? 'Equipaje personal';
+    $descripcion = htmlspecialchars($equipaje['descripcion'] ?? 'Equipaje personal', ENT_QUOTES, 'UTF-8');
     $cantidad_piezas = $equipaje['cantidad_piezas'] ?? 1;
     $tamano_equipaje = $equipaje['equipaje']['tamano'] ?? 'No especificado';
     $monto = $equipaje['monto'] ?? 0;
@@ -127,7 +125,7 @@ try {
     ];
 
     // Obtener usuario que registró - FUENTE: Base de datos tabla usuarios
-    $usuario_registro = $equipaje['usuario']['nombre_completo'] ?? $_SESSION['usuario_nombre'] ?? 'Usuario no disponible';
+    $usuario_registro = htmlspecialchars($equipaje['usuario']['nombre_completo'] ?? $_SESSION['usuario_nombre'] ?? 'Usuario no disponible', ENT_QUOTES, 'UTF-8');
 
     // Create PDF
     $is_mobile = isMobile();

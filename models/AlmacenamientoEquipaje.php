@@ -177,6 +177,25 @@ class AlmacenamientoEquipaje
      */
     public function crear($datos)
     {
+        // El código consecutivo se calcula con MAX+1; el lock evita que dos altas simultáneas
+        // generen el mismo ticket (se libera después del commit/rollback)
+        $lockAdquirido = false;
+        try {
+            $lockAdquirido = (int)$this->conexion->query("SELECT GET_LOCK('hotelflow_equipaje_ticket', 5)")->fetchColumn() === 1;
+            if (!$lockAdquirido) {
+                $this->lastError = 'El sistema está ocupado registrando otro equipaje. Intente nuevamente.';
+                return false;
+            }
+            return $this->crearConTicket($datos);
+        } finally {
+            if ($lockAdquirido) {
+                $this->conexion->query("SELECT RELEASE_LOCK('hotelflow_equipaje_ticket')");
+            }
+        }
+    }
+
+    private function crearConTicket($datos)
+    {
         require_once __DIR__ . '/Pago.php';
 
         try {
@@ -450,7 +469,7 @@ class AlmacenamientoEquipaje
                 if (trim($valor) === '') {
                     $datosSanitizados[$clave] = null;
                 } else {
-                    $datosSanitizados[$clave] = htmlspecialchars(trim($valor), ENT_QUOTES, 'UTF-8');
+                    $datosSanitizados[$clave] = trim($valor);
                 }
             } else {
                 $datosSanitizados[$clave] = $valor;

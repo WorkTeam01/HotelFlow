@@ -106,9 +106,17 @@ class ServicioBanoController
      */
     private function prepararDatosServicio($post_data)
     {
-        // Calcular el cambio
-        $total = isset($post_data['total']) ? (float)$post_data['total'] : 0;
-        $pagorecibido = isset($post_data['pagorecibido']) ? (float)$post_data['pagorecibido'] : 0;
+        // El total sale del precio del baño en BD, nunca del cliente
+        $idbano = isset($post_data['idbano']) ? (int)$post_data['idbano'] : 0;
+        $total = $this->modelo->getPrecioBano($idbano) ?? 0;
+        $metodopago = $post_data['metodopago'] ?? 'Efectivo';
+        if (!in_array($metodopago, ['Efectivo', 'QR', 'OTROS'], true)) {
+            $metodopago = 'Efectivo';
+        }
+        // Solo en efectivo hay un monto recibido distinto del total
+        $pagorecibido = $metodopago === 'Efectivo' && isset($post_data['pagorecibido'])
+            ? (float)$post_data['pagorecibido']
+            : $total;
         $cambio = max(0, $pagorecibido - $total); // Asegurar que el cambio no sea negativo
 
         $datos = [
@@ -117,7 +125,7 @@ class ServicioBanoController
             'idcliente' => isset($post_data['idcliente']) && !empty($post_data['idcliente']) ? (int)$post_data['idcliente'] : null,
             'tipo_cliente' => isset($post_data['tipo_cliente']) ? $post_data['tipo_cliente'] : 'Publico',
             'total' => $total,
-            'metodopago' => isset($post_data['metodopago']) ? $post_data['metodopago'] : 'Efectivo', // Valor por defecto
+            'metodopago' => $metodopago,
             'pagorecibido' => $pagorecibido,
             'cambio' => $cambio,
             'fecha' => isset($post_data['fecha']) ? $post_data['fecha'] : date('Y-m-d H:i:s')
@@ -147,6 +155,9 @@ class ServicioBanoController
 
             // Validar datos en el modelo
             $errores = $this->modelo->validarDatos($datos);
+            if (empty($errores) && $datos['pagorecibido'] < $datos['total']) {
+                $errores[] = 'El pago recibido no cubre el total del servicio';
+            }
 
             if (!empty($errores)) {
                 return ['success' => false, 'message' => $errores[0], 'icon' => 'error', 'redirect' => 'create.php'];
@@ -186,9 +197,11 @@ class ServicioBanoController
             }
 
             // Intentar reducir el stock del producto
+            $this->modelo->iniciarTransaccion();
             $resultadoReduccion = $this->productoModelo->reducirStock($producto['idproducto']);
 
             if ($resultadoReduccion === false) {
+                $this->modelo->revertirTransaccion();
                 return [
                     'success' => false,
                     'message' => 'No se puede crear el servicio: Error al reducir stock de "Rollo de papel": ' . $this->productoModelo->getLastError(),
@@ -199,6 +212,7 @@ class ServicioBanoController
 
             // Si llegamos aquí, el stock se redujo correctamente, ahora crear el servicio
             if ($this->modelo->crear($datos)) {
+                $this->modelo->confirmarTransaccion();
                 $mensaje = 'Servicio de baño registrado correctamente.';
 
                 // Verificar si hay alerta de stock bajo
@@ -215,8 +229,8 @@ class ServicioBanoController
                     'redirect' => 'index.php'
                 ];
             } else {
-                // Si no se pudo crear el servicio, intentar restaurar el stock
-                $this->restaurarStock($producto['idproducto']);
+                // El stock descontado se deshace junto con el servicio (misma transacción)
+                $this->modelo->revertirTransaccion();
 
                 return [
                     'success' => false,
@@ -226,6 +240,7 @@ class ServicioBanoController
                 ];
             }
         } catch (Exception $e) {
+            $this->modelo->revertirTransaccion();
             $this->logError('Error inesperado al crear servicio de baño', $e);
             return [
                 'success' => false,
@@ -289,9 +304,11 @@ class ServicioBanoController
             }
 
             // Intentar reducir el stock
+            $this->modelo->iniciarTransaccion();
             $resultadoReduccion = $this->productoModelo->reducirStock($producto['idproducto']);
 
             if ($resultadoReduccion === false) {
+                $this->modelo->revertirTransaccion();
                 return [
                     'success' => false,
                     'message' => 'Error al reducir stock de "Rollo de papel": ' . $this->productoModelo->getLastError(),
@@ -303,6 +320,7 @@ class ServicioBanoController
             $resultado = $this->modelo->crearServicioRapido($idbano, $_SESSION['usuario_id']);
 
             if ($resultado) {
+                $this->modelo->confirmarTransaccion();
                 $mensaje = 'Servicio de baño registrado correctamente.';
 
                 // Verificar alerta de stock bajo
@@ -319,8 +337,7 @@ class ServicioBanoController
                     'total' => $resultado['total']
                 ];
             } else {
-                // Si no se pudo crear el servicio, restaurar el stock
-                $this->restaurarStock($producto['idproducto']);
+                $this->modelo->revertirTransaccion();
 
                 return [
                     'success' => false,
@@ -329,29 +346,13 @@ class ServicioBanoController
                 ];
             }
         } catch (Exception $e) {
+            $this->modelo->revertirTransaccion();
             $this->logError('Error inesperado al crear servicio de baño rápido', $e);
             return [
                 'success' => false,
                 'message' => 'Ocurrió un error inesperado. Intente nuevamente.',
                 'icon' => 'error'
             ];
-        }
-    }
-
-    /**
-     * Restaurar stock en caso de error al crear servicio
-     * 
-     * @param int $idproducto ID del producto
-     * @return bool
-     */
-    private function restaurarStock($idproducto)
-    {
-        try {
-            // Usar el método incrementarStock del modelo Producto
-            return $this->productoModelo->incrementarStock($idproducto, 1);
-        } catch (Exception $e) {
-            $this->logError('Error al restaurar stock', $e);
-            return false;
         }
     }
 
@@ -490,6 +491,9 @@ class ServicioBanoController
 
         // Validar datos en el modelo
         $errores = $this->modelo->validarDatos($datos);
+        if (empty($errores) && $datos['pagorecibido'] < $datos['total']) {
+            $errores[] = 'El pago recibido no cubre el total del servicio';
+        }
 
         if (!empty($errores)) {
             return ['success' => false, 'message' => $errores[0], 'icon' => 'error', 'redirect' => "update.php?id=$id"];

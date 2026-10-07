@@ -85,8 +85,8 @@ $(document).ready(function () {
 
         var mensaje = `
             <div class="text-left">
-                <p><strong><i class="fas fa-user"></i> Cliente:</strong> ${clienteNombre}</p>
-                <p><strong><i class="fas fa-sticky-note"></i> Descripción:</strong> ${descripcion}</p>
+                <p><strong><i class="fas fa-user"></i> Cliente:</strong> ${escapeHtml(clienteNombre)}</p>
+                <p><strong><i class="fas fa-sticky-note"></i> Descripción:</strong> ${escapeHtml(descripcion)}</p>
                 <p><strong><i class="fas fa-tag"></i> Estado:</strong> ${estado}</p>
             </div>
         `;

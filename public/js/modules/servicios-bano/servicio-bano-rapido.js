@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Mostrar confirmación
             Swal.fire({
                 title: 'Confirmar Servicio',
-                html: `¿Registrar uso de baño <strong>${nombreBano}</strong>?<br>Precio: <strong>Bs. ${precioBano}</strong>`,
+                html: `¿Registrar uso de baño <strong>${escapeHtml(nombreBano)}</strong>?<br>Precio: <strong>Bs. ${precioBano}</strong>`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Sí, registrar',
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     Toast.fire({
                         icon: 'success',
-                        title: `Servicio de ${nombreBano} registrado correctamente`
+                        title: `Servicio de ${escapeHtml(nombreBano)} registrado correctamente`
                     }).then(() => {
                         // Recargar la página para actualizar la lista
                         location.reload();

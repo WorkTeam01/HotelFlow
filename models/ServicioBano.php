@@ -62,7 +62,7 @@ class ServicioBano
         foreach ($datos as $key => $value) {
             if (is_string($value)) {
                 // Eliminar espacios adicionales y caracteres potencialmente peligrosos
-                $sanitized[$key] = trim(htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
+                $sanitized[$key] = trim($value);
             } else {
                 $sanitized[$key] = $value;
             }
@@ -434,6 +434,48 @@ class ServicioBano
         }
     }
 
+    public function iniciarTransaccion()
+    {
+        if (!$this->conexion->inTransaction()) {
+            $this->conexion->beginTransaction();
+        }
+    }
+
+    public function confirmarTransaccion()
+    {
+        if ($this->conexion->inTransaction()) {
+            $this->conexion->commit();
+        }
+    }
+
+    public function revertirTransaccion()
+    {
+        if ($this->conexion->inTransaction()) {
+            $this->conexion->rollBack();
+        }
+    }
+
+    /**
+     * Precio vigente de un baño en BD (el total de un servicio nunca viene del cliente)
+     *
+     * @param int $idbano
+     * @return float|null null si el baño no existe
+     */
+    public function getPrecioBano($idbano)
+    {
+        try {
+            $stmt = $this->conexion->prepare("SELECT precio FROM bano WHERE idbano = :idbano");
+            $stmt->bindValue(':idbano', (int)$idbano, PDO::PARAM_INT);
+            $stmt->execute();
+            $precio = $stmt->fetchColumn();
+            return $precio === false ? null : (float)$precio;
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return null;
+        }
+    }
+
     /**
      * Crea un servicio de baño básico con precio predeterminado desde el baño
      * 
@@ -445,16 +487,21 @@ class ServicioBano
     {
         try {
             // Obtener el precio del baño
-            $query = "SELECT precio FROM bano WHERE idbano = :idbano";
+            $query = "SELECT precio, estado FROM bano WHERE idbano = :idbano";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':idbano', $idbano, PDO::PARAM_INT);
             $stmt->execute();
-            $precio = $stmt->fetchColumn();
+            $bano = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($precio === false) {
+            if ($bano === false) {
                 $this->lastError = "No se encontró el baño con ID $idbano";
                 return false;
             }
+            if ($bano['estado'] !== 'disponible') {
+                $this->lastError = 'El baño seleccionado no está disponible.';
+                return false;
+            }
+            $precio = $bano['precio'];
 
             // Crear los datos del servicio
             $datos = [

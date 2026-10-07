@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const reactivar = accion === 'iniciado';
 
             const tituloAlerta = reactivar
-                ? `¿Reactivar ${nombreServicio}?`
-                : `¿Cancelar ${nombreServicio}?`;
+                ? `¿Reactivar ${escapeHtml(nombreServicio)}?`
+                : `¿Cancelar ${escapeHtml(nombreServicio)}?`;
             const textoAlerta = reactivar
                 ? 'El servicio se marcará como iniciado.'
                 : 'El servicio se marcará como cancelado.';

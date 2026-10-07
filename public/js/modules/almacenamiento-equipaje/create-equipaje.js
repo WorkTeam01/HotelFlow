@@ -148,12 +148,12 @@ $(document).ready(function () {
 
         var mensaje = `
             <div class="text-left">
-                <p><strong><i class="fas fa-user"></i> Cliente:</strong> ${clienteNombre}</p>
-                <p><strong><i class="fas fa-luggage-cart"></i> Tipo de equipaje:</strong> ${tipoEquipaje}</p>
+                <p><strong><i class="fas fa-user"></i> Cliente:</strong> ${escapeHtml(clienteNombre)}</p>
+                <p><strong><i class="fas fa-luggage-cart"></i> Tipo de equipaje:</strong> ${escapeHtml(tipoEquipaje)}</p>
                 <p><strong><i class="fas fa-box"></i> Cantidad:</strong> ${cantidad} pieza(s)</p>
                 <p><strong><i class="fas fa-money-bill"></i> Monto total:</strong> Bs. ${monto.toFixed(2)}</p>
                 <p><strong><i class="fas fa-credit-card"></i> Método de pago:</strong> ${$('#metodopago').val()}</p>
-                <p><strong><i class="fas fa-ticket-alt"></i> Código de ticket:</strong> ${$('#codigo_ticket').val()}</p>
+                <p><strong><i class="fas fa-ticket-alt"></i> Código de ticket:</strong> ${escapeHtml($('#codigo_ticket').val())}</p>
             </div>
         `;
 

@@ -253,7 +253,7 @@ class AlmacenamientoEquipajeController
             'idpequipaje' => isset($post_data['idpequipaje']) ? (int)$post_data['idpequipaje'] : 0,
             'monto' => 0, // Ignorado: se calcula server-side desde precio_equipaje
             'fechaentrada' => isset($post_data['fechaentrada']) ? $post_data['fechaentrada'] : date('Y-m-d H:i:s'),
-            'estado' => isset($post_data['estado']) ? $post_data['estado'] : 'almacenado',
+            'estado' => 'almacenado', // el retiro y demás estados van por cambiarEstado()
             'metodopago' => isset($post_data['metodopago']) ? $post_data['metodopago'] : 'Efectivo'
         ];
 
@@ -397,7 +397,10 @@ class AlmacenamientoEquipajeController
         $datos = [
             'idcliente' => isset($_POST['idcliente']) ? (int)$_POST['idcliente'] : $equipaje_actual['idcliente'],
             'descripcion' => isset($_POST['descripcion']) ? trim($_POST['descripcion']) : null,
-            'estado' => isset($_POST['estado']) ? $_POST['estado'] : $equipaje_actual['estado']
+            // 'retirado' solo por cambiarEstado(), que registra la fecha de salida
+            'estado' => (isset($_POST['estado']) && in_array($_POST['estado'], ['almacenado', 'perdido', 'dañado'], true))
+                ? $_POST['estado']
+                : $equipaje_actual['estado']
         ];
 
         $datos = $this->modelo->sanitizarDatos($datos);
@@ -501,6 +504,10 @@ class AlmacenamientoEquipajeController
         // Verificar que el equipaje no esté ya retirado al intentar cambiar a otro estado
         if ($equipaje['estado'] === 'retirado' && $nuevo_estado !== 'retirado') {
             return ['success' => false, 'message' => 'No se puede cambiar el estado de un equipaje ya retirado', 'icon' => 'warning'];
+        }
+
+        if ($equipaje['estado'] === $nuevo_estado) {
+            return ['success' => false, 'message' => 'El equipaje ya se encuentra en ese estado', 'icon' => 'info'];
         }
 
         if ($this->modelo->cambiarEstado($id, $nuevo_estado)) {
