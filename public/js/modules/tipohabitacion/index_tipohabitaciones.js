@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const estadoActual = this.dataset.estado;
             const nombreTipo = this.dataset.nombre;
 
-            const tituloAlerta = estadoActual == 1 ? `¿Desactivar ${nombreTipo}?` : `¿Activar ${nombreTipo}?`;
+            const tituloAlerta = estadoActual == 1 ? `¿Desactivar ${escapeHtml(nombreTipo)}?` : `¿Activar ${escapeHtml(nombreTipo)}?`;
             const textoAlerta = estadoActual == 1 ? 'Este tipo de habitación no estará disponible para asignación.' : 'El tipo de habitación estará disponible nuevamente.';
             const confirmButtonText = estadoActual == 1 ? 'Sí, desactivar' : 'Sí, activar';
             const cancelButtonText = 'Cancelar';

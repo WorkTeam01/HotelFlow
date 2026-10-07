@@ -3,11 +3,13 @@ require_once __DIR__ . '/../../controllers/tipohabitaciones/TipoHabitacionContro
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
+requireLogin();
+
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
-if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'tipos_habitacion')) {
+if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'tipohabitaciones')) {
     $_SESSION['mensaje'] = 'No tiene permisos de administrador.';
     $_SESSION['icono'] = 'error';
     header('Location: index.php');

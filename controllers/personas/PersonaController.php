@@ -122,7 +122,7 @@ class PersonaController
             global $URL;
             $_SESSION['mensaje'] = 'ID de persona no válido';
             $_SESSION['icono'] = 'error';
-            header('Location: ' . $URL . 'views/personas');
+            header('Location: ' . $URL . 'views/clientes');
             exit;
         }
 
@@ -133,7 +133,7 @@ class PersonaController
             global $URL;
             $_SESSION['mensaje'] = 'Persona no encontrada';
             $_SESSION['icono'] = 'error';
-            header('Location: ' . $URL . 'views/personas');
+            header('Location: ' . $URL . 'views/clientes');
             exit;
         }
 

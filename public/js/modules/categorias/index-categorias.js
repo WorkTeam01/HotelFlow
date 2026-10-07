@@ -282,7 +282,7 @@ $(document).ready(function () {
     });
 
     // Manejar cambio de estado
-    $('.cambiar-estado').on('click', function () {
+    $(document).on('click', '.cambiar-estado', function () {
         const id = $(this).data('id');
         const estadoActual = $(this).data('estado-actual');
         const boton = $(this);

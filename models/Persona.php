@@ -57,7 +57,7 @@ class Persona
         $sanitized = [];
         foreach ($datos as $key => $value) {
             if (is_string($value)) {
-                $sanitized[$key] = trim(htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
+                $sanitized[$key] = trim($value);
             } else {
                 $sanitized[$key] = $value;
             }

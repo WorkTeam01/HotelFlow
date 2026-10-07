@@ -136,7 +136,7 @@ include_once '../layouts/header.php';
                     <div class="card-body p-0">
                         <ul class="nav nav-pills flex-column">
                             <li class="nav-item">
-                                <button onclick="cambiarEstado(<?= $persona['idpersona']; ?>, <?= $persona['estado']; ?>)" class="nav-link">
+                                <button type="button" class="nav-link cambiar-estado-persona" data-id="<?= (int) $persona['idpersona']; ?>" data-estado="<?= (int) $persona['estado']; ?>">
                                     <?php if ($persona['estado'] == 1): ?>
                                         <i class="fas fa-user-slash text-danger"></i> Desactivar Cliente
                                     <?php else: ?>

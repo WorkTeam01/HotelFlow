@@ -62,7 +62,7 @@ class Bano
         foreach ($datos as $key => $value) {
             if (is_string($value)) {
                 // Eliminar espacios adicionales y caracteres potencialmente peligrosos
-                $sanitized[$key] = trim(htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
+                $sanitized[$key] = trim($value);
             } else {
                 $sanitized[$key] = $value;
             }

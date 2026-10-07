@@ -191,7 +191,7 @@ class PrecioEquipaje
                 if (trim($valor) === '') {
                     $datosSanitizados[$clave] = null;
                 } else {
-                    $datosSanitizados[$clave] = htmlspecialchars(trim($valor), ENT_QUOTES, 'UTF-8');
+                    $datosSanitizados[$clave] = trim($valor);
                 }
             } else {
                 $datosSanitizados[$clave] = $valor;
