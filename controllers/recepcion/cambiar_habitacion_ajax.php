@@ -40,7 +40,7 @@ $resultado = $controller->cambiarHabitacion(
     $idrecepcion,
     $idHabitacionDestino,
     $idusuario,
-    $motivo !== null ? htmlspecialchars($motivo, ENT_QUOTES, 'UTF-8') : null
+    $motivo
 );
 
 if ($resultado['success']) {

@@ -59,9 +59,7 @@ try {
     }
 
     // Verificar sesión
-    if (!isset($_SESSION['usuario_id'])) {
-        die("Error: Sesión no iniciada");
-    }
+    requireLogin();
 
     // Verificar permisos
     $idusuario = $_SESSION['usuario_id'];
@@ -109,7 +107,7 @@ try {
     $folio_saldo = $folio['saldo'] ?? ['total_cargos' => 0, 'total_pagado' => 0, 'saldo' => 0];
 
     // Extraer datos principales con validación
-    $cliente = ($recepcion['nombre_cliente'] ?? '') . ' ' . ($recepcion['apellido_cliente'] ?? '');
+    $cliente = htmlspecialchars(($recepcion['nombre_cliente'] ?? '') . ' ' . ($recepcion['apellido_cliente'] ?? ''), ENT_QUOTES, 'UTF-8');
     $cliente = trim($cliente) ?: 'Cliente no disponible';
     $cliente = htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8');
 

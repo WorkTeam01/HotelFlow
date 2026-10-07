@@ -193,8 +193,8 @@ window.RecepcionModule.Create = (function ($) {
         Swal.fire({
             title: '¿Confirmar reserva?',
             html: '<div class="text-left">' +
-                '<p><strong>Habitación:</strong> N° ' + $room.data('numero') + '</p>' +
-                '<p><strong>Huésped:</strong> ' + ($cliente.find('option:selected').data('nombre') || '') + '</p>' +
+                '<p><strong>Habitación:</strong> N° ' + escapeHtml($room.data('numero')) + '</p>' +
+                '<p><strong>Huésped:</strong> ' + escapeHtml($cliente.find('option:selected').data('nombre') || '') + '</p>' +
                 '<p><strong>Total:</strong> ' + $('#rs-total').text() + '</p>' +
                 '<p><strong>Saldo:</strong> ' + $('#rs-saldo').text() + '</p></div>',
             icon: 'question',

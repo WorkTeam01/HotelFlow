@@ -200,8 +200,13 @@ class Pago
             return false;
         }
 
+        $propia = false;
         try {
-            $this->conexion->beginTransaction();
+            // Si ya hay una transacción abierta (check-out atómico), se participa de ella
+            $propia = !$this->conexion->inTransaction();
+            if ($propia) {
+                $this->conexion->beginTransaction();
+            }
 
             // Bloquear la recepción para evitar folios inconsistentes por escrituras concurrentes
             $stmtRecepcion = $this->conexion->prepare(
@@ -212,27 +217,37 @@ class Pago
             $recepcion = $stmtRecepcion->fetch(PDO::FETCH_ASSOC);
 
             if (!$recepcion) {
-                $this->conexion->rollBack();
+                if ($propia) {
+                    $this->conexion->rollBack();
+                }
                 $this->lastError = 'La recepción indicada no existe.';
                 return false;
             }
 
-            if ($recepcion['estado'] === 'cancelado') {
-                $this->conexion->rollBack();
-                $this->lastError = 'No se pueden registrar movimientos sobre una recepción cancelada.';
+            // Una estancia cerrada solo admite reversos (p. ej. reembolsar lo cobrado en una
+            // reserva cancelada); cargos y pagos nuevos no tienen sentido
+            if (in_array($recepcion['estado'], ['cancelado', 'finalizado'], true) && $tipo !== 'reverso') {
+                if ($propia) {
+                    $this->conexion->rollBack();
+                }
+                $this->lastError = 'Una recepción cancelada o finalizada solo admite reversos.';
                 return false;
             }
 
             $saldoPrevio = $this->calcularSaldo($idrecepcion, true);
 
             if ($tipo === 'pago' && $monto > $saldoPrevio['saldo'] + 0.01) {
-                $this->conexion->rollBack();
+                if ($propia) {
+                    $this->conexion->rollBack();
+                }
                 $this->lastError = 'El pago no puede ser mayor al saldo pendiente.';
                 return false;
             }
 
             if ($tipo === 'reverso' && empty($idPagoReversado)) {
-                $this->conexion->rollBack();
+                if ($propia) {
+                    $this->conexion->rollBack();
+                }
                 $this->lastError = 'Debe indicarse la línea que se está reversando.';
                 return false;
             }
@@ -255,7 +270,9 @@ class Pago
             }
 
             if (!$stmt->execute()) {
-                $this->conexion->rollBack();
+                if ($propia) {
+                    $this->conexion->rollBack();
+                }
                 error_log('[' . static::class . '] ' . implode(' ', $stmt->errorInfo()));
                 $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
                 return false;
@@ -273,16 +290,22 @@ class Pago
             $stmtCache->bindParam(':id', $idrecepcion, PDO::PARAM_INT);
 
             if (!$stmtCache->execute()) {
-                $this->conexion->rollBack();
+                if ($propia) {
+                    $this->conexion->rollBack();
+                }
                 error_log('[' . static::class . '] ' . implode(' ', $stmtCache->errorInfo()));
                 $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
                 return false;
             }
 
-            $this->conexion->commit();
+            if ($propia) {
+                $this->conexion->commit();
+            }
             return $idLinea;
         } catch (PDOException $e) {
-            $this->conexion->rollBack();
+            if ($propia) {
+                $this->conexion->rollBack();
+            }
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;

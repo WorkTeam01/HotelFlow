@@ -62,7 +62,7 @@ class AsignacionLimpieza
         foreach ($datos as $key => $value) {
             if (is_string($value)) {
                 // Eliminar espacios adicionales y caracteres potencialmente peligrosos
-                $sanitized[$key] = trim(htmlspecialchars($value, ENT_QUOTES, 'UTF-8'));
+                $sanitized[$key] = trim($value);
             } else {
                 $sanitized[$key] = $value;
             }
@@ -355,11 +355,71 @@ class AsignacionLimpieza
 
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
-            return $stmt->execute();
+            if (!$stmt->execute()) {
+                return false;
+            }
+
+            $this->liberarHabitacionSiLimpia($id, $datos['estado']);
+            return true;
         } catch (PDOException $e) {
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
+        }
+    }
+
+    /**
+     * Al completar o verificar una limpieza, la habitación vuelve a estar disponible
+     * (solo si seguía "por limpiar" y no tiene una estancia en curso). Orden de bloqueo
+     * canónico: recepcion y luego habitaciones.
+     *
+     * @param int $idasignacion
+     * @param string $estado Estado que acaba de quedar en la asignación
+     */
+    private function liberarHabitacionSiLimpia($idasignacion, $estado)
+    {
+        if (!in_array($estado, ['completada', 'verificada'], true)) {
+            return;
+        }
+
+        $transaccionPropia = false;
+        try {
+            $stmt = $this->conexion->prepare("SELECT idhabitacion FROM {$this->tabla} WHERE idasignacion = :id");
+            $stmt->bindValue(':id', (int)$idasignacion, PDO::PARAM_INT);
+            $stmt->execute();
+            $idhabitacion = $stmt->fetchColumn();
+            if (!$idhabitacion) {
+                return;
+            }
+
+            $transaccionPropia = !$this->conexion->inTransaction();
+            if ($transaccionPropia) {
+                $this->conexion->beginTransaction();
+            }
+
+            $stmtEstancia = $this->conexion->prepare("SELECT idrecepcion FROM recepcion WHERE idhabitacion = :h AND estado = 'en_curso' FOR UPDATE");
+            $stmtEstancia->bindValue(':h', (int)$idhabitacion, PDO::PARAM_INT);
+            $stmtEstancia->execute();
+            $conEstancia = $stmtEstancia->fetchColumn() !== false;
+
+            $stmtLock = $this->conexion->prepare("SELECT estado FROM habitaciones WHERE id_habitacion = :h FOR UPDATE");
+            $stmtLock->bindValue(':h', (int)$idhabitacion, PDO::PARAM_INT);
+            $stmtLock->execute();
+
+            if (!$conEstancia && $stmtLock->fetchColumn() === 'limpieza') {
+                $stmtUpd = $this->conexion->prepare("UPDATE habitaciones SET estado = 'disponible' WHERE id_habitacion = :h");
+                $stmtUpd->bindValue(':h', (int)$idhabitacion, PDO::PARAM_INT);
+                $stmtUpd->execute();
+            }
+
+            if ($transaccionPropia) {
+                $this->conexion->commit();
+            }
+        } catch (PDOException $e) {
+            if ($transaccionPropia && $this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+            error_log('[' . static::class . '] ' . $e->getMessage());
         }
     }
 
@@ -373,11 +433,25 @@ class AsignacionLimpieza
     public function actualizarEstado($id, $estado)
     {
         try {
+            // Una asignación verificada es definitiva (igual que en actualizar())
+            $stmtActual = $this->conexion->prepare("SELECT estado FROM {$this->tabla} WHERE idasignacion = :id");
+            $stmtActual->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmtActual->execute();
+            if ($stmtActual->fetchColumn() === 'verificada' && $estado !== 'verificada') {
+                $this->lastError = 'No se puede modificar una asignación que ya ha sido verificada';
+                return false;
+            }
+
             $query = "UPDATE {$this->tabla} SET estado = :estado WHERE idasignacion = :id";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':estado', $estado, PDO::PARAM_STR);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            return $stmt->execute();
+            if (!$stmt->execute()) {
+                return false;
+            }
+
+            $this->liberarHabitacionSiLimpia($id, $estado);
+            return true;
         } catch (PDOException $e) {
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
@@ -413,6 +487,16 @@ class AsignacionLimpieza
      * @return array Lista de errores encontrados
      */
     public function validarDatos($datos, $id_asignacion = null)
+    {
+        try {
+            return $this->validarDatosInterno($datos, $id_asignacion);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            return ['Ocurrió un error inesperado. Intente nuevamente.'];
+        }
+    }
+
+    private function validarDatosInterno($datos, $id_asignacion)
     {
         $errores = [];
 

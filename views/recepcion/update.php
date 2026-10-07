@@ -160,7 +160,7 @@ $etiqueta_estado = $estado_ui['label'];
                                             <i class="fas fa-tag mr-1 text-primary"></i>
                                             Tarifa <span class="text-danger">*</span>
                                         </label>
-                                        <select class="form-control select2" id="idtarifa" name="idtarifa" required>
+                                        <select class="form-control select2" id="idtarifa" required disabled>
                                             <option value="">Seleccione una tarifa</option>
                                             <?php foreach ($tarifas as $tarifa): ?>
                                                 <option value="<?= $tarifa['idtarifa']; ?>"
@@ -176,6 +176,8 @@ $etiqueta_estado = $estado_ui['label'];
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
+                                        <input type="hidden" name="idtarifa" value="<?= (int) $recepcion['idtarifa']; ?>">
+                                        <small class="form-text text-muted">La tarifa fija el cargo del folio y no se modifica aquí.</small>
                                         <div class="invalid-feedback">Por favor seleccione una tarifa</div>
                                     </div>
                                 </div>

@@ -681,6 +681,19 @@ class RecepcionController
 
         $limpios = $this->modelo->sanitizarDatos($limpios);
 
+        $actual = $this->modelo->getById($id);
+        if (!$actual) {
+            return ['success' => false, 'message' => 'Recepción no encontrada.', 'icon' => 'error'];
+        }
+        if (in_array($actual['estado'], ['finalizado', 'cancelado'], true)) {
+            return ['success' => false, 'message' => 'No se puede editar una recepción finalizada o cancelada.', 'icon' => 'error'];
+        }
+        // El cargo "Estancia" del folio se fijó con la tarifa original; cambiarla aquí
+        // desincronizaría el folio de lo que muestran el detalle y el recibo
+        if (isset($limpios['idtarifa']) && (int) $limpios['idtarifa'] !== (int) $actual['idtarifa']) {
+            return ['success' => false, 'message' => 'La tarifa de una estancia no se puede modificar.', 'icon' => 'error'];
+        }
+
         $errores = [];
         if (empty($limpios['idcliente'])) {
             $errores[] = 'El cliente es obligatorio.';
@@ -715,9 +728,7 @@ class RecepcionController
     /**
      * Check-out completo: verifica el saldo real del folio (Pago::calcularSaldo) antes
      * de finalizar. Si hay saldo pendiente y no se envía un pago que lo cubra, no finaliza.
-     * Reutiliza Pago::registrarPago() + Recepcion::cambiarEstado() (cada uno transaccional,
-     * sin SQL de dinero nuevo); si el registro del pago tuvo éxito el folio queda cuadrado
-     * aunque el cambio de estado fallara y se pueda reintentar.
+     * El cobro del saldo y la finalización ocurren en una sola transacción del modelo.
      *
      * @param int $id
      * @param int $idusuario
@@ -726,54 +737,7 @@ class RecepcionController
      */
     public function checkout(int $id, int $idusuario, ?array $pagoFinal = null): array
     {
-        require_once __DIR__ . '/../../models/Pago.php';
-        $pagoModelo = new Pago();
-
-        $recepcion = $this->modelo->getById($id);
-        if (!$recepcion) {
-            return ['success' => false, 'message' => 'Recepción no encontrada.'];
-        }
-        if ($recepcion['estado'] !== 'en_curso') {
-            return ['success' => false, 'message' => 'Solo se puede hacer check-out de una estancia en curso.'];
-        }
-
-        $saldo = (float) $pagoModelo->calcularSaldo($id)['saldo'];
-
-        if ($saldo > 0.01) {
-            if ($pagoFinal === null) {
-                return [
-                    'success' => false,
-                    'requiere_pago' => true,
-                    'saldo' => $saldo,
-                    'message' => 'Saldo pendiente Bs ' . number_format($saldo, 2),
-                ];
-            }
-
-            $monto = (float) ($pagoFinal['monto'] ?? 0);
-            $metodo = $pagoFinal['metodopago'] ?? '';
-
-            if (!in_array($metodo, ['Efectivo', 'QR', 'OTROS'], true)) {
-                return ['success' => false, 'message' => 'Método de pago no válido.', 'saldo' => $saldo];
-            }
-            if ($monto + 0.01 < $saldo) {
-                return [
-                    'success' => false,
-                    'message' => 'El pago no cubre el saldo. Saldo pendiente Bs ' . number_format($saldo - $monto, 2),
-                    'saldo' => $saldo,
-                ];
-            }
-
-            $idLinea = $pagoModelo->registrarPago($id, $saldo, $metodo, $idusuario, 'Pago de saldo (check-out)');
-            if (!$idLinea) {
-                return ['success' => false, 'message' => $pagoModelo->getLastError(), 'saldo' => $saldo];
-            }
-        }
-
-        if ($this->modelo->cambiarEstado($id, 'finalizado')) {
-            return ['success' => true, 'message' => 'Check-out realizado correctamente'];
-        }
-
-        return ['success' => false, 'message' => 'Error al finalizar la recepción: ' . $this->modelo->getLastError()];
+        return $this->modelo->checkout($id, $idusuario, $pagoFinal);
     }
 
     /**
@@ -785,10 +749,10 @@ class RecepcionController
      */
     public function cambiarEstado($id, $estado)
     {
-        if (!in_array($estado, ['reservado', 'en_curso', 'finalizado', 'cancelado'])) {
+        if (!in_array($estado, ['en_curso', 'cancelado'], true)) {
             return [
                 'success' => false,
-                'message' => 'Estado no válido',
+                'message' => 'Estado no válido. El check-out se realiza desde el folio.',
                 'icon' => 'error'
             ];
         }

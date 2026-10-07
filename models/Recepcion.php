@@ -142,7 +142,7 @@ class Recepcion
             $query = "SELECT r.*, 
                       p.nombre as nombre_cliente, p.apellidopaterno as apellido_cliente,
                       p.tipodocumento as tipodoc_cliente, p.numdocumento as numdoc_cliente,
-                      p.telefono as telefono_cliente, p.email as email_cliente,
+                      p.telefono as telefono_cliente, p.email as email_cliente, p.direccion as direccion_cliente,
                       h.numero as numero_habitacion, h.precio_base,
                       t.tipo_estancia as tipo_tarifa, t.tipo_estancia, t.duracion, t.precio as precio_tarifa,
                       u.nombre as nombre_usuario, 
@@ -188,7 +188,15 @@ class Recepcion
             $stmt->execute();
             $habitacion = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$habitacion || $habitacion['estado'] !== 'disponible') {
+            // Estado inicial: solo 'reservado' (pendiente de check-in) o 'en_curso' (check-in
+            // inmediato). Un check-in inmediato exige la habitación libre ahora; una reserva
+            // futura solo exige que no choque con otra (existeSolape) y que no esté en mantenimiento.
+            if (!in_array($datos['estado'] ?? null, ['reservado', 'en_curso'], true)) {
+                $datos['estado'] = 'en_curso';
+            }
+            $estadosPermitidos = $datos['estado'] === 'en_curso' ? ['disponible'] : ['disponible', 'ocupada', 'limpieza'];
+
+            if (!$habitacion || !in_array($habitacion['estado'], $estadosPermitidos, true)) {
                 $this->conexion->rollBack();
                 $this->lastError = "La habitación no está disponible";
                 return false;
@@ -196,7 +204,13 @@ class Recepcion
 
             // Recalcular montototal a partir del precio real de la tarifa en BD,
             // nunca confiar en el montototal enviado por el cliente
-            $stmtTarifa = $this->conexion->prepare("SELECT precio FROM tarifas WHERE idtarifa = :idtarifa AND estado = 1 FOR UPDATE");
+            // La tarifa debe corresponder al tipo de la habitación elegida
+            $stmtTarifa = $this->conexion->prepare(
+                "SELECT t.precio FROM tarifas t
+                 INNER JOIN habitaciones h ON h.id_habitacion = :idhabitacion AND h.id_tipo = t.id_tipo
+                 WHERE t.idtarifa = :idtarifa AND t.estado = 1 FOR UPDATE"
+            );
+            $stmtTarifa->bindParam(':idhabitacion', $datos['idhabitacion'], PDO::PARAM_INT);
             $stmtTarifa->bindParam(':idtarifa', $datos['idtarifa'], PDO::PARAM_INT);
             $stmtTarifa->execute();
             $tarifa = $stmtTarifa->fetch(PDO::FETCH_ASSOC);
@@ -216,7 +230,17 @@ class Recepcion
             }
 
             $datos['montototal'] = (float)$tarifa['precio'];
-            $datos['montopagado'] = $datos['montototal'];
+
+            // Solo se registra como pagado lo realmente cobrado: nada si no se eligió método,
+            // lo recibido (tope = total) en efectivo, y el total en QR/Otros (sin monto recibido)
+            $metodoCobro = $datos['metodopago'] ?? null;
+            if (empty($metodoCobro)) {
+                $datos['montopagado'] = 0.0;
+            } elseif ($metodoCobro === 'Efectivo') {
+                $datos['montopagado'] = min((float)($datos['dinero_recibido'] ?? 0), $datos['montototal']);
+            } else {
+                $datos['montopagado'] = $datos['montototal'];
+            }
 
             // El cambio se recalcula a partir del dinero recibido real y el monto total real
             if (($datos['metodopago'] ?? null) === 'Efectivo') {
@@ -224,13 +248,6 @@ class Recepcion
                 $datos['cambio'] = max(0, $dineroRecibido - $datos['montototal']);
             } else {
                 $datos['cambio'] = null;
-            }
-
-            // El estado inicial de una recepción nueva solo puede ser 'reservado' (pendiente de
-            // check-in) o 'en_curso' (check-in inmediato) — nunca 'finalizado'/'cancelado' desde
-            // el cliente; las transiciones posteriores van por el endpoint cambiarEstado()
-            if (!in_array($datos['estado'] ?? null, ['reservado', 'en_curso'], true)) {
-                $datos['estado'] = 'en_curso';
             }
 
             // Crear la recepción
@@ -256,12 +273,9 @@ class Recepcion
             $stmt->bindParam(':montopagado', $datos['montopagado'], PDO::PARAM_STR);
             $stmt->bindParam(':estado', $datos['estado'], PDO::PARAM_STR);
 
-            // Método de pago puede ser NULL
-            if (empty($datos['metodopago'])) {
-                $stmt->bindValue(':metodopago', null, PDO::PARAM_NULL);
-            } else {
-                $stmt->bindParam(':metodopago', $datos['metodopago'], PDO::PARAM_STR);
-            }
+            // La columna es NOT NULL: sin cobro inicial se guarda 'OTROS' como valor neutro
+            $metodoColumna = empty($datos['metodopago']) ? 'OTROS' : $datos['metodopago'];
+            $stmt->bindParam(':metodopago', $metodoColumna, PDO::PARAM_STR);
 
             // El cambio solo existe en pagos en efectivo
             if (isset($datos['cambio']) && $datos['metodopago'] === 'Efectivo') {
@@ -292,7 +306,7 @@ class Recepcion
             // dentro de la misma transacción. `pagos` es la fuente de verdad del folio;
             // montototal/montopagado en esta tabla quedan como cache calculado a partir de ella
             // (ver Pago::registrarLinea/calcularSaldo) y no deben modificarse fuera de este flujo.
-            $metodopagoFolio = $datos['metodopago'] ?? 'OTROS';
+            $metodopagoFolio = $metodoColumna;
             $queryCargo = "INSERT INTO pagos (idrecepcion, tipo, concepto, montototal, metodopago, idusuario)
                            VALUES (:idrecepcion, 'cargo', 'Estancia', :monto, :metodopago, :idusuario)";
             $stmtCargo = $this->conexion->prepare($queryCargo);
@@ -513,6 +527,86 @@ class Recepcion
     }
 
     /**
+     * Check-out atómico: bloquea la recepción, verifica el saldo del folio, cobra el saldo
+     * pendiente (si hay) y finaliza la estancia en UNA sola transacción, de modo que un
+     * cargo o una cancelación concurrentes no dejen la estancia finalizada con saldo.
+     *
+     * @param int $id
+     * @param int $idusuario
+     * @param array|null $pagoFinal ['monto'=>float, 'metodopago'=>'Efectivo'|'QR'|'OTROS']
+     * @return array{success:bool, message:string, requiere_pago?:bool, saldo?:float}
+     */
+    public function checkout($id, $idusuario, ?array $pagoFinal = null)
+    {
+        require_once __DIR__ . '/Pago.php';
+        $pagoModelo = new Pago();
+
+        try {
+            $this->conexion->beginTransaction();
+
+            $recepcion = $this->getByIdForUpdate($id);
+            if (!$recepcion) {
+                $this->conexion->rollBack();
+                return ['success' => false, 'message' => 'Recepción no encontrada.'];
+            }
+            if ($recepcion['estado'] !== 'en_curso') {
+                $this->conexion->rollBack();
+                return ['success' => false, 'message' => 'Solo se puede hacer check-out de una estancia en curso.'];
+            }
+
+            $saldo = (float) $pagoModelo->calcularSaldo($id, true)['saldo'];
+
+            if ($saldo > 0.01) {
+                if ($pagoFinal === null) {
+                    $this->conexion->rollBack();
+                    return [
+                        'success' => false,
+                        'requiere_pago' => true,
+                        'saldo' => $saldo,
+                        'message' => 'Saldo pendiente Bs ' . number_format($saldo, 2),
+                    ];
+                }
+
+                $monto = (float) ($pagoFinal['monto'] ?? 0);
+                $metodo = $pagoFinal['metodopago'] ?? '';
+
+                if (!in_array($metodo, ['Efectivo', 'QR', 'OTROS'], true)) {
+                    $this->conexion->rollBack();
+                    return ['success' => false, 'message' => 'Método de pago no válido.', 'saldo' => $saldo];
+                }
+                if ($monto + 0.01 < $saldo) {
+                    $this->conexion->rollBack();
+                    return [
+                        'success' => false,
+                        'message' => 'El pago no cubre el saldo. Saldo pendiente Bs ' . number_format($saldo - $monto, 2),
+                        'saldo' => $saldo,
+                    ];
+                }
+
+                if (!$pagoModelo->registrarPago($id, $saldo, $metodo, $idusuario, 'Pago de saldo (check-out)')) {
+                    $this->conexion->rollBack();
+                    return ['success' => false, 'message' => $pagoModelo->getLastError(), 'saldo' => $saldo];
+                }
+            }
+
+            if (!$this->cambiarEstado($id, 'finalizado')) {
+                $this->conexion->rollBack();
+                return ['success' => false, 'message' => 'Error al finalizar la recepción: ' . $this->lastError];
+            }
+
+            $this->conexion->commit();
+            return ['success' => true, 'message' => 'Check-out realizado correctamente'];
+        } catch (PDOException $e) {
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return ['success' => false, 'message' => $this->lastError];
+        }
+    }
+
+    /**
      * Cambia el estado de una recepción
      * 
      * @param int $id ID de la recepción
@@ -521,16 +615,54 @@ class Recepcion
      */
     public function cambiarEstado($id, $estado)
     {
+        $propia = false;
         try {
-            $this->conexion->beginTransaction();
+            // Si ya hay una transacción abierta (check-out atómico), se participa de ella
+            $propia = !$this->conexion->inTransaction();
+            if ($propia) {
+                $this->conexion->beginTransaction();
+            }
 
             // Bloquear la fila de recepción (orden canónico: recepcion -> habitaciones) para
             // evitar dos checkouts/cancelaciones concurrentes sobre el mismo registro.
             $recepcion = $this->getByIdForUpdate($id);
             if (!$recepcion) {
-                $this->conexion->rollBack();
+                if ($propia) {
+                    $this->conexion->rollBack();
+                }
                 $this->lastError = "Recepción no encontrada";
                 return false;
+            }
+
+            // Solo las transiciones del ciclo de vida son válidas; reactivar o retroceder
+            // un registro dejaría la habitación en un estado incoherente
+            $transiciones = [
+                'reservado' => ['en_curso', 'cancelado'],
+                'en_curso' => ['finalizado', 'cancelado'],
+            ];
+            if (!in_array($estado, $transiciones[$recepcion['estado']] ?? [], true)) {
+                if ($propia) {
+                    $this->conexion->rollBack();
+                }
+                $this->lastError = 'Transición de estado no permitida.';
+                return false;
+            }
+
+            // Check-in de una reserva: la habitación debe estar libre y pasa a ocupada
+            if ($estado === 'en_curso') {
+                $stmtLock = $this->conexion->prepare("SELECT estado FROM habitaciones WHERE id_habitacion = :idhabitacion FOR UPDATE");
+                $stmtLock->bindParam(':idhabitacion', $recepcion['idhabitacion'], PDO::PARAM_INT);
+                $stmtLock->execute();
+                if ($stmtLock->fetchColumn() !== 'disponible') {
+                    if ($propia) {
+                        $this->conexion->rollBack();
+                    }
+                    $this->lastError = 'La habitación no está disponible para el check-in.';
+                    return false;
+                }
+                $stmtOcupar = $this->conexion->prepare("UPDATE habitaciones SET estado = 'ocupada' WHERE id_habitacion = :idhabitacion");
+                $stmtOcupar->bindParam(':idhabitacion', $recepcion['idhabitacion'], PDO::PARAM_INT);
+                $stmtOcupar->execute();
             }
 
             // Actualizar estado de la recepción
@@ -555,12 +687,15 @@ class Recepcion
             $result = $stmt->execute();
 
             if (!$result) {
-                $this->conexion->rollBack();
+                if ($propia) {
+                    $this->conexion->rollBack();
+                }
                 return false;
             }
 
             // Actualizar estado de la habitación según corresponda
-            if ($estado === 'finalizado' || ($estado === 'cancelado' && $recepcion['estado'] !== 'finalizado')) {
+            // Una reserva cancelada nunca ocupó la habitación: no se toca su estado
+            if ($estado === 'finalizado' || ($estado === 'cancelado' && $recepcion['estado'] === 'en_curso')) {
                 // Bloquear la habitación antes de mover su estado (mismo orden que crear()/actualizar())
                 $stmtLock = $this->conexion->prepare("SELECT estado FROM habitaciones WHERE id_habitacion = :idhabitacion FOR UPDATE");
                 $stmtLock->bindParam(':idhabitacion', $recepcion['idhabitacion'], PDO::PARAM_INT);
@@ -576,15 +711,21 @@ class Recepcion
                 $result = $stmt->execute();
 
                 if (!$result) {
-                    $this->conexion->rollBack();
+                    if ($propia) {
+                        $this->conexion->rollBack();
+                    }
                     return false;
                 }
             }
 
-            $this->conexion->commit();
+            if ($propia) {
+                $this->conexion->commit();
+            }
             return true;
         } catch (PDOException $e) {
-            $this->conexion->rollBack();
+            if ($propia) {
+                $this->conexion->rollBack();
+            }
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
@@ -656,6 +797,14 @@ class Recepcion
             if (!$habitacionDestino || $habitacionDestino['estado'] !== 'disponible') {
                 $this->conexion->rollBack();
                 $this->lastError = 'La habitación destino ya no está disponible.';
+                return false;
+            }
+
+            // Una reserva futura en la habitación destino que pise lo que resta de la estancia
+            // generaría overbooking
+            if ($this->existeSolape($idHabitacionDestino, date('Y-m-d H:i:s'), $recepcion['fechasalida_prevista'], $id)) {
+                $this->conexion->rollBack();
+                $this->lastError = 'La habitación destino tiene una reserva que se solapa con el resto de la estancia.';
                 return false;
             }
 
@@ -1171,7 +1320,7 @@ class Recepcion
                     WHEN p.tipo = 'reverso' AND og.tipo = 'pago' THEN -p.montototal
                     ELSE 0 END), 0) AS ingresos
                  FROM pagos p LEFT JOIN pagos og ON og.id_pago = p.id_pago_reversado
-                 WHERE DATE(p.fechacreacion) = CURDATE()"
+                 WHERE DATE(p.fechacreacion) = CURDATE() AND p.idrecepcion IS NOT NULL"
             );
             $base['ingresos_dia'] = (float) ($stmt->fetch(PDO::FETCH_ASSOC)['ingresos'] ?? 0);
 
@@ -1218,15 +1367,18 @@ class Recepcion
                         AND estado IN ('reservado', 'en_curso')
                         AND fechaentrada < :salida
                         AND fechasalida_prevista > :entrada
-                        AND (:excluir IS NULL OR idrecepcion <> :excluir)";
+                        AND (:excluir_nulo IS NULL OR idrecepcion <> :excluir_id)";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindValue(':idhabitacion', (int) $idhabitacion, PDO::PARAM_INT);
             $stmt->bindValue(':salida', $salida, PDO::PARAM_STR);
             $stmt->bindValue(':entrada', $entrada, PDO::PARAM_STR);
+            // La conexión no emula prepares: un mismo parámetro nombrado no puede repetirse
             if ($excluirId === null) {
-                $stmt->bindValue(':excluir', null, PDO::PARAM_NULL);
+                $stmt->bindValue(':excluir_nulo', null, PDO::PARAM_NULL);
+                $stmt->bindValue(':excluir_id', 0, PDO::PARAM_INT);
             } else {
-                $stmt->bindValue(':excluir', (int) $excluirId, PDO::PARAM_INT);
+                $stmt->bindValue(':excluir_nulo', (int) $excluirId, PDO::PARAM_INT);
+                $stmt->bindValue(':excluir_id', (int) $excluirId, PDO::PARAM_INT);
             }
             $stmt->execute();
             return (int) $stmt->fetchColumn() > 0;
@@ -1422,7 +1574,7 @@ class Recepcion
                 if (trim($valor) === '') {
                     $datosSanitizados[$clave] = null;
                 } else {
-                    $datosSanitizados[$clave] = htmlspecialchars(trim($valor), ENT_QUOTES, 'UTF-8');
+                    $datosSanitizados[$clave] = trim($valor);
                 }
             } else {
                 $datosSanitizados[$clave] = $valor;

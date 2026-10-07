@@ -372,7 +372,7 @@ function renderizarMapaHabitaciones() {
 
         // Crear el divisor de piso
         const pisoDivider = $('<div class="piso-divider"></div>')
-            .html(`<i class="fas fa-building mr-1"></i> ${pisoData.nombre}`);
+            .html(`<i class="fas fa-building mr-1"></i> ${escapeHtml(pisoData.nombre)}`);
 
         // Crear el contenedor de habitaciones para este piso
         const pisoContainer = $('<div class="d-flex flex-wrap justify-content-start"></div>');

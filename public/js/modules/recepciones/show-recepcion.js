@@ -6,6 +6,7 @@ $(document).ready(function () {
         const $form = $(form);
         const $boton = $form.find('button[type="submit"]');
         $boton.prop('disabled', true);
+        mostrarCarga('Procesando...', 'Registrando el movimiento en el folio');
 
         $.ajax({
             url: $form.data('accion'),
@@ -69,6 +70,7 @@ $(document).ready(function () {
             }
 
             $boton.prop('disabled', true);
+            mostrarCarga('Procesando...', 'Cambiando de habitación');
 
             $.ajax({
                 url: $form.data('accion'),
@@ -134,6 +136,7 @@ $(document).ready(function () {
         const habitacion = $btn.data('habitacion') || '';
 
         function enviarCheckout(payload) {
+            mostrarCarga('Procesando...', 'Realizando el check-out');
             return $.ajax({
                 url: endpoint,
                 type: 'POST',
@@ -161,7 +164,7 @@ $(document).ready(function () {
                 confirmButtonText: 'Cobrar y finalizar',
                 cancelButtonText: 'Cancelar',
                 html: '<div class="text-left">' +
-                    '<p><strong>' + cliente + '</strong>' + (habitacion ? ' &middot; Hab. ' + habitacion : '') + '</p>' +
+                    '<p><strong>' + escapeHtml(cliente) + '</strong>' + (habitacion ? ' &middot; Hab. ' + escapeHtml(habitacion) : '') + '</p>' +
                     '<p>Saldo pendiente: <strong>Bs ' + saldo.toFixed(2) + '</strong></p>' +
                     '<div class="form-group"><label for="swal-checkout-metodo">Método de pago</label>' +
                     '<select id="swal-checkout-metodo" class="form-control">' +
@@ -190,7 +193,7 @@ $(document).ready(function () {
         } else {
             Swal.fire({
                 title: '¿Confirmar check-out?',
-                html: '<p><strong>' + cliente + '</strong>' + (habitacion ? ' &middot; Hab. ' + habitacion : '') + '</p><p>El folio está saldado.</p>',
+                html: '<p><strong>' + escapeHtml(cliente) + '</strong>' + (habitacion ? ' &middot; Hab. ' + escapeHtml(habitacion) : '') + '</p><p>El folio está saldado.</p>',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: themeColor('primary'),

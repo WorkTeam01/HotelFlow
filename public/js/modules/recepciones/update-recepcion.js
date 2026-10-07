@@ -56,8 +56,8 @@ $(document).ready(function () {
         Swal.fire({
             title: '¿Confirmar actualización?',
             html: '<div class="text-left">' +
-                '<p><strong>Cliente:</strong> ' + ($('#idcliente option:selected').data('nombre') || '—') + '</p>' +
-                '<p><strong>Tarifa:</strong> ' + ($('#idtarifa option:selected').data('tipo-nombre') || '—') + '</p>' +
+                '<p><strong>Cliente:</strong> ' + escapeHtml($('#idcliente option:selected').data('nombre') || '—') + '</p>' +
+                '<p><strong>Tarifa:</strong> ' + escapeHtml($('#idtarifa option:selected').data('tipo-nombre') || '—') + '</p>' +
                 '</div>',
             icon: 'question',
             showCancelButton: true,

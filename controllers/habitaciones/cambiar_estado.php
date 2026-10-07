@@ -105,7 +105,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQU
     }
 
     // Redirigir a la página anterior o a la lista
-    if (isset($_SERVER['HTTP_REFERER']) && !empty($_SERVER['HTTP_REFERER'])) {
+    if (!empty($_SERVER['HTTP_REFERER']) && str_starts_with($_SERVER['HTTP_REFERER'], $URL)) {
         header('Location: ' . $_SERVER['HTTP_REFERER']);
     } else {
         header('Location: ' . $URL . 'views/habitaciones/index.php');

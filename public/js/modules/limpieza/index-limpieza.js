@@ -226,7 +226,7 @@ $(document).ready(function () {
 
                     // Agregar las habitaciones disponibles
                     $.each(response.habitaciones, function (index, hab) {
-                        $('#idhabitacion').append(`<option value="${hab.id_habitacion}">${hab.numero} - ${hab.tipo}</option>`);
+                        $('#idhabitacion').append(`<option value="${hab.id_habitacion}">${escapeHtml(hab.numero)} - ${escapeHtml(hab.tipo)}</option>`);
                     });
 
                     // Cambiar apariencia del modal
@@ -305,7 +305,7 @@ $(document).ready(function () {
                     // Agregar las habitaciones disponibles
                     $.each(response.habitaciones, function (index, hab) {
                         const selected = parseInt(hab.id_habitacion) === parseInt(habitacion);
-                        $('#idhabitacion').append(`<option value="${hab.id_habitacion}" ${selected ? 'selected' : ''}>${hab.numero} - ${hab.tipo}</option>`);
+                        $('#idhabitacion').append(`<option value="${hab.id_habitacion}" ${selected ? 'selected' : ''}>${escapeHtml(hab.numero)} - ${escapeHtml(hab.tipo)}</option>`);
                     });
 
                     // Seleccionar el usuario

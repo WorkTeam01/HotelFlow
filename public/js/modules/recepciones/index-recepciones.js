@@ -142,8 +142,8 @@ $(function () {
 
         Swal.fire({
             title: '¿Realizar check-out?',
-            html: '<div class="text-left"><p><strong>Huésped:</strong> ' + cliente + '</p>' +
-                '<p><strong>Habitación:</strong> ' + habitacion + '</p>' +
+            html: '<div class="text-left"><p><strong>Huésped:</strong> ' + escapeHtml(cliente) + '</p>' +
+                '<p><strong>Habitación:</strong> ' + escapeHtml(habitacion) + '</p>' +
                 '<p>Se validará que el folio esté saldado antes de finalizar.</p></div>',
             icon: 'question',
             showCancelButton: true,

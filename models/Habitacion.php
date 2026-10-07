@@ -194,7 +194,29 @@ class Habitacion
      */
     public function cambiarEstado($id, $estado)
     {
+        $transaccionPropia = false;
         try {
+            $transaccionPropia = !$this->conexion->inTransaction();
+            if ($transaccionPropia) {
+                $this->conexion->beginTransaction();
+            }
+
+            // Orden canónico de bloqueo: recepcion primero, luego habitaciones. Una habitación
+            // con una estancia en curso solo puede estar ocupada; liberarla a mano permitiría
+            // asignarla a otro huésped.
+            $stmtEstancia = $this->conexion->prepare(
+                "SELECT idrecepcion FROM recepcion WHERE idhabitacion = :id AND estado = 'en_curso' FOR UPDATE"
+            );
+            $stmtEstancia->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmtEstancia->execute();
+            if ($stmtEstancia->fetchColumn() !== false && $estado !== 'ocupada') {
+                if ($transaccionPropia) {
+                    $this->conexion->rollBack();
+                }
+                $this->lastError = 'La habitación tiene una estancia en curso; haga el check-out o cambie de habitación al huésped.';
+                return false;
+            }
+
             $query = "UPDATE {$this->tabla} SET 
                       estado = :estado,
                       fechaactualizacion = CURRENT_TIMESTAMP
@@ -204,8 +226,15 @@ class Habitacion
             $stmt->bindParam(':estado', $estado, PDO::PARAM_STR);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
-            return $stmt->execute();
+            $ok = $stmt->execute();
+            if ($transaccionPropia) {
+                $ok ? $this->conexion->commit() : $this->conexion->rollBack();
+            }
+            return $ok;
         } catch (PDOException $e) {
+            if ($transaccionPropia && $this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
@@ -325,7 +354,7 @@ class Habitacion
         $datosSanitizados = [];
         foreach ($datos as $clave => $valor) {
             if (is_string($valor)) {
-                $datosSanitizados[$clave] = htmlspecialchars(trim($valor), ENT_QUOTES, 'UTF-8');
+                $datosSanitizados[$clave] = trim($valor);
             } else {
                 $datosSanitizados[$clave] = $valor;
             }

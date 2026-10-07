@@ -250,6 +250,19 @@ class AsignacionLimpiezaController
             ];
         }
 
+        // Un usuario de Limpieza solo opera sus propias asignaciones y no puede verificarlas
+        require_once __DIR__ . '/../../services/AuthorizationService.php';
+        $idSesion = (int)($_SESSION['usuario_id'] ?? 0);
+        if (!(new AuthorizationService())->esAdministrador($idSesion)) {
+            $asignacion = $this->modelo->getById($id);
+            if (!$asignacion || (int)$asignacion['idusuario'] !== $idSesion) {
+                return ['success' => false, 'message' => 'Solo puede modificar sus propias asignaciones'];
+            }
+            if ($estado === 'verificada') {
+                return ['success' => false, 'message' => 'Solo un administrador puede verificar una limpieza'];
+            }
+        }
+
         // Actualizar estado
         if ($this->modelo->actualizarEstado($id, $estado)) {
             // Texto para mensaje

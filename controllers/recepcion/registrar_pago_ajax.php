@@ -37,7 +37,7 @@ if ($idrecepcion <= 0 || !in_array($metodopago, ['Efectivo', 'QR', 'OTROS'], tru
 }
 
 $pagoModelo = new Pago();
-$idLinea = $pagoModelo->registrarPago($idrecepcion, $monto, $metodopago, $idusuario, htmlspecialchars($concepto, ENT_QUOTES, 'UTF-8'));
+$idLinea = $pagoModelo->registrarPago($idrecepcion, $monto, $metodopago, $idusuario, $concepto);
 
 if ($idLinea) {
     $_SESSION['mensaje'] = 'Pago registrado correctamente';

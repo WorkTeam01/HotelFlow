@@ -36,7 +36,7 @@ if ($idrecepcion <= 0 || $concepto === '') {
 }
 
 $pagoModelo = new Pago();
-$idLinea = $pagoModelo->registrarCargo($idrecepcion, $monto, htmlspecialchars($concepto, ENT_QUOTES, 'UTF-8'), $idusuario);
+$idLinea = $pagoModelo->registrarCargo($idrecepcion, $monto, $concepto, $idusuario);
 
 if ($idLinea) {
     $_SESSION['mensaje'] = 'Cargo registrado correctamente';
