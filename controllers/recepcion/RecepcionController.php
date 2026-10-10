@@ -614,45 +614,6 @@ class RecepcionController
     }
 
     /**
-     * Actualiza una recepción existente
-     * 
-     * @param int $id ID de la recepción
-     * @param array $datos Datos actualizados
-     * @return array Resultado de la operación
-     */
-    public function actualizar($id, $datos)
-    {
-        // Sanitizar los datos
-        $datos = $this->modelo->sanitizarDatos($datos);
-
-        // Validar datos
-        $errores = $this->modelo->validarDatos($datos);
-
-        if (!empty($errores)) {
-            return [
-                'success' => false,
-                'message' => $errores[0],
-                'icon' => 'error'
-            ];
-        }
-
-        // Actualizar mediante el modelo
-        if ($this->modelo->actualizar($id, $datos)) {
-            return [
-                'success' => true,
-                'message' => 'Recepción actualizada correctamente',
-                'icon' => 'success'
-            ];
-        } else {
-            return [
-                'success' => false,
-                'message' => 'Error al actualizar la recepción: ' . $this->modelo->getLastError(),
-                'icon' => 'error'
-            ];
-        }
-    }
-
-    /**
      * Actualiza SOLO los datos de estancia de una recepción. NUNCA acepta
      * montototal/montopagado/cambio/metodopago (el dinero se gestiona por el folio,
      * ver models/Pago.php) ni transiciones de estado (van por cambiarEstado()/checkout()).

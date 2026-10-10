@@ -369,10 +369,11 @@ class Recepcion
     }
 
     /**
-     * Actualiza una recepción existente
-     * 
+     * Actualiza los datos descriptivos de la estancia (cliente, tarifa, fechas, observaciones).
+     * El dinero va por el folio (Pago) y los estados por cambiarEstado()/checkout()/cambiarHabitacion().
+     *
      * @param int $id ID de la recepción
-     * @param array $datos Datos de la recepción
+     * @param array $datos Solo las claves de la whitelist; el resto se ignora
      * @return bool True si se actualizó correctamente, False en caso contrario
      */
     public function actualizar($id, $datos)
@@ -380,11 +381,8 @@ class Recepcion
         try {
             $this->conexion->beginTransaction();
 
-            // Bloquear la fila de recepción (orden canónico: recepcion -> habitaciones)
-            // para evitar que dos actualizaciones concurrentes sobre el mismo registro
-            // pisen el estado de la habitación de forma inconsistente.
+            // Orden canónico de bloqueo: recepcion -> habitaciones
             $recepcion_anterior = $this->getByIdForUpdate($id);
-            $estado_anterior = $recepcion_anterior ? $recepcion_anterior['estado'] : null;
 
             // Si cambian las fechas de la estancia, revalidar solape sobre la misma
             // habitación (excluyéndose a sí misma). Bloquear habitaciones después de
@@ -416,33 +414,16 @@ class Recepcion
             // Mapear campos a actualizar
             $campos_mapeados = [
                 'idcliente' => 'idcliente = :idcliente',
-                'idhabitacion' => 'idhabitacion = :idhabitacion',
                 'idtarifa' => 'idtarifa = :idtarifa',
                 'fechaentrada' => 'fechaentrada = :fechaentrada',
-                'fechasalida' => 'fechasalida = :fechasalida',
                 'fechasalida_prevista' => 'fechasalida_prevista = :fechasalida_prevista',
-                'montototal' => 'montototal = :montototal',
-                'montopagado' => 'montopagado = :montopagado',
-                'estado' => 'estado = :estado',
-                'observaciones' => 'observaciones = :observaciones',
-                'metodopago' => 'metodopago = :metodopago',
-                'cambio' => 'cambio = :cambio'
+                'observaciones' => 'observaciones = :observaciones'
             ];
 
-            // Añadir campos que existen en los datos
             foreach ($campos_mapeados as $campo => $sql) {
                 if (array_key_exists($campo, $datos)) {
                     if ($campo === 'observaciones' && empty($datos[$campo])) {
                         $campos[] = "observaciones = NULL";
-                    } else if ($campo === 'cambio') {
-                        if (isset($datos[$campo]) && $datos['metodopago'] === 'Efectivo') {
-                            $campos[] = $sql;
-                            $params[':' . $campo] = (float)$datos[$campo];
-                        } else {
-                            $campos[] = "cambio = NULL";
-                        }
-                    } else if ($campo === 'metodopago' && empty($datos[$campo])) {
-                        $campos[] = "metodopago = NULL";
                     } else {
                         $campos[] = $sql;
                         $params[':' . $campo] = $datos[$campo];
@@ -463,12 +444,7 @@ class Recepcion
 
             // Vincular parámetros
             foreach ($params as $param => $value) {
-                if ($param === ':cambio' && $value !== null) {
-                    // Asegurarse de que el cambio se pase como número decimal
-                    $stmt->bindValue($param, (float)$value, PDO::PARAM_STR);
-                } else {
-                    $stmt->bindValue($param, $value);
-                }
+                $stmt->bindValue($param, $value);
             }
 
             $result = $stmt->execute();
@@ -479,49 +455,12 @@ class Recepcion
                 return false;
             }
 
-            // Actualizar estado de habitación si es necesario
-            if (isset($datos['estado']) && $recepcion_anterior) {
-                $idhabitacion = $recepcion_anterior['idhabitacion'];
-
-                if (
-                    ($datos['estado'] === 'en_curso' && $estado_anterior !== 'en_curso') ||
-                    ($datos['estado'] === 'finalizado' && $estado_anterior !== 'finalizado') ||
-                    ($datos['estado'] === 'cancelado' && $estado_anterior !== 'cancelado')
-                ) {
-                    // Bloquear la habitación antes de mover su estado (mismo orden que crear()/cambiarEstado())
-                    $stmtLock = $this->conexion->prepare("SELECT estado FROM habitaciones WHERE id_habitacion = :idhabitacion FOR UPDATE");
-                    $stmtLock->bindParam(':idhabitacion', $idhabitacion, PDO::PARAM_INT);
-                    $stmtLock->execute();
-
-                    $estado_habitacion_nuevo = match ($datos['estado']) {
-                        'en_curso' => 'ocupada',
-                        'finalizado' => 'limpieza',
-                        'cancelado' => 'disponible',
-                        default => null,
-                    };
-
-                    $query = "UPDATE habitaciones SET estado = :estado_habitacion
-                          WHERE id_habitacion = :idhabitacion";
-                    $stmt = $this->conexion->prepare($query);
-                    $stmt->bindParam(':estado_habitacion', $estado_habitacion_nuevo, PDO::PARAM_STR);
-                    $stmt->bindParam(':idhabitacion', $idhabitacion, PDO::PARAM_INT);
-                    $result = $stmt->execute();
-
-                    if (!$result) {
-                        $this->conexion->rollBack();
-                        error_log("Error al actualizar el estado de la habitación: " . print_r($stmt->errorInfo(), true));
-                        return false;
-                    }
-                }
-            }
-
             $this->conexion->commit();
             return true;
         } catch (PDOException $e) {
             $this->conexion->rollBack();
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            error_log("Excepción PDO en actualizar: " . $e->getMessage());
             return false;
         }
     }
