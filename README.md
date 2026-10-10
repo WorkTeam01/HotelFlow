@@ -209,14 +209,14 @@ HotelFlow/
 - Punto de venta en dos columnas (carrito + sidebar de cliente/totales/acciones) con catálogo de productos y clientes por modales
 - Pago único o mixto (Efectivo / QR / Otros) con folio de cobro auditable y recibo térmico PDF
 - Control de stock automático (se revierte al anular)
-- Gestión de compras y proveedores
+- Gestión de compras: el stock entra al inventario al completarlas (una compra pendiente no lo modifica)
 - Reportes exportables desde el listado (PDF, Excel, CSV, imprimir)
 
 ### Roles y Permisos
 
 | Rol               | Acceso                                                   |
 | ----------------- | -------------------------------------------------------- |
-| **Administrador** | Acceso completo, gestión de usuarios y configuración     |
+| **Administrador** | Acceso completo; único rol con gestión de usuarios       |
 | **Recepcionista** | Habitaciones, huéspedes, check-in/out, ventas            |
 | **Limpieza**      | Dashboard especializado, asignaciones, cambio de estados |
 

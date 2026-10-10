@@ -5,6 +5,44 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.7.1] - 2026-10-10
+
+Segunda pasada de la auditoría de bugs: se probaron con acciones reales los flujos de ventas, compras, baño, equipaje, productos y usuarios (apareció que en 1.7.0 no se podían crear ni editar productos), se cerró la deuda técnica conocida y se unificaron los reportes de DataTables. Dos correcciones que cambian el comportamiento: el stock de una compra entra al completarla y la gestión de usuarios queda solo para el Administrador (ver Migración).
+
+### Fixed
+
+- **Dashboard de administrador mostraba datos inventados** en los gráficos de actividad (`[5, 7, 3, 8, …]`) cuando no había actividad real: `Dashboard::getDatosGraficos()` devolvía series de ejemplo. Ahora devuelve las series reales (ceros).
+- **Gráfico de actividad ignoraba su configuración de ejes**: estaba escrita con la sintaxis de Chart.js 3 (`scales.x`/`scales.y`) y el proyecto carga Chart.js 2, así que el eje Y mostraba valores negativos con datos en cero. Pasa a `xAxes`/`yAxes` con `beginAtZero` y `precision: 0`.
+- **Gráficos del dashboard con opciones de Chart.js 3 ignoradas** (Chart.js 2 instalado): leyenda nativa duplicada junto a la HTML, tooltips sin fecha completa ni unidades (`Bs.`, `habitaciones`) ni porcentaje en la dona, dona al 50 % en vez de 70 %. Pasan a `legend`/`tooltips`/`hover`/`cutoutPercentage`/`lineTension` de la v2.
+- **Exportaciones de `productos`** incluían la columna Imagen (vacía) y omitían Estado; las columnas exportadas pasan a Nro, Código, Nombre, Categoría, Precio, Stock y Estado.
+- **Acciones de `productos` ocultas en móvil**: la DataTable responsive las colapsaba tras el control de expansión; ahora Nombre, Acciones, Stock y Estado tienen prioridad de visibilidad.
+- **Crear y editar productos fallaba siempre** (`SQLSTATE[HY093]`): el bind de `:stock` se había quitado del método equivocado; ahora `crear()` guarda el stock inicial y `actualizar()` no lo toca.
+- **Método de pago inválido en baño y equipaje** se convertía en silencio a Efectivo; ahora se rechaza.
+- **El servicio de baño normal registraba baños en mantenimiento**; ahora exige un baño existente y `disponible`, igual que el servicio rápido.
+- **Anular una venta o cancelar una compra por segunda vez** mostraba "error inesperado"; ahora indica que ya estaba anulada/cancelada.
+- **Exportaciones PDF salían siempre en vertical**: la orientación estaba puesta en la collection de botones, que pdfmake ignora. Ahora va en el botón PDF (horizontal).
+- El mensaje al intentar modificar a un Administrador sin serlo hablaba de "asignar el cargo".
+
+### Changed
+
+- **El stock de una compra entra al completarla**, no al crearla: una compra `pendiente` ya no suma stock, `completar()` lo suma y `cancelar()` solo lo revierte si estaba `completada`.
+- **Gestión de usuarios (vistas y altas/ediciones/desactivaciones) solo para el Administrador**; el permiso `usuarios` ya no basta, porque permitía cambiar claves y permisos de otros usuarios.
+- El historial de recepciones gana el menú Reportes (copiar, PDF horizontal, Excel, CSV, imprimir): era el único listado sin exportación.
+- Los reportes de DataTables de 15 módulos pasan a un helper común (`public/js/core/datatable-utils.js`): cada `index-*.js` queda en una llamada de ~15 líneas en vez de ~150. La cabecera del PDF usa el color `dark` del tema; la impresión de usuarios y tipos de habitación incluye todas las columnas exportadas (antes solo las dos primeras).
+- `Recepcion::actualizar()` solo acepta `idcliente`, `idtarifa`, `fechaentrada`, `fechasalida_prevista` y `observaciones`; ya no puede escribir dinero, método de pago, estado ni habitación (eso va por el folio, `cambiarEstado()`, `checkout()` y `cambiarHabitacion()`).
+
+### Removed
+
+- `RecepcionController::actualizar()` (sin llamadas) e `ImagenService::redimensionarImagen()` (sin uso; sobrescribía el original).
+
+### Migración
+
+- Si hay compras `pendiente` creadas antes de este cambio, su stock ya se sumó al crearlas: restar esas cantidades a `productos.stock` (o completar/cancelar con cuidado) para no duplicarlo al completarlas.
+
+### Docs
+
+- Capturas del README regeneradas (login, dashboard, habitaciones, recepción y ventas): la de ventas salía con el sidebar tapando el contenido por usar captura de página completa, y todas mostraban versiones antiguas en el pie.
+
 ## [1.7.0] - 2026-10-07
 
 Auditoría de bugs de todo el proyecto (PHP MVC completo) con correcciones en seguridad, integridad de dinero/estados y escape de salida. Un cambio de esquema menor y un paso de datos al desplegar (ver Migración).
@@ -554,6 +592,7 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.7.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.7.0...1.7.1
 [1.7.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.6.1...1.7.0
 [1.6.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.6.0...1.6.1
 [1.6.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.5.0...1.6.0
