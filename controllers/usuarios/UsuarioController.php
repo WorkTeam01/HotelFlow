@@ -111,13 +111,13 @@ class UsuarioController
             return null;
         }
 
+        if ($objetivo && $objetivo['cargo'] === 'Administrador') {
+            return 'No tiene permisos para modificar a un Administrador.';
+        }
         if ($datos['cargo'] === 'Administrador') {
             return 'No tiene permisos para asignar el cargo de Administrador.';
         }
         if ($objetivo) {
-            if ($objetivo['cargo'] === 'Administrador') {
-                return 'No tiene permisos para modificar a un Administrador.';
-            }
             if ((int)$objetivo['idusuario'] === $idSesion) {
                 if ($datos['cargo'] !== $objetivo['cargo'] || (int)$datos['estado'] !== (int)$objetivo['estado']) {
                     return 'No puede cambiar su propio cargo ni su estado.';

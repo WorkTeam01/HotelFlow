@@ -10,7 +10,7 @@ $idusuario = $_SESSION['usuario_id'] ?? '';
 $authService = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
-if (!($authService->puedeAccederModulo($idusuario, 'usuarios')) && !($authService->esAdministrador($idusuario))) {
+if (!$authService->esAdministrador($idusuario)) {
     $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL);

@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../services/AuthorizationService.php';
 $idusuario_sesion = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
-if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($idusuario_sesion, 'usuarios')) {
+if (!$auth->esAdministrador($idusuario_sesion)) {
     $_SESSION['mensaje'] = 'No tiene permisos para realizar esta acción.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . 'views/usuarios/index.php');
