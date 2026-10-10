@@ -376,7 +376,9 @@ class Venta
             $estadoActual = $stmtLock->fetchColumn();
 
             if ($estadoActual === false || $estadoActual == 0) {
-                throw new PDOException("La venta no existe o ya está anulada");
+                $this->conexion->rollBack();
+                $this->lastError = 'La venta no existe o ya está anulada.';
+                return false;
             }
 
             // Obtener los detalles de la venta

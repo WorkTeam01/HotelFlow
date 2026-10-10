@@ -191,8 +191,10 @@ class Compra
 
                 $totalCalculado += $detalle['preciocompra'] * $detalle['cantidad'];
 
-                // Actualizar el stock del producto
-                $this->actualizarStockProducto($detalle['idproducto'], $detalle['cantidad']);
+                // La mercadería entra al inventario al recibirla (completada), no al emitir la orden
+                if ($datos['estado'] === 'completada') {
+                    $this->actualizarStockProducto($detalle['idproducto'], $detalle['cantidad']);
+                }
             }
 
             // Recalcular y persistir el total real a partir de los detalles insertados,
@@ -257,6 +259,12 @@ class Compra
                 return false;
             }
 
+            // Recepción de la mercadería: aquí entra al inventario
+            $compra = $this->getById($id);
+            foreach ($compra['detalles'] as $detalle) {
+                $this->actualizarStockProducto($detalle['idproducto'], $detalle['cantidad']);
+            }
+
             if (!$this->actualizarEstado($id, 'completada')) {
                 $this->conexion->rollBack();
                 return false;
@@ -275,7 +283,7 @@ class Compra
     }
 
     /**
-     * Cancela una compra y revierte el stock de productos
+     * Cancela una compra; si estaba completada, revierte el stock de productos
      * 
      * @param int $id ID de la compra
      * @return bool True si se canceló correctamente, False en caso contrario
@@ -292,16 +300,19 @@ class Compra
             $estadoActual = $stmtLock->fetchColumn();
 
             if ($estadoActual === false || $estadoActual == 'cancelada') {
-                throw new PDOException("La compra no existe o ya está cancelada");
+                $this->conexion->rollBack();
+                $this->lastError = 'La compra no existe o ya está cancelada.';
+                return false;
             }
 
             // Obtener los detalles de la compra
             $compra = $this->getById($id);
 
-            // Revertir el stock de cada producto, bloqueando la fila para no dejarlo negativo
-            // si esas unidades ya se vendieron
+            // Solo una compra completada movió el inventario; cancelar una pendiente no lo toca.
+            // Se bloquea la fila del producto para no dejarlo negativo si esas unidades ya se vendieron
             $stmtStock = $this->conexion->prepare("SELECT nombre, stock FROM productos WHERE idproducto = :id FOR UPDATE");
-            foreach ($compra['detalles'] as $detalle) {
+            $detallesRevertir = $estadoActual === 'completada' ? $compra['detalles'] : [];
+            foreach ($detallesRevertir as $detalle) {
                 $stmtStock->bindValue(':id', (int)$detalle['idproducto'], PDO::PARAM_INT);
                 $stmtStock->execute();
                 $producto = $stmtStock->fetch(PDO::FETCH_ASSOC);
