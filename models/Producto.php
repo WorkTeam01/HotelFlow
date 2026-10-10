@@ -141,8 +141,7 @@ class Producto
             // Manejar campos opcionales
             $this->bindOptionalParam($stmt, ':codigo', $datos['codigo'] ?? null);
             $this->bindOptionalParam($stmt, ':descripcion', $datos['descripcion'] ?? null);
-            // El stock no se edita aquí: lo mueven ventas/compras, y un valor absoluto del
-            // formulario pisaría las ventas ocurridas mientras estaba abierto
+            $this->bindOptionalParam($stmt, ':stock', $datos['stock'] ?? 0, PDO::PARAM_INT);
             $this->bindOptionalParam($stmt, ':stock_minimo', $datos['stock_minimo'] ?? 0, PDO::PARAM_INT);
             $this->bindOptionalParam($stmt, ':stock_maximo', $datos['stock_maximo'] ?? null, PDO::PARAM_INT);
             $this->bindOptionalParam($stmt, ':imagen', $datos['imagen'] ?? null);
@@ -190,7 +189,8 @@ class Producto
             // Manejar campos opcionales
             $this->bindOptionalParam($stmt, ':codigo', $datos['codigo'] ?? null);
             $this->bindOptionalParam($stmt, ':descripcion', $datos['descripcion'] ?? null);
-            $this->bindOptionalParam($stmt, ':stock', $datos['stock'] ?? 0, PDO::PARAM_INT);
+            // El stock no se edita aquí: lo mueven ventas/compras, y un valor absoluto del
+            // formulario pisaría las ventas ocurridas mientras estaba abierto
             $this->bindOptionalParam($stmt, ':stock_minimo', $datos['stock_minimo'] ?? 0, PDO::PARAM_INT);
             $this->bindOptionalParam($stmt, ':stock_maximo', $datos['stock_maximo'] ?? null, PDO::PARAM_INT);
             $this->bindOptionalParam($stmt, ':imagen', $datos['imagen'] ?? null);
