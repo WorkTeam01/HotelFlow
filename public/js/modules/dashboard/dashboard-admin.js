@@ -102,7 +102,7 @@ function inicializarGraficoActividad() {
                 borderColor: themeColor('primary'),
                 backgroundColor: 'rgba(0, 123, 255, 0.1)',
                 pointBackgroundColor: themeColor('primary'),
-                tension: 0.4,
+                lineTension: 0.4,
                 fill: true
             },
             {
@@ -111,60 +111,63 @@ function inicializarGraficoActividad() {
                 borderColor: themeColor('warning'),
                 backgroundColor: 'rgba(255, 193, 7, 0.1)',
                 pointBackgroundColor: themeColor('warning'),
-                tension: 0.4,
+                lineTension: 0.4,
                 fill: true
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: {
+            hover: {
                 mode: 'index',
                 intersect: false
             },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        title: function (tooltipItems) {
-                            // Mostrar el día y la fecha completa
-                            const index = tooltipItems[0].dataIndex;
-                            const dia = datosGraficos.labels[index];
-                            const fecha = datosGraficos.fechasCompletas ? datosGraficos.fechasCompletas[index] : '';
-                            return dia + (fecha ? ' - ' + fecha : '');
-                        },
-                        label: function (context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
+            legend: {
+                display: false
+            },
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                    title: function (items) {
+                        const index = items[0].index;
+                        const dia = datosGraficos.labels[index];
+                        const fecha = datosGraficos.fechasCompletas ? datosGraficos.fechasCompletas[index] : '';
+                        return dia + (fecha ? ' - ' + fecha : '');
+                    },
+                    label: function (item, data) {
+                        let label = data.datasets[item.datasetIndex].label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        const valor = Number(item.yLabel);
 
-                            // Mostrar formato correcto según la métrica
-                            if (metricaActual === 'ingresos') {
-                                return label + context.parsed.y.toFixed(2) + ' Bs.';
-                            } else if (metricaActual === 'ocupacion') {
-                                return label + context.parsed.y + ' habitaciones';
-                            } else {
-                                return label + context.parsed.y + ' unidades';
-                            }
+                        if (metricaActual === 'ingresos') {
+                            return label + valor.toFixed(2) + ' Bs.';
+                        } else if (metricaActual === 'ocupacion') {
+                            return label + valor + ' habitaciones';
+                        } else {
+                            return label + valor + ' unidades';
                         }
                     }
                 }
             },
             scales: {
-                x: {
-                    grid: {
+                xAxes: [{
+                    gridLines: {
                         display: false
                     }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: {
+                }],
+                yAxes: [{
+                    gridLines: {
                         color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        beginAtZero: true,
+                        suggestedMax: 5,
+                        precision: 0
                     }
-                }
+                }]
             }
         }
     };
@@ -212,7 +215,7 @@ function actualizarGraficoActividad(metrica, datosGraficos) {
                     borderColor: themeColor('primary'),
                     backgroundColor: 'rgba(0, 123, 255, 0.1)',
                     pointBackgroundColor: themeColor('primary'),
-                    tension: 0.4,
+                    lineTension: 0.4,
                     fill: true
                 },
                 {
@@ -221,7 +224,7 @@ function actualizarGraficoActividad(metrica, datosGraficos) {
                     borderColor: themeColor('warning'),
                     backgroundColor: 'rgba(255, 193, 7, 0.1)',
                     pointBackgroundColor: themeColor('warning'),
-                    tension: 0.4,
+                    lineTension: 0.4,
                     fill: true
                 }
             ];
@@ -241,7 +244,7 @@ function actualizarGraficoActividad(metrica, datosGraficos) {
                     borderColor: themeColor('success'),
                     backgroundColor: 'rgba(40, 167, 69, 0.1)',
                     pointBackgroundColor: themeColor('success'),
-                    tension: 0.4,
+                    lineTension: 0.4,
                     fill: true
                 }
             ];
@@ -260,7 +263,7 @@ function actualizarGraficoActividad(metrica, datosGraficos) {
                     borderColor: themeColor('danger'),
                     backgroundColor: 'rgba(220, 53, 69, 0.1)',
                     pointBackgroundColor: themeColor('danger'),
-                    tension: 0.4,
+                    lineTension: 0.4,
                     fill: true
                 }
             ];
@@ -322,24 +325,22 @@ function inicializarGraficoEstadoBanos() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '70%',
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        boxWidth: 12,
-                        padding: 15
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            const label = context.label || '';
-                            const value = context.parsed || 0;
-                            const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
-                            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                            return label + ': ' + value + ' (' + percentage + '%)';
-                        }
+            cutoutPercentage: 70,
+            legend: {
+                position: 'bottom',
+                labels: {
+                    boxWidth: 12,
+                    padding: 15
+                }
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (item, data) {
+                        const label = data.labels[item.index] || '';
+                        const value = data.datasets[0].data[item.index] || 0;
+                        const total = data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+                        const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                        return label + ': ' + value + ' (' + percentage + '%)';
                     }
                 }
             }

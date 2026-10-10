@@ -665,28 +665,6 @@ class Dashboard
         $ocupacion = array_values($ocupacion);
         $ingresos = array_values($ingresos);
 
-        // Verificar si hay al menos algunos datos reales
-        $hay_datos = false;
-        foreach ([$servicios_bano, $equipajes, $ocupacion, $ingresos] as $dataset) {
-            if (array_sum($dataset) > 0) {
-                $hay_datos = true;
-                break;
-            }
-        }
-
-        // Si no hay datos reales, usar datos de ejemplo
-        if (!$hay_datos) {
-            error_log("No se encontraron datos reales. Usando datos de ejemplo.");
-            return [
-                'labels' => $labels,
-                'fechas_completas' => $fechas_completas,
-                'servicios_bano' => [5, 7, 3, 8, 6, 9, 5],
-                'equipajes' => [2, 3, 1, 5, 2, 6, 3],
-                'ocupacion' => [8, 10, 12, 9, 15, 18, 14],
-                'ingresos' => [1000, 1500, 800, 1200, 2000, 2500, 1800]
-            ];
-        }
-
         return [
             'labels' => $labels,
             'fechas_completas' => $fechas_completas,
