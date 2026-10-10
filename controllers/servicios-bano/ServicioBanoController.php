@@ -109,10 +109,8 @@ class ServicioBanoController
         // El total sale del precio del baño en BD, nunca del cliente
         $idbano = isset($post_data['idbano']) ? (int)$post_data['idbano'] : 0;
         $total = $this->modelo->getPrecioBano($idbano) ?? 0;
+        // Un método fuera de la lista blanca no se corrige en silencio: lo rechaza validarMetodoPago()
         $metodopago = $post_data['metodopago'] ?? 'Efectivo';
-        if (!in_array($metodopago, ['Efectivo', 'QR', 'OTROS'], true)) {
-            $metodopago = 'Efectivo';
-        }
         // Solo en efectivo hay un monto recibido distinto del total
         $pagorecibido = $metodopago === 'Efectivo' && isset($post_data['pagorecibido'])
             ? (float)$post_data['pagorecibido']
@@ -136,6 +134,11 @@ class ServicioBanoController
         return $datos;
     }
 
+    private function validarMetodoPago($metodopago)
+    {
+        return in_array($metodopago, ['Efectivo', 'QR', 'OTROS'], true) ? null : 'El método de pago no es válido.';
+    }
+
     /**
      * Procesa el formulario para guardar un nuevo servicio de baño
      * y reduce el stock del producto "Rollo de papel"
@@ -155,6 +158,17 @@ class ServicioBanoController
 
             // Validar datos en el modelo
             $errores = $this->modelo->validarDatos($datos);
+            if (empty($errores) && ($errorMetodo = $this->validarMetodoPago($datos['metodopago']))) {
+                $errores[] = $errorMetodo;
+            }
+            if (empty($errores)) {
+                $bano = $this->modelo->getBanoParaServicio($datos['idbano']);
+                if ($bano === null) {
+                    $errores[] = 'El baño seleccionado no existe.';
+                } elseif ($bano['estado'] !== 'disponible') {
+                    $errores[] = 'El baño seleccionado no está disponible.';
+                }
+            }
             if (empty($errores) && $datos['pagorecibido'] < $datos['total']) {
                 $errores[] = 'El pago recibido no cubre el total del servicio';
             }
@@ -491,6 +505,9 @@ class ServicioBanoController
 
         // Validar datos en el modelo
         $errores = $this->modelo->validarDatos($datos);
+        if (empty($errores) && ($errorMetodo = $this->validarMetodoPago($datos['metodopago']))) {
+            $errores[] = $errorMetodo;
+        }
         if (empty($errores) && $datos['pagorecibido'] < $datos['total']) {
             $errores[] = 'El pago recibido no cubre el total del servicio';
         }

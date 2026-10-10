@@ -276,7 +276,7 @@ class AlmacenamientoEquipajeController
         // Validar método de pago
         $metodosValidos = ['Efectivo', 'QR', 'OTROS'];
         if (!in_array($datos['metodopago'], $metodosValidos, true)) {
-            $datos['metodopago'] = 'Efectivo';
+            return ['success' => false, 'message' => 'El método de pago no es válido.', 'icon' => 'error', 'redirect' => 'create.php'];
         }
 
         // Validar idpequipaje antes de que el modelo lo lea de BD

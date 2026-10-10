@@ -461,6 +461,21 @@ class ServicioBano
      * @param int $idbano
      * @return float|null null si el baño no existe
      */
+    public function getBanoParaServicio($idbano)
+    {
+        try {
+            $stmt = $this->conexion->prepare("SELECT estado FROM bano WHERE idbano = :idbano");
+            $stmt->bindValue(':idbano', (int)$idbano, PDO::PARAM_INT);
+            $stmt->execute();
+            $bano = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $bano === false ? null : $bano;
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return null;
+        }
+    }
+
     public function getPrecioBano($idbano)
     {
         try {
