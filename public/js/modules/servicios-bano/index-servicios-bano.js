@@ -1,156 +1,16 @@
 document.addEventListener('DOMContentLoaded', function () {
     // Inicializar DataTable
     try {
-        const tabla = $("#tablaServicios").DataTable({
-            "responsive": true,
-            "autoWidth": false,
-            buttons: [{
-                extend: 'collection',
-                text: 'Reportes',
-                orientation: 'landscape',
-                buttons: [{
-                    text: 'Copiar',
-                    extend: 'copy',
-                    exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                    }
-                }, {
-                    extend: 'pdf',
-                    title: 'Servicios de Baños' + ' - ' + APP_NAME,
-                    filename: 'servicios_banos_' + new Date().toISOString().slice(0, 10),
-                    pageSize: 'LETTER',
-                    exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                    },
-                    customize: function (doc) {
-                        doc.defaultStyle.fontSize = 10;
-                        doc.styles.tableHeader.fontSize = 11;
-                        doc.styles.tableHeader.fillColor = '#4b545c';
-                        doc.styles.tableHeader.color = '#ffffff';
-                        doc.content.splice(0, 1, {
-                            text: 'SERVICIOS DE BAÑOS' + ' - ' + APP_NAME.toUpperCase(),
-                            style: {
-                                fontSize: 16,
-                                alignment: 'center',
-                                bold: true,
-                                margin: [0, 10, 0, 10]
-                            }
-                        });
-                        doc.content.splice(1, 0, {
-                            text: 'Servicios registrados',
-                            style: {
-                                fontSize: 11,
-                                alignment: 'center',
-                                italic: true,
-                                margin: [0, 0, 0, 10]
-                            }
-                        });
-                        doc.content.splice(2, 0, {
-                            text: 'Generado el: ' + new Date().toLocaleString('es-BO'),
-                            style: {
-                                fontSize: 9,
-                                alignment: 'right',
-                                margin: [0, 0, 0, 10]
-                            }
-                        });
-                        doc.footer = function (currentPage, pageCount) {
-                            return {
-                                columns: [{
-                                    text: 'Sistema de Gestión' + ' - ' + APP_NAME,
-                                    alignment: 'left',
-                                    fontSize: 8
-                                },
-                                {
-                                    text: 'Página ' + currentPage + ' de ' + pageCount,
-                                    alignment: 'center',
-                                    fontSize: 8
-                                },
-                                {
-                                    text: 'Confidencial',
-                                    alignment: 'right',
-                                    fontSize: 8
-                                }
-                                ],
-                                margin: [40, 0]
-                            };
-                        };
-                    }
-                }, {
-                    extend: 'excel',
-                    title: 'Servicios de Baños' + ' - ' + APP_NAME,
-                    messageTop: 'Registro de servicios de baños del sistema',
-                    messageBottom: 'Documento generado el ' + new Date().toLocaleDateString('es-BO'),
-                    exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5, 6, 7],
-                        format: {
-                            body: function (data, row, column, node) {
-                                if (column === 7) {
-                                    return $(node).find('span').text();
-                                }
-                                return data;
-                            }
-                        }
-                    }
-                }, {
-                    extend: 'csv',
-                    text: 'CSV',
-                    exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                    }
-                }, {
-                    extend: 'print',
-                    text: 'Imprimir',
-                    title: 'Servicios de Baños' + ' - ' + APP_NAME,
-                    messageTop: 'Reporte generado el ' + new Date().toLocaleDateString('es-BO'),
-                    exportOptions: {
-                        columns: [0, 1, 2, 3, 4, 5, 6, 7]
-                    },
-                    customize: function (win) {
-                        $(win.document.body).find('table')
-                            .addClass('table-striped')
-                            .css('font-size', '12px');
-                    }
-                }]
-            },
-            {
-                extend: 'colvis',
-                text: 'Visualización de columnas'
-            }
-            ],
-            "pageLength": 10,
-            lengthMenu: [
-                [5, 10, 25, 50, -1],
-                [5, 10, 25, 50, "Todos"]
-            ],
-            "language": {
-                "sProcessing": "Procesando...",
-                "sLengthMenu": "Mostrar _MENU_ registros",
-                "sZeroRecords": "No se encontraron resultados",
-                "sEmptyTable": "Ningún dato disponible en esta tabla",
-                "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ servicios",
-                "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 servicios",
-                "sInfoFiltered": "(filtrado de un total de _MAX_ servicios)",
-                "sInfoPostFix": "",
-                "sSearch": "Buscar:",
-                "sUrl": "",
-                "sInfoThousands": ",",
-                "sLoadingRecords": "Cargando...",
-                "oPaginate": {
-                    "sFirst": "Primero",
-                    "sLast": "Último",
-                    "sNext": "Siguiente",
-                    "sPrevious": "Anterior"
-                },
-                "oAria": {
-                    "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-                    "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-                }
-            }
+        initDataTable('#tablaServicios', {
+            titulo: 'Servicios de Baños',
+            archivo: 'servicios_banos',
+            subtitulo: 'Servicios registrados',
+            descripcionExcel: 'Registro de servicios de baños del sistema',
+            entidad: 'servicios',
+            columnas: [0, 1, 2, 3, 4, 5, 6, 7],
+            columnasTexto: [7]
         });
 
-        if (tabla) {
-            tabla.buttons().container().appendTo('#tablaServicios_wrapper .col-md-6:eq(0)');
-        }
     } catch (e) {
         console.error('Error al inicializar DataTable:', e);
     }

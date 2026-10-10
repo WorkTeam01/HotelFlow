@@ -34,23 +34,23 @@ $(function () {
 
     // ── DataTable del historial ───────────────────────────────────────
     if ($.fn.DataTable && $('#tablaRecepciones').length) {
-        $('#tablaRecepciones').DataTable({
-            responsive: true,
-            autoWidth: false,
-            pageLength: 10,
-            order: [[0, 'asc']],
-            columnDefs: [{ orderable: false, targets: [8] }],
-            language: {
-                sProcessing: 'Procesando...',
-                sLengthMenu: 'Mostrar _MENU_ registros',
-                sZeroRecords: 'No se encontraron resultados',
-                sEmptyTable: 'Sin recepciones registradas',
-                sInfo: 'Mostrando _START_ a _END_ de _TOTAL_ recepciones',
-                sInfoEmpty: 'Mostrando 0 a 0 de 0 recepciones',
-                sInfoFiltered: '(filtrado de _MAX_ recepciones)',
-                sSearch: 'Buscar:',
-                sLoadingRecords: 'Cargando...',
-                oPaginate: { sFirst: 'Primero', sLast: 'Último', sNext: 'Siguiente', sPrevious: 'Anterior' }
+        initDataTable('#tablaRecepciones', {
+            titulo: 'Historial de Recepciones',
+            archivo: 'recepciones_historial',
+            subtitulo: 'Recepciones registradas',
+            descripcionExcel: 'Historial de recepciones del sistema',
+            entidad: 'recepciones',
+            columnas: [0, 1, 2, 3, 4, 5, 6, 7],
+            columnasTexto: [7],
+            dt: {
+                order: [[0, 'asc']],
+                columnDefs: [{ orderable: false, targets: [8] }],
+                language: {
+                    sEmptyTable: 'Sin recepciones registradas',
+                    sInfo: 'Mostrando _START_ a _END_ de _TOTAL_ recepciones',
+                    sInfoEmpty: 'Mostrando 0 a 0 de 0 recepciones',
+                    sInfoFiltered: '(filtrado de _MAX_ recepciones)'
+                }
             }
         });
     }
