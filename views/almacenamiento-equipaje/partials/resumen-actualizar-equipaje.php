@@ -17,12 +17,12 @@
 ?>
 <div class="card card-outline card-info equipaje-resumen sticky-top">
     <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-clipboard-check mr-2"></i>Resumen de cambios</h3>
+        <h3 class="card-title"><i class="fas fa-clipboard-check mr-2" aria-hidden="true"></i>Resumen de cambios</h3>
     </div>
     <div class="card-body">
         <div class="text-center mb-3">
             <span id="resumen-estado" class="badge <?= $estado_ui['badge']; ?> badge-lg">
-                <i class="fas fa-<?= $estado_ui['icono']; ?>"></i> <?= $estado_ui['label']; ?>
+                <i class="fas fa-<?= $estado_ui['icono']; ?>" aria-hidden="true"></i> <?= $estado_ui['label']; ?>
             </span>
         </div>
 
@@ -40,7 +40,7 @@
         </dl>
 
         <hr>
-        <h6 class="mb-2"><i class="fas fa-calendar-day mr-1"></i> Tiempo almacenado</h6>
+        <h6 class="mb-2"><i class="fas fa-calendar-day mr-1" aria-hidden="true"></i> Tiempo almacenado</h6>
         <p class="lead mb-1"><?= $tiempo['texto']; ?></p>
         <?php
         $porcentaje = $tiempo['porcentaje'];
@@ -55,13 +55,13 @@
     <div class="card-footer">
         <a href="<?= $URL; ?>views/almacenamiento-equipaje/show.php?id=<?= $equipaje['idalmacen']; ?>"
             class="btn btn-info btn-block mb-2">
-            <i class="fas fa-eye"></i> Ver detalles
+            <i class="fas fa-eye" aria-hidden="true"></i> Ver detalles
         </a>
         <a href="<?= $URL; ?>views/almacenamiento-equipaje" class="btn btn-outline-secondary btn-block mb-2">
-            <i class="fas fa-times"></i> Cancelar
+            <i class="fas fa-times" aria-hidden="true"></i> Cancelar
         </a>
         <button type="submit" form="formActualizarEquipaje" class="btn btn-warning btn-block btn-lg">
-            <i class="fas fa-save mr-2"></i> Guardar cambios
+            <i class="fas fa-save mr-2" aria-hidden="true"></i> Guardar cambios
         </button>
         <p class="text-muted small mb-0 mt-2">
             Para marcar como "Retirado", hazlo desde la página de detalles.

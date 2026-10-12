@@ -53,6 +53,7 @@
 
     /* Neutros */
     --color-white:           #fff;
+    --color-shadow:          rgba(0, 0, 0, 0.1);
     --color-text:            #212529;
     --color-text-secondary:  #495057;
     --color-text-strong:     #444444;

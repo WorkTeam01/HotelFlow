@@ -17,7 +17,8 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
 
 // Incluir el encabezado después de verificar permisos
 $skip_chartjs = true;
-$module_scripts = ['almacenamiento-equipaje/index-equipajes'];
+$module_styles = ['almacenamiento-equipaje/almacenamiento-equipaje'];
+$module_scripts = ['almacenamiento-equipaje/cambiar-estado-equipajes', 'almacenamiento-equipaje/index-equipajes'];
 include_once '../layouts/header.php';
 
 $controller = new AlmacenamientoEquipajeController();
@@ -27,21 +28,19 @@ $filtros = $controller->procesarFiltros();
 $equipajes = $controller->index($filtros);
 $estadisticas = $controller->getEstadisticas();
 
-// Obtener clientes para el filtro
-$datos_formulario = $controller->crear();
-$clientes = $datos_formulario['clientes'];
+$clientes = $controller->clientesParaFiltro();
 ?>
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-sm-6">
                 <h1>Gestión de Almacenamiento de Equipaje</h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home" aria-hidden="true"></i> Inicio</a></li>
                     <li class="breadcrumb-item active">Almacenamiento de Equipaje</li>
                 </ol>
             </div>
@@ -56,7 +55,7 @@ $clientes = $datos_formulario['clientes'];
         <div class="row">
             <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box">
-                    <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-warehouse"></i></span>
+                    <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-warehouse" aria-hidden="true"></i></span>
                     <div class="info-box-content">
                         <span class="info-box-text">En almacén</span>
                         <span class="info-box-number"><?= $estadisticas['en_almacen']; ?></span>
@@ -65,7 +64,7 @@ $clientes = $datos_formulario['clientes'];
             </div>
             <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box">
-                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-exclamation-triangle"></i></span>
+                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></span>
                     <div class="info-box-content">
                         <span class="info-box-text">Vencidos</span>
                         <span class="info-box-number"><?= $estadisticas['vencidos']; ?></span>
@@ -74,7 +73,7 @@ $clientes = $datos_formulario['clientes'];
             </div>
             <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box">
-                    <span class="info-box-icon bg-success elevation-1"><i class="fas fa-check-circle"></i></span>
+                    <span class="info-box-icon bg-success elevation-1"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
                     <div class="info-box-content">
                         <span class="info-box-text">Retirados hoy</span>
                         <span class="info-box-number"><?= $estadisticas['retirados_hoy']; ?></span>
@@ -83,7 +82,7 @@ $clientes = $datos_formulario['clientes'];
             </div>
             <div class="col-12 col-sm-6 col-md-3">
                 <div class="info-box">
-                    <span class="info-box-icon bg-primary elevation-1"><i class="fas fa-dollar-sign"></i></span>
+                    <span class="info-box-icon bg-primary elevation-1"><i class="fas fa-dollar-sign" aria-hidden="true"></i></span>
                     <div class="info-box-content">
                         <span class="info-box-text">Ingresos hoy</span>
                         <span class="info-box-number">Bs. <?= number_format($estadisticas['ingresos_hoy'], 2); ?></span>
@@ -99,12 +98,12 @@ $clientes = $datos_formulario['clientes'];
                     <div class="card-header">
                         <h3 class="card-title">Filtros de búsqueda</h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-plus"></i>
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Mostrar u ocultar filtros">
+                                <i class="fas fa-plus" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="card-body" style="display: none;">
+                    <div class="card-body">
                         <form method="GET" action="">
                             <div class="row">
                                 <div class="col-md-3">
@@ -112,11 +111,9 @@ $clientes = $datos_formulario['clientes'];
                                         <label for="estado">Estado</label>
                                         <select class="form-control select2" id="estado" name="estado">
                                             <option value="">Todos los estados</option>
-                                            <option value="almacenado" <?= isset($filtros['estado']) && $filtros['estado'] == 'almacenado' ? 'selected' : ''; ?>>Almacenado</option>
-                                            <option value="vencido" <?= isset($filtros['estado']) && $filtros['estado'] == 'vencido' ? 'selected' : ''; ?>>Vencido</option>
-                                            <option value="retirado" <?= isset($filtros['estado']) && $filtros['estado'] == 'retirado' ? 'selected' : ''; ?>>Retirado</option>
-                                            <option value="perdido" <?= isset($filtros['estado']) && $filtros['estado'] == 'perdido' ? 'selected' : ''; ?>>Perdido</option>
-                                            <option value="dañado" <?= isset($filtros['estado']) && $filtros['estado'] == 'dañado' ? 'selected' : ''; ?>>Dañado</option>
+                                            <?php foreach (AlmacenamientoEquipajeController::estadosFiltro() as $valor => $ui_filtro): ?>
+                                                <option value="<?= $valor; ?>" <?= isset($filtros['estado']) && $filtros['estado'] == $valor ? 'selected' : ''; ?>><?= $ui_filtro['label']; ?></option>
+                                            <?php endforeach; ?>
                                         </select>
                                     </div>
                                 </div>
@@ -150,10 +147,10 @@ $clientes = $datos_formulario['clientes'];
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label>&nbsp;</label>
+                                        <label class="d-none d-md-block" aria-hidden="true">&nbsp;</label>
                                         <div>
                                             <button type="submit" class="btn btn-primary btn-block">
-                                                <i class="fas fa-search"></i> Filtrar
+                                                <i class="fas fa-search" aria-hidden="true"></i> Filtrar
                                             </button>
                                         </div>
                                     </div>
@@ -162,7 +159,7 @@ $clientes = $datos_formulario['clientes'];
                             <div class="row">
                                 <div class="col-md-12">
                                     <a href="<?= $URL; ?>views/almacenamiento-equipaje/" class="btn btn-secondary">
-                                        <i class="fas fa-times"></i> Limpiar filtros
+                                        <i class="fas fa-times" aria-hidden="true"></i> Limpiar filtros
                                     </a>
                                 </div>
                             </div>
@@ -180,15 +177,15 @@ $clientes = $datos_formulario['clientes'];
                         <h3 class="card-title">Equipajes registrados</h3>
                         <div class="card-tools">
                             <a href="<?= $URL; ?>views/almacenamiento-equipaje/create.php" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus"></i> Nuevo Registro
+                                <i class="fas fa-plus" aria-hidden="true"></i> Nuevo Registro
                             </a>
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer tabla de equipajes">
+                                <i class="fas fa-minus" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
+                        <div class="table-responsive equipaje-tabla">
                             <table id="tablaEquipajes" class="table table-bordered table-hover table-striped table-sm">
                                 <thead>
                                     <tr>
@@ -221,65 +218,39 @@ $clientes = $datos_formulario['clientes'];
                                                 <span class="badge <?= $ui['badge']; ?>"><?= $ui['label']; ?></span>
                                             </td>
                                             <td class="text-center">
+                                                <?php
+                                                $ticket = htmlspecialchars($equipaje['codigo_ticket']);
+                                                $acciones_estado = AlmacenamientoEquipajeController::accionesEstado($equipaje['estado']);
+                                                ?>
                                                 <div class="btn-group">
-                                                    <!-- Botón Ver detalles - Siempre visible -->
                                                     <a href="<?= $URL; ?>views/almacenamiento-equipaje/show.php?id=<?= $equipaje['idalmacen']; ?>"
-                                                        class="btn btn-touch btn-info btn-sm" title="Ver detalles">
-                                                        <i class="fas fa-eye"></i>
+                                                        class="btn btn-touch btn-info btn-sm" title="Ver detalles" aria-label="Ver detalles del ticket <?= $ticket; ?>">
+                                                        <i class="fas fa-eye" aria-hidden="true"></i>
                                                     </a>
-                                                    <!-- NUEVO: Botón Imprimir recibo -->
-                                                    <a href="<?= $URL; ?>views/almacenamiento-equipaje/recibo.php?id=<?= $equipaje['idalmacen']; ?>"
-                                                        class="btn btn-touch btn-primary btn-sm" title="Imprimir recibo" target="_blank">
-                                                        <i class="fas fa-file-pdf"></i>
-                                                    </a>
-
-                                                    <?php if ($equipaje['estado'] !== 'retirado'): ?>
-                                                        <!-- Botón Editar - Solo visible si no está retirado -->
-                                                        <a href="<?= $URL; ?>views/almacenamiento-equipaje/update.php?id=<?= $equipaje['idalmacen']; ?>"
-                                                            class="btn btn-touch btn-warning btn-sm" title="Editar">
-                                                            <i class="fas fa-edit"></i>
+                                                    <button type="button" class="btn btn-touch btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split"
+                                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                                        aria-label="Más acciones del ticket <?= $ticket; ?>">
+                                                        <span class="sr-only">Más acciones</span>
+                                                    </button>
+                                                    <div class="dropdown-menu dropdown-menu-right">
+                                                        <?php if (AlmacenamientoEquipajeController::esEditable($equipaje['estado'])): ?>
+                                                            <a class="dropdown-item" href="<?= $URL; ?>views/almacenamiento-equipaje/update.php?id=<?= $equipaje['idalmacen']; ?>">
+                                                                <i class="fas fa-edit mr-2 text-warning" aria-hidden="true"></i> Editar
+                                                            </a>
+                                                        <?php endif; ?>
+                                                        <a class="dropdown-item" href="<?= $URL; ?>views/almacenamiento-equipaje/recibo.php?id=<?= $equipaje['idalmacen']; ?>" target="_blank" rel="noopener">
+                                                            <i class="fas fa-file-pdf mr-2 text-primary" aria-hidden="true"></i> Imprimir recibo
                                                         </a>
-
-                                                        <!-- Dropdown para cambiar estado - Solo visible si no está retirado -->
-                                                        <div class="btn-group">
-                                                            <button type="button" class="btn btn-touch btn-success btn-sm dropdown-toggle"
-                                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                                                                title="Cambiar estado">
-                                                                <i class="fas fa-sync-alt"></i>
-                                                            </button>
-                                                            <div class="dropdown-menu">
-                                                                <?php if ($equipaje['estado'] !== 'retirado'): ?>
-                                                                    <a class="dropdown-item text-success cambiar-estado"
-                                                                        href="#"
-                                                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=retirado&csrf_token=<?= generateCSRFToken(); ?>"
-                                                                        data-accion="Retirado"
-                                                                        data-icono="success">
-                                                                        <i class="fas fa-check-circle mr-2"></i> Marcar como Retirado
-                                                                    </a>
-                                                                <?php endif; ?>
-
-                                                                <?php if ($equipaje['estado'] !== 'perdido'): ?>
-                                                                    <a class="dropdown-item text-danger cambiar-estado"
-                                                                        href="#"
-                                                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=perdido&csrf_token=<?= generateCSRFToken(); ?>"
-                                                                        data-accion="Perdido"
-                                                                        data-icono="error">
-                                                                        <i class="fas fa-exclamation-triangle mr-2"></i> Marcar como Perdido
-                                                                    </a>
-                                                                <?php endif; ?>
-
-                                                                <?php if ($equipaje['estado'] !== 'dañado'): ?>
-                                                                    <a class="dropdown-item text-warning cambiar-estado"
-                                                                        href="#"
-                                                                        data-url="<?= $URL; ?>controllers/almacenamiento-equipaje/cambiar_estado.php?id=<?= $equipaje['idalmacen']; ?>&nuevo_estado=dañado&csrf_token=<?= generateCSRFToken(); ?>"
-                                                                        data-accion="Dañado"
-                                                                        data-icono="warning">
-                                                                        <i class="fas fa-times-circle mr-2"></i> Marcar como Dañado
-                                                                    </a>
-                                                                <?php endif; ?>
-                                                            </div>
-                                                        </div>
-                                                    <?php endif; ?>
+                                                        <?php if ($acciones_estado): ?>
+                                                            <div class="dropdown-divider"></div>
+                                                            <?php foreach ($acciones_estado as $destino => $accion): ?>
+                                                                <button type="button" class="dropdown-item cambiar-estado"
+                                                                    data-id="<?= $equipaje['idalmacen']; ?>" data-estado="<?= $destino; ?>">
+                                                                    <i class="fas fa-<?= $accion['icono']; ?> mr-2 text-<?= $accion['clase']; ?>" aria-hidden="true"></i><?= $accion['accion_label']; ?>
+                                                                </button>
+                                                            <?php endforeach; ?>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>

@@ -3,31 +3,30 @@
  * HotelFlow
  */
 
-/* Estilos para tarjetas de equipaje */
-.equipaje-card.estado-almacenado {
-    border-left-color: var(--color-warning);
+/* El dropdown de acciones de la tabla no debe recortarse en la última fila;
+   DataTables Responsive ya evita el desborde horizontal. */
+.equipaje-tabla.table-responsive {
+    overflow: visible;
 }
 
-.equipaje-card.estado-retirado {
-    border-left-color: var(--color-success);
+.equipaje-oculto {
+    display: none;
 }
 
-.equipaje-card.estado-perdido {
-    border-left-color: var(--color-danger);
-}
-
-.equipaje-card.estado-dañado {
-    border-left-color: var(--color-secondary);
-}
-
-.equipaje-card.estado-vencido {
-    border-left-color: var(--color-danger);
-}
-
-/* Mejorar la visualización de los formularios */
-.form-group label {
+/* Páginas con formulario/detalle: ajustes que no deben filtrarse al resto de la app */
+.equipaje-pagina .form-group label {
     font-weight: 600;
     color: var(--color-text-soft);
+}
+
+.equipaje-pagina .input-group-text {
+    background-color: var(--color-surface-alt);
+    font-weight: 600;
+}
+
+.equipaje-pagina .info-box-number {
+    font-size: 1.5rem;
+    font-weight: 600;
 }
 
 .required-field::after {
@@ -35,49 +34,17 @@
     color: var(--color-danger);
 }
 
-/* Mejora visual para campos de moneda */
-.input-group-text {
-    background-color: var(--color-surface-alt);
-    font-weight: 600;
+/* ── Detalle: avatar del perfil ─────────────────────────────────── */
+.equipaje-avatar {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
 }
 
-/* Estilos para botones de acción */
-.btn-retirar {
-    background-color: var(--color-success);
-    border-color: var(--color-success);
-    color: white;
-}
-
-.btn-retirar:hover {
-    background-color: var(--color-success-hover);
-    border-color: var(--color-success-dark);
-}
-
-.btn-marcar-perdido {
-    background-color: var(--color-danger);
-    border-color: var(--color-danger);
-    color: white;
-}
-
-.btn-marcar-perdido:hover {
-    background-color: var(--color-danger-hover);
-    border-color: var(--color-danger-dark);
-}
-
-/* Estilos para la vista de detalle */
-.info-box-equipaje {
-    border-radius: 5px;
-    transition: all 0.3s ease;
-}
-
-.info-box-equipaje:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.info-box-number {
-    font-size: 1.5rem;
-    font-weight: 600;
+.equipaje-avatar__estado {
+    position: absolute;
+    top: -4px;
+    right: -4px;
 }
 
 /* ── Panel resumen sticky (create/update/show) ───────────────────── */
@@ -122,94 +89,44 @@
     }
 }
 
-/* Sidebar sticky de show.php (solo desktop; con scroll propio si se desborda) */
-.equipaje-sidebar > .card {
-    margin-bottom: 1rem;
-}
-
-@media (min-width: 992px) {
-    .equipaje-sidebar.sticky-top {
-        top: 1rem;
-        max-height: calc(100vh - 2rem);
-        overflow-y: auto;
-    }
-}
-
-@media (max-width: 991.98px) {
-    .equipaje-sidebar.sticky-top {
-        position: relative !important;
-        top: auto !important;
-        max-height: none !important;
-        overflow: visible !important;
-    }
-}
-
-/* Código de ticket */
-.ticket-code {
-    font-family: monospace;
-    font-size: 1.2rem;
-    padding: 8px 15px;
-    background-color: var(--color-surface-alt);
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    display: inline-block;
-}
-
-/* Iconos en los campos */
-.form-control-icon {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    color: var(--color-text-light);
-}
-
-/* Ajustes responsive */
 @media (max-width: 767.98px) {
-    .card-footer {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .card-footer .btn {
-        margin-bottom: 10px;
-    }
-
     .equipaje-resumen {
         padding: 10px;
     }
 }
 
-/* Estilos para las imágenes de tipos de equipaje */
-.equipaje-icon {
-    font-size: 2rem;
-    color: var(--color-info);
-    margin-right: 10px;
+/* ── Historial (pestaña Sistema de show.php) ─────────────────────── */
+/* Cada bloque lleva un tono (tl-*) que fija fondo y texto con contraste >= 4.5:1 */
+.tl-primary {
+    --tl-bg: var(--color-primary-dark);
+    --tl-fg: var(--color-white);
 }
 
-/* Estilos para el generador de ticket */
-.ticket-generator {
-    background-color: var(--color-surface-alt);
-    border: 1px dashed var(--color-border-soft);
-    padding: 15px;
-    border-radius: 5px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
+.tl-success {
+    --tl-bg: var(--color-success-dark);
+    --tl-fg: var(--color-white);
 }
 
-.ticket-generator:hover {
-    background-color: var(--color-surface-hover);
-    border-color: var(--color-border-strong);
+.tl-warning {
+    --tl-bg: var(--color-warning);
+    --tl-fg: var(--color-text-strong);
 }
 
-/* Destacar información del cliente */
-.cliente-info {
-    padding: 10px;
-    background-color: var(--color-info-soft);
-    border-left: 3px solid var(--color-info);
-    margin-bottom: 15px;
+.tl-danger {
+    --tl-bg: var(--color-danger-dark);
+    --tl-fg: var(--color-white);
 }
-/* Timeline de AdminLTE mejorado (vista de detalle) */
+
+.tl-dark {
+    --tl-bg: var(--color-dark);
+    --tl-fg: var(--color-white);
+}
+
+.tl-secondary {
+    --tl-bg: var(--color-secondary);
+    --tl-fg: var(--color-white);
+}
+
 .timeline {
     position: relative;
     margin: 0 0 30px 0;
@@ -235,22 +152,18 @@
     margin-bottom: 15px;
 }
 
-.time-label {
-    margin-bottom: 15px;
-}
-
-.time-label>span {
+/* Más específico que las reglas de AdminLTE (.timeline > .time-label > span, .timeline > div > .fa) */
+.timeline > div.time-label > span {
     font-weight: 600;
     padding: 5px 10px;
     display: inline-block;
-    background-color: var(--color-white);
+    background-color: var(--tl-bg);
     border-radius: 4px;
-    color: white;
+    color: var(--tl-fg);
 }
 
 .timeline>div>.timeline-item {
-    -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px var(--color-shadow);
     border-radius: 3px;
     margin-top: 0;
     background-color: var(--color-white);
@@ -289,36 +202,26 @@
     color: var(--color-text-faint);
 }
 
-.timeline>div>i {
+.timeline > div > i.fas {
     width: 30px;
     height: 30px;
     font-size: 15px;
     line-height: 30px;
     position: absolute;
-    color: var(--color-white);
-    background-color: var(--color-primary);
+    color: var(--tl-fg, var(--color-white));
+    background-color: var(--tl-bg, var(--color-primary));
     border-radius: 50%;
     text-align: center;
     left: 18px;
     top: 0;
 }
 
-/* Colores para estados */
-.bg-blue {
-    background-color: var(--color-primary) !important;
-}
-
-.bg-yellow {
-    background-color: var(--color-warning) !important;
-}
-
-/* Responsive */
 @media (max-width: 767.98px) {
     .timeline>div>.timeline-item {
         margin-left: 45px;
     }
 
-    .timeline>div>i {
+    .timeline > div > i.fas {
         left: 10px;
     }
 

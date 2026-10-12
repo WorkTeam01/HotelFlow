@@ -64,7 +64,27 @@ class AlmacenamientoEquipajeController
         }
 
         $ui['badge'] = 'badge-' . $ui['clase'];
+        $ui['alerta'] = self::alertaEstado($estado);
         return $ui;
+    }
+
+    /**
+     * Aviso que acompaña a un estado final en el historial del detalle.
+     *
+     * @return array{clase:string,icono:string,texto:string}|null
+     */
+    private static function alertaEstado(string $estado): ?array
+    {
+        switch ($estado) {
+            case 'retirado':
+                return ['clase' => 'success', 'icono' => 'info-circle', 'texto' => 'El equipaje ha sido entregado al cliente.'];
+            case 'perdido':
+                return ['clase' => 'danger', 'icono' => 'exclamation-triangle', 'texto' => 'El equipaje ha sido marcado como perdido.'];
+            case 'dañado':
+                return ['clase' => 'dark', 'icono' => 'exclamation-circle', 'texto' => 'El equipaje ha sido marcado como dañado.'];
+            default:
+                return null;
+        }
     }
 
     /**
@@ -80,6 +100,51 @@ class AlmacenamientoEquipajeController
             $estados[$estado] = self::estadoEquipaje($estado);
         }
         return $estados;
+    }
+
+    /**
+     * Estados que ofrece el filtro del listado (incluye los finales y el derivado 'vencido').
+     *
+     * @return array<string,array{label:string,clase:string,badge:string,icono:string,orden:int}>
+     */
+    public static function estadosFiltro(): array
+    {
+        $estados = [];
+        foreach (['almacenado', 'vencido', 'retirado', 'perdido', 'dañado'] as $estado) {
+            $estados[$estado] = self::estadoEquipaje($estado);
+        }
+        return $estados;
+    }
+
+    /**
+     * Un equipaje retirado es final: no se edita ni cambia de estado.
+     */
+    public static function esEditable(string $estado): bool
+    {
+        return $estado !== 'retirado';
+    }
+
+    /**
+     * Cambios de estado que se pueden ofrecer sobre un equipaje: un retirado es final.
+     *
+     * @return array<string,array{label:string,clase:string,badge:string,icono:string,orden:int,accion_label:string}>
+     */
+    public static function accionesEstado(string $estadoActual): array
+    {
+        if (!self::esEditable($estadoActual)) {
+            return [];
+        }
+
+        $acciones = [];
+        foreach (['retirado', 'perdido', 'dañado'] as $destino) {
+            if ($destino === $estadoActual) {
+                continue;
+            }
+            $ui = self::estadoEquipaje($destino);
+            $ui['accion_label'] = 'Marcar como ' . $ui['label'];
+            $acciones[$destino] = $ui;
+        }
+        return $acciones;
     }
 
     /**
@@ -234,6 +299,14 @@ class AlmacenamientoEquipajeController
             'clientes' => $clientes,
             'precios_equipaje' => $precios_equipaje
         ];
+    }
+
+    /**
+     * Clientes para el selector del filtro del listado.
+     */
+    public function clientesParaFiltro()
+    {
+        return $this->modelo->getClientes();
     }
 
     /**
@@ -458,8 +531,93 @@ class AlmacenamientoEquipajeController
         $pagoModel = new Pago();
         $equipaje['pagos'] = $pagoModel->getByEquipaje($id);
         $equipaje['metodopago'] = $this->obtenerMetodoPago($equipaje['pagos']);
+        $equipaje['timeline'] = self::armarTimeline($equipaje);
 
         return $equipaje;
+    }
+
+    /**
+     * Historial del detalle como lista plana de eventos ya resueltos para pintar.
+     * 'dia' viene solo en el primer evento de cada fecha. Un perdido/dañado no tiene
+     * fecha de salida: su evento usa la última actualización.
+     *
+     * @param array $equipaje Fila decorada por mostrar() (estado_ui, tiempo_almacenado)
+     * @return array<int,array{dia:?string,tono:string,icono:string,hora:string,titulo:string,mensaje:string,estado_ui:?array,detalles:array,alerta:?array,pie:string}>
+     */
+    public static function armarTimeline(array $equipaje): array
+    {
+        $fmtDia = static fn($f) => date('d/m/Y', strtotime($f));
+        $fmtHora = static fn($f) => date('H:i', strtotime($f));
+
+        $entrada = $equipaje['fechaentrada'];
+        $actualizacion = $equipaje['fechaactualizacion'] ?? null;
+        $ultimoDia = null;
+        $eventos = [];
+
+        $diaDe = static function (string $fecha) use (&$ultimoDia, $fmtDia) {
+            $dia = $fmtDia($fecha);
+            if ($dia === $ultimoDia) {
+                return null;
+            }
+            $ultimoDia = $dia;
+            return $dia;
+        };
+
+        $eventos[] = [
+            'dia' => $diaDe($entrada),
+            'tono' => 'primary',
+            'icono' => 'calendar-plus',
+            'hora' => $fmtHora($entrada),
+            'titulo' => 'Registro inicial',
+            'mensaje' => 'Equipaje registrado en el sistema con estado',
+            'estado_ui' => self::estadoEquipaje('almacenado'),
+            'detalles' => [
+                'Cliente' => $equipaje['nombre_cliente'] ?? 'N/A',
+                'Tipo' => $equipaje['tamano_equipaje'] ?? 'N/A',
+                'Código' => $equipaje['codigo_ticket'],
+            ],
+            'alerta' => null,
+            'pie' => 'Registrado por: ' . ($equipaje['nombre_usuario'] ?? 'Sistema'),
+        ];
+
+        $estadoFinal = in_array($equipaje['estado'], ['retirado', 'perdido', 'dañado'], true);
+        $fechaFinal = $equipaje['estado'] === 'retirado'
+            ? ($equipaje['fechasalida'] ?? $actualizacion)
+            : $actualizacion;
+
+        // El cambio a un estado final ya registra esa misma marca de tiempo: no se duplica como 'Actualización'
+        if ($actualizacion && $actualizacion != $entrada && !($estadoFinal && $actualizacion == $fechaFinal)) {
+            $eventos[] = [
+                'dia' => $diaDe($actualizacion),
+                'tono' => 'warning',
+                'icono' => 'edit',
+                'hora' => $fmtHora($actualizacion),
+                'titulo' => 'Actualización',
+                'mensaje' => 'Se actualizó la información del equipaje.',
+                'estado_ui' => null,
+                'detalles' => [],
+                'alerta' => null,
+                'pie' => '',
+            ];
+        }
+
+        if ($estadoFinal && $fechaFinal) {
+            $ui = self::estadoEquipaje($equipaje['estado']);
+            $eventos[] = [
+                'dia' => $diaDe($fechaFinal),
+                'tono' => $ui['clase'],
+                'icono' => $ui['icono'],
+                'hora' => $fmtHora($fechaFinal),
+                'titulo' => 'Cambio de estado',
+                'mensaje' => 'Estado cambiado a',
+                'estado_ui' => $ui,
+                'detalles' => [],
+                'alerta' => $ui['alerta'],
+                'pie' => 'Tiempo total almacenado: ' . $equipaje['tiempo_almacenado']['texto'],
+            ];
+        }
+
+        return $eventos;
     }
 
     /**

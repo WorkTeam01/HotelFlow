@@ -18,38 +18,18 @@ $(document).ready(function () {
                 .addClass('table-striped')
                 .css('font-size', '11px');
         },
-        tamanoLetra: 9
-    });
-
-    // Manejar cambios de estado con SweetAlert2
-    $(document).on('click', '.cambiar-estado', function (e) {
-        e.preventDefault();
-
-        var url = $(this).data('url');
-        var accion = $(this).data('accion');
-        var icono = $(this).data('icono');
-
-        Swal.fire({
-            title: '¿Está seguro?',
-            text: "Esta acción marcará el equipaje como " + accion,
-            icon: icono,
-            showCancelButton: true,
-            confirmButtonColor: themeColor('primary'),
-            cancelButtonColor: themeColor('secondary'),
-            confirmButtonText: 'Sí, confirmar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = url;
-            }
-        });
+        tamanoLetra: 9,
+        dt: {
+            // En móvil se colapsan primero Nro/Piezas/Fecha/Monto; Acciones y Estado quedan a la vista
+            columnDefs: [
+                { responsivePriority: 1, targets: 7 },
+                { responsivePriority: 2, targets: 1 },
+                { responsivePriority: 3, targets: 6 },
+                { responsivePriority: 4, targets: 2 }
+            ]
+        }
     });
 
     // Inicializar Select2 para el filtro de clientes
     initializeSelect2();
-
-    // Limpiar fechas cuando se hace clic en limpiar filtros
-    $('.btn-secondary').on('click', function () {
-        $('#fecha_inicio, #fecha_fin').val('');
-    });
 });

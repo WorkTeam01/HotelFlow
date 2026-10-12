@@ -1,69 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Manejar botones de cambio de estado
-    const botonesEstado = document.querySelectorAll('.cambiar-estado');
-    botonesEstado.forEach(function (boton) {
-        boton.addEventListener('click', function () {
-            const url = this.getAttribute('data-url');
-            const estado = this.getAttribute('data-estado');
-            const icono = this.getAttribute('data-icono');
-
-            let titulo = '';
-            let texto = '';
-            let confirmButtonColor = '';
-
-            switch (estado) {
-                case 'retirado':
-                    titulo = '¿Marcar como Retirado?';
-                    texto = 'Esta acción registrará que el equipaje ha sido entregado al cliente y no se podrá deshacer.';
-                    confirmButtonColor = themeColor('success');
-                    break;
-                case 'perdido':
-                    titulo = '¿Marcar como Perdido?';
-                    texto = 'Esta acción registrará que el equipaje ha sido perdido o no puede ser localizado.';
-                    confirmButtonColor = themeColor('danger');
-                    break;
-                case 'dañado':
-                    titulo = '¿Marcar como Dañado?';
-                    texto = 'Esta acción registrará que el equipaje ha sufrido daños.';
-                    confirmButtonColor = themeColor('dark');
-                    break;
-                default:
-                    titulo = '¿Cambiar estado?';
-                    texto = 'Esta acción cambiará el estado del equipaje.';
-                    confirmButtonColor = themeColor('primary');
-            }
-
-            Swal.fire({
-                title: titulo,
-                text: texto,
-                icon: icono,
-                showCancelButton: true,
-                confirmButtonColor: confirmButtonColor,
-                cancelButtonColor: themeColor('secondary'),
-                confirmButtonText: 'Sí, confirmar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Mostrar indicador de carga
-                    mostrarCarga('Procesando...', 'Por favor espere mientras se actualiza el estado');
-
-                    // Redireccionar a la página de cambio de estado
-                    window.location.href = url;
-                }
-            });
-        });
-    });
-
     // Persistir la pestaña activa del detalle (mismo patrón que usuarios/show)
-    const tabs = document.querySelectorAll('a[data-toggle="pill"]');
-    tabs.forEach(function (tab) {
-        tab.addEventListener('shown.bs.tab', function (e) {
-            try {
-                sessionStorage.setItem('lastEquipajeDetailTab', e.target.id);
-            } catch (err) {
-                // sessionStorage no disponible: se ignora
-            }
-        });
+    // Bootstrap 4 dispara shown.bs.tab por jQuery: un addEventListener nativo no lo recibe
+    $('a[data-toggle="pill"]').on('shown.bs.tab', function (e) {
+        try {
+            sessionStorage.setItem('lastEquipajeDetailTab', e.target.id);
+        } catch (err) {
+            // sessionStorage no disponible: se ignora
+        }
     });
 
     try {

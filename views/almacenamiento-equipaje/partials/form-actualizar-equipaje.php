@@ -20,9 +20,9 @@
     <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
 
     <!-- 1 · Cliente -->
-    <div class="card card-outline card-primary">
+    <div class="card card-outline card-warning">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-user mr-2"></i>Cliente</h3>
+            <h3 class="card-title"><i class="fas fa-user mr-2" aria-hidden="true"></i>Cliente</h3>
         </div>
         <div class="card-body">
             <div class="form-group mb-0">
@@ -44,11 +44,11 @@
             </div>
 
             <!-- Información del cliente seleccionado (visible si ya hay cliente; update-equipaje.js la muestra/oculta) -->
-            <div id="info-cliente"<?= !empty($equipaje['idcliente']) ? '' : ' style="display: none;"'; ?>>
+            <div id="info-cliente" <?= !empty($equipaje['idcliente']) ? '' : ' class="equipaje-oculto"'; ?>>
                 <div class="row mt-3 mb-0">
                     <div class="col-md-4">
                         <div class="info-box bg-light mb-0">
-                            <span class="info-box-icon bg-info"><i class="fas fa-id-card"></i></span>
+                            <span class="info-box-icon bg-info"><i class="fas fa-id-card" aria-hidden="true"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">Tipo de Documento</span>
                                 <span class="info-box-number" id="cliente-tipodoc"><?= htmlspecialchars($equipaje['tipodoc_cliente'] ?? '-'); ?></span>
@@ -57,7 +57,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="info-box bg-light mb-0">
-                            <span class="info-box-icon bg-primary"><i class="fas fa-passport"></i></span>
+                            <span class="info-box-icon bg-primary"><i class="fas fa-passport" aria-hidden="true"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">Número de Documento</span>
                                 <span class="info-box-number" id="cliente-numdoc"><?= htmlspecialchars($equipaje['numdoc_cliente'] ?? '-'); ?></span>
@@ -66,7 +66,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="info-box bg-light mb-0">
-                            <span class="info-box-icon bg-success"><i class="fas fa-phone"></i></span>
+                            <span class="info-box-icon bg-success"><i class="fas fa-phone" aria-hidden="true"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">Teléfono</span>
                                 <span class="info-box-number" id="cliente-telefono"><?= htmlspecialchars($equipaje['telefono_cliente'] ?? '-'); ?></span>
@@ -79,9 +79,9 @@
     </div>
 
     <!-- 2 · Equipaje (campos editables) -->
-    <div class="card card-outline card-primary">
+    <div class="card card-outline card-warning">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-suitcase mr-2"></i>Equipaje</h3>
+            <h3 class="card-title"><i class="fas fa-suitcase mr-2" aria-hidden="true"></i>Equipaje</h3>
         </div>
         <div class="card-body">
             <div class="row">
@@ -90,9 +90,6 @@
                         <label for="estado">Estado</label>
                         <select class="form-control select2" id="estado" name="estado">
                             <?php foreach (AlmacenamientoEquipajeController::estadosEquipaje() as $valor => $ui): ?>
-                                <?php if ($valor === 'retirado') {
-                                    continue;
-                                } ?>
                                 <option value="<?= htmlspecialchars($valor); ?>"
                                     data-clase="<?= $ui['clase']; ?>"
                                     <?= $equipaje['estado'] == $valor ? 'selected' : ''; ?>>
@@ -109,7 +106,7 @@
                         <div class="input-group">
                             <input type="text" class="form-control" id="codigo_ticket" value="<?= htmlspecialchars($equipaje['codigo_ticket']); ?>" readonly>
                             <div class="input-group-append">
-                                <span class="input-group-text"><i class="fas fa-ticket-alt"></i></span>
+                                <span class="input-group-text"><i class="fas fa-ticket-alt" aria-hidden="true"></i></span>
                             </div>
                         </div>
                         <small class="form-text text-muted">Fijo tras el registro</small>
@@ -127,7 +124,7 @@
     <!-- 3 · Entrada y cobro (solo lectura, sin inputs de escritura) -->
     <div class="card card-outline card-secondary">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-cash-register mr-2"></i>Entrada y cobro</h3>
+            <h3 class="card-title"><i class="fas fa-cash-register mr-2" aria-hidden="true"></i>Entrada y cobro</h3>
             <div class="card-tools">
                 <span class="badge badge-secondary">Fija tras el registro</span>
             </div>
@@ -166,10 +163,10 @@
     <!-- Envío visible solo en móvil/tablet (en desktop usa el del resumen) -->
     <div class="equipaje-form-actions d-lg-none">
         <button type="submit" class="btn btn-warning btn-block btn-lg">
-            <i class="fas fa-save mr-2"></i> Guardar cambios
+            <i class="fas fa-save mr-2" aria-hidden="true"></i> Guardar cambios
         </button>
         <a href="<?= $URL; ?>views/almacenamiento-equipaje" class="btn btn-outline-secondary btn-block mt-2">
-            <i class="fas fa-arrow-left mr-1"></i> Volver
+            <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Volver
         </a>
     </div>
 </form>

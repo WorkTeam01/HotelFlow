@@ -13,7 +13,7 @@
 ?>
 <div class="card card-outline card-info equipaje-resumen sticky-top">
     <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-clipboard-check mr-2"></i>Resumen</h3>
+        <h3 class="card-title"><i class="fas fa-clipboard-check mr-2" aria-hidden="true"></i>Resumen</h3>
     </div>
     <div class="card-body">
         <dl class="equipaje-resumen__lista mb-0">
@@ -38,10 +38,10 @@
     </div>
     <div class="card-footer">
         <a href="<?= $URL; ?>views/almacenamiento-equipaje" class="btn btn-outline-secondary btn-block mb-2">
-            <i class="fas fa-arrow-left mr-1"></i> Volver
+            <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Volver
         </a>
         <button type="submit" form="formRegistroEquipaje" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-save mr-2"></i> Registrar Equipaje
+            <i class="fas fa-save mr-2" aria-hidden="true"></i> Registrar Equipaje
         </button>
     </div>
 </div>

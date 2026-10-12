@@ -21,7 +21,7 @@
     <!-- 1 · Cliente -->
     <div class="card card-outline card-primary">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-user mr-2"></i>Cliente</h3>
+            <h3 class="card-title"><i class="fas fa-user mr-2" aria-hidden="true"></i>Cliente</h3>
         </div>
         <div class="card-body">
             <div class="form-group mb-0">
@@ -42,11 +42,11 @@
             </div>
 
             <!-- Información del cliente seleccionado (la muestra/oculta create-equipaje.js) -->
-            <div id="info-cliente" style="display: none;">
+            <div id="info-cliente" class="equipaje-oculto">
                 <div class="row mt-3 mb-0">
                     <div class="col-md-4">
                         <div class="info-box bg-light">
-                            <span class="info-box-icon bg-info"><i class="fas fa-id-card"></i></span>
+                            <span class="info-box-icon bg-info"><i class="fas fa-id-card" aria-hidden="true"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">Tipo de Documento</span>
                                 <span class="info-box-number" id="cliente-tipodoc">-</span>
@@ -55,7 +55,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="info-box bg-light">
-                            <span class="info-box-icon bg-primary"><i class="fas fa-passport"></i></span>
+                            <span class="info-box-icon bg-primary"><i class="fas fa-passport" aria-hidden="true"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">Número de Documento</span>
                                 <span class="info-box-number" id="cliente-numdoc">-</span>
@@ -64,7 +64,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="info-box bg-light">
-                            <span class="info-box-icon bg-success"><i class="fas fa-phone"></i></span>
+                            <span class="info-box-icon bg-success"><i class="fas fa-phone" aria-hidden="true"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">Teléfono</span>
                                 <span class="info-box-number" id="cliente-telefono">-</span>
@@ -79,7 +79,7 @@
     <!-- 2 · Equipaje -->
     <div class="card card-outline card-primary">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-suitcase mr-2"></i>Equipaje</h3>
+            <h3 class="card-title"><i class="fas fa-suitcase mr-2" aria-hidden="true"></i>Equipaje</h3>
         </div>
         <div class="card-body">
             <div class="row">
@@ -104,7 +104,7 @@
                             <input type="number" class="form-control" id="cantidad_piezas" name="cantidad_piezas"
                                 value="1" min="1" max="50">
                             <div class="input-group-append">
-                                <span class="input-group-text"><i class="fas fa-box"></i></span>
+                                <span class="input-group-text"><i class="fas fa-box" aria-hidden="true"></i></span>
                             </div>
                         </div>
                     </div>
@@ -128,7 +128,7 @@
     <!-- 3 · Entrada y cobro -->
     <div class="card card-outline card-primary">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-cash-register mr-2"></i>Entrada y cobro</h3>
+            <h3 class="card-title"><i class="fas fa-cash-register mr-2" aria-hidden="true"></i>Entrada y cobro</h3>
         </div>
         <div class="card-body">
             <div class="row">
@@ -139,7 +139,7 @@
                             <input type="datetime-local" class="form-control" id="fechaentrada" name="fechaentrada"
                                 value="<?= date('Y-m-d\TH:i'); ?>">
                             <div class="input-group-append">
-                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                <span class="input-group-text"><i class="fas fa-calendar-alt" aria-hidden="true"></i></span>
                             </div>
                         </div>
                     </div>
@@ -174,10 +174,10 @@
     <!-- Envío visible solo en móvil/tablet (en desktop usa el del resumen) -->
     <div class="equipaje-form-actions d-lg-none">
         <button type="submit" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-save mr-2"></i> Registrar Equipaje
+            <i class="fas fa-save mr-2" aria-hidden="true"></i> Registrar Equipaje
         </button>
         <a href="<?= $URL; ?>views/almacenamiento-equipaje" class="btn btn-outline-secondary btn-block mt-2">
-            <i class="fas fa-arrow-left mr-1"></i> Volver
+            <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i> Volver
         </a>
     </div>
 </form>

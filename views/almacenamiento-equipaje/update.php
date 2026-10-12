@@ -40,7 +40,7 @@ $equipaje = $datos['equipaje'];
 $clientes = $datos['clientes'];
 
 // No permitir editar equipajes retirados
-if ($equipaje['estado'] === 'retirado') {
+if (!AlmacenamientoEquipajeController::esEditable($equipaje['estado'])) {
     $_SESSION['mensaje'] = 'No se puede editar un equipaje que ya ha sido retirado';
     $_SESSION['icono'] = 'warning';
     header('Location: ' . $URL . 'views/almacenamiento-equipaje/show.php?id=' . $id);
@@ -67,8 +67,8 @@ include_once '../layouts/header.php';
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/almacenamiento-equipaje"><i class="fas fa-suitcase"></i> Almacenamiento de Equipaje</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home" aria-hidden="true"></i> Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/almacenamiento-equipaje"><i class="fas fa-suitcase" aria-hidden="true"></i> Almacenamiento de Equipaje</a></li>
                     <li class="breadcrumb-item active">Editar Equipaje</li>
                 </ol>
             </div>
@@ -77,7 +77,7 @@ include_once '../layouts/header.php';
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content equipaje-pagina">
     <div class="container-fluid">
         <div class="row">
             <!-- Columna principal: formulario de edición -->

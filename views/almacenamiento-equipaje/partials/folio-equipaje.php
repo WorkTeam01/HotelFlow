@@ -20,7 +20,7 @@
 <?php else: ?>
     <div id="folio-equipaje">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="fas fa-receipt mr-2"></i>Folio de pagos</h5>
+            <h5 class="mb-0"><i class="fas fa-receipt mr-2" aria-hidden="true"></i>Folio de pagos</h5>
             <span class="badge badge-info"><?= count($equipaje['pagos']); ?> movimiento(s)</span>
         </div>
         <div class="table-responsive">
