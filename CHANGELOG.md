@@ -5,6 +5,31 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.7.2] - 2026-10-12
+
+Auditoría de frontend de `almacenamiento-equipaje` (13/20 → 19/20, verificada en navegador a 1280px y 390px) y listado de habitaciones con dropdown de acciones.
+
+### Changed
+
+- **Cambio de estado de equipaje por POST con CSRF en el body** (antes GET con `csrf_token` en la URL): `cambiar_estado.php` es de contrato dual (JSON con `X-Requested-With`, redirect + mensaje de sesión si no) y solo acepta POST. Un solo flujo de JS (`cambiar-estado-equipajes.js`) reemplaza las dos copias de `index-equipajes.js` y `show-equipaje.js`, con confirmación y spinner de carga.
+- **Listado de equipaje**: cada fila muestra solo "Ver" y un dropdown con Editar, Imprimir recibo y los cambios de estado; los ítems son `<button>` con nombre accesible. El filtro de estado y las acciones salen de helpers del controlador (`estadosFiltro()`, `accionesEstado()`, `esEditable()`), y `index` ya no llama a `crear()` solo para obtener clientes.
+- **Listado de habitaciones**: los cambios de estado pasan a un dropdown en vez de un botón por transición.
+- **Historial de `show.php` de equipaje** armado en el controlador (`armarTimeline()`) y pintado por el partial `timeline-equipaje.php`; 463 → ~330 líneas en la vista. Los avisos de estado final salen de `estadoEquipaje()['alerta']`.
+- CSS de equipaje depurado: se elimina el CSS sin uso, los ajustes globales de formulario van bajo `.equipaje-pagina` y los `style=` estáticos pasan a clases. Nuevo token `--color-shadow`.
+- Accesibilidad del módulo: `aria-label` en los botones de icono, `aria-hidden` en los iconos decorativos y label vacío del filtro oculto a lectores de pantalla.
+
+### Fixed
+
+- **Persistencia de pestaña de `show.php` de equipaje no funcionaba**: escuchaba `shown.bs.tab` con `addEventListener`, y Bootstrap 4 lo dispara por jQuery.
+- **Listener global `.btn-secondary` de `index-equipajes.js`** borraba las fechas del filtro al pulsar cualquier botón secundario de la página.
+- **Acciones de equipaje ocultas en móvil**: la DataTable responsive las colapsaba; ahora Acciones, Código y Estado tienen prioridad de visibilidad.
+- **Eventos perdidos en la timeline**: un equipaje perdido o dañado no mostraba su evento "Cambio de estado" (exigía `fechasalida`, que solo tiene el retirado), y un cambio a estado final aparecía también duplicado como "Actualización".
+- Contraste de las etiquetas de la timeline (success/primary con texto blanco quedaban bajo 4.5:1): ahora usan tonos `tl-*` desde `tokens.css` (4.69 a 11.51:1, medidos en navegador).
+
+### Docs
+
+- `CLAUDE.md`: flujo único de estado de equipaje, helpers nuevos del controlador, `responsivePriority` en la columna Acciones de DataTables Responsive, regla de especificidad al sobrescribir componentes de AdminLTE y eventos de Bootstrap 4 por jQuery.
+
 ## [1.7.1] - 2026-10-10
 
 Segunda pasada de la auditoría de bugs: se probaron con acciones reales los flujos de ventas, compras, baño, equipaje, productos y usuarios (apareció que en 1.7.0 no se podían crear ni editar productos), se cerró la deuda técnica conocida y se unificaron los reportes de DataTables. Dos correcciones que cambian el comportamiento: el stock de una compra entra al completarla y la gestión de usuarios queda solo para el Administrador (ver Migración).

@@ -176,7 +176,7 @@ HotelFlow/
 ### Gestión de Habitaciones
 
 - Tipos: Simple, doble, matrimonial, suite
-- Estados: Disponible, ocupada, por limpiar, mantenimiento (con cambio de estado inline y auditado)
+- Estados: Disponible, ocupada, por limpiar, mantenimiento (cambio de estado desde un dropdown de acciones en el listado y en el detalle, con confirmación y auditado)
 - Organización jerárquica por pisos
 - Sistema de tarifas configurable
 
@@ -194,7 +194,7 @@ HotelFlow/
 ### Servicios
 
 - **Baño y Limpieza:** Asignación de tareas, precios dinámicos
-- **Equipaje:** Control de entrada/salida con folio de pagos (cargo + pago al registrar), estados (almacenado, vencido, retirado, perdido, dañado), alerta de permanencia configurable (`EQUIPAJE_DIAS_ALERTA`) y recibos PDF
+- **Equipaje:** Control de entrada/salida con folio de pagos (cargo + pago al registrar), estados (almacenado, vencido, retirado, perdido, dañado), alerta de permanencia configurable (`EQUIPAJE_DIAS_ALERTA`), historial por ticket, cambios de estado con confirmación (un retirado es final) y recibos PDF
 
 ### Productos
 
