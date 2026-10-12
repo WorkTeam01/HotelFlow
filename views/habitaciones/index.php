@@ -232,18 +232,24 @@ $estados_ui = HabitacionController::estadosHabitacion();
                                                     <a href="<?= $URL; ?>views/habitaciones/update.php?id=<?= $habitacion['id_habitacion']; ?>" class="btn btn-warning btn-sm btn-touch" title="Editar" aria-label="Editar la habitación <?= $numero; ?>">
                                                         <i class="fas fa-edit" aria-hidden="true"></i>
                                                     </a>
-                                                    <?php foreach ($acciones_estado as $destino) :
-                                                        $destino_ui = HabitacionController::estadoHabitacion($destino);
-                                                    ?>
-                                                        <button type="button" class="btn btn-<?= $destino_ui['clase']; ?> btn-sm btn-touch cambiar-estado"
-                                                            data-id="<?= $habitacion['id_habitacion']; ?>"
-                                                            data-estado="<?= $destino; ?>"
-                                                            data-estado-actual="<?= $estado; ?>"
-                                                            title="Marcar como <?= $destino_ui['label']; ?>"
-                                                            aria-label="Marcar la habitación <?= $numero; ?> como <?= $destino_ui['label']; ?>">
-                                                            <i class="fas fa-<?= $destino_ui['icono']; ?>" aria-hidden="true"></i>
+                                                    <?php if ($acciones_estado) : ?>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split btn-touch"
+                                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Cambiar estado de la habitación <?= $numero; ?>">
+                                                            <span class="sr-only">Cambiar estado</span>
                                                         </button>
-                                                    <?php endforeach; ?>
+                                                        <div class="dropdown-menu dropdown-menu-right">
+                                                            <?php foreach ($acciones_estado as $destino) :
+                                                                $destino_ui = HabitacionController::estadoHabitacion($destino);
+                                                            ?>
+                                                                <button type="button" class="dropdown-item cambiar-estado"
+                                                                    data-id="<?= $habitacion['id_habitacion']; ?>"
+                                                                    data-estado="<?= $destino; ?>"
+                                                                    data-estado-actual="<?= $estado; ?>">
+                                                                    <i class="fas fa-<?= $destino_ui['icono']; ?> mr-2 text-<?= $destino_ui['clase']; ?>" aria-hidden="true"></i><?= $destino_ui['label']; ?>
+                                                                </button>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
