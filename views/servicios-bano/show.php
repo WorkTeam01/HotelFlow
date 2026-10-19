@@ -26,23 +26,20 @@ if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario
     exit;
 }
 
-// Incluir el encabezado
-$skip_select2 = true;
-$skip_chartjs = true;
-$module_scripts = ['servicios-bano/show-servicios-bano'];
-include_once '../layouts/header.php';
-
-// Instanciar el controlador y obtener los datos del servicio
 $controller = new ServicioBanoController();
-$datos = $controller->editar($id);
+$datos = $controller->obtener($id);
 
-// Verificar si el servicio existe
 if (!$datos) {
     $_SESSION['mensaje'] = 'Servicio de baño no encontrado';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . 'views/servicios-bano');
     exit;
 }
+
+$skip_select2 = true;
+$skip_chartjs = true;
+$module_scripts = ['servicios-bano/show-servicios-bano'];
+include_once '../layouts/header.php';
 
 // Preparar la clase y texto según el estado
 $clase_estado = '';
@@ -114,10 +111,10 @@ $esCancelado = $servicio['estado'] === 'cancelado';
                                 <b>Baño</b> <span class="float-right"><?= htmlspecialchars($servicio['nombre_bano'] ?? 'N/A'); ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b>Precio del Baño</b> <span class="float-right"><?= number_format($servicio['precio_bano'], 2 ?? 0); ?></span>
+                                <b>Precio del Baño</b> <span class="float-right"><?= number_format((float)($servicio['precio_bano'] ?? 0), 2); ?></span>
                             </li>
                             <li class="list-group-item">
-                                <b>Tipo de Cliente</b> <span class="float-right"><?= htmlspecialchars($servicio['tipo_cliente']); ?></span>
+                                <b>Tipo de Cliente</b> <span class="float-right"><?= htmlspecialchars($servicio['tipo_cliente'] ?? ''); ?></span>
                             </li>
                             <?php if ($servicio['tipo_cliente'] == 'Huesped' && !empty($servicio['nombre_cliente'])): ?>
                                 <li class="list-group-item">

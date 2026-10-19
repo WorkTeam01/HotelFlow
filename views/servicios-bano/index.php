@@ -3,13 +3,13 @@ require_once __DIR__ . '/../../controllers/servicios-bano/ServicioBanoController
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 require_once __DIR__ . '/../layouts/session.php';
 
-$idusuario = $_SESSION['usuario_id'] ?? ''; // Obtener el ID del usuario desde la sesión
+requireLogin();
+$idusuario = $_SESSION['usuario_id'];
 
-// Verificar si el usuario tiene permiso para crear servicios de baño
 $auth = new AuthorizationService();
 
-if (!($auth->puedeAccederModulo($idusuario, 'servicios_bano'))) {
-    $_SESSION['mensaje'] = 'No tiene permisos para crear servicios de baños.';
+if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'servicios_bano')) {
+    $_SESSION['mensaje'] = 'No tiene permisos para ver servicios de baños.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . 'views/servicios-bano');
     exit;
@@ -25,20 +25,10 @@ $controller = new ServicioBanoController();
 $servicios = $controller->index();
 $estadisticas = $controller->getEstadisticas();
 
-// Obtener los baños disponibles para el registro rápido
-$banos = $controller->getBanosDisponibles();
-
-// Verificar disponibilidad del servicio
 $disponibilidad = $controller->validarDisponibilidadServicio();
 
-// Obtener los baños disponibles solo si el servicio está disponible
-$banos = [];
-if ($disponibilidad['disponible']) {
-    $banos = $controller->getBanosDisponibles();
-}
-
-// Verificar si el usuario está autenticado
-requireLogin();
+// Baños para el registro rápido, solo si el servicio está disponible
+$banos = $disponibilidad['disponible'] ? $controller->getBanosDisponibles() : [];
 ?>
 
 <!-- Content Header (Page header) -->

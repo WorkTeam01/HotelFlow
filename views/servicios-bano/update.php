@@ -27,25 +27,22 @@ if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario
     exit;
 }
 
-// Agregar los estilos específicos para este módulo
-$module_styles = ['servicios-bano/servicios-bano'];
-$module_scripts = ['servicios-bano/update-servicios-bano'];
-
-// Incluir el encabezado
-$skip_chartjs = true;
-include_once '../layouts/header.php';
-
-// Instanciar el controlador y obtener los datos del servicio
 $controller = new ServicioBanoController();
-$datos = $controller->editar($id);
+$datos = $controller->obtener($id);
 
-// Verificar si el servicio existe
 if (!$datos) {
     $_SESSION['mensaje'] = 'Servicio de baño no encontrado';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . 'views/servicios-bano');
     exit;
 }
+
+// Agregar los estilos específicos para este módulo
+$module_styles = ['servicios-bano/servicios-bano'];
+$module_scripts = ['servicios-bano/update-servicios-bano'];
+
+$skip_chartjs = true;
+include_once '../layouts/header.php';
 
 $servicio = $datos['servicio'];
 $banos_disponibles = $datos['banos_disponibles'];
@@ -145,7 +142,7 @@ switch ($servicio['estado']) {
                                             <?php if (!$bano_actual_en_lista && $servicio['idbano']): ?>
                                                 <option value="<?= $servicio['idbano']; ?>" selected>
                                                     <?= htmlspecialchars($servicio['nombre_bano']); ?> -
-                                                    <?= number_format($servicio['precio_bano'], 0); ?>
+                                                    <?= number_format((float)($servicio['precio_bano'] ?? 0), 0); ?>
                                                 </option>
                                             <?php endif; ?>
                                         </select>

@@ -6,12 +6,12 @@ require_once __DIR__ . '/../layouts/session.php';
 // Verificar si el usuario está autenticado
 requireLogin();
 
-$idusuario = $_SESSION['usuario_id'] ?? ''; // Obtener el ID del usuario desde la sesión
+$idusuario = $_SESSION['usuario_id'];
 
 // Verificar si el usuario tiene permiso para crear servicios de baño
 $auth = new AuthorizationService();
 
-if (!($auth->puedeAccederModulo($idusuario, 'servicios_bano'))) {
+if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'servicios_bano')) {
     $_SESSION['mensaje'] = 'No tiene permisos para crear servicios de baños.';
     $_SESSION['icono'] = 'error';
     header('Location: ' . $URL . 'views/servicios-bano');

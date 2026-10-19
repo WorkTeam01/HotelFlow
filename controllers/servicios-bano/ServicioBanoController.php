@@ -428,44 +428,27 @@ class ServicioBanoController
     }
 
     /**
-     * Muestra el formulario para editar un servicio de baño
-     * 
-     * @param int $id ID del servicio de baño
-     * @return array|null Datos del servicio de baño o redirige en caso de error
+     * Datos para los formularios de detalle y edición de un servicio de baño.
+     * No redirige: la vista decide el destino antes de incluir el layout.
+     *
+     * @param int|null $id ID del servicio de baño
+     * @return array|null Datos del servicio, o null si el ID es inválido o no existe
      */
-    public function editar($id = null)
+    public function obtener($id = null)
     {
-        // Verificar si se proporcionó un ID
         if (!$id) {
-            global $URL;
-            $_SESSION['mensaje'] = 'ID de servicio de baño no válido';
-            $_SESSION['icono'] = 'error';
-            header('Location: ' . $URL . 'views/servicios-bano');
-            exit;
+            return null;
         }
 
-        // Obtener datos del servicio
         $servicio = $this->modelo->getById($id);
-
         if (!$servicio) {
-            global $URL;
-            $_SESSION['mensaje'] = 'Servicio de baño no encontrado';
-            $_SESSION['icono'] = 'error';
-            header('Location: ' . $URL . 'views/servicios-bano');
-            exit;
+            return null;
         }
 
-        // Obtener los baños disponibles para el select
-        $banos_disponibles = $this->getBanosDisponibles();
-
-        // Obtener los clientes para el select
-        $clientes = $this->getClientes();
-
-        // Devolver los datos del servicio
         return [
             'servicio' => $servicio,
-            'banos_disponibles' => $banos_disponibles,
-            'clientes' => $clientes
+            'banos_disponibles' => $this->getBanosDisponibles(),
+            'clientes' => $this->getClientes()
         ];
     }
 
