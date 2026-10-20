@@ -695,6 +695,8 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.8.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.7.2...1.8.0
+[1.7.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.7.1...1.7.2
 [1.7.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.7.0...1.7.1
 [1.7.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.6.1...1.7.0
 [1.6.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.6.0...1.6.1
