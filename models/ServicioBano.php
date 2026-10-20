@@ -81,6 +81,8 @@ class ServicioBano
             $query = "SELECT sb.idservicio, sb.idbano, sb.idusuario, sb.idcliente, 
                   sb.tipo_cliente, sb.total, sb.metodopago, sb.pagorecibido, 
                   sb.cambio, sb.fecha, sb.estado, sb.modalidad_cobro, sb.observaciones,
+                  sb.motivo_cancelacion, sb.fecha_cancelacion, sb.stock_repuesto,
+                  CONCAT(uc.nombre, ' ', uc.apellidop) as nombre_usuario_cancelacion,
                   b.nombre as nombre_bano, b.precio as precio_bano,
                   CONCAT(u.nombre, ' ', u.apellidop) as nombre_usuario,
                   CASE 
@@ -90,6 +92,7 @@ class ServicioBano
                   FROM {$this->tabla} sb
                   LEFT JOIN bano b ON sb.idbano = b.idbano
                   LEFT JOIN usuarios u ON sb.idusuario = u.idusuario
+                  LEFT JOIN usuarios uc ON sb.idusuario_cancelacion = uc.idusuario
                   LEFT JOIN persona p ON sb.idcliente = p.idpersona
                   ORDER BY sb.idservicio DESC";
 
@@ -120,6 +123,8 @@ class ServicioBano
             $query = "SELECT sb.idservicio, sb.idbano, sb.idusuario, sb.idcliente, 
                   sb.tipo_cliente, sb.total, sb.metodopago, sb.pagorecibido, 
                   sb.cambio, sb.fecha, sb.estado, sb.modalidad_cobro, sb.observaciones,
+                  sb.motivo_cancelacion, sb.fecha_cancelacion, sb.stock_repuesto,
+                  CONCAT(uc.nombre, ' ', uc.apellidop) as nombre_usuario_cancelacion,
                   b.nombre as nombre_bano, b.precio as precio_bano,
                   CONCAT(u.nombre, ' ', u.apellidop) as nombre_usuario,
                   CASE 
@@ -129,6 +134,7 @@ class ServicioBano
                   FROM {$this->tabla} sb
                   LEFT JOIN bano b ON sb.idbano = b.idbano
                   LEFT JOIN usuarios u ON sb.idusuario = u.idusuario
+                  LEFT JOIN usuarios uc ON sb.idusuario_cancelacion = uc.idusuario
                   LEFT JOIN persona p ON sb.idcliente = p.idpersona
                   WHERE sb.idservicio = :id";
 
@@ -308,77 +314,79 @@ class ServicioBano
     }
 
     /**
-     * Actualiza un servicio de baño existente
-     * 
-     * @param int $id ID del servicio de baño
-     * @param array $datos Datos del servicio de baño
-     * @return bool True si se actualizó correctamente, False en caso contrario
-     */
-    public function actualizar($id, $datos)
-    {
-        try {
-            // El estado NUNCA se toca aquí: la actualización de datos del servicio
-            // (baño, cliente, montos, etc.) está separada del cambio de estado, que
-            // se hace exclusivamente vía actualizarEstado().
-            $query = "UPDATE {$this->tabla} SET
-                  idbano = :idbano,
-                  idcliente = :idcliente,
-                  tipo_cliente = :tipo_cliente,
-                  total = :total,
-                  metodopago = :metodopago,
-                  pagorecibido = :pagorecibido,
-                  cambio = :cambio
-                  WHERE idservicio = :id";
-
-            $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':idbano', $datos['idbano'], PDO::PARAM_INT);
-
-            // Manejar idcliente que puede ser NULL
-            if (!empty($datos['idcliente'])) {
-                $stmt->bindParam(':idcliente', $datos['idcliente'], PDO::PARAM_INT);
-            } else {
-                $stmt->bindValue(':idcliente', null, PDO::PARAM_NULL);
-            }
-
-            $stmt->bindParam(':tipo_cliente', $datos['tipo_cliente'], PDO::PARAM_STR);
-            $stmt->bindParam(':total', $datos['total'], PDO::PARAM_STR);
-            $stmt->bindParam(':metodopago', $datos['metodopago'], PDO::PARAM_STR);
-            $stmt->bindParam(':pagorecibido', $datos['pagorecibido'], PDO::PARAM_STR);
-            $stmt->bindParam(':cambio', $datos['cambio'], PDO::PARAM_STR);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log('[' . static::class . '] ' . $e->getMessage());
-            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            return false;
-        }
-    }
-
-    /**
      * Estados válidos para un servicio de baño (columna enum en BD)
      */
     public const ESTADOS_VALIDOS = ['iniciado', 'finalizado', 'cancelado'];
 
     /**
-     * Actualiza el estado de un servicio de baño
-     *
-     * @param int $id ID del servicio de baño
-     * @param string $estado Nuevo estado ('iniciado'|'finalizado'|'cancelado')
-     * @return bool True si se actualizó correctamente, False en caso contrario
+     * Transiciones permitidas; un servicio cancelado es final.
      */
-    public function actualizarEstado($id, $estado)
+    public const TRANSICIONES = [
+        'iniciado'   => ['finalizado', 'cancelado'],
+        'finalizado' => ['cancelado'],
+        'cancelado'  => [],
+    ];
+
+    /**
+     * Transiciones reservadas al Administrador.
+     */
+    public const SOLO_ADMIN = ['finalizado>cancelado'];
+
+    /**
+     * Campos que se pueden editar tras el cobro; el dinero solo se corrige cancelando con reverso.
+     */
+    public const CAMPOS_EDITABLES = ['observaciones'];
+
+    /**
+     * Si cancelar devuelve el insumo según el estado del que se cancela: un servicio 'iniciado'
+     * se cancela por error de registro (el insumo no se usó); uno 'finalizado' ya lo consumió.
+     */
+    private function reponeStockAlCancelar($estadoOrigen)
     {
-        if (!in_array($estado, self::ESTADOS_VALIDOS, true)) {
-            $this->lastError = "Estado '$estado' no válido";
+        return $estadoOrigen === 'iniciado';
+    }
+
+    /**
+     * Indica si el usuario puede pasar el servicio al estado indicado.
+     *
+     * @param string $estadoActual
+     * @param string $nuevoEstado
+     * @param bool $esAdmin
+     * @return bool
+     */
+    public static function transicionPermitida($estadoActual, $nuevoEstado, $esAdmin)
+    {
+        if (!in_array($nuevoEstado, self::TRANSICIONES[$estadoActual] ?? [], true)) {
             return false;
         }
+        return $esAdmin || !in_array($estadoActual . '>' . $nuevoEstado, self::SOLO_ADMIN, true);
+    }
 
+    /**
+     * Actualiza los campos descriptivos de un servicio (el dinero y el estado no se tocan aquí).
+     *
+     * @param int $id ID del servicio de baño
+     * @param array $datos Solo se usan los campos de CAMPOS_EDITABLES
+     * @return bool True si se actualizó correctamente, False en caso contrario
+     */
+    public function actualizar($id, $datos)
+    {
         try {
-            $sql = "UPDATE {$this->tabla} SET estado = :estado WHERE idservicio = :id";
-            $stmt = $this->conexion->prepare($sql);
-            $stmt->bindParam(':estado', $estado, PDO::PARAM_STR);
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $servicio = $this->getById($id);
+            if (!$servicio) {
+                $this->lastError = 'Servicio de baño no encontrado';
+                return false;
+            }
+            if ($servicio['estado'] === 'cancelado') {
+                $this->lastError = 'Un servicio cancelado no se puede editar.';
+                return false;
+            }
+
+            $observaciones = trim($datos['observaciones'] ?? '');
+            $stmt = $this->conexion->prepare("UPDATE {$this->tabla} SET observaciones = :observaciones WHERE idservicio = :id");
+            $stmt->bindValue(':observaciones', $observaciones !== '' ? $observaciones : null, PDO::PARAM_STR);
+            $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+
             return $stmt->execute();
         } catch (PDOException $e) {
             error_log('[' . static::class . '] ' . $e->getMessage());
@@ -388,14 +396,102 @@ class ServicioBano
     }
 
     /**
-     * Cancela un servicio de baño
+     * Cancela un servicio: revierte en `pagos` cada línea viva (primero el pago, luego el cargo),
+     * devuelve el insumo si corresponde y registra quién y por qué. El estado se lee con FOR UPDATE.
+     * Orden de bloqueo: bano → servicio_bano → productos.
      *
-     * @param int $id ID del servicio de baño
-     * @return bool True si se canceló correctamente, False en caso contrario
+     * @param int $id
+     * @param int $idusuario Usuario que cancela
+     * @param bool $esAdmin
+     * @param string $motivo Obligatorio
+     * @return bool
      */
-    public function cancelarServicio($id)
+    public function cancelar($id, $idusuario, $esAdmin, $motivo)
     {
-        return $this->actualizarEstado($id, 'cancelado');
+        $motivo = trim($motivo);
+        if ($motivo === '') {
+            $this->lastError = 'Indique el motivo de la cancelación.';
+            return false;
+        }
+        $motivo = mb_substr($motivo, 0, 255);
+
+        $config = require __DIR__ . '/../config/config.php';
+        $transaccionPropia = !$this->conexion->inTransaction();
+
+        try {
+            // Sin lock: solo para conocer el baño (inmutable) y poder bloquear en el orden canónico
+            $stmt = $this->conexion->prepare("SELECT idbano FROM {$this->tabla} WHERE idservicio = :id");
+            $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+            $stmt->execute();
+            $idbano = $stmt->fetchColumn();
+            if ($idbano === false) {
+                $this->lastError = 'Servicio de baño no encontrado';
+                return false;
+            }
+
+            if ($transaccionPropia) {
+                $this->conexion->beginTransaction();
+            }
+
+            $stmt = $this->conexion->prepare("SELECT idbano FROM bano WHERE idbano = :idbano FOR UPDATE");
+            $stmt->bindValue(':idbano', (int)$idbano, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $stmt = $this->conexion->prepare("SELECT estado FROM {$this->tabla} WHERE idservicio = :id FOR UPDATE");
+            $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+            $stmt->execute();
+            $estadoActual = $stmt->fetchColumn();
+
+            if ($estadoActual === 'cancelado') {
+                return $this->abortarRegistro($transaccionPropia, 'El servicio ya está cancelado');
+            }
+            if (!self::transicionPermitida($estadoActual, 'cancelado', $esAdmin)) {
+                $mensaje = in_array($estadoActual . '>cancelado', self::SOLO_ADMIN, true)
+                    ? 'Solo un Administrador puede cancelar un servicio finalizado.'
+                    : 'Transición de estado no permitida.';
+                return $this->abortarRegistro($transaccionPropia, $mensaje);
+            }
+
+            require_once __DIR__ . '/Pago.php';
+            $pagoModelo = new Pago();
+            foreach ($pagoModelo->getLineasVivasServicio($id) as $linea) {
+                if (!$pagoModelo->registrarLineaServicio($id, 'reverso', 'Cancelación de servicio de baño #' . (int)$id, null, null, $idusuario, $linea['id_pago'])) {
+                    return $this->abortarRegistro($transaccionPropia, $pagoModelo->getLastError());
+                }
+            }
+
+            $stockRepuesto = 0;
+            if ($this->reponeStockAlCancelar($estadoActual)) {
+                require_once __DIR__ . '/Producto.php';
+                $productoModelo = new Producto();
+                $producto = $productoModelo->getByNombre($config['servicios_bano']['producto_consumible']);
+                if ($producto && $productoModelo->incrementarStock($producto['idproducto'])) {
+                    $stockRepuesto = 1;
+                }
+            }
+
+            $stmt = $this->conexion->prepare("UPDATE {$this->tabla} SET estado = 'cancelado',
+                motivo_cancelacion = :motivo, idusuario_cancelacion = :idusuario,
+                fecha_cancelacion = :fecha, stock_repuesto = :stock WHERE idservicio = :id");
+            $stmt->bindValue(':motivo', $motivo, PDO::PARAM_STR);
+            $stmt->bindValue(':idusuario', (int)$idusuario, PDO::PARAM_INT);
+            $stmt->bindValue(':fecha', date('Y-m-d H:i:s'), PDO::PARAM_STR);
+            $stmt->bindValue(':stock', $stockRepuesto, PDO::PARAM_INT);
+            $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            if ($transaccionPropia) {
+                $this->conexion->commit();
+            }
+            return true;
+        } catch (PDOException $e) {
+            if ($transaccionPropia && $this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return false;
+        }
     }
 
     /**

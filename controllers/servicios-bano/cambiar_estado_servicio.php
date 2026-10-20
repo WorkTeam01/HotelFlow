@@ -3,53 +3,56 @@ require_once __DIR__ . '/../../views/layouts/session.php';
 require_once __DIR__ . '/ServicioBanoController.php';
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 
-// Verificar si el usuario está autenticado
 requireLogin();
 
-// Verificar permisos
+// Contrato dual: JSON si llega con X-Requested-With, redirect + mensaje de sesión si no.
+$esAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+$responder = function (bool $success, string $mensaje, string $icono = 'error', ?int $id = null) use ($esAjax, $URL) {
+    if ($esAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $success, 'message' => $mensaje]);
+        exit;
+    }
+
+    $_SESSION['mensaje'] = $mensaje;
+    $_SESSION['icono'] = $icono;
+
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    if ($referer !== '' && str_starts_with($referer, $URL)) {
+        header('Location: ' . $referer);
+    } elseif ($id) {
+        header('Location: ' . $URL . 'views/servicios-bano/show.php?id=' . $id);
+    } else {
+        header('Location: ' . $URL . 'views/servicios-bano/index.php');
+    }
+    exit;
+};
+
 $idusuario_sesion = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
 if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($idusuario_sesion, 'servicios_bano')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para realizar esta acción.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL . 'views/servicios-bano/index.php');
-    exit;
+    $responder(false, 'No tiene permisos para realizar esta acción.');
 }
 
-// Instanciar el controlador
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $responder(false, 'Método no permitido.');
+}
+
+if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+    $responder(false, 'Token de seguridad inválido. Recargue la página e intente nuevamente.');
+}
+
+$id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
+$nuevo_estado = isset($_POST['nuevo_estado']) ? trim($_POST['nuevo_estado']) : '';
+$motivo = isset($_POST['motivo']) ? trim($_POST['motivo']) : '';
+
+if (!$id || $nuevo_estado === '') {
+    $responder(false, 'Datos inválidos para cambiar el estado del servicio.');
+}
+
 $controller = new ServicioBanoController();
+$resultado = $controller->cambiarEstadoServicio($id, $nuevo_estado, $motivo);
 
-$id_servicio = null;
-$nuevo_estado = null;
-
-if ($_SERVER['REQUEST_METHOD'] != 'GET' || !isset($_GET['id']) || !isset($_GET['nuevo_estado'])) {
-    $_SESSION['mensaje'] = 'Acción no permitida.';
-    $_SESSION['icono'] = 'warning';
-    header('Location: ' . $URL . 'views/servicios-bano/index.php');
-    exit;
-}
-
-if (!isset($_GET['csrf_token']) || !verifyCSRFToken($_GET['csrf_token'])) {
-    $_SESSION['mensaje'] = 'Token de seguridad inválido o expirado.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL . 'views/servicios-bano/index.php');
-    exit;
-}
-
-$id_servicio = filter_var($_GET['id'], FILTER_VALIDATE_INT);
-$nuevo_estado = filter_var($_GET['nuevo_estado'], FILTER_SANITIZE_STRING);
-
-if ($id_servicio === false || $nuevo_estado === '') {
-    $_SESSION['mensaje'] = 'Datos inválidos para cambiar el estado del servicio.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL . 'views/servicios-bano/index.php');
-    exit;
-}
-
-$resultado = $controller->cambiarEstadoServicio($id_servicio, $nuevo_estado);
-$_SESSION['mensaje'] = $resultado['message'];
-$_SESSION['icono'] = $resultado['icon'];
-
-header('Location: ' . $URL . 'views/servicios-bano/index.php');
-exit;
+$responder($resultado['success'], $resultado['message'], $resultado['icon'], $id);

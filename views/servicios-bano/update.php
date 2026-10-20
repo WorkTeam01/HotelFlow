@@ -37,16 +37,23 @@ if (!$datos) {
     exit;
 }
 
+if ($datos['servicio']['estado'] === 'cancelado') {
+    $_SESSION['mensaje'] = 'Un servicio cancelado no se puede editar.';
+    $_SESSION['icono'] = 'warning';
+    header('Location: ' . $URL . 'views/servicios-bano/show.php?id=' . $id);
+    exit;
+}
+
 // Agregar los estilos específicos para este módulo
 $module_styles = ['servicios-bano/servicios-bano'];
+
 $module_scripts = ['servicios-bano/update-servicios-bano'];
 
+$skip_select2 = true;
 $skip_chartjs = true;
 include_once '../layouts/header.php';
 
 $servicio = $datos['servicio'];
-$banos_disponibles = $datos['banos_disponibles'];
-$clientes = $datos['clientes'];
 
 // Determinar clases y estilos según el estado real (enum: iniciado/finalizado/cancelado)
 $card_class = 'card-primary';
@@ -112,131 +119,31 @@ switch ($servicio['estado']) {
                                 </span>
                             </div>
 
-                            <div class="row">
-                                <!-- Baño -->
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="idbano" class="required-field">Baño</label>
-                                        <select class="form-control select2" id="idbano" name="idbano" required>
-                                            <option value="">Seleccione un baño</option>
-                                            <?php
-                                            // Agregar el baño actual si no está en la lista de disponibles
-                                            $bano_actual_en_lista = false;
+                            <!-- Datos cobrados (solo lectura): el dinero se corrige cancelando el servicio -->
+                            <ul class="list-group list-group-unbordered mb-3">
+                                <li class="list-group-item">
+                                    <b>Baño</b> <span class="float-right"><?= htmlspecialchars($servicio['nombre_bano'] ?? 'N/A'); ?></span>
+                                </li>
+                                <li class="list-group-item">
+                                    <b>Cliente</b>
+                                    <span class="float-right">
+                                        <?= htmlspecialchars($servicio['tipo_cliente'] === 'Publico' ? 'Cliente público' : ($servicio['nombre_cliente'] ?? 'N/A')); ?>
+                                    </span>
+                                </li>
+                                <li class="list-group-item">
+                                    <b>Método de pago</b> <span class="float-right"><?= htmlspecialchars($servicio['metodopago'] ?? 'N/A'); ?></span>
+                                </li>
+                                <li class="list-group-item">
+                                    <b>Total cobrado</b> <span class="float-right">Bs. <?= number_format((float)$servicio['total'], 2); ?></span>
+                                </li>
+                            </ul>
 
-                                            foreach ($banos_disponibles as $bano):
-                                                if ($bano['idbano'] == $servicio['idbano']) {
-                                                    $bano_actual_en_lista = true;
-                                                }
-                                            ?>
-                                                <option value="<?= $bano['idbano']; ?>"
-                                                    data-precio="<?= $bano['precio']; ?>"
-                                                    <?= $bano['idbano'] == $servicio['idbano'] ? 'selected' : ''; ?>>
-                                                    <?= htmlspecialchars($bano['nombre']); ?>
-                                                    <?php if (!empty($bano['ubicacion'])): ?>
-                                                        - <?= htmlspecialchars($bano['ubicacion']); ?>
-                                                    <?php endif; ?>
-                                                    (<?= number_format($bano['precio'], 0); ?>)
-                                                </option>
-                                            <?php endforeach; ?>
-
-                                            <?php if (!$bano_actual_en_lista && $servicio['idbano']): ?>
-                                                <option value="<?= $servicio['idbano']; ?>" selected>
-                                                    <?= htmlspecialchars($servicio['nombre_bano']); ?> -
-                                                    <?= number_format((float)($servicio['precio_bano'] ?? 0), 0); ?>
-                                                </option>
-                                            <?php endif; ?>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- Tipo de Cliente -->
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="tipo_cliente" class="required-field">Tipo de Cliente</label>
-                                        <select class="form-control select2" id="tipo_cliente" name="tipo_cliente" required>
-                                            <option value="Publico" <?= $servicio['tipo_cliente'] == 'Publico' ? 'selected' : ''; ?>>Público</option>
-                                            <option value="Huesped" <?= $servicio['tipo_cliente'] == 'Huesped' ? 'selected' : ''; ?>>Huésped</option>
-                                        </select>
-                                    </div>
-                                </div>
+                            <div class="form-group">
+                                <label for="observaciones">Observaciones</label>
+                                <input type="text" class="form-control" id="observaciones" name="observaciones"
+                                    maxlength="255" value="<?= htmlspecialchars($servicio['observaciones'] ?? ''); ?>">
                             </div>
 
-                            <div class="row">
-                                <!-- Cliente (opcional) -->
-                                <div class="col-md-12" id="div_cliente" style="<?= $servicio['tipo_cliente'] != 'Huesped' ? 'display: none;' : ''; ?>">
-                                    <div class="form-group">
-                                        <label for="idcliente">Cliente</label>
-                                        <select class="form-control select2" id="idcliente" name="idcliente">
-                                            <option value="">Seleccione un cliente (opcional)</option>
-                                            <?php foreach ($clientes as $cliente): ?>
-                                                <option value="<?= $cliente['idpersona']; ?>" <?= $cliente['idpersona'] == $servicio['idcliente'] ? 'selected' : ''; ?>>
-                                                    <?= htmlspecialchars($cliente['nombre_completo']); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <small class="form-text text-muted">Opcional: Seleccione si el cliente está registrado</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <!-- Método de Pago -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="metodopago" class="required-field">Método de Pago</label>
-                                        <select class="form-control select2" id="metodopago" name="metodopago" required>
-                                            <option value="Efectivo" <?= $servicio['metodopago'] == 'Efectivo' ? 'selected' : ''; ?>>Efectivo</option>
-                                            <option value="QR" <?= $servicio['metodopago'] == 'QR' ? 'selected' : ''; ?>>QR</option>
-                                            <option value="OTROS" <?= $servicio['metodopago'] == 'OTROS' ? 'selected' : ''; ?>>Otros</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- Total -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="total" class="required-field">Total</label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">Bs.</span>
-                                            </div>
-                                            <input type="number" class="form-control" id="total" name="total"
-                                                placeholder="0.00" step="0.01" min="0" value="<?= $servicio['total']; ?>" required>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Pago Recibido -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="pagorecibido" class="required-field">Pago Recibido</label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">Bs.</span>
-                                            </div>
-                                            <input type="number" class="form-control" id="pagorecibido" name="pagorecibido"
-                                                placeholder="0.00" step="0.01" min="0" value="<?= $servicio['pagorecibido']; ?>" required>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <!-- Cambio (calculado automáticamente) -->
-                                <div class="col-md-12" id="cambio_display">
-                                    <div class="form-group">
-                                        <label for="cambio_display">Cambio</label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">Bs.</span>
-                                            </div>
-                                            <input type="text" class="form-control" id="cambio_display" readonly
-                                                value="<?= number_format($servicio['cambio'], 2); ?>">
-                                        </div>
-                                        <small class="form-text text-muted">Calculado automáticamente</small>
-                                    </div>
-                                </div>
-                            </div>
                             <!-- El estado del servicio no se edita aquí: use el botón de acción
                                  en el listado (Finalizar / Cancelar) para cambiarlo. -->
 
@@ -282,7 +189,7 @@ switch ($servicio['estado']) {
                             <div class="row g-1">
                                 <div class="col-12 col-sm-auto">
                                     <button type="submit" class="btn btn-warning w-100">
-                                        <i class="fas fa-save"></i> Actualizar Servicio
+                                        <i class="fas fa-save"></i> Guardar observaciones
                                     </button>
                                 </div>
                                 <div class="col-12 col-sm-auto">
@@ -350,10 +257,8 @@ switch ($servicio['estado']) {
                         <div class="callout callout-info">
                             <h5>Instrucciones:</h5>
                             <ul>
-                                <li>Modifique los campos necesarios</li>
-                                <li>El cambio se calcula automáticamente</li>
-                                <li>El pago recibido debe ser igual o mayor al total</li>
-                                <li>El precio se ajustará automáticamente al cambiar el baño</li>
+                                <li>Solo se pueden editar las observaciones</li>
+                                <li>Para corregir un cobro, cancele el servicio y regístrelo de nuevo</li>
                             </ul>
                         </div>
                     </div>

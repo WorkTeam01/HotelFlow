@@ -398,6 +398,10 @@ CREATE TABLE `servicio_bano` (
   `duracion_minutos` int(11) DEFAULT NULL,
   `estado` enum('iniciado','finalizado','cancelado') DEFAULT 'iniciado',
   `observaciones` varchar(255) DEFAULT NULL,
+  `motivo_cancelacion` varchar(255) DEFAULT NULL,
+  `idusuario_cancelacion` int(11) DEFAULT NULL,
+  `fecha_cancelacion` datetime DEFAULT NULL,
+  `stock_repuesto` tinyint(1) NOT NULL DEFAULT 0,
   `fechacreacion` datetime DEFAULT current_timestamp(),
   `fechaactualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -566,7 +570,7 @@ ALTER TABLE `pagos`
   ADD KEY `idservicio_bano` (`idservicio_bano`),
   ADD KEY `idx_pagos_recepcion_fecha` (`idrecepcion`,`fechacreacion`),
   ADD KEY `idusuario` (`idusuario`),
-  ADD KEY `id_pago_reversado` (`id_pago_reversado`);
+  ADD UNIQUE KEY `uq_pagos_reversado` (`id_pago_reversado`);
 
 --
 -- Indices de la tabla `pagoventa`
@@ -646,6 +650,7 @@ ALTER TABLE `servicio_bano`
   ADD KEY `idbano` (`idbano`),
   ADD KEY `idusuario` (`idusuario`),
   ADD KEY `idcliente` (`idcliente`),
+  ADD KEY `idusuario_cancelacion` (`idusuario_cancelacion`),
   ADD KEY `idx_sb_fecha_estado` (`fecha`,`estado`);
 
 --
@@ -926,8 +931,10 @@ ALTER TABLE `servicio_bano`
   ADD CONSTRAINT `servicio_bano_ibfk_1` FOREIGN KEY (`idbano`) REFERENCES `bano` (`idbano`),
   ADD CONSTRAINT `servicio_bano_ibfk_2` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuario`),
   ADD CONSTRAINT `servicio_bano_ibfk_3` FOREIGN KEY (`idcliente`) REFERENCES `persona` (`idpersona`) ON DELETE SET NULL,
+  ADD CONSTRAINT `servicio_bano_ibfk_4` FOREIGN KEY (`idusuario_cancelacion`) REFERENCES `usuarios` (`idusuario`),
   ADD CONSTRAINT `chk_sb_montos` CHECK (`total` >= 0 AND `pagorecibido` >= 0 AND `cambio` >= 0),
-  ADD CONSTRAINT `chk_sb_contado` CHECK (`modalidad_cobro` <> 'contado' OR `pagorecibido` >= `total`);
+  ADD CONSTRAINT `chk_sb_contado` CHECK (`modalidad_cobro` <> 'contado' OR `pagorecibido` >= `total`),
+  ADD CONSTRAINT `chk_sb_cancel` CHECK (`estado` <> 'cancelado' OR `fecha_cancelacion` IS NOT NULL);
 
 --
 -- Filtros para la tabla `tarifas`

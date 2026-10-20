@@ -18,7 +18,7 @@ if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario
 // Incluir el encabezado
 $skip_select2 = true;
 $skip_chartjs = true;
-$module_scripts = ['servicios-bano/index-servicios-bano', 'servicios-bano/servicio-bano-rapido'];
+$module_scripts = ['servicios-bano/index-servicios-bano', 'servicios-bano/servicio-bano-rapido', 'servicios-bano/cambiar-estado-servicios-bano'];
 include_once '../layouts/header.php';
 
 $controller = new ServicioBanoController();
@@ -241,24 +241,17 @@ $banos = $disponibilidad['disponible'] ? $controller->getBanosDisponibles() : []
                                                     <a href="<?= $URL; ?>views/servicios-bano/show.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-touch btn-info btn-sm">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="<?= $URL; ?>views/servicios-bano/update.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-touch btn-warning btn-sm">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
                                                     <?php if ($servicio['estado'] !== 'cancelado'): ?>
-                                                        <button type="button" class="btn btn-touch btn-danger btn-sm btn-cambiar-estado"
+                                                        <a href="<?= $URL; ?>views/servicios-bano/update.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-touch btn-warning btn-sm" title="Editar observaciones">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    <?php endif; ?>
+                                                    <?php if (in_array('cancelado', $controller->accionesEstado($servicio), true)): ?>
+                                                        <button type="button" class="btn btn-touch btn-danger btn-sm cambiar-estado-servicio"
                                                             data-id="<?= $servicio['idservicio']; ?>"
-                                                            data-estado="<?= $servicio['estado']; ?>"
-                                                            data-accion="cancelado"
+                                                            data-estado="cancelado"
                                                             title="Cancelar servicio">
                                                             <i class="fas fa-times"></i>
-                                                        </button>
-                                                    <?php else: ?>
-                                                        <button type="button" class="btn btn-touch btn-success btn-sm btn-cambiar-estado"
-                                                            data-id="<?= $servicio['idservicio']; ?>"
-                                                            data-estado="<?= $servicio['estado']; ?>"
-                                                            data-accion="iniciado"
-                                                            title="Reactivar servicio">
-                                                            <i class="fas fa-check"></i>
                                                         </button>
                                                     <?php endif; ?>
                                                 </div>

@@ -38,7 +38,7 @@ if (!$datos) {
 
 $skip_select2 = true;
 $skip_chartjs = true;
-$module_scripts = ['servicios-bano/show-servicios-bano'];
+$module_scripts = ['servicios-bano/cambiar-estado-servicios-bano'];
 include_once '../layouts/header.php';
 
 // Preparar la clase y texto según el estado
@@ -130,44 +130,35 @@ $esCancelado = $servicio['estado'] === 'cancelado';
                         </ul>
 
                         <div class="d-flex justify-content-between">
-                            <a href="<?= $URL; ?>views/servicios-bano/update.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-warning mb-3">
-                                <i class="fas fa-edit"></i> Editar
-                            </a>
+                            <?php if (!$esCancelado): ?>
+                                <a href="<?= $URL; ?>views/servicios-bano/update.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-warning mb-3">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                            <?php endif; ?>
                             <a href="<?= $URL; ?>views/servicios-bano" class="btn btn-secondary mb-3">
                                 <i class="fas fa-arrow-left"></i> Volver
                             </a>
                         </div>
                     </div>
                 </div>
-                <!-- Acciones adicionales -->
-                <div class="card <?= $card_estado; ?>">
-                    <div class="card-header">
-                        <h3 class="card-title">Cambiar Estado del Servicio</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-12">
-                                <?php if (!$esCancelado): ?>
-                                    <button type="button" class="btn btn-danger btn-block btn-cambiar-estado"
-                                        data-id="<?= $servicio['idservicio']; ?>"
-                                        data-estado="<?= htmlspecialchars($servicio['estado']); ?>"
-                                        data-accion="cancelado"
-                                        data-nombre="<?= htmlspecialchars($servicio['nombre_bano'] ?? ''); ?>">
-                                        <i class="fas fa-times-circle"></i> Cancelar Servicio
-                                    </button>
-                                <?php else: ?>
-                                    <button type="button" class="btn btn-success btn-block btn-cambiar-estado"
-                                        data-id="<?= $servicio['idservicio']; ?>"
-                                        data-estado="<?= htmlspecialchars($servicio['estado']); ?>"
-                                        data-accion="iniciado"
-                                        data-nombre="<?= htmlspecialchars($servicio['nombre_bano'] ?? ''); ?>">
-                                        <i class="fas fa-check-circle"></i> Reactivar Servicio
-                                    </button>
-                                <?php endif; ?>
-                            </div>
+                <?php $accionesEstado = $controller->accionesEstado($servicio); ?>
+                <?php if (!empty($accionesEstado)): ?>
+                    <!-- Acciones adicionales -->
+                    <div class="card <?= $card_estado; ?>">
+                        <div class="card-header">
+                            <h3 class="card-title">Cambiar Estado del Servicio</h3>
+                        </div>
+                        <div class="card-body">
+                            <?php if (in_array('cancelado', $accionesEstado, true)): ?>
+                                <button type="button" class="btn btn-danger btn-block cambiar-estado-servicio"
+                                    data-id="<?= $servicio['idservicio']; ?>"
+                                    data-estado="cancelado">
+                                    <i class="fas fa-times-circle"></i> Cancelar Servicio
+                                </button>
+                            <?php endif; ?>
                         </div>
                     </div>
-                </div>
+                <?php endif; ?>
             </div>
 
             <div class="col-md-8">
@@ -209,12 +200,28 @@ $esCancelado = $servicio['estado'] === 'cancelado';
                     </div>
                 </div>
 
+                <?php if ($esCancelado): ?>
+                    <div class="card card-danger">
+                        <div class="card-header">
+                            <h3 class="card-title">Cancelación</h3>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Motivo:</strong> <?= htmlspecialchars($servicio['motivo_cancelacion'] ?? 'N/A'); ?></p>
+                            <p><strong>Cancelado por:</strong> <?= htmlspecialchars($servicio['nombre_usuario_cancelacion'] ?? 'N/A'); ?></p>
+                            <p class="mb-0"><strong>Fecha:</strong> <?= !empty($servicio['fecha_cancelacion']) ? date('d/m/Y H:i', strtotime($servicio['fecha_cancelacion'])) : 'N/A'; ?></p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <!-- Tarjeta de registro -->
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Información de Registro</h3>
                     </div>
                     <div class="card-body">
+                        <?php if (!empty($servicio['observaciones'])): ?>
+                            <p><strong>Observaciones:</strong> <?= htmlspecialchars($servicio['observaciones']); ?></p>
+                        <?php endif; ?>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">

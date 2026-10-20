@@ -8,6 +8,8 @@
  * @author Sistema de Alojamiento
  * @version 2.0
  */
+require_once __DIR__ . '/../../services/AuthorizationService.php';
+
 class ServicioBanoController
 {
     /**
@@ -349,55 +351,32 @@ class ServicioBanoController
             return ['success' => false, 'message' => 'ID de servicio de baño no válido', 'icon' => 'error', 'redirect' => 'index.php'];
         }
 
-        // Obtener datos actuales del servicio
-        $servicio_actual = $this->modelo->getById($id);
-        if (!$servicio_actual) {
+        if (!$this->modelo->getById($id)) {
             return ['success' => false, 'message' => 'Servicio de baño no encontrado para actualizar', 'icon' => 'error', 'redirect' => 'index.php'];
         }
 
-        // Preparar datos del servicio
-        $datos = $this->prepararDatosServicio($_POST);
+        // Solo se editan campos descriptivos; el dinero y el estado no vienen del formulario
+        $datos = ['observaciones' => mb_substr(trim($_POST['observaciones'] ?? ''), 0, 255)];
 
-        // Mantener el usuario original que registró el servicio
-        $datos['idusuario'] = $servicio_actual['idusuario'];
-
-        // Sanitizar los datos
-        $datos = $this->modelo->sanitizarDatos($datos);
-
-        // Validar datos en el modelo
-        $errores = $this->modelo->validarDatos($datos);
-        if (empty($errores) && ($errorMetodo = $this->validarMetodoPago($datos['metodopago']))) {
-            $errores[] = $errorMetodo;
-        }
-        if (empty($errores) && $datos['pagorecibido'] < $datos['total']) {
-            $errores[] = 'El pago recibido no cubre el total del servicio';
-        }
-
-        if (!empty($errores)) {
-            return ['success' => false, 'message' => $errores[0], 'icon' => 'error', 'redirect' => "update.php?id=$id"];
-        }
-
-        // Actualizar servicio
         if ($this->modelo->actualizar($id, $datos)) {
             return ['success' => true, 'message' => 'Servicio de baño actualizado correctamente', 'icon' => 'success', 'redirect' => 'index.php'];
-        } else {
-            $error_message = 'Error al actualizar el servicio de baño: ' . $this->modelo->getLastError();
-            return ['success' => false, 'message' => $error_message, 'icon' => 'error', 'redirect' => "update.php?id=$id"];
         }
+
+        return ['success' => false, 'message' => $this->modelo->getLastError(), 'icon' => 'error', 'redirect' => "update.php?id=$id"];
     }
 
     /**
-     * Cambia el estado de un servicio de baño
+     * Cambia el estado de un servicio de baño.
      *
-     * El estado actual SIEMPRE se recalcula desde la BD (nunca se confía en un
-     * valor recibido del cliente), y el nuevo estado se valida contra los
-     * valores reales del enum de la columna.
+     * El estado actual se lee siempre de la BD (nunca del cliente) y la matriz de
+     * transiciones se aplica en el modelo. Por ahora solo se puede cancelar.
      *
      * @param int $id ID del servicio de baño
-     * @param string $nuevo_estado Nuevo estado ('iniciado'|'finalizado'|'cancelado')
+     * @param string $nuevo_estado Nuevo estado
+     * @param string $motivo Obligatorio al cancelar
      * @return array Resultado de la operación
      */
-    public function cambiarEstadoServicio($id = null, $nuevo_estado = null)
+    public function cambiarEstadoServicio($id = null, $nuevo_estado = null, $motivo = '')
     {
         if ($id === null || $nuevo_estado === null) {
             return ['success' => false, 'message' => 'Datos no válidos para cambiar el estado del servicio', 'icon' => 'error'];
@@ -407,35 +386,39 @@ class ServicioBanoController
             return ['success' => false, 'message' => 'Estado no válido', 'icon' => 'error'];
         }
 
-        // Verificar que el servicio existe (estado actual recalculado desde BD)
-        $servicio = $this->modelo->getById($id);
-        if (!$servicio) {
+        if ($nuevo_estado !== 'cancelado') {
+            return ['success' => false, 'message' => 'Esa acción no está disponible.', 'icon' => 'warning'];
+        }
+
+        if (!$this->modelo->getById($id)) {
             return ['success' => false, 'message' => 'Servicio de baño no encontrado', 'icon' => 'error'];
         }
 
-        if ($servicio['estado'] === $nuevo_estado) {
-            return ['success' => false, 'message' => 'El servicio ya se encuentra en ese estado', 'icon' => 'warning'];
+        $auth = new AuthorizationService();
+        $esAdmin = $auth->esAdministrador($_SESSION['usuario_id']);
+
+        if ($this->modelo->cancelar($id, $_SESSION['usuario_id'], $esAdmin, $motivo)) {
+            return ['success' => true, 'message' => 'Servicio de baño cancelado correctamente', 'icon' => 'success'];
         }
 
-        if ($this->modelo->actualizarEstado($id, $nuevo_estado)) {
-            $mensajes = [
-                'iniciado' => 'reactivado',
-                'finalizado' => 'finalizado',
-                'cancelado' => 'cancelado'
-            ];
+        return ['success' => false, 'message' => $this->modelo->getLastError(), 'icon' => 'error'];
+    }
 
-            return [
-                'success' => true,
-                'message' => "Servicio de baño " . $mensajes[$nuevo_estado] . " correctamente",
-                'icon' => 'success'
-            ];
-        } else {
-            return [
-                'success' => false,
-                'message' => 'Error al cambiar el estado del servicio: ' . $this->modelo->getLastError(),
-                'icon' => 'error'
-            ];
-        }
+    /**
+     * Acciones de estado que el usuario puede ejecutar sobre un servicio; las vistas solo pintan botones.
+     *
+     * @param array $servicio Fila de servicio (necesita 'estado')
+     * @return array Lista de estados destino permitidos
+     */
+    public function accionesEstado(array $servicio)
+    {
+        $auth = new AuthorizationService();
+        $esAdmin = $auth->esAdministrador($_SESSION['usuario_id']);
+
+        return array_values(array_filter(
+            ['cancelado'],
+            fn($destino) => ServicioBano::transicionPermitida($servicio['estado'], $destino, $esAdmin)
+        ));
     }
 
     /**

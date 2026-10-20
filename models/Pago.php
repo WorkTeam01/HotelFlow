@@ -156,40 +156,57 @@ class Pago
     }
 
     /**
-     * Registra una línea del ledger de un servicio de baño cobrado al contado.
-     * Se llama desde ServicioBano::registrar() dentro de su transacción; no toca `recepcion`.
+     * Registra una línea del ledger de un servicio de baño.
+     * Se llama desde ServicioBano dentro de su transacción; no toca `recepcion`.
+     * Un reverso copia el monto y el método de la línea que anula, y esa línea debe
+     * pertenecer al mismo servicio (se bloquea para que no se reverse dos veces).
      *
      * @param int $idservicio
-     * @param string $tipo 'cargo'|'pago'
+     * @param string $tipo 'cargo'|'pago'|'reverso'
      * @param string $concepto
-     * @param float $monto Siempre positivo
-     * @param string $metodopago 'Efectivo'|'QR'|'OTROS'
+     * @param float|null $monto Positivo; en un reverso se toma de la línea original
+     * @param string|null $metodopago 'Efectivo'|'QR'|'OTROS'; en un reverso se toma de la original
      * @param int $idusuario
+     * @param int|null $idPagoReversado Línea que anula (solo para 'reverso')
      * @return bool|int ID de la línea creada o false si falló
      */
-    public function registrarLineaServicio($idservicio, $tipo, $concepto, $monto, $metodopago, $idusuario)
+    public function registrarLineaServicio($idservicio, $tipo, $concepto, $monto, $metodopago, $idusuario, $idPagoReversado = null)
     {
-        if (!in_array($tipo, ['cargo', 'pago'], true)) {
+        if (!in_array($tipo, ['cargo', 'pago', 'reverso'], true)) {
             $this->lastError = 'Tipo de línea de folio no válido.';
             return false;
         }
 
-        if ($monto <= 0) {
-            $this->lastError = 'El monto debe ser mayor que cero.';
-            return false;
-        }
-
         try {
+            if ($tipo === 'reverso') {
+                $stmt = $this->conexion->prepare("SELECT montototal, metodopago, tipo FROM {$this->tabla}
+                    WHERE id_pago = :id AND idservicio_bano = :idservicio FOR UPDATE");
+                $stmt->bindValue(':id', (int)$idPagoReversado, PDO::PARAM_INT);
+                $stmt->bindValue(':idservicio', (int)$idservicio, PDO::PARAM_INT);
+                $stmt->execute();
+                $original = $stmt->fetch(PDO::FETCH_ASSOC);
+                if (!$original || $original['tipo'] === 'reverso') {
+                    $this->lastError = 'La línea a reversar no pertenece a este servicio.';
+                    return false;
+                }
+                $monto = $original['montototal'];
+                $metodopago = $original['metodopago'];
+            } elseif ($monto <= 0) {
+                $this->lastError = 'El monto debe ser mayor que cero.';
+                return false;
+            }
+
             $query = "INSERT INTO {$this->tabla}
-                      (idservicio_bano, tipo, concepto, montototal, metodopago, idusuario)
-                      VALUES (:idservicio, :tipo, :concepto, :monto, :metodopago, :idusuario)";
+                      (idservicio_bano, tipo, concepto, montototal, metodopago, idusuario, id_pago_reversado)
+                      VALUES (:idservicio, :tipo, :concepto, :monto, :metodopago, :idusuario, :reversado)";
             $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':idservicio', $idservicio, PDO::PARAM_INT);
-            $stmt->bindParam(':tipo', $tipo, PDO::PARAM_STR);
-            $stmt->bindParam(':concepto', $concepto, PDO::PARAM_STR);
-            $stmt->bindParam(':monto', $monto, PDO::PARAM_STR);
-            $stmt->bindParam(':metodopago', $metodopago, PDO::PARAM_STR);
-            $stmt->bindParam(':idusuario', $idusuario, PDO::PARAM_INT);
+            $stmt->bindValue(':idservicio', (int)$idservicio, PDO::PARAM_INT);
+            $stmt->bindValue(':tipo', $tipo, PDO::PARAM_STR);
+            $stmt->bindValue(':concepto', $concepto, PDO::PARAM_STR);
+            $stmt->bindValue(':monto', $monto);
+            $stmt->bindValue(':metodopago', $metodopago, PDO::PARAM_STR);
+            $stmt->bindValue(':idusuario', (int)$idusuario, PDO::PARAM_INT);
+            $stmt->bindValue(':reversado', $tipo === 'reverso' ? (int)$idPagoReversado : null, PDO::PARAM_INT);
 
             if (!$stmt->execute()) {
                 error_log('[' . static::class . '] ' . implode(' ', $stmt->errorInfo()));
@@ -202,6 +219,29 @@ class Pago
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
+        }
+    }
+
+    /**
+     * Líneas de un servicio de baño que aún no tienen reverso (primero los pagos, luego los cargos).
+     *
+     * @param int $idservicio
+     * @return array
+     */
+    public function getLineasVivasServicio($idservicio)
+    {
+        try {
+            $stmt = $this->conexion->prepare("SELECT p.id_pago, p.tipo FROM {$this->tabla} p
+                LEFT JOIN {$this->tabla} r ON r.id_pago_reversado = p.id_pago
+                WHERE p.idservicio_bano = :idservicio AND p.tipo IN ('cargo', 'pago') AND r.id_pago IS NULL
+                ORDER BY FIELD(p.tipo, 'pago', 'cargo'), p.id_pago");
+            $stmt->bindValue(':idservicio', (int)$idservicio, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
         }
     }
 

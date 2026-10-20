@@ -603,7 +603,7 @@ class Dashboard
                 SELECT DATE(fecha) as dia, COALESCE(SUM(total), 0) as total
                 FROM servicio_bano
                 WHERE DATE(fecha) BETWEEN :fecha_inicio AND :fecha_fin
-                AND estado = 'finalizado'
+                AND estado <> 'cancelado'
                 GROUP BY DATE(fecha)
             ");
             $stmt->bindParam(':fecha_inicio', $fecha_inicio);
@@ -961,7 +961,7 @@ class Dashboard
             $stmt = $this->conexion->prepare("
             SELECT SUM(total) as ingresos
             FROM servicio_bano
-            WHERE fecha >= :fecha_inicio AND estado = 'finalizado'
+            WHERE fecha >= :fecha_inicio AND estado <> 'cancelado'
         ");
             $stmt->bindParam(':fecha_inicio', $fecha_inicio);
             $stmt->execute();
@@ -1090,7 +1090,7 @@ class Dashboard
                 $stmt = $this->conexion->prepare("
                 SELECT COALESCE(SUM(total), 0) as ingreso
                 FROM servicio_bano
-                WHERE DATE(fecha) = :fecha AND estado = 'finalizado'
+                WHERE DATE(fecha) = :fecha AND estado <> 'cancelado'
             ");
                 $stmt->bindParam(':fecha', $fecha);
                 $stmt->execute();
@@ -1160,7 +1160,7 @@ class Dashboard
             SELECT COALESCE(SUM(total), 0) as ingresos_bano
             FROM servicio_bano
             WHERE fecha BETWEEN :fecha_inicio AND :fecha_fin
-            AND estado = 'finalizado'
+            AND estado <> 'cancelado'
         ");
             $stmt->bindParam(':fecha_inicio', $fecha_inicio);
             $stmt->bindParam(':fecha_fin', $fecha_fin);

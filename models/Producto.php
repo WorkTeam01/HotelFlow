@@ -678,7 +678,7 @@ class Producto
                         FROM servicio_bano sb
                         JOIN bano b ON sb.idbano = b.idbano
                         JOIN usuarios u ON sb.idusuario = u.idusuario
-                        WHERE sb.estado = 'finalizado'
+                        WHERE sb.stock_repuesto = 0
                         ORDER BY sb.fecha DESC
                         LIMIT :limite";
 
