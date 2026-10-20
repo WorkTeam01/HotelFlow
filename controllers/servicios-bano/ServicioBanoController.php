@@ -282,15 +282,6 @@ class ServicioBanoController
     public function validarDisponibilidadServicio()
     {
         try {
-            // Verificar baños disponibles
-            $banos = $this->getBanosDisponibles();
-            if (empty($banos)) {
-                return [
-                    'disponible' => false,
-                    'message' => 'No hay baños disponibles'
-                ];
-            }
-
             // Verificar producto y stock
             $config = require __DIR__ . '/../../config/config.php';
             $nombreInsumo = $config['servicios_bano']['producto_consumible'];
@@ -394,7 +385,7 @@ class ServicioBanoController
      * Cambia el estado de un servicio de baño.
      *
      * El estado actual se lee siempre de la BD (nunca del cliente) y la matriz de
-     * transiciones se aplica en el modelo. Por ahora solo se puede cancelar.
+     * transiciones se aplica en el modelo.
      *
      * @param int $id ID del servicio de baño
      * @param string $nuevo_estado Nuevo estado
@@ -411,7 +402,7 @@ class ServicioBanoController
             return ['success' => false, 'message' => 'Estado no válido', 'icon' => 'error'];
         }
 
-        if ($nuevo_estado !== 'cancelado') {
+        if (!in_array($nuevo_estado, ['finalizado', 'cancelado'], true)) {
             return ['success' => false, 'message' => 'Esa acción no está disponible.', 'icon' => 'warning'];
         }
 
@@ -421,6 +412,13 @@ class ServicioBanoController
 
         $auth = new AuthorizationService();
         $esAdmin = $auth->esAdministrador($_SESSION['usuario_id']);
+
+        if ($nuevo_estado === 'finalizado') {
+            if ($this->modelo->finalizar($id, $_SESSION['usuario_id'], $esAdmin)) {
+                return ['success' => true, 'message' => 'Servicio de baño finalizado correctamente', 'icon' => 'success'];
+            }
+            return ['success' => false, 'message' => $this->modelo->getLastError(), 'icon' => 'error'];
+        }
 
         if ($this->modelo->cancelar($id, $_SESSION['usuario_id'], $esAdmin, $motivo)) {
             return ['success' => true, 'message' => 'Servicio de baño cancelado correctamente', 'icon' => 'success'];
@@ -441,9 +439,62 @@ class ServicioBanoController
         $esAdmin = $auth->esAdministrador($_SESSION['usuario_id']);
 
         return array_values(array_filter(
-            ['cancelado'],
+            ['finalizado', 'cancelado'],
             fn($destino) => ServicioBano::transicionPermitida($servicio['estado'], $destino, $esAdmin)
         ));
+    }
+
+    /**
+     * Minutos que lleva en curso un servicio iniciado.
+     */
+    private function minutosEnCurso($inicio)
+    {
+        return max(0, (int)floor((time() - strtotime($inicio)) / 60));
+    }
+
+    /**
+     * Estado de presentación de un servicio: 'excedido' es derivado (un iniciado que supera
+     * los minutos de alerta configurados), no un valor de BD.
+     *
+     * @param array $servicio Fila de servicio (estado, fecha)
+     * @return string
+     */
+    public function estadoDerivado(array $servicio)
+    {
+        if ($servicio['estado'] === 'iniciado' && $this->minutosEnCurso($servicio['fecha']) > $this->minutosAlerta()) {
+            return 'excedido';
+        }
+        return $servicio['estado'];
+    }
+
+    private function minutosAlerta()
+    {
+        $config = require __DIR__ . '/../../config/config.php';
+        return (int)$config['servicios_bano']['minutos_alerta'];
+    }
+
+    /**
+     * Baños con su ocupación para el rack del listado: libre, en_uso, excedido, mantenimiento o fuera_servicio.
+     *
+     * @return array
+     */
+    public function getBanosConOcupacion()
+    {
+        $banos = $this->modelo->getBanosConOcupacion();
+        $alerta = $this->minutosAlerta();
+
+        foreach ($banos as &$bano) {
+            $bano['minutos'] = null;
+            if ($bano['idservicio']) {
+                $bano['minutos'] = $this->minutosEnCurso($bano['inicio']);
+                $bano['ocupacion'] = $bano['minutos'] > $alerta ? 'excedido' : 'en_uso';
+            } else {
+                $bano['ocupacion'] = $bano['estado'] === 'disponible' ? 'libre' : $bano['estado'];
+            }
+        }
+        unset($bano);
+
+        return $banos;
     }
 
     /**

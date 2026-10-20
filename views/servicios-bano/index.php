@@ -18,6 +18,7 @@ if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario
 // Incluir el encabezado
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_styles = ['servicios-bano/servicios-bano'];
 $module_scripts = ['servicios-bano/index-servicios-bano', 'servicios-bano/servicio-bano-rapido', 'servicios-bano/cambiar-estado-servicios-bano'];
 include_once '../layouts/header.php';
 
@@ -27,8 +28,8 @@ $estadisticas = $controller->getEstadisticas();
 
 $disponibilidad = $controller->validarDisponibilidadServicio();
 
-// Baños para el registro rápido, solo si el servicio está disponible
-$banos = $disponibilidad['disponible'] ? $controller->getBanosDisponibles() : [];
+// Rack de baños: libres, en uso (con minutos) y fuera de operación
+$banos = $controller->getBanosConOcupacion();
 ?>
 
 <!-- Content Header (Page header) -->
@@ -71,7 +72,7 @@ $banos = $disponibilidad['disponible'] ? $controller->getBanosDisponibles() : []
                 <div class="small-box bg-success">
                     <div class="inner">
                         <h3><?= $estadisticas['activos']; ?></h3>
-                        <p>Activos Hoy</p>
+                        <p>Activos Hoy · <?= (int)$estadisticas['en_uso']; ?> en uso</p>
                     </div>
                     <div class="icon">
                         <i class="fas fa-check-circle"></i>
@@ -108,12 +109,12 @@ $banos = $disponibilidad['disponible'] ? $controller->getBanosDisponibles() : []
         </div>
         <!-- /.row -->
 
-        <!-- Botones de acción rápida -->
+        <!-- Rack de baños -->
         <div class="row">
             <div class="col-12">
                 <div class="card card-outline card-primary">
                     <div class="card-header">
-                        <h3 class="card-title">Registro Rápido - Baños Disponibles</h3>
+                        <h3 class="card-title">Registro Rápido - Estado de los Baños</h3>
                         <div class="card-tools">
                             <button type="button" class="btn btn-tool" data-card-widget="collapse">
                                 <i class="fas fa-minus"></i>
@@ -122,45 +123,60 @@ $banos = $disponibilidad['disponible'] ? $controller->getBanosDisponibles() : []
                     </div>
                     <div class="card-body">
                         <?php if (!$disponibilidad['disponible']): ?>
-                            <div class="alert alert-danger text-center">
+                            <div class="alert alert-danger">
                                 <i class="fas fa-exclamation-triangle mr-2"></i>
-                                <strong>Servicio No Disponible:</strong> <?= htmlspecialchars($disponibilidad['message']); ?>
+                                <strong>Registro no disponible:</strong> <?= htmlspecialchars($disponibilidad['message']); ?>
+                                <a href="<?= $URL; ?>views/productos" class="alert-link ml-2">Gestionar Productos</a>
                             </div>
-                            <div class="text-center">
-                                <p class="text-muted">No se pueden crear servicios de baño en este momento.</p>
-                                <a href="<?= $URL; ?>views/productos" class="btn btn-primary">
-                                    <i class="fas fa-boxes"></i> Gestionar Productos
-                                </a>
-                            </div>
-                        <?php elseif (empty($banos)): ?>
-                            <div class="alert alert-warning text-center">
-                                <i class="fas fa-exclamation-triangle mr-2"></i>
-                                No hay baños disponibles en este momento.
-                            </div>
-                        <?php else: ?>
-                            <!-- Mostrar alerta de stock bajo si es necesario -->
-                            <?php
+                        <?php else:
                             $stockActual = $disponibilidad['stock_actual'] ?? 0;
                             $stockMinimo = $disponibilidad['stock_minimo'] ?? 0;
-
                             if ($stockActual <= $stockMinimo && $stockMinimo > 0): ?>
                                 <div class="alert alert-warning">
                                     <i class="fas fa-exclamation-triangle mr-2"></i>
                                     <strong>Stock Bajo:</strong> Quedan <?= $stockActual; ?> unidades de papel higiénico
                                     (mínimo recomendado: <?= $stockMinimo; ?>).
                                 </div>
-                            <?php endif; ?>
+                        <?php endif;
+                        endif; ?>
 
+                        <?php if (empty($banos)): ?>
+                            <div class="alert alert-warning text-center mb-0">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                No hay baños registrados.
+                            </div>
+                        <?php else: ?>
                             <div class="row">
                                 <?php foreach ($banos as $bano): ?>
+                                    <?php $ocupacion = $bano['ocupacion']; ?>
                                     <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
-                                        <button type="button" class="btn btn-block btn-success btn-registro-rapido"
-                                            data-id="<?= $bano['idbano']; ?>"
-                                            data-nombre="<?= htmlspecialchars($bano['nombre']); ?>"
-                                            data-precio="<?= $bano['precio']; ?>">
-                                            <i class="fas fa-bolt mr-2"></i>
-                                            <?= htmlspecialchars($bano['nombre']); ?> - <?= number_format($bano['precio'], 2); ?>
-                                        </button>
+                                        <?php if ($ocupacion === 'libre'): ?>
+                                            <button type="button" class="btn btn-touch btn-block btn-success btn-registro-rapido"
+                                                <?= $disponibilidad['disponible'] ? '' : 'disabled'; ?>
+                                                data-id="<?= $bano['idbano']; ?>"
+                                                data-nombre="<?= htmlspecialchars($bano['nombre']); ?>"
+                                                data-precio="<?= $bano['precio']; ?>">
+                                                <i class="fas fa-bolt mr-2"></i>
+                                                <?= htmlspecialchars($bano['nombre']); ?> - <?= number_format($bano['precio'], 2); ?>
+                                            </button>
+                                        <?php elseif ($ocupacion === 'en_uso' || $ocupacion === 'excedido'): ?>
+                                            <div class="bano-rack <?= $ocupacion === 'excedido' ? 'bano-rack-excedido' : 'bano-rack-uso'; ?>">
+                                                <div class="font-weight-bold"><?= htmlspecialchars($bano['nombre']); ?></div>
+                                                <div class="small">
+                                                    <?= $ocupacion === 'excedido' ? 'Excedido' : 'En uso'; ?> · <?= (int)$bano['minutos']; ?> min
+                                                </div>
+                                                <button type="button" class="btn btn-touch btn-sm btn-light btn-block mt-2 cambiar-estado-servicio"
+                                                    data-id="<?= (int)$bano['idservicio']; ?>"
+                                                    data-estado="finalizado">
+                                                    <i class="fas fa-flag-checkered mr-1"></i> Finalizar
+                                                </button>
+                                            </div>
+                                        <?php else: ?>
+                                            <button type="button" class="btn btn-block btn-secondary" disabled>
+                                                <i class="fas fa-tools mr-2"></i>
+                                                <?= htmlspecialchars($bano['nombre']); ?> · <?= $ocupacion === 'mantenimiento' ? 'Mantenimiento' : 'Fuera de servicio'; ?>
+                                            </button>
+                                        <?php endif; ?>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -208,8 +224,12 @@ $banos = $disponibilidad['disponible'] ? $controller->getBanosDisponibles() : []
                                     <?php
                                     $contador = 1;
                                     foreach ($servicios as $servicio) :
-                                        $estado = $servicio['estado'];
+                                        $estado = $controller->estadoDerivado($servicio);
                                         switch ($estado) {
+                                            case 'excedido':
+                                                $clase_estado = 'badge-danger';
+                                                $texto_estado = 'Excedido';
+                                                break;
                                             case 'cancelado':
                                                 $clase_estado = 'badge-danger';
                                                 $texto_estado = 'Cancelado';
@@ -246,7 +266,16 @@ $banos = $disponibilidad['disponible'] ? $controller->getBanosDisponibles() : []
                                                             <i class="fas fa-edit"></i>
                                                         </a>
                                                     <?php endif; ?>
-                                                    <?php if (in_array('cancelado', $controller->accionesEstado($servicio), true)): ?>
+                                                    <?php $acciones = $controller->accionesEstado($servicio); ?>
+                                                    <?php if (in_array('finalizado', $acciones, true)): ?>
+                                                        <button type="button" class="btn btn-touch btn-primary btn-sm cambiar-estado-servicio"
+                                                            data-id="<?= $servicio['idservicio']; ?>"
+                                                            data-estado="finalizado"
+                                                            title="Finalizar servicio">
+                                                            <i class="fas fa-flag-checkered"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                    <?php if (in_array('cancelado', $acciones, true)): ?>
                                                         <button type="button" class="btn btn-touch btn-danger btn-sm cambiar-estado-servicio"
                                                             data-id="<?= $servicio['idservicio']; ?>"
                                                             data-estado="cancelado"

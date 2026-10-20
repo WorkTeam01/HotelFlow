@@ -9,12 +9,21 @@
     'use strict';
 
     var META = {
+        finalizado: {
+            titulo: '¿Finalizar este servicio?',
+            texto: 'Se registrará la duración y el baño quedará libre.',
+            icono: 'question',
+            color: 'success',
+            boton: 'Sí, finalizar',
+            pideMotivo: false
+        },
         cancelado: {
             titulo: '¿Cancelar este servicio?',
             texto: 'Se revertirá el cobro en el folio y no se podrá reactivar.',
             icono: 'warning',
             color: 'danger',
-            boton: 'Sí, cancelar'
+            boton: 'Sí, cancelar',
+            pideMotivo: true
         }
     };
 
@@ -24,23 +33,28 @@
             return;
         }
 
-        Swal.fire({
+        var dialogo = {
             title: meta.titulo,
             text: meta.texto,
             icon: meta.icono,
-            input: 'text',
-            inputLabel: 'Motivo',
-            inputAttributes: { maxlength: 255, autocomplete: 'off' },
-            inputValidator: function (valor) {
-                return valor && valor.trim() !== '' ? null : 'Indique el motivo de la cancelación';
-            },
             showCancelButton: true,
             confirmButtonColor: themeColor(meta.color),
             cancelButtonColor: themeColor('secondary'),
             confirmButtonText: meta.boton,
             cancelButtonText: 'No, volver',
             allowOutsideClick: false
-        }).then(function (result) {
+        };
+
+        if (meta.pideMotivo) {
+            dialogo.input = 'text';
+            dialogo.inputLabel = 'Motivo';
+            dialogo.inputAttributes = { maxlength: 255, autocomplete: 'off' };
+            dialogo.inputValidator = function (valor) {
+                return valor && valor.trim() !== '' ? null : 'Indique el motivo de la cancelación';
+            };
+        }
+
+        Swal.fire(dialogo).then(function (result) {
             if (!result.isConfirmed) {
                 return;
             }
@@ -52,7 +66,7 @@
                 type: 'POST',
                 dataType: 'json',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                data: { id: opts.id, nuevo_estado: opts.estado, motivo: result.value, csrf_token: CSRF_TOKEN },
+                data: { id: opts.id, nuevo_estado: opts.estado, motivo: meta.pideMotivo ? result.value : '', csrf_token: CSRF_TOKEN },
                 success: function (response) {
                     if (response.success) {
                         Swal.fire({

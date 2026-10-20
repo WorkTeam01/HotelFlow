@@ -396,6 +396,7 @@ CREATE TABLE `servicio_bano` (
   `pagorecibido` decimal(10,2) NOT NULL,
   `cambio` decimal(10,2) NOT NULL,
   `fecha` datetime NOT NULL DEFAULT current_timestamp(),
+  `fecha_fin` datetime DEFAULT NULL,
   `duracion_minutos` int(11) DEFAULT NULL,
   `estado` enum('iniciado','finalizado','cancelado') DEFAULT 'iniciado',
   `observaciones` varchar(255) DEFAULT NULL,
@@ -403,6 +404,7 @@ CREATE TABLE `servicio_bano` (
   `idusuario_cancelacion` int(11) DEFAULT NULL,
   `fecha_cancelacion` datetime DEFAULT NULL,
   `stock_repuesto` tinyint(1) NOT NULL DEFAULT 0,
+  `bano_en_uso` int(11) AS (if(`estado` = 'iniciado',`idbano`,NULL)) PERSISTENT,
   `fechacreacion` datetime DEFAULT current_timestamp(),
   `fechaactualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -653,7 +655,8 @@ ALTER TABLE `servicio_bano`
   ADD KEY `idcliente` (`idcliente`),
   ADD KEY `idrecepcion` (`idrecepcion`),
   ADD KEY `idusuario_cancelacion` (`idusuario_cancelacion`),
-  ADD KEY `idx_sb_fecha_estado` (`fecha`,`estado`);
+  ADD KEY `idx_sb_fecha_estado` (`fecha`,`estado`),
+  ADD UNIQUE KEY `uq_sb_bano_en_uso` (`bano_en_uso`);
 
 --
 -- Indices de la tabla `tarifas`
@@ -938,6 +941,7 @@ ALTER TABLE `servicio_bano`
   ADD CONSTRAINT `chk_sb_montos` CHECK (`total` >= 0 AND `pagorecibido` >= 0 AND `cambio` >= 0),
   ADD CONSTRAINT `chk_sb_contado` CHECK (`modalidad_cobro` <> 'contado' OR (`metodopago` IS NOT NULL AND `pagorecibido` >= `total`)),
   ADD CONSTRAINT `chk_sb_folio` CHECK (`modalidad_cobro` <> 'folio' OR (`idrecepcion` IS NOT NULL AND `metodopago` IS NULL AND `pagorecibido` = 0 AND `cambio` = 0)),
+  ADD CONSTRAINT `chk_sb_fin` CHECK (`estado` <> 'finalizado' OR `fecha_fin` IS NOT NULL),
   ADD CONSTRAINT `chk_sb_cancel` CHECK (`estado` <> 'cancelado' OR `fecha_cancelacion` IS NOT NULL);
 
 --

@@ -49,7 +49,8 @@ return [
         'dias_alerta' => (int) env('EQUIPAJE_DIAS_ALERTA', 7)
     ],
     'servicios_bano' => [
-        'producto_consumible' => env('BANO_PRODUCTO_CONSUMIBLE', 'Rollo de papel')
+        'producto_consumible' => env('BANO_PRODUCTO_CONSUMIBLE', 'Rollo de papel'),
+        'minutos_alerta' => (int) env('BANO_MINUTOS_ALERTA', 30)
     ],
     'productos' => [
         'margen_alerta' => (int) env('PRODUCTOS_MARGEN_ALERTA', 10),

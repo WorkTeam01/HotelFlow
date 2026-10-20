@@ -145,7 +145,7 @@ class Bano
      */
     public function actualizar($id, $datos)
     {
-        try {
+        return $this->actualizarConGuardaDeOcupacion($id, $datos['estado'], function ($conexion) use ($id, $datos) {
             $query = "UPDATE {$this->tabla} SET 
                       nombre = :nombre, 
                       ubicacion = :ubicacion,
@@ -153,7 +153,7 @@ class Bano
                       estado = :estado 
                       WHERE idbano = :id";
 
-            $stmt = $this->conexion->prepare($query);
+            $stmt = $conexion->prepare($query);
             $stmt->bindParam(':nombre', $datos['nombre'], PDO::PARAM_STR);
             $stmt->bindParam(':ubicacion', $datos['ubicacion'], PDO::PARAM_STR);
             $stmt->bindParam(':precio', $datos['precio'], PDO::PARAM_STR);
@@ -161,11 +161,7 @@ class Bano
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
             return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log('[' . static::class . '] ' . $e->getMessage());
-            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            return false;
-        }
+        });
     }
 
     /**
@@ -177,13 +173,58 @@ class Bano
      */
     public function actualizarEstado($id, $estado)
     {
-        try {
-            $sql = "UPDATE {$this->tabla} SET estado = :estado WHERE idbano = :idbano";
-            $stmt = $this->conexion->prepare($sql);
+        return $this->actualizarConGuardaDeOcupacion($id, $estado, function ($conexion) use ($id, $estado) {
+            $stmt = $conexion->prepare("UPDATE {$this->tabla} SET estado = :estado WHERE idbano = :idbano");
             $stmt->bindParam(':estado', $estado, PDO::PARAM_STR);
             $stmt->bindParam(':idbano', $id, PDO::PARAM_INT);
             return $stmt->execute();
+        });
+    }
+
+    /**
+     * Ejecuta un UPDATE del baño; si deja el baño fuera de operación, bloquea la fila y rechaza
+     * el cambio cuando hay un servicio iniciado (mismo orden de bloqueo que el alta de servicios).
+     *
+     * @param int $id ID del baño
+     * @param string $estadoNuevo Estado en que quedará el baño
+     * @param callable $ejecutar Recibe la conexión y devuelve bool
+     * @return bool
+     */
+    private function actualizarConGuardaDeOcupacion($id, $estadoNuevo, callable $ejecutar)
+    {
+        $propia = !$this->conexion->inTransaction();
+
+        try {
+            if ($estadoNuevo !== 'disponible') {
+                if ($propia) {
+                    $this->conexion->beginTransaction();
+                }
+                $stmt = $this->conexion->prepare("SELECT idbano FROM {$this->tabla} WHERE idbano = :id FOR UPDATE");
+                $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+                $stmt->execute();
+
+                $stmt = $this->conexion->prepare("SELECT 1 FROM servicio_bano WHERE idbano = :id AND estado = 'iniciado' LIMIT 1");
+                $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+                $stmt->execute();
+                if ($stmt->fetchColumn()) {
+                    if ($propia) {
+                        $this->conexion->rollBack();
+                    }
+                    $this->lastError = 'Finalice el servicio en curso antes de cambiar el estado del baño.';
+                    return false;
+                }
+            }
+
+            $ok = $ejecutar($this->conexion);
+
+            if ($propia && $this->conexion->inTransaction()) {
+                $ok ? $this->conexion->commit() : $this->conexion->rollBack();
+            }
+            return $ok;
         } catch (PDOException $e) {
+            if ($propia && $this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;

@@ -80,7 +80,7 @@ class ServicioBano
         try {
             $query = "SELECT sb.idservicio, sb.idbano, sb.idusuario, sb.idcliente, 
                   sb.tipo_cliente, sb.total, sb.metodopago, sb.pagorecibido, 
-                  sb.cambio, sb.fecha, sb.estado, sb.modalidad_cobro, sb.observaciones, sb.idrecepcion,
+                  sb.cambio, sb.fecha, sb.fecha_fin, sb.duracion_minutos, sb.estado, sb.modalidad_cobro, sb.observaciones, sb.idrecepcion,
                   h.numero as numero_habitacion,
                   sb.motivo_cancelacion, sb.fecha_cancelacion, sb.stock_repuesto,
                   CONCAT(uc.nombre, ' ', uc.apellidop) as nombre_usuario_cancelacion,
@@ -125,7 +125,7 @@ class ServicioBano
         try {
             $query = "SELECT sb.idservicio, sb.idbano, sb.idusuario, sb.idcliente, 
                   sb.tipo_cliente, sb.total, sb.metodopago, sb.pagorecibido, 
-                  sb.cambio, sb.fecha, sb.estado, sb.modalidad_cobro, sb.observaciones, sb.idrecepcion,
+                  sb.cambio, sb.fecha, sb.fecha_fin, sb.duracion_minutos, sb.estado, sb.modalidad_cobro, sb.observaciones, sb.idrecepcion,
                   h.numero as numero_habitacion,
                   sb.motivo_cancelacion, sb.fecha_cancelacion, sb.stock_repuesto,
                   CONCAT(uc.nombre, ' ', uc.apellidop) as nombre_usuario_cancelacion,
@@ -163,7 +163,10 @@ class ServicioBano
     public function getBanosDisponibles()
     {
         try {
-            $query = "SELECT idbano, nombre, ubicacion, precio FROM bano WHERE estado = 'disponible' ORDER BY nombre";
+            $query = "SELECT b.idbano, b.nombre, b.ubicacion, b.precio FROM bano b
+                      WHERE b.estado = 'disponible'
+                      AND NOT EXISTS (SELECT 1 FROM {$this->tabla} sb WHERE sb.idbano = b.idbano AND sb.estado = 'iniciado')
+                      ORDER BY b.nombre";
             $stmt = $this->conexion->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -249,6 +252,13 @@ class ServicioBano
                 return $this->abortarRegistro($transaccionPropia, 'El baño seleccionado no está disponible.');
             }
 
+            $stmt = $this->conexion->prepare("SELECT idservicio FROM {$this->tabla} WHERE idbano = :idbano AND estado = 'iniciado' FOR UPDATE");
+            $stmt->bindValue(':idbano', (int)$datos['idbano'], PDO::PARAM_INT);
+            $stmt->execute();
+            if ($stmt->fetchColumn() !== false) {
+                return $this->abortarRegistro($transaccionPropia, 'El baño está en uso.');
+            }
+
             $total = $this->calcularMonto($bano);
             if ($modalidad === 'folio') {
                 $metodopago = null;
@@ -278,9 +288,9 @@ class ServicioBano
 
             $stmt = $this->conexion->prepare("INSERT INTO {$this->tabla}
                 (idbano, idusuario, idcliente, idrecepcion, tipo_cliente, modalidad_cobro, total, metodopago,
-                 pagorecibido, cambio, fecha, observaciones)
+                 pagorecibido, cambio, fecha, estado, fecha_fin, duracion_minutos, observaciones)
                 VALUES (:idbano, :idusuario, :idcliente, :idrecepcion, :tipo_cliente, :modalidad, :total, :metodopago,
-                 :pagorecibido, :cambio, :fecha, :observaciones)");
+                 :pagorecibido, :cambio, :fecha, :estado, :fecha_fin, :duracion, :observaciones)");
             $stmt->bindValue(':idbano', (int)$datos['idbano'], PDO::PARAM_INT);
             $stmt->bindValue(':idusuario', (int)$idusuario, PDO::PARAM_INT);
             $stmt->bindValue(':idcliente', $idcliente, PDO::PARAM_INT);
@@ -291,7 +301,12 @@ class ServicioBano
             $stmt->bindValue(':metodopago', $metodopago, $metodopago === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
             $stmt->bindValue(':pagorecibido', $pagorecibido);
             $stmt->bindValue(':cambio', $cambio);
-            $stmt->bindValue(':fecha', date('Y-m-d H:i:s'), PDO::PARAM_STR);
+            $ahora = date('Y-m-d H:i:s');
+            $instantaneo = !self::REQUIERE_FINALIZAR;
+            $stmt->bindValue(':fecha', $ahora, PDO::PARAM_STR);
+            $stmt->bindValue(':estado', $instantaneo ? 'finalizado' : 'iniciado', PDO::PARAM_STR);
+            $stmt->bindValue(':fecha_fin', $instantaneo ? $ahora : null, $instantaneo ? PDO::PARAM_STR : PDO::PARAM_NULL);
+            $stmt->bindValue(':duracion', $instantaneo ? 0 : null, $instantaneo ? PDO::PARAM_INT : PDO::PARAM_NULL);
             $stmt->bindValue(':observaciones', ($datos['observaciones'] ?? '') !== '' ? $datos['observaciones'] : null, PDO::PARAM_STR);
             $stmt->execute();
             $idservicio = (int)$this->conexion->lastInsertId();
@@ -325,6 +340,11 @@ class ServicioBano
             if ($transaccionPropia && $this->conexion->inTransaction()) {
                 $this->conexion->rollBack();
             }
+            // El UNIQUE de bano_en_uso corta la carrera que el lock aplicativo no cubra
+            if (($e->errorInfo[1] ?? 0) === 1062) {
+                $this->lastError = 'El baño está en uso.';
+                return false;
+            }
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
@@ -355,6 +375,12 @@ class ServicioBano
      * Estados válidos para un servicio de baño (columna enum en BD)
      */
     public const ESTADOS_VALIDOS = ['iniciado', 'finalizado', 'cancelado'];
+
+    /**
+     * [D4] true: el servicio ocupa el baño hasta que se finaliza. false: servicio instantáneo,
+     * nace finalizado y nunca bloquea el baño.
+     */
+    public const REQUIERE_FINALIZAR = true;
 
     /**
      * Transiciones permitidas; un servicio cancelado es final.
@@ -548,6 +574,95 @@ class ServicioBano
     }
 
     /**
+     * Finaliza un servicio: libera el baño y registra la fecha de fin y la duración real.
+     * Orden de bloqueo: bano → servicio_bano. Cualquier usuario con permiso del módulo puede finalizar.
+     *
+     * @param int $id
+     * @param int $idusuario
+     * @param bool $esAdmin
+     * @return bool
+     */
+    public function finalizar($id, $idusuario, $esAdmin)
+    {
+        $transaccionPropia = !$this->conexion->inTransaction();
+
+        try {
+            $stmt = $this->conexion->prepare("SELECT idbano FROM {$this->tabla} WHERE idservicio = :id");
+            $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+            $stmt->execute();
+            $idbano = $stmt->fetchColumn();
+            if ($idbano === false) {
+                $this->lastError = 'Servicio de baño no encontrado';
+                return false;
+            }
+
+            if ($transaccionPropia) {
+                $this->conexion->beginTransaction();
+            }
+
+            $stmt = $this->conexion->prepare("SELECT idbano FROM bano WHERE idbano = :idbano FOR UPDATE");
+            $stmt->bindValue(':idbano', (int)$idbano, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $stmt = $this->conexion->prepare("SELECT estado, fecha FROM {$this->tabla} WHERE idservicio = :id FOR UPDATE");
+            $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+            $stmt->execute();
+            $servicio = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($servicio['estado'] === 'finalizado') {
+                return $this->abortarRegistro($transaccionPropia, 'El servicio ya está finalizado');
+            }
+            if (!self::transicionPermitida($servicio['estado'], 'finalizado', $esAdmin)) {
+                return $this->abortarRegistro($transaccionPropia, 'Transición de estado no permitida.');
+            }
+
+            $ahora = date('Y-m-d H:i:s');
+            $duracion = max(0, (int)floor((strtotime($ahora) - strtotime($servicio['fecha'])) / 60));
+
+            $stmt = $this->conexion->prepare("UPDATE {$this->tabla} SET estado = 'finalizado',
+                fecha_fin = :fin, duracion_minutos = :duracion WHERE idservicio = :id");
+            $stmt->bindValue(':fin', $ahora, PDO::PARAM_STR);
+            $stmt->bindValue(':duracion', $duracion, PDO::PARAM_INT);
+            $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            if ($transaccionPropia) {
+                $this->conexion->commit();
+            }
+            return true;
+        } catch (PDOException $e) {
+            if ($transaccionPropia && $this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return false;
+        }
+    }
+
+    /**
+     * Todos los baños con el servicio en curso (si lo hay), para el rack del listado.
+     *
+     * @return array
+     */
+    public function getBanosConOcupacion()
+    {
+        try {
+            $stmt = $this->conexion->prepare("SELECT b.idbano, b.nombre, b.ubicacion, b.precio, b.estado,
+                       sb.idservicio, sb.fecha AS inicio
+                FROM bano b
+                LEFT JOIN {$this->tabla} sb ON sb.bano_en_uso = b.idbano
+                ORDER BY b.nombre");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
      * Valida los datos del servicio de baño antes de crear o actualizar
      * 
      * @param array $datos Datos del servicio de baño
@@ -617,7 +732,8 @@ class ServicioBano
                 'activos' => 0,
                 'inactivos' => 0,
                 'ingresos_totales' => 0,
-                'folio_hoy' => 0
+                'folio_hoy' => 0,
+                'en_uso' => 0
             ];
 
             // Fecha actual para filtrar
@@ -657,6 +773,9 @@ class ServicioBano
             $ingresos = $stmt->fetchColumn();
             $estadisticas['ingresos_totales'] = $ingresos ? round($ingresos, 2) : 0;
 
+            // Baños ocupados ahora (servicios iniciados, sin importar el día)
+            $estadisticas['en_uso'] = (int)$this->conexion->query("SELECT COUNT(*) FROM {$this->tabla} WHERE estado = 'iniciado'")->fetchColumn();
+
             // Cargado al folio de huéspedes hoy (cargo neto de servicios vigentes; se cobra en el check-out)
             $query = "SELECT COALESCE(SUM(total), 0) FROM {$this->tabla}
                       WHERE modalidad_cobro = 'folio' AND estado <> 'cancelado' AND DATE(fecha) = :fecha_hoy";
@@ -674,7 +793,8 @@ class ServicioBano
                 'activos' => 0,
                 'inactivos' => 0,
                 'ingresos_totales' => 0,
-                'folio_hoy' => 0
+                'folio_hoy' => 0,
+                'en_uso' => 0
             ];
         }
     }

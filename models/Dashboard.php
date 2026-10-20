@@ -133,7 +133,7 @@ class Dashboard
             $stmt->execute();
             $total_hoy = $stmt->fetch(PDO::FETCH_ASSOC)['total_hoy'];
 
-            // Servicios pendientes (iniciados)
+            // Servicios en uso (iniciados: el baño sigue ocupado)
             $stmt = $this->conexion->prepare("
                 SELECT COUNT(*) as pendientes 
                 FROM servicio_bano 
@@ -349,32 +349,24 @@ class Dashboard
             $stmt->execute();
             $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
-            // Baños disponibles
+            // Baños disponibles (libres: sin servicio en curso)
             $stmt = $this->conexion->prepare("
                 SELECT COUNT(*) as disponibles 
                 FROM bano 
                 WHERE estado = 'disponible'
+                AND NOT EXISTS (SELECT 1 FROM servicio_bano sb WHERE sb.idbano = bano.idbano AND sb.estado = 'iniciado')
             ");
             $stmt->execute();
             $disponibles = $stmt->fetch(PDO::FETCH_ASSOC)['disponibles'];
 
-            // Baños ocupados
+            // Baños ocupados: derivado de los servicios iniciados, no un estado del baño
             $stmt = $this->conexion->prepare("
-                SELECT COUNT(*) as ocupados 
-                FROM bano 
-                WHERE estado = 'ocupada'
+                SELECT COUNT(DISTINCT idbano) as ocupados 
+                FROM servicio_bano 
+                WHERE estado = 'iniciado'
             ");
             $stmt->execute();
             $ocupados = $stmt->fetch(PDO::FETCH_ASSOC)['ocupados'];
-
-            // Baños en limpieza
-            $stmt = $this->conexion->prepare("
-                SELECT COUNT(*) as limpieza 
-                FROM bano 
-                WHERE estado = 'limpieza'
-            ");
-            $stmt->execute();
-            $limpieza = $stmt->fetch(PDO::FETCH_ASSOC)['limpieza'];
 
             // Baños en mantenimiento
             $stmt = $this->conexion->prepare("
@@ -385,23 +377,13 @@ class Dashboard
             $stmt->execute();
             $mantenimiento = $stmt->fetch(PDO::FETCH_ASSOC)['mantenimiento'];
 
-            // Lista de baños para limpieza
-            $stmt = $this->conexion->prepare("
-                SELECT idbano, nombre as numero, ubicacion as tipo, 
-                       'Estándar' as precio, estado, fechaactualizacion as actualizado
-                FROM bano 
-                WHERE estado = 'limpieza'
-                ORDER BY fechaactualizacion ASC
-            ");
-            $stmt->execute();
-            $lista_limpieza = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
             // Lista de baños disponibles
             $stmt = $this->conexion->prepare("
                 SELECT idbano, nombre as numero, ubicacion as tipo, 
                        'Estándar' as precio, estado
                 FROM bano 
                 WHERE estado = 'disponible'
+                AND NOT EXISTS (SELECT 1 FROM servicio_bano sb WHERE sb.idbano = bano.idbano AND sb.estado = 'iniciado')
                 ORDER BY nombre ASC
             ");
             $stmt->execute();
@@ -411,9 +393,7 @@ class Dashboard
                 'total' => $total,
                 'disponibles' => $disponibles,
                 'ocupados' => $ocupados,
-                'limpieza' => $limpieza,
                 'mantenimiento' => $mantenimiento,
-                'lista_limpieza' => $lista_limpieza,
                 'lista_disponibles' => $lista_disponibles
             ];
         } catch (PDOException $e) {
@@ -422,9 +402,7 @@ class Dashboard
                 'total' => 0,
                 'disponibles' => 0,
                 'ocupados' => 0,
-                'limpieza' => 0,
                 'mantenimiento' => 0,
-                'lista_limpieza' => [],
                 'lista_disponibles' => []
             ];
         }
@@ -934,7 +912,7 @@ class Dashboard
             $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
             // Baños por estado
-            $estados = ['disponible', 'ocupada', 'mantenimiento', 'fuera_servicio', 'limpieza'];
+            $estados = ['disponible', 'mantenimiento', 'fuera_servicio'];
             $por_estado = array_fill_keys($estados, 0);
 
             $stmt = $this->conexion->prepare("
@@ -946,6 +924,14 @@ class Dashboard
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
                 $por_estado[$fila['estado']] = $fila['cantidad'];
             }
+
+            // Ocupados: derivado de los servicios iniciados; se descuentan de los disponibles
+            $ocupados = (int)$this->conexion->query("
+                SELECT COUNT(DISTINCT sb.idbano) FROM servicio_bano sb
+                JOIN bano b ON b.idbano = sb.idbano
+                WHERE sb.estado = 'iniciado' AND b.estado = 'disponible'
+            ")->fetchColumn();
+            $por_estado['disponible'] = max(0, $por_estado['disponible'] - $ocupados);
 
             // Todos los baños con su estado
             $stmt = $this->conexion->prepare("
@@ -970,8 +956,7 @@ class Dashboard
             return [
                 'total' => $total,
                 'disponibles' => $por_estado['disponible'] ?? 0,
-                'ocupados' => $por_estado['ocupada'] ?? 0,
-                'limpieza' => $por_estado['limpieza'] ?? 0,
+                'ocupados' => $ocupados,
                 'mantenimiento' => $por_estado['mantenimiento'] ?? 0,
                 'fuera_servicio' => $por_estado['fuera_servicio'] ?? 0,
                 'todos' => $todos_banos,
@@ -983,7 +968,6 @@ class Dashboard
                 'total' => 0,
                 'disponibles' => 0,
                 'ocupados' => 0,
-                'limpieza' => 0,
                 'mantenimiento' => 0,
                 'fuera_servicio' => 0,
                 'todos' => [],

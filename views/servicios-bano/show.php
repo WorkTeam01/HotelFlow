@@ -133,6 +133,11 @@ $esCancelado = $servicio['estado'] === 'cancelado';
                             <li class="list-group-item">
                                 <b>Fecha</b> <span class="float-right"><?= date('d/m/Y H:i', strtotime($servicio['fecha'])); ?></span>
                             </li>
+                            <?php if (!empty($servicio['fecha_fin'])): ?>
+                                <li class="list-group-item">
+                                    <b>Duración</b> <span class="float-right"><?= (int)($servicio['duracion_minutos'] ?? 0); ?> min</span>
+                                </li>
+                            <?php endif; ?>
                         </ul>
 
                         <div class="d-flex justify-content-between">
@@ -155,6 +160,13 @@ $esCancelado = $servicio['estado'] === 'cancelado';
                             <h3 class="card-title">Cambiar Estado del Servicio</h3>
                         </div>
                         <div class="card-body">
+                            <?php if (in_array('finalizado', $accionesEstado, true)): ?>
+                                <button type="button" class="btn btn-success btn-block cambiar-estado-servicio"
+                                    data-id="<?= $servicio['idservicio']; ?>"
+                                    data-estado="finalizado">
+                                    <i class="fas fa-flag-checkered"></i> Finalizar Servicio
+                                </button>
+                            <?php endif; ?>
                             <?php if (in_array('cancelado', $accionesEstado, true)): ?>
                                 <button type="button" class="btn btn-danger btn-block cambiar-estado-servicio"
                                     data-id="<?= $servicio['idservicio']; ?>"

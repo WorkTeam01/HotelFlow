@@ -185,8 +185,8 @@ INSERT INTO `detallecompra` (`idcompra`, `idproducto`, `cantidad`, `preciocompra
 (1, 2, 5, 3.00);
 
 -- Servicio de baño para un huésped del día
-INSERT INTO `servicio_bano` (`idbano`, `idusuario`, `idcliente`, `idrecepcion`, `tipo_cliente`, `modalidad_cobro`, `total`, `metodopago`, `pagorecibido`, `cambio`, `fecha`, `duracion_minutos`, `estado`) VALUES
-(1, 2, 1, 1, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, NOW(), 20, 'finalizado');
+INSERT INTO `servicio_bano` (`idbano`, `idusuario`, `idcliente`, `idrecepcion`, `tipo_cliente`, `modalidad_cobro`, `total`, `metodopago`, `pagorecibido`, `cambio`, `fecha`, `fecha_fin`, `duracion_minutos`, `estado`) VALUES
+(1, 2, 1, 1, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, NOW(), NOW(), 20, 'finalizado');
 
 -- Cargo del servicio de baño anterior en el folio de la recepción 1 (ver ServicioBano::registrar);
 -- `recepcion`.montototal se actualiza con el cache del folio
