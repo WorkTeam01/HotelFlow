@@ -41,7 +41,7 @@ $banos = $controller->getBanosConOcupacion();
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home" aria-hidden="true"></i> Inicio</a></li>
                     <li class="breadcrumb-item active">Servicios de Baños</li>
                 </ol>
             </div>
@@ -50,147 +50,11 @@ $banos = $controller->getBanosConOcupacion();
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content servicios-bano-pagina">
     <div class="container-fluid">
-        <!-- Tarjetas de estadísticas -->
-        <div class="row">
-            <div class="col-lg-3 col-6">
-                <!-- small box -->
-                <div class="small-box bg-info">
-                    <div class="inner">
-                        <h3><?= $estadisticas['total']; ?></h3>
-                        <p>Servicios Hoy</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-shower"></i>
-                    </div>
-                </div>
-            </div>
-            <!-- ./col -->
-            <div class="col-lg-3 col-6">
-                <!-- small box -->
-                <div class="small-box bg-success">
-                    <div class="inner">
-                        <h3><?= $estadisticas['activos']; ?></h3>
-                        <p>Activos Hoy · <?= (int)$estadisticas['en_uso']; ?> en uso</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                </div>
-            </div>
-            <!-- ./col -->
-            <div class="col-lg-3 col-6">
-                <!-- small box -->
-                <div class="small-box bg-warning">
-                    <div class="inner">
-                        <h3><?= $estadisticas['inactivos']; ?></h3>
-                        <p>Inactivos Hoy</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-times-circle"></i>
-                    </div>
-                </div>
-            </div>
-            <!-- ./col -->
-            <div class="col-lg-3 col-6">
-                <!-- small box -->
-                <div class="small-box bg-danger">
-                    <div class="inner">
-                        <h3><?= number_format($estadisticas['ingresos_totales'], 2); ?></h3>
-                        <p>Cobrado hoy<?php if ($estadisticas['folio_hoy'] > 0): ?> · <?= number_format($estadisticas['folio_hoy'], 2); ?> a folio<?php endif; ?></p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-dollar-sign"></i>
-                    </div>
-                </div>
-            </div>
-            <!-- ./col -->
-        </div>
-        <!-- /.row -->
+        <?php require __DIR__ . '/partials/kpi-servicios.php'; ?>
 
-        <!-- Rack de baños -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card card-outline card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">Registro Rápido - Estado de los Baños</h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <?php if (!$disponibilidad['disponible']): ?>
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle mr-2"></i>
-                                <strong>Registro no disponible:</strong> <?= htmlspecialchars($disponibilidad['message']); ?>
-                                <a href="<?= $URL; ?>views/productos" class="alert-link ml-2">Gestionar Productos</a>
-                            </div>
-                        <?php else:
-                            $stockActual = $disponibilidad['stock_actual'] ?? 0;
-                            $stockMinimo = $disponibilidad['stock_minimo'] ?? 0;
-                            if ($stockActual <= $stockMinimo && $stockMinimo > 0): ?>
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle mr-2"></i>
-                                    <strong>Stock Bajo:</strong> Quedan <?= $stockActual; ?> unidades de papel higiénico
-                                    (mínimo recomendado: <?= $stockMinimo; ?>).
-                                </div>
-                        <?php endif;
-                        endif; ?>
-
-                        <?php if (empty($banos)): ?>
-                            <div class="alert alert-warning text-center mb-0">
-                                <i class="fas fa-exclamation-triangle mr-2"></i>
-                                No hay baños registrados.
-                            </div>
-                        <?php else: ?>
-                            <div class="row">
-                                <?php foreach ($banos as $bano): ?>
-                                    <?php $ocupacion = $bano['ocupacion']; ?>
-                                    <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
-                                        <?php if ($ocupacion === 'libre'): ?>
-                                            <button type="button" class="btn btn-touch btn-block btn-success btn-registro-rapido"
-                                                <?= $disponibilidad['disponible'] ? '' : 'disabled'; ?>
-                                                data-id="<?= $bano['idbano']; ?>"
-                                                data-nombre="<?= htmlspecialchars($bano['nombre']); ?>"
-                                                data-precio="<?= $bano['precio']; ?>">
-                                                <i class="fas fa-bolt mr-2"></i>
-                                                <?= htmlspecialchars($bano['nombre']); ?> - <?= number_format($bano['precio'], 2); ?>
-                                            </button>
-                                        <?php elseif ($ocupacion === 'en_uso' || $ocupacion === 'excedido'): ?>
-                                            <div class="bano-rack <?= $ocupacion === 'excedido' ? 'bano-rack-excedido' : 'bano-rack-uso'; ?>">
-                                                <div class="font-weight-bold"><?= htmlspecialchars($bano['nombre']); ?></div>
-                                                <div class="small">
-                                                    <?= $ocupacion === 'excedido' ? 'Excedido' : 'En uso'; ?> · <?= (int)$bano['minutos']; ?> min
-                                                </div>
-                                                <button type="button" class="btn btn-touch btn-sm btn-light btn-block mt-2 cambiar-estado-servicio"
-                                                    data-id="<?= (int)$bano['idservicio']; ?>"
-                                                    data-estado="finalizado">
-                                                    <i class="fas fa-flag-checkered mr-1"></i> Finalizar
-                                                </button>
-                                            </div>
-                                        <?php else: ?>
-                                            <button type="button" class="btn btn-block btn-secondary" disabled>
-                                                <i class="fas fa-tools mr-2"></i>
-                                                <?= htmlspecialchars($bano['nombre']); ?> · <?= $ocupacion === 'mantenimiento' ? 'Mantenimiento' : 'Fuera de servicio'; ?>
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-
-                            <div class="text-center mt-3">
-                                <a href="<?= $URL; ?>views/servicios-bano/create.php" class="btn btn-outline-primary">
-                                    <i class="fas fa-plus-circle"></i> Registro Manual
-                                </a>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <?php require __DIR__ . '/partials/rack-banos.php'; ?>
 
         <div class="row">
             <div class="col-12">
@@ -198,8 +62,8 @@ $banos = $controller->getBanosConOcupacion();
                     <div class="card-header card-outline card-primary">
                         <h3 class="card-title">Listado de Servicios de Baños</h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir el listado">
+                                <i class="fas fa-minus" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -212,77 +76,47 @@ $banos = $controller->getBanosConOcupacion();
                                         <th>#</th>
                                         <th>Baño</th>
                                         <th>Cliente</th>
-                                        <th>Tipo</th>
-                                        <th>Método de Pago</th>
+                                        <th>Cobro</th>
                                         <th>Total</th>
                                         <th>Fecha</th>
+                                        <th>Duración</th>
                                         <th>Estado</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php
-                                    $contador = 1;
-                                    foreach ($servicios as $servicio) :
-                                        $estado = $controller->estadoDerivado($servicio);
-                                        switch ($estado) {
-                                            case 'excedido':
-                                                $clase_estado = 'badge-danger';
-                                                $texto_estado = 'Excedido';
-                                                break;
-                                            case 'cancelado':
-                                                $clase_estado = 'badge-danger';
-                                                $texto_estado = 'Cancelado';
-                                                break;
-                                            case 'finalizado':
-                                                $clase_estado = 'badge-info';
-                                                $texto_estado = 'Finalizado';
-                                                break;
-                                            case 'iniciado':
-                                            default:
-                                                $clase_estado = 'badge-success';
-                                                $texto_estado = 'Iniciado';
-                                                break;
-                                        }
+                                    <?php foreach ($servicios as $servicio) :
+                                        $ui = $servicio['estado_ui'];
+                                        $acciones = $controller->accionesEstado($servicio);
+                                        $duracion = $servicio['minutos_en_uso'] ?? $servicio['duracion_minutos'];
                                     ?>
                                         <tr>
-                                            <td class="text-center"><?= $contador++; ?></td>
+                                            <td class="text-center"><?= (int)$servicio['idservicio']; ?></td>
                                             <td><?= htmlspecialchars($servicio['nombre_bano'] ?? 'N/A'); ?></td>
-                                            <td><?= htmlspecialchars($servicio['tipo_cliente'] == 'Publico' ? 'Cliente público' : ($servicio['nombre_cliente'] ?? 'N/A')); ?></td>
-                                            <td><?= htmlspecialchars($servicio['tipo_cliente'] ?? 'N/A'); ?></td>
-                                            <td><?= $servicio['modalidad_cobro'] === 'folio' ? 'Folio · Hab. ' . htmlspecialchars($servicio['numero_habitacion'] ?? 'N/A') : htmlspecialchars($servicio['metodopago'] ?? 'N/A'); ?></td>
-                                            <td>Bs. <?= number_format(floatval($servicio['total'] ?? 0), 2); ?></td>
+                                            <td><?= htmlspecialchars($servicio['cliente_label']); ?></td>
+                                            <td><?= htmlspecialchars($servicio['cobro_label']); ?></td>
+                                            <td>Bs. <?= number_format((float)($servicio['total'] ?? 0), 2); ?></td>
                                             <td><?= !empty($servicio['fecha']) ? date('d/m/Y H:i', strtotime($servicio['fecha'])) : 'N/A'; ?></td>
+                                            <td><?= $duracion !== null ? (int)$duracion . ' min' : '—'; ?></td>
                                             <td class="text-center">
-                                                <span class="badge <?= $clase_estado; ?>"><?= $texto_estado; ?></span>
+                                                <span class="badge <?= $ui['badge']; ?>">
+                                                    <i class="fas fa-<?= $ui['icono']; ?>" aria-hidden="true"></i> <?= $ui['label']; ?>
+                                                </span>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="<?= $URL; ?>views/servicios-bano/show.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-touch btn-info btn-sm">
-                                                        <i class="fas fa-eye"></i>
+                                                    <a href="<?= $URL; ?>views/servicios-bano/show.php?id=<?= (int)$servicio['idservicio']; ?>"
+                                                        class="btn btn-touch btn-info btn-sm" aria-label="Ver detalle" title="Ver detalle">
+                                                        <i class="fas fa-eye" aria-hidden="true"></i>
                                                     </a>
-                                                    <?php if ($servicio['estado'] !== 'cancelado'): ?>
-                                                        <a href="<?= $URL; ?>views/servicios-bano/update.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-touch btn-warning btn-sm" title="Editar observaciones">
-                                                            <i class="fas fa-edit"></i>
+                                                    <?php if (ServicioBanoController::esEditable($servicio)): ?>
+                                                        <a href="<?= $URL; ?>views/servicios-bano/update.php?id=<?= (int)$servicio['idservicio']; ?>"
+                                                            class="btn btn-touch btn-warning btn-sm" aria-label="Editar observaciones" title="Editar observaciones">
+                                                            <i class="fas fa-edit" aria-hidden="true"></i>
                                                         </a>
                                                     <?php endif; ?>
-                                                    <?php $acciones = $controller->accionesEstado($servicio); ?>
-                                                    <?php if (in_array('finalizado', $acciones, true)): ?>
-                                                        <button type="button" class="btn btn-touch btn-primary btn-sm cambiar-estado-servicio"
-                                                            data-id="<?= $servicio['idservicio']; ?>"
-                                                            data-estado="finalizado"
-                                                            title="Finalizar servicio">
-                                                            <i class="fas fa-flag-checkered"></i>
-                                                        </button>
-                                                    <?php endif; ?>
-                                                    <?php if (in_array('cancelado', $acciones, true)): ?>
-                                                        <button type="button" class="btn btn-touch btn-danger btn-sm cambiar-estado-servicio"
-                                                            data-id="<?= $servicio['idservicio']; ?>"
-                                                            data-estado="cancelado"
-                                                            title="Cancelar servicio">
-                                                            <i class="fas fa-times"></i>
-                                                        </button>
-                                                    <?php endif; ?>
+                                                    <?php $variante = 'fila';
+                                                    require __DIR__ . '/partials/acciones-estado.php'; ?>
                                                 </div>
                                             </td>
                                         </tr>

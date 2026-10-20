@@ -325,20 +325,6 @@ $dashboard_data = [
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($stats['servicios_bano']['ultimos'] as $servicio):
-                                    $estado_clase = '';
-                                    switch ($servicio['estado']) {
-                                        case 'iniciado':
-                                            $estado_clase = 'primary';
-                                            break;
-                                        case 'finalizado':
-                                            $estado_clase = 'success';
-                                            break;
-                                        case 'cancelado':
-                                            $estado_clase = 'danger';
-                                            break;
-                                        default:
-                                            $estado_clase = 'secondary';
-                                    }
                                 ?>
                                     <tr>
                                         <td><?= htmlspecialchars($servicio['numero_bano']) ?></td>
@@ -349,8 +335,8 @@ $dashboard_data = [
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge badge-<?= $estado_clase ?>">
-                                                <?= ucfirst($servicio['estado']) ?>
+                                            <span class="badge <?= $servicio['estado_ui']['badge'] ?>">
+                                                <?= $servicio['estado_ui']['label'] ?>
                                             </span>
                                         </td>
                                         <td class="font-weight-bold">

@@ -21,6 +21,7 @@ class DashboardController
     {
         // Incluir el modelo de Dashboard
         require_once __DIR__ . '/../../models/Dashboard.php';
+        require_once __DIR__ . '/../servicios-bano/ServicioBanoController.php';
         $this->modelo = new Dashboard();
     }
 
@@ -48,6 +49,10 @@ class DashboardController
 
         // Estadísticas de servicios de baño
         $stats['servicios_bano'] = $this->modelo->getEstadisticasServiciosBano();
+        foreach ($stats['servicios_bano']['ultimos'] as &$servicioBano) {
+            $servicioBano['estado_ui'] = ServicioBanoController::estadoServicio($servicioBano['estado']);
+        }
+        unset($servicioBano);
 
         // Estadísticas de equipajes
         $stats['equipajes'] = $this->modelo->getEstadisticasEquipajes();

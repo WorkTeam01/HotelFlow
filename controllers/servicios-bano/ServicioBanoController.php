@@ -56,8 +56,7 @@ class ServicioBanoController
      */
     public function index()
     {
-        // Obtener todos los servicios de baños
-        return $this->modelo->getAll();
+        return $this->decorarEstados($this->modelo->getAll());
     }
 
     /**
@@ -342,9 +341,11 @@ class ServicioBanoController
             return null;
         }
 
+        require_once __DIR__ . '/../../models/Pago.php';
+
         return [
-            'servicio' => $servicio,
-            'banos_disponibles' => $this->getBanosDisponibles()
+            'servicio' => $this->decorarEstados([$servicio])[0],
+            'folio' => (new Pago())->getByServicioBano($id)
         ];
     }
 
@@ -445,6 +446,88 @@ class ServicioBanoController
     }
 
     /**
+     * Presentación de un estado de servicio: etiqueta, color AdminLTE, badge e icono. Fuente única;
+     * ninguna vista vuelve a escribir un switch sobre el estado. 'excedido' es derivado (ver estadoDerivado()).
+     * Vocabulario: amarillo = en uso (ocupado), rojo = excedido, verde = finalizado, gris = cancelado.
+     *
+     * @return array{label:string,clase:string,badge:string,icono:string,orden:int}
+     */
+    public static function estadoServicio(string $estado): array
+    {
+        switch ($estado) {
+            case 'iniciado':
+                $ui = ['label' => 'En uso', 'clase' => 'warning', 'icono' => 'clock', 'orden' => 1];
+                break;
+            case 'excedido':
+                $ui = ['label' => 'Excedido', 'clase' => 'danger', 'icono' => 'hourglass-half', 'orden' => 2];
+                break;
+            case 'finalizado':
+                $ui = ['label' => 'Finalizado', 'clase' => 'success', 'icono' => 'flag-checkered', 'orden' => 3];
+                break;
+            case 'cancelado':
+                $ui = ['label' => 'Cancelado', 'clase' => 'secondary', 'icono' => 'ban', 'orden' => 4];
+                break;
+            default:
+                $ui = ['label' => ucfirst($estado), 'clase' => 'secondary', 'icono' => 'question-circle', 'orden' => 99];
+                break;
+        }
+
+        $ui['badge'] = 'badge-' . $ui['clase'];
+        return $ui;
+    }
+
+    /**
+     * Etiqueta de cobro de un servicio: método de pago o, si va al folio, la habitación.
+     */
+    public static function etiquetaCobro(array $servicio): string
+    {
+        if (($servicio['modalidad_cobro'] ?? 'contado') === 'folio') {
+            return 'Folio · Hab. ' . ($servicio['numero_habitacion'] ?? 'N/A');
+        }
+        $metodo = $servicio['metodopago'] ?? null;
+        return $metodo === 'OTROS' ? 'Otros' : ($metodo ?? 'N/A');
+    }
+
+    /**
+     * Etiqueta de cliente: "Público" o el huésped con su habitación.
+     */
+    public static function etiquetaCliente(array $servicio): string
+    {
+        if (($servicio['tipo_cliente'] ?? 'Publico') === 'Publico') {
+            return 'Público';
+        }
+        $nombre = $servicio['nombre_cliente'] ?? 'N/A';
+        return isset($servicio['numero_habitacion']) ? $nombre . ' · Hab. ' . $servicio['numero_habitacion'] : $nombre;
+    }
+
+    /**
+     * Un servicio cancelado ya no admite cambios (ni siquiera de campos descriptivos).
+     */
+    public static function esEditable(array $servicio): bool
+    {
+        return $servicio['estado'] !== 'cancelado';
+    }
+
+    /**
+     * Agrega a cada servicio los datos de presentación que las vistas necesitan.
+     *
+     * @param array $servicios Filas de servicio
+     * @return array Las mismas filas con estado_ui, minutos_en_uso, cobro_label y cliente_label
+     */
+    public function decorarEstados(array $servicios): array
+    {
+        foreach ($servicios as &$servicio) {
+            $servicio['estado_ui'] = self::estadoServicio($this->estadoDerivado($servicio));
+            $servicio['minutos_en_uso'] = $servicio['estado'] === 'iniciado' ? $this->minutosEnCurso($servicio['fecha']) : null;
+            $servicio['cobro_label'] = self::etiquetaCobro($servicio);
+            $servicio['cliente_label'] = self::etiquetaCliente($servicio);
+        }
+        unset($servicio);
+
+        return $servicios;
+    }
+
+    /**
      * Minutos que lleva en curso un servicio iniciado.
      */
     private function minutosEnCurso($inicio)
@@ -454,14 +537,15 @@ class ServicioBanoController
 
     /**
      * Estado de presentación de un servicio: 'excedido' es derivado (un iniciado que supera
-     * los minutos de alerta configurados), no un valor de BD.
+     * los minutos de alerta configurados; 0 desactiva la alerta), no un valor de BD.
      *
      * @param array $servicio Fila de servicio (estado, fecha)
      * @return string
      */
     public function estadoDerivado(array $servicio)
     {
-        if ($servicio['estado'] === 'iniciado' && $this->minutosEnCurso($servicio['fecha']) > $this->minutosAlerta()) {
+        $alerta = $this->minutosAlerta();
+        if ($alerta > 0 && $servicio['estado'] === 'iniciado' && $this->minutosEnCurso($servicio['fecha']) > $alerta) {
             return 'excedido';
         }
         return $servicio['estado'];
@@ -487,7 +571,7 @@ class ServicioBanoController
             $bano['minutos'] = null;
             if ($bano['idservicio']) {
                 $bano['minutos'] = $this->minutosEnCurso($bano['inicio']);
-                $bano['ocupacion'] = $bano['minutos'] > $alerta ? 'excedido' : 'en_uso';
+                $bano['ocupacion'] = $alerta > 0 && $bano['minutos'] > $alerta ? 'excedido' : 'en_uso';
             } else {
                 $bano['ocupacion'] = $bano['estado'] === 'disponible' ? 'libre' : $bano['estado'];
             }

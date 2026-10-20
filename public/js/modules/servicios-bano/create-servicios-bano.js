@@ -129,43 +129,28 @@ document.addEventListener('DOMContentLoaded', function () {
         mostrarCarga('Guardando...', 'Registrando el servicio.');
     }
 
-    // Inicializar los elementos con un pequeño retraso para asegurar que Select2 está listo
-    setTimeout(function () {
-        // Ejecutar actualizarVisibilidadCliente para configurar el estado inicial
-        actualizarVisibilidadCliente();
+    // Estado inicial y listeners; Select2 se inicializó arriba, así que no hace falta esperar
+    actualizarVisibilidadCliente();
+    actualizarVisibilidadCambio();
 
-        // Ejecutar actualizarVisibilidadCambio para configurar el estado inicial
-        actualizarVisibilidadCambio();
+    tipoClienteSelect.addEventListener('change', actualizarVisibilidadCliente);
+    document.querySelectorAll('input[name="modalidad_cobro"]').forEach(function (radio) {
+        radio.addEventListener('change', actualizarVisibilidadPago);
+    });
+    metodoPagoSelect.addEventListener('change', actualizarVisibilidadCambio);
 
-        // Agregar listener para el cambio de tipo de cliente
-        tipoClienteSelect.addEventListener('change', actualizarVisibilidadCliente);
+    // Select2 dispara sus eventos por jQuery
+    $(tipoClienteSelect).on('select2:select', actualizarVisibilidadCliente);
+    $(metodoPagoSelect).on('select2:select', actualizarVisibilidadCambio);
 
-        document.querySelectorAll('input[name="modalidad_cobro"]').forEach(function (radio) {
-            radio.addEventListener('change', actualizarVisibilidadPago);
-        });
+    banoSelect.addEventListener('change', actualizarPrecioBano);
+    $(banoSelect).on('select2:select', actualizarPrecioBano);
 
-        // Agregar listener para el cambio de método de pago
-        metodoPagoSelect.addEventListener('change', actualizarVisibilidadCambio);
+    pagoRecibidoInput.addEventListener('input', calcularCambio);
+    formServicioBano.addEventListener('submit', validarFormulario);
 
-        // También agregar listener para eventos de Select2
-        $(tipoClienteSelect).on('select2:select', actualizarVisibilidadCliente);
-        $(metodoPagoSelect).on('select2:select', actualizarVisibilidadCambio);
-
-        // Listener para cambio en baño seleccionado
-        banoSelect.addEventListener('change', actualizarPrecioBano);
-
-        // Listener para calcular cambio
-        pagoRecibidoInput.addEventListener('input', calcularCambio);
-
-        // Validación del formulario
-        const formServicioBano = document.getElementById('formServicioBano');
-        if (formServicioBano) {
-            formServicioBano.addEventListener('submit', validarFormulario);
-        }
-
-        // Cargar precio inicial si hay un baño seleccionado
-        if (banoSelect.selectedIndex > 0) {
-            actualizarPrecioBano();
-        }
-    }, 200); // Retraso para asegurar que Select2 está inicializado
+    // Cargar precio inicial si hay un baño seleccionado
+    if (banoSelect.selectedIndex > 0) {
+        actualizarPrecioBano();
+    }
 });

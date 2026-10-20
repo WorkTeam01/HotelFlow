@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     Toast.fire({
                         icon: 'info',
-                        title: 'Registrando servicio...'
+                        titleText: 'Registrando servicio...'
                     });
 
                     // Deshabilitar botón mientras se procesa
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     Toast.fire({
                         icon: 'success',
-                        title: `Servicio de ${escapeHtml(nombreBano)} registrado correctamente`
+                        titleText: `Servicio de ${nombreBano} registrado correctamente`
                     }).then(() => {
                         // Recargar la página para actualizar la lista
                         location.reload();
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     Toast.fire({
                         icon: 'error',
-                        title: response.message || 'No se pudo registrar el servicio'
+                        titleText: response.message || 'No se pudo registrar el servicio'
                     });
                 }
             },
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 Toast.fire({
                     icon: 'error',
-                    title: 'Error de conexión con el servidor'
+                    titleText: 'Error de conexión con el servidor'
                 });
             }
         });
