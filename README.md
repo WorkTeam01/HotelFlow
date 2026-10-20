@@ -71,7 +71,7 @@ Registro de ventas en dos columnas con catálogo por modales, pago único o mixt
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Habitaciones** | Gestión por tipo, piso y estado. Sistema de tarifas y galería de imágenes                                                                                                                                                 |
 | **Recepción**    | Panel único con tabs Hoy / Mapa de habitaciones / Historial, KPIs del día, folio de huésped con cargos/pagos múltiples, check-in/out, cambio de habitación auditable, validación de solape, recibos y tarjeta de registro |
-| **Servicios**    | Baños, limpieza y almacenamiento de equipaje con folio de pagos, alerta de permanencia y recibos PDF                                                                                                                      |
+| **Servicios**    | Baños con cobro en pagos o cargo al folio del huésped, control de ocupación y duración, limpieza y almacenamiento de equipaje con folio de pagos, alerta de permanencia y recibos PDF                                                                                                                      |
 | **Comercial**    | Punto de venta con pago único/mixto y recibo térmico, control de inventario, compras y reportes exportables (PDF/Excel)                                                                                                   |
 | **Dashboard**    | Métricas en tiempo real, estadísticas por rol y exportación de reportes                                                                                                                                                   |
 | **Usuarios**     | Sistema de roles (Admin, Recepcionista, Limpieza) con permisos granulares                                                                                                                                                 |
@@ -193,7 +193,7 @@ HotelFlow/
 
 ### Servicios
 
-- **Baño y Limpieza:** Asignación de tareas, precios dinámicos
+- **Baño y Limpieza:** Cobro del baño en el libro de pagos o cargo al folio del huésped, ocupación y duración por baño, asignación de tareas, precios dinámicos
 - **Equipaje:** Control de entrada/salida con folio de pagos (cargo + pago al registrar), estados (almacenado, vencido, retirado, perdido, dañado), alerta de permanencia configurable (`EQUIPAJE_DIAS_ALERTA`), historial por ticket, cambios de estado con confirmación (un retirado es final) y recibos PDF
 
 ### Productos

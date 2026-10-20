@@ -5,6 +5,84 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.8.0] - 2026-10-20
+
+Refactor de `servicios-bano`: el cobro entra al libro de `pagos`, el servicio se registra y cancela de forma atómica, un huésped puede cargarlo a su folio y cada baño sabe si está en uso. Auditoría de frontend del módulo (16/20 → 18/20). Hay cambios de esquema (ver Migración).
+
+### Added
+
+- **Cobro en `pagos`** (`pagos.idservicio_bano`) y **cargo al folio** de una estancia `en_curso`; el Dashboard cuenta solo el baño al contado para no duplicar lo que ya entra por Recepción.
+- **Cancelación con reverso** y motivo obligatorio; un cancelado no se reactiva y cancelar uno finalizado es solo del Administrador.
+- **Ocupación del baño** (`bano_en_uso` + `UNIQUE`): acción Finalizar, rack de baños en el listado y estado derivado `excedido`.
+- Variables `BANO_PRODUCTO_CONSUMIBLE` y `BANO_MINUTOS_ALERTA` (`0` desactiva la alerta).
+
+### Changed
+
+- El servicio se registra en una transacción con bloqueos y el cambio de estado pasa de GET a POST con CSRF; `update.php` solo edita `observaciones`.
+- Estado por helper único, partials, KPI en `info-box` y mejoras de contraste, áreas táctiles y foco.
+
+### Fixed
+
+- Los ingresos del baño salían en 0 en el Dashboard y el kardex (solo contaban `finalizado`).
+- La fecha y el total del cobro los definía el cliente.
+- Dos servicios simultáneos sobre el mismo baño eran posibles y cancelar no revertía el cobro.
+- Un usuario sin permiso sobre el módulo (Limpieza) entraba en un bucle de redirecciones.
+
+### Migración
+
+Ejecutar en orden. Antes, comprobar que dan 0 filas: `SELECT COUNT(*) FROM pagos WHERE idequipaje IS NOT NULL AND idrecepcion IS NOT NULL`, `SELECT COUNT(*) FROM servicio_bano WHERE pagorecibido < total OR total < 0` y `SELECT id_pago_reversado FROM pagos WHERE id_pago_reversado IS NOT NULL GROUP BY id_pago_reversado HAVING COUNT(*) > 1`.
+
+```sql
+ALTER TABLE servicio_bano
+  ADD COLUMN idrecepcion int(11) DEFAULT NULL AFTER idcliente,
+  ADD COLUMN modalidad_cobro enum('contado','folio') NOT NULL DEFAULT 'contado' AFTER tipo_cliente,
+  ADD COLUMN fecha_fin datetime DEFAULT NULL AFTER fecha,
+  ADD COLUMN observaciones varchar(255) DEFAULT NULL AFTER estado,
+  ADD COLUMN motivo_cancelacion varchar(255) DEFAULT NULL AFTER observaciones,
+  ADD COLUMN idusuario_cancelacion int(11) DEFAULT NULL AFTER motivo_cancelacion,
+  ADD COLUMN fecha_cancelacion datetime DEFAULT NULL AFTER idusuario_cancelacion,
+  ADD COLUMN stock_repuesto tinyint(1) NOT NULL DEFAULT 0 AFTER fecha_cancelacion,
+  MODIFY metodopago enum('Efectivo','QR','OTROS') DEFAULT NULL;
+ALTER TABLE pagos ADD COLUMN idservicio_bano int(11) DEFAULT NULL AFTER idequipaje;
+
+-- Los 'iniciado' anteriores significaban "cobrado": cerrarlos antes del UNIQUE
+UPDATE servicio_bano SET estado = 'finalizado', fecha_fin = fecha WHERE estado = 'iniciado';
+UPDATE servicio_bano SET fecha_fin = fecha WHERE estado = 'finalizado' AND fecha_fin IS NULL;
+UPDATE servicio_bano SET fecha_cancelacion = COALESCE(fechaactualizacion, fecha), motivo_cancelacion = 'Cancelado antes de 1.8.0'
+ WHERE estado = 'cancelado' AND fecha_cancelacion IS NULL;
+
+-- Ledger de los servicios vigentes
+INSERT INTO pagos (idservicio_bano, tipo, concepto, montototal, metodopago, idusuario, fechacreacion)
+  SELECT idservicio, 'cargo', CONCAT('Servicio de baño #', idservicio, ' (migración)'), total, 'OTROS', idusuario, fecha
+  FROM servicio_bano WHERE estado <> 'cancelado' AND total > 0;
+INSERT INTO pagos (idservicio_bano, tipo, concepto, montototal, metodopago, idusuario, fechacreacion)
+  SELECT idservicio, 'pago', CONCAT('Pago servicio de baño #', idservicio, ' (migración)'), total, metodopago, idusuario, fecha
+  FROM servicio_bano WHERE estado <> 'cancelado' AND total > 0;
+
+ALTER TABLE servicio_bano
+  ADD COLUMN bano_en_uso int(11) AS (IF(estado = 'iniciado', idbano, NULL)) PERSISTENT,
+  ADD KEY idrecepcion (idrecepcion), ADD KEY idusuario_cancelacion (idusuario_cancelacion),
+  ADD KEY idx_sb_fecha_estado (fecha, estado), ADD UNIQUE KEY uq_sb_bano_en_uso (bano_en_uso),
+  ADD CONSTRAINT servicio_bano_ibfk_4 FOREIGN KEY (idusuario_cancelacion) REFERENCES usuarios (idusuario),
+  ADD CONSTRAINT servicio_bano_ibfk_5 FOREIGN KEY (idrecepcion) REFERENCES recepcion (idrecepcion),
+  ADD CONSTRAINT chk_sb_montos CHECK (total >= 0 AND pagorecibido >= 0 AND cambio >= 0),
+  ADD CONSTRAINT chk_sb_contado CHECK (modalidad_cobro <> 'contado' OR (metodopago IS NOT NULL AND pagorecibido >= total)),
+  ADD CONSTRAINT chk_sb_folio CHECK (modalidad_cobro <> 'folio' OR (idrecepcion IS NOT NULL AND metodopago IS NULL AND pagorecibido = 0 AND cambio = 0)),
+  ADD CONSTRAINT chk_sb_fin CHECK (estado <> 'finalizado' OR fecha_fin IS NOT NULL),
+  ADD CONSTRAINT chk_sb_cancel CHECK (estado <> 'cancelado' OR fecha_cancelacion IS NOT NULL);
+ALTER TABLE pagos
+  ADD KEY idservicio_bano (idservicio_bano),
+  ADD CONSTRAINT pagos_ibfk_5 FOREIGN KEY (idservicio_bano) REFERENCES servicio_bano (idservicio),
+  ADD CONSTRAINT chk_pagos_origen CHECK (idequipaje IS NULL OR (idrecepcion IS NULL AND idservicio_bano IS NULL)),
+  DROP KEY id_pago_reversado, ADD UNIQUE KEY uq_pagos_reversado (id_pago_reversado);
+```
+
+Debe existir un producto con el nombre de `BANO_PRODUCTO_CONSUMIBLE` (por defecto `Rollo de papel`) o no se podrá registrar ningún servicio. Los servicios existentes quedan como `contado`.
+
+### Docs
+
+- `CLAUDE.md`, `PROMPTS.md` y `README.md` alineados con el módulo.
+
 ## [1.7.2] - 2026-10-12
 
 Auditoría de frontend de `almacenamiento-equipaje` (13/20 → 19/20, verificada en navegador a 1280px y 390px) y listado de habitaciones con dropdown de acciones.

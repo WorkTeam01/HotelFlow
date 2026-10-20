@@ -73,6 +73,7 @@ _______________
 - Texto de usuario se guarda crudo (sanitizarDatos solo hace trim) y se escapa al mostrar: htmlspecialchars($v ?? '') en PHP/PDF y escapeHtml() de common-utils.js en JS (title/html de Swal, .html()); toasts con titleText
 - Sesion: solo session.php inicia sesiones; requireLogin() verifica usuario activo; logout y acciones por GET llevan csrf_token. Usuarios: gestion de usuarios solo para el Administrador (vistas y endpoints exigen esAdministrador(), el permiso 'usuarios' no basta); UsuarioController::validarPrivilegios() sigue como defensa (nadie cambia su propio cargo/estado/permisos)
 - Recepcion: transiciones de estado solo via Recepcion::cambiarEstado() y checkout() atomico; existeSolape() en alta y cambio de habitacion; PDO sin emulacion: nunca repetir un parametro nombrado en la misma consulta (HY093)
+- Servicio de baño = ledger `pagos.idservicio_bano` (cache inmutable en `servicio_bano`, solo `observaciones` editable); alta/cancelacion/finalizacion solo por ServicioBano::registrar/cancelar/finalizar con orden de lock recepcion → bano → servicio_bano → productos; contado o folio (el Dashboard cuenta solo contado); estado de ServicioBanoController::estadoServicio / estadoDerivado (`excedido` derivado, BANO_MINUTOS_ALERTA; 0 = sin alerta); ocupacion por `bano_en_uso` + UNIQUE; cambio de estado por POST dual con cambiar-estado-servicios-bano.js; nunca incluir `bano_en_uso` en INSERT/UPDATE
 - Compras/baño/equipaje: idusuario de la sesion, montos desde precios reales en BD, estados validados contra el valor actual (Compra::completar/cancelar con FOR UPDATE); stock de producto solo por movimientos; el stock de una compra entra en completar(), no en crear() (cancelar solo revierte una completada)
 - Reportes de DataTables: helper initDataTable() de public/js/core/datatable-utils.js (orientacion del PDF en el boton pdf, no en la collection); no copiar el bloque de botones/idioma en un modulo nuevo
 - Resaltado de sidebar en subpaginas de una seccion: sidebarEnSeccion() (match por prefijo), no sidebarEsActivo() (match exacto)
@@ -290,5 +291,5 @@ Preparar el proyecto para publicacion open source:
 
 ---
 
-_Ultima actualizacion: 2026-10-07_
+_Ultima actualizacion: 2026-10-20_
 _Mantener sincronizado con CLAUDE.md cuando cambie arquitectura o flujo._
