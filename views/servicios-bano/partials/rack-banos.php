@@ -79,7 +79,7 @@
                     </div>
 
                     <div class="text-center mt-3">
-                        <a href="<?= $URL; ?>views/servicios-bano/create.php" class="btn btn-outline-primary">
+                        <a href="<?= $URL; ?>views/servicios-bano/create.php" class="btn btn-touch btn-outline-primary">
                             <i class="fas fa-plus-circle" aria-hidden="true"></i> Registro manual
                         </a>
                     </div>

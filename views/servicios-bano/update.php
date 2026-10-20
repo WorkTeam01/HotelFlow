@@ -137,11 +137,11 @@ $ui = $servicio['estado_ui'];
                     <!-- Información adicional (solo lectura) -->
                     <div class="row mt-3">
                         <div class="col-md-12">
-                            <div class="card card-secondary">
+                            <div class="card card-outline card-secondary">
                                 <div class="card-header">
                                     <h3 class="card-title"><i class="fas fa-info-circle" aria-hidden="true"></i> Información del Sistema</h3>
                                     <div class="card-tools">
-                                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                        <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir la información del sistema">
                                             <i class="fas fa-minus" aria-hidden="true"></i>
                                         </button>
                                     </div>
@@ -170,12 +170,12 @@ $ui = $servicio['estado_ui'];
                                 <div class="card-footer">
                                     <div class="row g-1">
                                         <div class="col-12 col-sm-auto">
-                                            <button type="submit" class="btn btn-warning w-100">
+                                            <button type="submit" class="btn btn-touch btn-warning w-100">
                                                 <i class="fas fa-save" aria-hidden="true"></i> Guardar observaciones
                                             </button>
                                         </div>
                                         <div class="col-12 col-sm-auto">
-                                            <a href="<?= $URL; ?>views/servicios-bano" class="btn btn-secondary w-100">
+                                            <a href="<?= $URL; ?>views/servicios-bano" class="btn btn-touch btn-secondary w-100">
                                                 <i class="fas fa-times" aria-hidden="true"></i> Cancelar
                                             </a>
                                         </div>
@@ -194,7 +194,7 @@ $ui = $servicio['estado_ui'];
                     <div class="card-header">
                         <h3 class="card-title"><i class="fas fa-info-circle" aria-hidden="true"></i> Resumen del Servicio</h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir el resumen del servicio">
                                 <i class="fas fa-minus" aria-hidden="true"></i>
                             </button>
                         </div>
@@ -220,7 +220,7 @@ $ui = $servicio['estado_ui'];
                             </li>
                         </ul>
 
-                        <a href="<?= $URL; ?>views/servicios-bano/show.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-info btn-block">
+                        <a href="<?= $URL; ?>views/servicios-bano/show.php?id=<?= $servicio['idservicio']; ?>" class="btn btn-touch btn-info btn-block">
                             <i class="fas fa-eye" aria-hidden="true"></i> Ver Detalle Completo
                         </a>
                     </div>
@@ -231,7 +231,7 @@ $ui = $servicio['estado_ui'];
                     <div class="card-header bg-light">
                         <h3 class="card-title"><i class="fas fa-question-circle" aria-hidden="true"></i> Ayuda</h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir la ayuda">
                                 <i class="fas fa-minus" aria-hidden="true"></i>
                             </button>
                         </div>

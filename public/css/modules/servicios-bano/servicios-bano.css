@@ -76,3 +76,60 @@
         margin-bottom: 10px;
     }
 }
+
+/* Acciones con texto blanco ≥4.5:1: los tonos base de Bootstrap (success 3.13:1, primary 3.98:1, info 3.04:1) no llegan */
+.servicios-bano-pagina .btn-success,
+.servicios-bano-pagina .card-success:not(.card-outline) > .card-header,
+.servicios-bano-pagina .info-box.bg-success {
+    background-color: var(--color-success-dark);
+    border-color: var(--color-success-dark);
+}
+
+.servicios-bano-pagina .btn-primary {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+}
+
+.servicios-bano-pagina .btn-info {
+    background-color: var(--color-info-dark);
+    border-color: var(--color-info-dark);
+}
+
+.servicios-bano-pagina .btn-success:hover,
+.servicios-bano-pagina .btn-success:focus {
+    background-color: var(--color-success-darker);
+    border-color: var(--color-success-darker);
+}
+
+.servicios-bano-pagina .btn-primary:hover,
+.servicios-bano-pagina .btn-primary:focus {
+    background-color: var(--color-primary-darker);
+    border-color: var(--color-primary-darker);
+}
+
+.servicios-bano-pagina .btn-info:hover,
+.servicios-bano-pagina .btn-info:focus {
+    background-color: var(--color-info-darker);
+    border-color: var(--color-info-darker);
+}
+
+.servicios-bano-pagina .btn-outline-primary {
+    color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+}
+
+.servicios-bano-pagina .btn-outline-primary:hover,
+.servicios-bano-pagina .btn-outline-primary:focus {
+    color: var(--color-white);
+    background-color: var(--color-primary-dark);
+}
+
+.servicios-bano-pagina .text-muted {
+    color: var(--color-text-secondary) !important;
+}
+
+/* AdminLTE quita el contorno a los botones de herramienta de las tarjetas */
+.servicios-bano-pagina .btn-tool:focus-visible {
+    outline: 2px solid var(--color-primary-dark);
+    outline-offset: 2px;
+}

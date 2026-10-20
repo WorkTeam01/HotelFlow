@@ -104,10 +104,10 @@ if (!$disponibilidad['disponible']) {
                             </div>
                         </div>
                         <div class="card-footer">
-                            <a href="<?= $URL; ?>views/servicios-bano" class="btn btn-secondary">
+                            <a href="<?= $URL; ?>views/servicios-bano" class="btn btn-touch btn-secondary">
                                 <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver a Servicios
                             </a>
-                            <a href="<?= $URL; ?>views/productos" class="btn btn-primary">
+                            <a href="<?= $URL; ?>views/productos" class="btn btn-touch btn-primary">
                                 <i class="fas fa-boxes" aria-hidden="true"></i> Gestionar Productos
                             </a>
                         </div>
@@ -301,12 +301,12 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
                         <div class="card-footer">
                             <div class="row g-1">
                                 <div class="col-12 col-sm-auto">
-                                    <button type="submit" class="btn btn-primary w-100">
+                                    <button type="submit" class="btn btn-touch btn-primary w-100">
                                         <i class="fas fa-save" aria-hidden="true"></i> Registrar Servicio
                                     </button>
                                 </div>
                                 <div class="col-12 col-sm-auto">
-                                    <a href="<?= $URL; ?>views/servicios-bano" class="btn btn-secondary w-100">
+                                    <a href="<?= $URL; ?>views/servicios-bano" class="btn btn-touch btn-secondary w-100">
                                         <i class="fas fa-times" aria-hidden="true"></i> Cancelar
                                     </a>
                                 </div>
@@ -324,7 +324,7 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
                     <div class="card-header card-outline card-info">
                         <h3 class="card-title"><i class="fas fa-question-circle" aria-hidden="true"></i> Ayuda y Tips</h3>
                         <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir la ayuda">
                                 <i class="fas fa-minus" aria-hidden="true"></i>
                             </button>
                         </div>
@@ -360,7 +360,7 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
                         <div class="card-header">
                             <h3 class="card-title"><i class="fas fa-info-circle" aria-hidden="true"></i> Estado del Inventario</h3>
                             <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir el estado del inventario">
                                     <i class="fas fa-minus" aria-hidden="true"></i>
                                 </button>
                             </div>
