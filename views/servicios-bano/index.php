@@ -11,7 +11,7 @@ $auth = new AuthorizationService();
 if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'servicios_bano')) {
     $_SESSION['mensaje'] = 'No tiene permisos para ver servicios de baños.';
     $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL . 'views/servicios-bano');
+    header('Location: ' . $URL);
     exit;
 }
 
