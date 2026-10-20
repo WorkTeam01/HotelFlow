@@ -388,10 +388,11 @@ CREATE TABLE `servicio_bano` (
   `idbano` int(11) NOT NULL,
   `idusuario` int(11) NOT NULL,
   `idcliente` int(11) DEFAULT NULL,
+  `idrecepcion` int(11) DEFAULT NULL,
   `tipo_cliente` enum('Huesped','Publico') DEFAULT 'Publico',
   `modalidad_cobro` enum('contado','folio') NOT NULL DEFAULT 'contado',
   `total` decimal(10,2) NOT NULL,
-  `metodopago` enum('Efectivo','QR','OTROS') NOT NULL,
+  `metodopago` enum('Efectivo','QR','OTROS') DEFAULT NULL,
   `pagorecibido` decimal(10,2) NOT NULL,
   `cambio` decimal(10,2) NOT NULL,
   `fecha` datetime NOT NULL DEFAULT current_timestamp(),
@@ -650,6 +651,7 @@ ALTER TABLE `servicio_bano`
   ADD KEY `idbano` (`idbano`),
   ADD KEY `idusuario` (`idusuario`),
   ADD KEY `idcliente` (`idcliente`),
+  ADD KEY `idrecepcion` (`idrecepcion`),
   ADD KEY `idusuario_cancelacion` (`idusuario_cancelacion`),
   ADD KEY `idx_sb_fecha_estado` (`fecha`,`estado`);
 
@@ -932,8 +934,10 @@ ALTER TABLE `servicio_bano`
   ADD CONSTRAINT `servicio_bano_ibfk_2` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuario`),
   ADD CONSTRAINT `servicio_bano_ibfk_3` FOREIGN KEY (`idcliente`) REFERENCES `persona` (`idpersona`) ON DELETE SET NULL,
   ADD CONSTRAINT `servicio_bano_ibfk_4` FOREIGN KEY (`idusuario_cancelacion`) REFERENCES `usuarios` (`idusuario`),
+  ADD CONSTRAINT `servicio_bano_ibfk_5` FOREIGN KEY (`idrecepcion`) REFERENCES `recepcion` (`idrecepcion`),
   ADD CONSTRAINT `chk_sb_montos` CHECK (`total` >= 0 AND `pagorecibido` >= 0 AND `cambio` >= 0),
-  ADD CONSTRAINT `chk_sb_contado` CHECK (`modalidad_cobro` <> 'contado' OR `pagorecibido` >= `total`),
+  ADD CONSTRAINT `chk_sb_contado` CHECK (`modalidad_cobro` <> 'contado' OR (`metodopago` IS NOT NULL AND `pagorecibido` >= `total`)),
+  ADD CONSTRAINT `chk_sb_folio` CHECK (`modalidad_cobro` <> 'folio' OR (`idrecepcion` IS NOT NULL AND `metodopago` IS NULL AND `pagorecibido` = 0 AND `cambio` = 0)),
   ADD CONSTRAINT `chk_sb_cancel` CHECK (`estado` <> 'cancelado' OR `fecha_cancelacion` IS NOT NULL);
 
 --

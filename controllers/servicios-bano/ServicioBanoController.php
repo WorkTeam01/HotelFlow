@@ -70,13 +70,13 @@ class ServicioBanoController
         // Obtener los baños disponibles para el select
         $banos_disponibles = $this->getBanosDisponibles();
 
-        // Obtener los clientes para el select
-        $clientes = $this->getClientes();
+        // Huéspedes con estancia en curso: el servicio se liga a la estancia, no a una persona suelta
+        require_once __DIR__ . '/../../models/Recepcion.php';
+        $estancias = (new Recepcion())->getInHouse();
 
-        // Devolver los datos para el formulario
         return [
             'banos_disponibles' => $banos_disponibles,
-            'clientes' => $clientes
+            'estancias_en_curso' => $estancias
         ];
     }
 
@@ -111,20 +111,27 @@ class ServicioBanoController
         // El total sale del precio del baño en BD, nunca del cliente
         $idbano = isset($post_data['idbano']) ? (int)$post_data['idbano'] : 0;
         $total = $this->modelo->getPrecioBano($idbano) ?? 0;
-        // Un método fuera de la lista blanca no se corrige en silencio: lo rechaza validarMetodoPago()
-        $metodopago = $post_data['metodopago'] ?? 'Efectivo';
-        // Solo en efectivo hay un monto recibido distinto del total
-        $pagorecibido = $metodopago === 'Efectivo' && isset($post_data['pagorecibido'])
-            ? (float)$post_data['pagorecibido']
-            : $total;
-        $cambio = max(0, $pagorecibido - $total); // Asegurar que el cambio no sea negativo
-        $tipoCliente = ($post_data['tipo_cliente'] ?? 'Publico') === 'Huesped' ? 'Huesped' : 'Publico';
 
-        $datos = [
-            'idbano' => isset($post_data['idbano']) ? (int)$post_data['idbano'] : 0,
+        $tipoCliente = ($post_data['tipo_cliente'] ?? 'Publico') === 'Huesped' ? 'Huesped' : 'Publico';
+        // Solo un huésped se liga a una estancia; el servidor deriva el cliente de ella
+        $idrecepcion = $tipoCliente === 'Huesped' && !empty($post_data['idrecepcion']) ? (int)$post_data['idrecepcion'] : null;
+        $modalidad = $this->modalidadSolicitada($post_data, $idrecepcion);
+
+        // Un método fuera de la lista blanca no se corrige en silencio: lo rechaza validarMetodoPago()
+        $metodopago = $modalidad === 'folio' ? null : ($post_data['metodopago'] ?? 'Efectivo');
+        // Solo en efectivo hay un monto recibido distinto del total
+        $pagorecibido = $modalidad === 'folio' ? 0 : ($metodopago === 'Efectivo' && isset($post_data['pagorecibido'])
+            ? (float)$post_data['pagorecibido']
+            : $total);
+        $cambio = max(0, $pagorecibido - $total);
+
+        return [
+            'idbano' => $idbano,
             'idusuario' => $_SESSION['usuario_id'], // Usuario actual que registra el servicio
-            'idcliente' => $tipoCliente === 'Huesped' && !empty($post_data['idcliente']) ? (int)$post_data['idcliente'] : null,
+            'idcliente' => null,
+            'idrecepcion' => $idrecepcion,
             'tipo_cliente' => $tipoCliente,
+            'modalidad_cobro' => $modalidad,
             'total' => $total,
             'metodopago' => $metodopago,
             'pagorecibido' => $pagorecibido,
@@ -133,8 +140,24 @@ class ServicioBanoController
             // Nota: 'estado' se maneja exclusivamente vía cambiarEstadoServicio(),
             // nunca a partir de datos de creación/actualización del formulario.
         ];
+    }
 
-        return $datos;
+    /**
+     * Modalidades de cobro que admite un servicio. [D2]
+     * Con una estancia en curso se puede cobrar al momento o cargar al folio; sin ella, solo al contado.
+     *
+     * @param int|null $idrecepcion
+     * @return array
+     */
+    public function modalidadesPermitidas($idrecepcion)
+    {
+        return $idrecepcion ? ['contado', 'folio'] : ['contado'];
+    }
+
+    private function modalidadSolicitada($post_data, $idrecepcion)
+    {
+        $pedida = ($post_data['modalidad_cobro'] ?? 'contado') === 'folio' ? 'folio' : 'contado';
+        return in_array($pedida, $this->modalidadesPermitidas($idrecepcion), true) ? $pedida : 'contado';
     }
 
     private function validarMetodoPago($metodopago)
@@ -159,8 +182,11 @@ class ServicioBanoController
             $datos = $this->modelo->sanitizarDatos($this->prepararDatosServicio($_POST));
 
             $errores = $this->modelo->validarDatos($datos);
-            if (empty($errores) && ($errorMetodo = $this->validarMetodoPago($datos['metodopago']))) {
+            if (empty($errores) && $datos['modalidad_cobro'] === 'contado' && ($errorMetodo = $this->validarMetodoPago($datos['metodopago']))) {
                 $errores[] = $errorMetodo;
+            }
+            if (empty($errores) && $datos['tipo_cliente'] === 'Huesped' && !$datos['idrecepcion']) {
+                $errores[] = 'Seleccione la estancia del huésped.';
             }
             if (!empty($errores)) {
                 return ['success' => false, 'message' => $errores[0], 'icon' => 'error', 'redirect' => 'create.php'];
@@ -327,8 +353,7 @@ class ServicioBanoController
 
         return [
             'servicio' => $servicio,
-            'banos_disponibles' => $this->getBanosDisponibles(),
-            'clientes' => $this->getClientes()
+            'banos_disponibles' => $this->getBanosDisponibles()
         ];
     }
 

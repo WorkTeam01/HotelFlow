@@ -131,7 +131,10 @@ switch ($servicio['estado']) {
                                     </span>
                                 </li>
                                 <li class="list-group-item">
-                                    <b>Método de pago</b> <span class="float-right"><?= htmlspecialchars($servicio['metodopago'] ?? 'N/A'); ?></span>
+                                    <b>Cobro</b>
+                                    <span class="float-right">
+                                        <?= $servicio['modalidad_cobro'] === 'folio' ? 'Cargado al folio · Hab. ' . htmlspecialchars($servicio['numero_habitacion'] ?? 'N/A') : htmlspecialchars($servicio['metodopago'] ?? 'N/A'); ?>
+                                    </span>
                                 </li>
                                 <li class="list-group-item">
                                     <b>Total cobrado</b> <span class="float-right">Bs. <?= number_format((float)$servicio['total'], 2); ?></span>

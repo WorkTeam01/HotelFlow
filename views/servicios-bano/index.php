@@ -97,7 +97,7 @@ $banos = $disponibilidad['disponible'] ? $controller->getBanosDisponibles() : []
                 <div class="small-box bg-danger">
                     <div class="inner">
                         <h3><?= number_format($estadisticas['ingresos_totales'], 2); ?></h3>
-                        <p>Ingresos Hoy</p>
+                        <p>Cobrado hoy<?php if ($estadisticas['folio_hoy'] > 0): ?> · <?= number_format($estadisticas['folio_hoy'], 2); ?> a folio<?php endif; ?></p>
                     </div>
                     <div class="icon">
                         <i class="fas fa-dollar-sign"></i>
@@ -230,7 +230,7 @@ $banos = $disponibilidad['disponible'] ? $controller->getBanosDisponibles() : []
                                             <td><?= htmlspecialchars($servicio['nombre_bano'] ?? 'N/A'); ?></td>
                                             <td><?= htmlspecialchars($servicio['tipo_cliente'] == 'Publico' ? 'Cliente público' : ($servicio['nombre_cliente'] ?? 'N/A')); ?></td>
                                             <td><?= htmlspecialchars($servicio['tipo_cliente'] ?? 'N/A'); ?></td>
-                                            <td><?= htmlspecialchars($servicio['metodopago'] ?? 'N/A'); ?></td>
+                                            <td><?= $servicio['modalidad_cobro'] === 'folio' ? 'Folio · Hab. ' . htmlspecialchars($servicio['numero_habitacion'] ?? 'N/A') : htmlspecialchars($servicio['metodopago'] ?? 'N/A'); ?></td>
                                             <td>Bs. <?= number_format(floatval($servicio['total'] ?? 0), 2); ?></td>
                                             <td><?= !empty($servicio['fecha']) ? date('d/m/Y H:i', strtotime($servicio['fecha'])) : 'N/A'; ?></td>
                                             <td class="text-center">

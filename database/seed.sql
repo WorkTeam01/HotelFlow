@@ -185,13 +185,14 @@ INSERT INTO `detallecompra` (`idcompra`, `idproducto`, `cantidad`, `preciocompra
 (1, 2, 5, 3.00);
 
 -- Servicio de baño para un huésped del día
-INSERT INTO `servicio_bano` (`idbano`, `idusuario`, `idcliente`, `tipo_cliente`, `total`, `metodopago`, `pagorecibido`, `cambio`, `fecha`, `duracion_minutos`, `estado`) VALUES
-(1, 2, 1, 'Huesped', 10.00, 'Efectivo', 10.00, 0.00, NOW(), 20, 'finalizado');
+INSERT INTO `servicio_bano` (`idbano`, `idusuario`, `idcliente`, `idrecepcion`, `tipo_cliente`, `modalidad_cobro`, `total`, `metodopago`, `pagorecibido`, `cambio`, `fecha`, `duracion_minutos`, `estado`) VALUES
+(1, 2, 1, 1, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, NOW(), 20, 'finalizado');
 
--- Ledger del servicio de baño anterior (cargo + pago, ver ServicioBano::registrar)
-INSERT INTO `pagos` (`idservicio_bano`, `tipo`, `concepto`, `montototal`, `metodopago`, `idusuario`) VALUES
-(1, 'cargo', 'Servicio de baño - Baño 1 (#1)', 10.00, 'OTROS', 2),
-(1, 'pago', 'Servicio de baño - Baño 1 (#1)', 10.00, 'Efectivo', 2);
+-- Cargo del servicio de baño anterior en el folio de la recepción 1 (ver ServicioBano::registrar);
+-- `recepcion`.montototal se actualiza con el cache del folio
+INSERT INTO `pagos` (`idrecepcion`, `idservicio_bano`, `tipo`, `concepto`, `montototal`, `metodopago`, `idusuario`) VALUES
+(1, 1, 'cargo', 'Servicio de baño - Baño 1 (#1)', 10.00, 'OTROS', 2);
+UPDATE `recepcion` SET `montototal` = 90.00 WHERE `idrecepcion` = 1;
 
 -- Equipaje almacenado del día
 INSERT INTO `almacenamiento_equipaje` (`idcliente`, `idusuario`, `descripcion`, `cantidad_piezas`, `codigo_ticket`, `fechaentrada`, `idpequipaje`, `monto`, `estado`) VALUES

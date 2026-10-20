@@ -183,3 +183,8 @@
         margin-bottom: 10px;
     }
 }
+
+/* Oculta bloques del formulario según el tipo de cliente y la modalidad de cobro */
+.bano-oculto {
+    display: none !important;
+}

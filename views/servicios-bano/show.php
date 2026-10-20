@@ -47,7 +47,6 @@ $texto_estado = '';
 
 $servicio = $datos['servicio'];
 $banos_disponibles = $datos['banos_disponibles'];
-$clientes = $datos['clientes'];
 
 // Vocabulario de estado del módulo: `estado` es un enum de texto
 // (iniciado | finalizado | cancelado), no un booleano.
@@ -122,7 +121,14 @@ $esCancelado = $servicio['estado'] === 'cancelado';
                                 </li>
                             <?php endif; ?>
                             <li class="list-group-item">
-                                <b>Método de Pago</b> <span class="float-right"><?= htmlspecialchars($servicio['metodopago'] ?? 'N/A'); ?></span>
+                                <b>Cobro</b>
+                                <span class="float-right">
+                                    <?php if ($servicio['modalidad_cobro'] === 'folio'): ?>
+                                        Cargado al folio · Hab. <?= htmlspecialchars($servicio['numero_habitacion'] ?? 'N/A'); ?>
+                                    <?php else: ?>
+                                        <?= htmlspecialchars($servicio['metodopago'] ?? 'N/A'); ?>
+                                    <?php endif; ?>
+                                </span>
                             </li>
                             <li class="list-group-item">
                                 <b>Fecha</b> <span class="float-right"><?= date('d/m/Y H:i', strtotime($servicio['fecha'])); ?></span>

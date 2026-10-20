@@ -80,7 +80,8 @@ class ServicioBano
         try {
             $query = "SELECT sb.idservicio, sb.idbano, sb.idusuario, sb.idcliente, 
                   sb.tipo_cliente, sb.total, sb.metodopago, sb.pagorecibido, 
-                  sb.cambio, sb.fecha, sb.estado, sb.modalidad_cobro, sb.observaciones,
+                  sb.cambio, sb.fecha, sb.estado, sb.modalidad_cobro, sb.observaciones, sb.idrecepcion,
+                  h.numero as numero_habitacion,
                   sb.motivo_cancelacion, sb.fecha_cancelacion, sb.stock_repuesto,
                   CONCAT(uc.nombre, ' ', uc.apellidop) as nombre_usuario_cancelacion,
                   b.nombre as nombre_bano, b.precio as precio_bano,
@@ -93,6 +94,8 @@ class ServicioBano
                   LEFT JOIN bano b ON sb.idbano = b.idbano
                   LEFT JOIN usuarios u ON sb.idusuario = u.idusuario
                   LEFT JOIN usuarios uc ON sb.idusuario_cancelacion = uc.idusuario
+                  LEFT JOIN recepcion rc ON sb.idrecepcion = rc.idrecepcion
+                  LEFT JOIN habitaciones h ON rc.idhabitacion = h.id_habitacion
                   LEFT JOIN persona p ON sb.idcliente = p.idpersona
                   ORDER BY sb.idservicio DESC";
 
@@ -122,7 +125,8 @@ class ServicioBano
         try {
             $query = "SELECT sb.idservicio, sb.idbano, sb.idusuario, sb.idcliente, 
                   sb.tipo_cliente, sb.total, sb.metodopago, sb.pagorecibido, 
-                  sb.cambio, sb.fecha, sb.estado, sb.modalidad_cobro, sb.observaciones,
+                  sb.cambio, sb.fecha, sb.estado, sb.modalidad_cobro, sb.observaciones, sb.idrecepcion,
+                  h.numero as numero_habitacion,
                   sb.motivo_cancelacion, sb.fecha_cancelacion, sb.stock_repuesto,
                   CONCAT(uc.nombre, ' ', uc.apellidop) as nombre_usuario_cancelacion,
                   b.nombre as nombre_bano, b.precio as precio_bano,
@@ -135,6 +139,8 @@ class ServicioBano
                   LEFT JOIN bano b ON sb.idbano = b.idbano
                   LEFT JOIN usuarios u ON sb.idusuario = u.idusuario
                   LEFT JOIN usuarios uc ON sb.idusuario_cancelacion = uc.idusuario
+                  LEFT JOIN recepcion rc ON sb.idrecepcion = rc.idrecepcion
+                  LEFT JOIN habitaciones h ON rc.idhabitacion = h.id_habitacion
                   LEFT JOIN persona p ON sb.idcliente = p.idpersona
                   WHERE sb.idservicio = :id";
 
@@ -188,11 +194,12 @@ class ServicioBano
     }
 
     /**
-     * Registra un servicio de baño cobrado al contado en una sola transacción:
-     * bloquea el baño, descuenta el insumo y escribe el servicio y su cargo + pago en `pagos`.
+     * Registra un servicio de baño en una sola transacción, cobrado al contado o cargado al folio de una estancia:
+     * bloquea la estancia (si la hay) y el baño, descuenta el insumo y escribe el servicio y su cargo + pago en `pagos`.
      * El monto y la fecha salen del servidor, nunca del cliente.
      *
-     * @param array $datos idbano, idcliente, tipo_cliente, metodopago, pagorecibido, observaciones
+     * @param array $datos idbano, idcliente, tipo_cliente, metodopago, pagorecibido, observaciones,
+     *                     idrecepcion y modalidad_cobro ('contado'|'folio'; folio exige idrecepcion)
      * @param int $idusuario Usuario que cobra
      * @return array|false ['idservicio','total','alertaStockBajo','stock_restante','stock_minimo'] o false
      */
@@ -208,6 +215,28 @@ class ServicioBano
                 $this->conexion->beginTransaction();
             }
 
+            // Orden canónico de bloqueo: recepcion → bano → servicio_bano → productos
+            $idrecepcion = !empty($datos['idrecepcion']) ? (int)$datos['idrecepcion'] : null;
+            $modalidad = ($datos['modalidad_cobro'] ?? 'contado') === 'folio' ? 'folio' : 'contado';
+            $idcliente = !empty($datos['idcliente']) ? (int)$datos['idcliente'] : null;
+            $tipoCliente = $datos['tipo_cliente'];
+
+            if ($modalidad === 'folio' && !$idrecepcion) {
+                return $this->abortarRegistro($transaccionPropia, 'Seleccione la estancia a la que se cargará el servicio.');
+            }
+            if ($idrecepcion) {
+                $stmt = $this->conexion->prepare("SELECT idcliente, estado FROM recepcion WHERE idrecepcion = :id FOR UPDATE");
+                $stmt->bindValue(':id', $idrecepcion, PDO::PARAM_INT);
+                $stmt->execute();
+                $recepcion = $stmt->fetch(PDO::FETCH_ASSOC);
+                if (!$recepcion || $recepcion['estado'] !== 'en_curso') {
+                    return $this->abortarRegistro($transaccionPropia, 'La estancia seleccionada no está en curso.');
+                }
+                // El huésped sale de la estancia, nunca del formulario
+                $idcliente = (int)$recepcion['idcliente'];
+                $tipoCliente = 'Huesped';
+            }
+
             $stmt = $this->conexion->prepare("SELECT nombre, precio, estado FROM bano WHERE idbano = :idbano FOR UPDATE");
             $stmt->bindValue(':idbano', (int)$datos['idbano'], PDO::PARAM_INT);
             $stmt->execute();
@@ -221,13 +250,19 @@ class ServicioBano
             }
 
             $total = $this->calcularMonto($bano);
-            $metodopago = $datos['metodopago'];
-            // Solo en efectivo el monto recibido puede ser mayor al total
-            $pagorecibido = $metodopago === 'Efectivo' && isset($datos['pagorecibido']) ? (float)$datos['pagorecibido'] : $total;
-            if ($pagorecibido < $total) {
-                return $this->abortarRegistro($transaccionPropia, 'El pago recibido no cubre el total del servicio');
+            if ($modalidad === 'folio') {
+                $metodopago = null;
+                $pagorecibido = 0.0;
+                $cambio = 0.0;
+            } else {
+                $metodopago = $datos['metodopago'];
+                // Solo en efectivo el monto recibido puede ser mayor al total
+                $pagorecibido = $metodopago === 'Efectivo' && isset($datos['pagorecibido']) ? (float)$datos['pagorecibido'] : $total;
+                if ($pagorecibido < $total) {
+                    return $this->abortarRegistro($transaccionPropia, 'El pago recibido no cubre el total del servicio');
+                }
+                $cambio = $pagorecibido - $total;
             }
-            $cambio = $pagorecibido - $total;
 
             require_once __DIR__ . '/Producto.php';
             $productoModelo = new Producto();
@@ -242,16 +277,18 @@ class ServicioBano
             }
 
             $stmt = $this->conexion->prepare("INSERT INTO {$this->tabla}
-                (idbano, idusuario, idcliente, tipo_cliente, modalidad_cobro, total, metodopago,
+                (idbano, idusuario, idcliente, idrecepcion, tipo_cliente, modalidad_cobro, total, metodopago,
                  pagorecibido, cambio, fecha, observaciones)
-                VALUES (:idbano, :idusuario, :idcliente, :tipo_cliente, 'contado', :total, :metodopago,
+                VALUES (:idbano, :idusuario, :idcliente, :idrecepcion, :tipo_cliente, :modalidad, :total, :metodopago,
                  :pagorecibido, :cambio, :fecha, :observaciones)");
             $stmt->bindValue(':idbano', (int)$datos['idbano'], PDO::PARAM_INT);
             $stmt->bindValue(':idusuario', (int)$idusuario, PDO::PARAM_INT);
-            $stmt->bindValue(':idcliente', !empty($datos['idcliente']) ? (int)$datos['idcliente'] : null, PDO::PARAM_INT);
-            $stmt->bindValue(':tipo_cliente', $datos['tipo_cliente'], PDO::PARAM_STR);
+            $stmt->bindValue(':idcliente', $idcliente, PDO::PARAM_INT);
+            $stmt->bindValue(':idrecepcion', $idrecepcion, PDO::PARAM_INT);
+            $stmt->bindValue(':tipo_cliente', $tipoCliente, PDO::PARAM_STR);
+            $stmt->bindValue(':modalidad', $modalidad, PDO::PARAM_STR);
             $stmt->bindValue(':total', $total);
-            $stmt->bindValue(':metodopago', $metodopago, PDO::PARAM_STR);
+            $stmt->bindValue(':metodopago', $metodopago, $metodopago === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
             $stmt->bindValue(':pagorecibido', $pagorecibido);
             $stmt->bindValue(':cambio', $cambio);
             $stmt->bindValue(':fecha', date('Y-m-d H:i:s'), PDO::PARAM_STR);
@@ -263,13 +300,14 @@ class ServicioBano
             $pagoModelo = new Pago();
             $concepto = 'Servicio de baño - ' . $bano['nombre'] . ' (#' . $idservicio . ')';
             // Un baño de precio cero no genera movimiento de dinero en el ledger
-            if (
-                $total > 0 && (
-                    !$pagoModelo->registrarLineaServicio($idservicio, 'cargo', $concepto, $total, 'OTROS', $idusuario)
-                    || !$pagoModelo->registrarLineaServicio($idservicio, 'pago', $concepto, $total, $metodopago, $idusuario)
-                )
-            ) {
-                return $this->abortarRegistro($transaccionPropia, $pagoModelo->getLastError());
+            if ($total > 0) {
+                $okLineas = $modalidad === 'folio'
+                    ? $pagoModelo->registrarLinea($idrecepcion, 'cargo', $concepto, $total, 'OTROS', $idusuario, null, $idservicio)
+                    : $pagoModelo->registrarLineaServicio($idservicio, 'cargo', $concepto, $total, 'OTROS', $idusuario)
+                        && $pagoModelo->registrarLineaServicio($idservicio, 'pago', $concepto, $total, $metodopago, $idusuario);
+                if (!$okLineas) {
+                    return $this->abortarRegistro($transaccionPropia, $pagoModelo->getLastError());
+                }
             }
 
             if ($transaccionPropia) {
@@ -420,17 +458,28 @@ class ServicioBano
 
         try {
             // Sin lock: solo para conocer el baño (inmutable) y poder bloquear en el orden canónico
-            $stmt = $this->conexion->prepare("SELECT idbano FROM {$this->tabla} WHERE idservicio = :id");
+            $stmt = $this->conexion->prepare("SELECT idbano, idrecepcion, modalidad_cobro FROM {$this->tabla} WHERE idservicio = :id");
             $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
             $stmt->execute();
-            $idbano = $stmt->fetchColumn();
-            if ($idbano === false) {
+            $previo = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$previo) {
                 $this->lastError = 'Servicio de baño no encontrado';
                 return false;
             }
+            $idbano = $previo['idbano'];
+            $esFolio = $previo['modalidad_cobro'] === 'folio';
 
             if ($transaccionPropia) {
                 $this->conexion->beginTransaction();
+            }
+
+            if ($esFolio) {
+                $stmt = $this->conexion->prepare("SELECT estado FROM recepcion WHERE idrecepcion = :id FOR UPDATE");
+                $stmt->bindValue(':id', (int)$previo['idrecepcion'], PDO::PARAM_INT);
+                $stmt->execute();
+                if ($stmt->fetchColumn() !== 'en_curso') {
+                    return $this->abortarRegistro($transaccionPropia, 'La estancia ya cerró: registre la devolución en Recepción.');
+                }
             }
 
             $stmt = $this->conexion->prepare("SELECT idbano FROM bano WHERE idbano = :idbano FOR UPDATE");
@@ -454,8 +503,12 @@ class ServicioBano
 
             require_once __DIR__ . '/Pago.php';
             $pagoModelo = new Pago();
+            $conceptoReverso = 'Cancelación de servicio de baño #' . (int)$id;
             foreach ($pagoModelo->getLineasVivasServicio($id) as $linea) {
-                if (!$pagoModelo->registrarLineaServicio($id, 'reverso', 'Cancelación de servicio de baño #' . (int)$id, null, null, $idusuario, $linea['id_pago'])) {
+                $ok = $esFolio
+                    ? $pagoModelo->registrarLinea($previo['idrecepcion'], 'reverso', $conceptoReverso, $linea['montototal'], $linea['metodopago'], $idusuario, $linea['id_pago'], $id)
+                    : $pagoModelo->registrarLineaServicio($id, 'reverso', $conceptoReverso, null, null, $idusuario, $linea['id_pago']);
+                if (!$ok) {
                     return $this->abortarRegistro($transaccionPropia, $pagoModelo->getLastError());
                 }
             }
@@ -563,7 +616,8 @@ class ServicioBano
                 'total' => 0,
                 'activos' => 0,
                 'inactivos' => 0,
-                'ingresos_totales' => 0
+                'ingresos_totales' => 0,
+                'folio_hoy' => 0
             ];
 
             // Fecha actual para filtrar
@@ -603,6 +657,14 @@ class ServicioBano
             $ingresos = $stmt->fetchColumn();
             $estadisticas['ingresos_totales'] = $ingresos ? round($ingresos, 2) : 0;
 
+            // Cargado al folio de huéspedes hoy (cargo neto de servicios vigentes; se cobra en el check-out)
+            $query = "SELECT COALESCE(SUM(total), 0) FROM {$this->tabla}
+                      WHERE modalidad_cobro = 'folio' AND estado <> 'cancelado' AND DATE(fecha) = :fecha_hoy";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
+            $stmt->execute();
+            $estadisticas['folio_hoy'] = round((float)$stmt->fetchColumn(), 2);
+
             return $estadisticas;
         } catch (PDOException $e) {
             error_log('[' . static::class . '] ' . $e->getMessage());
@@ -611,7 +673,8 @@ class ServicioBano
                 'total' => 0,
                 'activos' => 0,
                 'inactivos' => 0,
-                'ingresos_totales' => 0
+                'ingresos_totales' => 0,
+                'folio_hoy' => 0
             ];
         }
     }

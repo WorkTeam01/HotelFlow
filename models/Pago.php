@@ -231,7 +231,7 @@ class Pago
     public function getLineasVivasServicio($idservicio)
     {
         try {
-            $stmt = $this->conexion->prepare("SELECT p.id_pago, p.tipo FROM {$this->tabla} p
+            $stmt = $this->conexion->prepare("SELECT p.id_pago, p.tipo, p.montototal, p.metodopago, p.idrecepcion FROM {$this->tabla} p
                 LEFT JOIN {$this->tabla} r ON r.id_pago_reversado = p.id_pago
                 WHERE p.idservicio_bano = :idservicio AND p.tipo IN ('cargo', 'pago') AND r.id_pago IS NULL
                 ORDER BY FIELD(p.tipo, 'pago', 'cargo'), p.id_pago");
@@ -301,9 +301,10 @@ class Pago
      * @param string $metodopago 'Efectivo'|'QR'|'OTROS'
      * @param int $idusuario Usuario que registra la línea
      * @param int|null $idPagoReversado Requerido si $tipo === 'reverso'
+     * @param int|null $idServicioBano Servicio de baño que origina la línea (cargo al folio)
      * @return bool|int ID de la línea creada o false si falló
      */
-    public function registrarLinea($idrecepcion, $tipo, $concepto, $monto, $metodopago, $idusuario, $idPagoReversado = null)
+    public function registrarLinea($idrecepcion, $tipo, $concepto, $monto, $metodopago, $idusuario, $idPagoReversado = null, $idServicioBano = null)
     {
         if (!in_array($tipo, ['cargo', 'pago', 'reverso'], true)) {
             $this->lastError = 'Tipo de línea de folio no válido.';
@@ -368,10 +369,11 @@ class Pago
             }
 
             $query = "INSERT INTO {$this->tabla}
-                      (idrecepcion, tipo, concepto, montototal, metodopago, idusuario, id_pago_reversado)
-                      VALUES (:idrecepcion, :tipo, :concepto, :monto, :metodopago, :idusuario, :idreversado)";
+                      (idrecepcion, idservicio_bano, tipo, concepto, montototal, metodopago, idusuario, id_pago_reversado)
+                      VALUES (:idrecepcion, :idservicio, :tipo, :concepto, :monto, :metodopago, :idusuario, :idreversado)";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':idrecepcion', $idrecepcion, PDO::PARAM_INT);
+            $stmt->bindValue(':idservicio', $idServicioBano ? (int)$idServicioBano : null, PDO::PARAM_INT);
             $stmt->bindParam(':tipo', $tipo, PDO::PARAM_STR);
             $stmt->bindParam(':concepto', $concepto, PDO::PARAM_STR);
             $stmt->bindParam(':monto', $monto, PDO::PARAM_STR);

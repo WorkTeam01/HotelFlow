@@ -30,11 +30,11 @@ include_once '../layouts/header.php';
 $controller = new ServicioBanoController();
 
 // Obtener datos para el formulario
-$data = $controller->crear(); // Este método nos devolverá los baños disponibles y clientes
+$data = $controller->crear(); // Baños disponibles y estancias en curso
 
 // Extraer datos
 $banos_disponibles = $data['banos_disponibles'];
-$clientes = $data['clientes'];
+$estancias = $data['estancias_en_curso'];
 
 // Verificar si hay baños disponibles
 if (empty($banos_disponibles)) {
@@ -207,21 +207,39 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <!-- Cliente (solo visible si es huésped) -->
-                                <div class="col-md-12" id="div_cliente" style="display: none;">
+                            <div class="row bano-oculto" id="div_estancia">
+                                <!-- Estancia (solo si es huésped): el cliente se deriva de ella en el servidor -->
+                                <div class="col-md-8">
                                     <div class="form-group">
-                                        <label for="idcliente">Cliente</label>
-                                        <select class="form-control select2" id="idcliente" name="idcliente">
-                                            <option value="">Seleccione un cliente</option>
-                                            <?php foreach ($clientes as $cliente) : ?>
-                                                <option value="<?= $cliente['idpersona']; ?>"><?= htmlspecialchars($cliente['nombre_completo']); ?></option>
+                                        <label for="idrecepcion">Estancia del huésped</label>
+                                        <select class="form-control select2" id="idrecepcion" name="idrecepcion">
+                                            <option value="">Seleccione una estancia en curso</option>
+                                            <?php foreach ($estancias as $estancia) : ?>
+                                                <option value="<?= (int)$estancia['idrecepcion']; ?>">
+                                                    <?= htmlspecialchars('Hab. ' . ($estancia['numero_habitacion'] ?? '?') . ' – ' . trim(($estancia['nombre_cliente'] ?? '') . ' ' . ($estancia['apellido_cliente'] ?? ''))); ?>
+                                                </option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
                                 </div>
+
+                                <!-- Modalidad de cobro -->
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Cobro</label>
+                                        <div class="custom-control custom-radio">
+                                            <input class="custom-control-input" type="radio" id="modalidad_contado" name="modalidad_cobro" value="contado" checked>
+                                            <label for="modalidad_contado" class="custom-control-label">Cobrar ahora</label>
+                                        </div>
+                                        <div class="custom-control custom-radio">
+                                            <input class="custom-control-input" type="radio" id="modalidad_folio" name="modalidad_cobro" value="folio">
+                                            <label for="modalidad_folio" class="custom-control-label">Cargar al folio</label>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
+                            <div id="bloque_pago">
                             <div class="row">
                                 <!-- Método de Pago -->
                                 <div class="col-md-6">
@@ -277,6 +295,8 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
                             </div>
 
                             <div class="row">

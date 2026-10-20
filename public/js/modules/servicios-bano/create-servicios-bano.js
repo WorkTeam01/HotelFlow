@@ -21,8 +21,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Declarar variables para los elementos
     const tipoClienteSelect = document.getElementById('tipo_cliente');
-    const divCliente = document.getElementById('div_cliente');
-    const idClienteSelect = document.getElementById('idcliente');
+    const divEstancia = document.getElementById('div_estancia');
+    const idRecepcionSelect = document.getElementById('idrecepcion');
+    const bloquePago = document.getElementById('bloque_pago');
     const banoSelect = document.getElementById('idbano');
     const totalInput = document.getElementById('total');
     const pagoRecibidoInput = document.getElementById('pagorecibido');
@@ -30,26 +31,41 @@ document.addEventListener('DOMContentLoaded', function () {
     const metodoPagoSelect = document.getElementById('metodopago');
     const divCambio = document.getElementById('div_cambio');
 
-    // Función para mostrar/ocultar el selector de cliente según el tipo
+    function modalidadActual() {
+        const marcada = document.querySelector('input[name="modalidad_cobro"]:checked');
+        return marcada ? marcada.value : 'contado';
+    }
+
+    // Un huésped elige estancia y modalidad; con cargo al folio no se pide el cobro
     function actualizarVisibilidadCliente() {
-        if (tipoClienteSelect.value === 'Huesped') {
-            divCliente.style.display = 'block';
-        } else {
-            divCliente.style.display = 'none';
-            idClienteSelect.value = '';
-            $(idClienteSelect).trigger('change'); // Actualizar Select2
+        const esHuesped = tipoClienteSelect.value === 'Huesped';
+        divEstancia.classList.toggle('bano-oculto', !esHuesped);
+        if (!esHuesped) {
+            idRecepcionSelect.value = '';
+            $(idRecepcionSelect).trigger('change'); // Actualizar Select2
+            document.getElementById('modalidad_contado').checked = true;
         }
+        actualizarVisibilidadPago();
+    }
+
+    function actualizarVisibilidadPago() {
+        const folio = tipoClienteSelect.value === 'Huesped' && modalidadActual() === 'folio';
+        bloquePago.classList.toggle('bano-oculto', folio);
+        // Los campos ocultos no se envían ni bloquean el submit por required
+        bloquePago.querySelectorAll('select, input').forEach(function (campo) {
+            campo.disabled = folio;
+        });
     }
 
     // Función para mostrar/ocultar el campo de cambio según el método de pago
     function actualizarVisibilidadCambio() {
         if (metodoPagoSelect.value === 'QR') {
-            divCambio.style.display = 'none';
+            divCambio.classList.add('bano-oculto');
             // Para QR, el pago recibido es igual al total
             pagoRecibidoInput.value = totalInput.value;
             cambioInput.value = '0.00';
         } else {
-            divCambio.style.display = 'block';
+            divCambio.classList.remove('bano-oculto');
             calcularCambio();
         }
     }
@@ -79,6 +95,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Validación del formulario
     function validarFormulario(e) {
+        if (tipoClienteSelect.value === 'Huesped' && !idRecepcionSelect.value) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Estancia requerida',
+                text: 'Seleccione la estancia del huésped',
+                confirmButtonColor: themeColor('primary')
+            });
+            return false;
+        }
+
+        if (bloquePago.classList.contains('bano-oculto')) {
+            mostrarCarga('Guardando...', 'Registrando el servicio en el folio.');
+            return true;
+        }
+
         const total = parseFloat(totalInput.value) || 0;
         const pagoRecibido = parseFloat(pagoRecibidoInput.value) || 0;
 
@@ -93,6 +125,8 @@ document.addEventListener('DOMContentLoaded', function () {
             pagoRecibidoInput.focus();
             return false;
         }
+
+        mostrarCarga('Guardando...', 'Registrando el servicio.');
     }
 
     // Inicializar los elementos con un pequeño retraso para asegurar que Select2 está listo
@@ -105,6 +139,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Agregar listener para el cambio de tipo de cliente
         tipoClienteSelect.addEventListener('change', actualizarVisibilidadCliente);
+
+        document.querySelectorAll('input[name="modalidad_cobro"]').forEach(function (radio) {
+            radio.addEventListener('change', actualizarVisibilidadPago);
+        });
 
         // Agregar listener para el cambio de método de pago
         metodoPagoSelect.addEventListener('change', actualizarVisibilidadCambio);
