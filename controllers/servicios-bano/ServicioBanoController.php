@@ -116,17 +116,18 @@ class ServicioBanoController
             ? (float)$post_data['pagorecibido']
             : $total;
         $cambio = max(0, $pagorecibido - $total); // Asegurar que el cambio no sea negativo
+        $tipoCliente = ($post_data['tipo_cliente'] ?? 'Publico') === 'Huesped' ? 'Huesped' : 'Publico';
 
         $datos = [
             'idbano' => isset($post_data['idbano']) ? (int)$post_data['idbano'] : 0,
             'idusuario' => $_SESSION['usuario_id'], // Usuario actual que registra el servicio
-            'idcliente' => isset($post_data['idcliente']) && !empty($post_data['idcliente']) ? (int)$post_data['idcliente'] : null,
-            'tipo_cliente' => isset($post_data['tipo_cliente']) ? $post_data['tipo_cliente'] : 'Publico',
+            'idcliente' => $tipoCliente === 'Huesped' && !empty($post_data['idcliente']) ? (int)$post_data['idcliente'] : null,
+            'tipo_cliente' => $tipoCliente,
             'total' => $total,
             'metodopago' => $metodopago,
             'pagorecibido' => $pagorecibido,
             'cambio' => $cambio,
-            'fecha' => isset($post_data['fecha']) ? $post_data['fecha'] : date('Y-m-d H:i:s')
+            'observaciones' => mb_substr(trim($post_data['observaciones'] ?? ''), 0, 255)
             // Nota: 'estado' se maneja exclusivamente vía cambiarEstadoServicio(),
             // nunca a partir de datos de creación/actualización del formulario.
         ];
@@ -141,7 +142,7 @@ class ServicioBanoController
 
     /**
      * Procesa el formulario para guardar un nuevo servicio de baño
-     * y reduce el stock del producto "Rollo de papel"
+     * y descuenta el insumo configurado
      * 
      * @return array Resultado de la operación
      */
@@ -153,108 +154,33 @@ class ServicioBanoController
         }
 
         try {
-            // Preparar datos del servicio
             $datos = $this->modelo->sanitizarDatos($this->prepararDatosServicio($_POST));
 
-            // Validar datos en el modelo
             $errores = $this->modelo->validarDatos($datos);
             if (empty($errores) && ($errorMetodo = $this->validarMetodoPago($datos['metodopago']))) {
                 $errores[] = $errorMetodo;
             }
-            if (empty($errores)) {
-                $bano = $this->modelo->getBanoParaServicio($datos['idbano']);
-                if ($bano === null) {
-                    $errores[] = 'El baño seleccionado no existe.';
-                } elseif ($bano['estado'] !== 'disponible') {
-                    $errores[] = 'El baño seleccionado no está disponible.';
-                }
-            }
-            if (empty($errores) && $datos['pagorecibido'] < $datos['total']) {
-                $errores[] = 'El pago recibido no cubre el total del servicio';
-            }
-
             if (!empty($errores)) {
                 return ['success' => false, 'message' => $errores[0], 'icon' => 'error', 'redirect' => 'create.php'];
             }
 
-            // VALIDACIÓN ESTRICTA: Verificar producto "Rollo de papel"
-            $producto = $this->productoModelo->getByNombre('Rollo de papel');
-
-            if (!$producto) {
-                return [
-                    'success' => false,
-                    'message' => 'No se puede crear el servicio: El producto "Rollo de papel" no existe en el sistema. Contacte al administrador.',
-                    'icon' => 'error',
-                    'redirect' => 'create.php'
-                ];
+            $resultado = $this->modelo->registrar($datos, $_SESSION['usuario_id']);
+            if ($resultado === false) {
+                return ['success' => false, 'message' => $this->modelo->getLastError(), 'icon' => 'error', 'redirect' => 'create.php'];
             }
 
-            // Verificar que el producto esté activo
-            if (!isset($producto['estado']) || $producto['estado'] != 1) {
-                return [
-                    'success' => false,
-                    'message' => 'No se puede crear el servicio: El producto "Rollo de papel" está inactivo.',
-                    'icon' => 'error',
-                    'redirect' => 'create.php'
-                ];
+            $mensaje = 'Servicio de baño registrado correctamente.';
+            if ($resultado['alertaStockBajo']) {
+                $mensaje .= " ADVERTENCIA: Stock bajo - Quedan {$resultado['stock_restante']} unidades (mínimo recomendado: {$resultado['stock_minimo']}).";
             }
 
-            // Verificar stock suficiente
-            $stockActual = (int)($producto['stock'] ?? 0);
-            if ($stockActual <= 0) {
-                return [
-                    'success' => false,
-                    'message' => 'No se puede crear el servicio: No hay stock disponible de "Rollo de papel". Stock actual: ' . $stockActual,
-                    'icon' => 'error',
-                    'redirect' => 'create.php'
-                ];
-            }
-
-            // Intentar reducir el stock del producto
-            $this->modelo->iniciarTransaccion();
-            $resultadoReduccion = $this->productoModelo->reducirStock($producto['idproducto']);
-
-            if ($resultadoReduccion === false) {
-                $this->modelo->revertirTransaccion();
-                return [
-                    'success' => false,
-                    'message' => 'No se puede crear el servicio: Error al reducir stock de "Rollo de papel": ' . $this->productoModelo->getLastError(),
-                    'icon' => 'error',
-                    'redirect' => 'create.php'
-                ];
-            }
-
-            // Si llegamos aquí, el stock se redujo correctamente, ahora crear el servicio
-            if ($this->modelo->crear($datos)) {
-                $this->modelo->confirmarTransaccion();
-                $mensaje = 'Servicio de baño registrado correctamente.';
-
-                // Verificar si hay alerta de stock bajo
-                if (is_array($resultadoReduccion) && isset($resultadoReduccion['alertaStockBajo']) && $resultadoReduccion['alertaStockBajo']) {
-                    $stockRestante = $stockActual - 1;
-                    $stockMinimo = $producto['stock_minimo'] ?? 0;
-                    $mensaje .= " ADVERTENCIA: Stock bajo - Quedan {$stockRestante} unidades (mínimo recomendado: {$stockMinimo}).";
-                }
-
-                return [
-                    'success' => true,
-                    'message' => $mensaje,
-                    'icon' => is_array($resultadoReduccion) && isset($resultadoReduccion['alertaStockBajo']) && $resultadoReduccion['alertaStockBajo'] ? 'warning' : 'success',
-                    'redirect' => 'index.php'
-                ];
-            } else {
-                // El stock descontado se deshace junto con el servicio (misma transacción)
-                $this->modelo->revertirTransaccion();
-
-                return [
-                    'success' => false,
-                    'message' => 'Error al crear el servicio de baño: ' . $this->modelo->getLastError(),
-                    'icon' => 'error',
-                    'redirect' => 'create.php'
-                ];
-            }
+            return [
+                'success' => true,
+                'message' => $mensaje,
+                'icon' => $resultado['alertaStockBajo'] ? 'warning' : 'success',
+                'redirect' => 'index.php'
+            ];
         } catch (Exception $e) {
-            $this->modelo->revertirTransaccion();
             $this->logError('Error inesperado al crear servicio de baño', $e);
             return [
                 'success' => false,
@@ -287,80 +213,30 @@ class ServicioBanoController
                 $idbano = $banos_disponibles[0]['idbano'];
             }
 
-            // VALIDACIÓN ESTRICTA: Verificar producto "Rollo de papel"
-            $producto = $this->productoModelo->getByNombre('Rollo de papel');
+            $resultado = $this->modelo->registrar([
+                'idbano' => $idbano,
+                'idcliente' => null,
+                'tipo_cliente' => 'Publico',
+                'metodopago' => 'Efectivo'
+            ], $_SESSION['usuario_id']);
 
-            if (!$producto) {
-                return [
-                    'success' => false,
-                    'message' => 'No se puede crear el servicio: El producto "Rollo de papel" no existe en el sistema.',
-                    'icon' => 'error'
-                ];
+            if ($resultado === false) {
+                return ['success' => false, 'message' => $this->modelo->getLastError(), 'icon' => 'error'];
             }
 
-            // Verificar que el producto esté activo
-            if (!isset($producto['estado']) || $producto['estado'] != 1) {
-                return [
-                    'success' => false,
-                    'message' => 'No se puede crear el servicio: El producto "Rollo de papel" está inactivo.',
-                    'icon' => 'error'
-                ];
+            $mensaje = 'Servicio de baño registrado correctamente.';
+            if ($resultado['alertaStockBajo']) {
+                $mensaje .= " ADVERTENCIA: Stock bajo de papel higiénico ({$resultado['stock_restante']} unidades restantes).";
             }
 
-            // Verificar stock suficiente
-            $stockActual = (int)($producto['stock'] ?? 0);
-            if ($stockActual <= 0) {
-                return [
-                    'success' => false,
-                    'message' => 'No hay stock disponible de papel higiénico. Stock actual: ' . $stockActual,
-                    'icon' => 'error'
-                ];
-            }
-
-            // Intentar reducir el stock
-            $this->modelo->iniciarTransaccion();
-            $resultadoReduccion = $this->productoModelo->reducirStock($producto['idproducto']);
-
-            if ($resultadoReduccion === false) {
-                $this->modelo->revertirTransaccion();
-                return [
-                    'success' => false,
-                    'message' => 'Error al reducir stock de "Rollo de papel": ' . $this->productoModelo->getLastError(),
-                    'icon' => 'error'
-                ];
-            }
-
-            // Crear el servicio rápido
-            $resultado = $this->modelo->crearServicioRapido($idbano, $_SESSION['usuario_id']);
-
-            if ($resultado) {
-                $this->modelo->confirmarTransaccion();
-                $mensaje = 'Servicio de baño registrado correctamente.';
-
-                // Verificar alerta de stock bajo
-                if (is_array($resultadoReduccion) && isset($resultadoReduccion['alertaStockBajo']) && $resultadoReduccion['alertaStockBajo']) {
-                    $stockRestante = $stockActual - 1;
-                    $mensaje .= " ADVERTENCIA: Stock bajo de papel higiénico ({$stockRestante} unidades restantes).";
-                }
-
-                return [
-                    'success' => true,
-                    'message' => $mensaje,
-                    'icon' => is_array($resultadoReduccion) && isset($resultadoReduccion['alertaStockBajo']) && $resultadoReduccion['alertaStockBajo'] ? 'warning' : 'success',
-                    'idservicio' => $resultado['idservicio'],
-                    'total' => $resultado['total']
-                ];
-            } else {
-                $this->modelo->revertirTransaccion();
-
-                return [
-                    'success' => false,
-                    'message' => 'Error al crear el servicio de baño: ' . $this->modelo->getLastError(),
-                    'icon' => 'error'
-                ];
-            }
+            return [
+                'success' => true,
+                'message' => $mensaje,
+                'icon' => $resultado['alertaStockBajo'] ? 'warning' : 'success',
+                'idservicio' => $resultado['idservicio'],
+                'total' => $resultado['total']
+            ];
         } catch (Exception $e) {
-            $this->modelo->revertirTransaccion();
             $this->logError('Error inesperado al crear servicio de baño rápido', $e);
             return [
                 'success' => false,
@@ -388,19 +264,21 @@ class ServicioBanoController
             }
 
             // Verificar producto y stock
-            $producto = $this->productoModelo->getByNombre('Rollo de papel');
+            $config = require __DIR__ . '/../../config/config.php';
+            $nombreInsumo = $config['servicios_bano']['producto_consumible'];
+            $producto = $this->productoModelo->getByNombre($nombreInsumo);
 
             if (!$producto) {
                 return [
                     'disponible' => false,
-                    'message' => 'Producto "Rollo de papel" no configurado'
+                    'message' => 'Producto "' . $nombreInsumo . '" no configurado'
                 ];
             }
 
             if (!isset($producto['estado']) || $producto['estado'] != 1) {
                 return [
                     'disponible' => false,
-                    'message' => 'Producto "Rollo de papel" inactivo'
+                    'message' => 'Producto "' . $nombreInsumo . '" inactivo'
                 ];
             }
 

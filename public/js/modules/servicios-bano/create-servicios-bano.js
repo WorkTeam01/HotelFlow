@@ -117,7 +117,6 @@ document.addEventListener('DOMContentLoaded', function () {
         banoSelect.addEventListener('change', actualizarPrecioBano);
 
         // Listener para calcular cambio
-        totalInput.addEventListener('input', calcularCambio);
         pagoRecibidoInput.addEventListener('input', calcularCambio);
 
         // Validación del formulario

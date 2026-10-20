@@ -244,7 +244,7 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
                                                 <span class="input-group-text">Bs.</span>
                                             </div>
                                             <input type="number" class="form-control" id="total" name="total"
-                                                min="0" step="0.01" value="0" required>
+                                                min="0" step="0.01" value="0" readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -277,9 +277,15 @@ if (isset($disponibilidad['stock_actual']) && isset($disponibilidad['stock_minim
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Fecha y Hora (oculto, se llena automáticamente) -->
-                                <input type="hidden" name="fecha" value="<?= date('Y-m-d H:i:s'); ?>">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="observaciones">Observaciones</label>
+                                        <input type="text" class="form-control" id="observaciones" name="observaciones" maxlength="255">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <!-- /.card-body -->

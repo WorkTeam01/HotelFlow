@@ -80,7 +80,7 @@ class ServicioBano
         try {
             $query = "SELECT sb.idservicio, sb.idbano, sb.idusuario, sb.idcliente, 
                   sb.tipo_cliente, sb.total, sb.metodopago, sb.pagorecibido, 
-                  sb.cambio, sb.fecha, sb.estado,
+                  sb.cambio, sb.fecha, sb.estado, sb.modalidad_cobro, sb.observaciones,
                   b.nombre as nombre_bano, b.precio as precio_bano,
                   CONCAT(u.nombre, ' ', u.apellidop) as nombre_usuario,
                   CASE 
@@ -119,7 +119,7 @@ class ServicioBano
         try {
             $query = "SELECT sb.idservicio, sb.idbano, sb.idusuario, sb.idcliente, 
                   sb.tipo_cliente, sb.total, sb.metodopago, sb.pagorecibido, 
-                  sb.cambio, sb.fecha, sb.estado,
+                  sb.cambio, sb.fecha, sb.estado, sb.modalidad_cobro, sb.observaciones,
                   b.nombre as nombre_bano, b.precio as precio_bano,
                   CONCAT(u.nombre, ' ', u.apellidop) as nombre_usuario,
                   CASE 
@@ -182,48 +182,129 @@ class ServicioBano
     }
 
     /**
-     * Crea un nuevo servicio de baño
-     * 
-     * @param array $datos Datos del servicio de baño
-     * @return bool True si se creó correctamente, False en caso contrario
+     * Registra un servicio de baño cobrado al contado en una sola transacción:
+     * bloquea el baño, descuenta el insumo y escribe el servicio y su cargo + pago en `pagos`.
+     * El monto y la fecha salen del servidor, nunca del cliente.
+     *
+     * @param array $datos idbano, idcliente, tipo_cliente, metodopago, pagorecibido, observaciones
+     * @param int $idusuario Usuario que cobra
+     * @return array|false ['idservicio','total','alertaStockBajo','stock_restante','stock_minimo'] o false
      */
-    public function crear($datos)
+    public function registrar($datos, $idusuario)
     {
+        $config = require __DIR__ . '/../config/config.php';
+        $nombreInsumo = $config['servicios_bano']['producto_consumible'] ?? 'Rollo de papel';
+
+        $transaccionPropia = !$this->conexion->inTransaction();
+
         try {
-            // El estado no se recibe de fuera: toda fila nueva nace 'iniciado' (valor por
-            // defecto de la columna). El estado se cambia únicamente vía actualizarEstado().
-            $query = "INSERT INTO {$this->tabla} (idbano, idusuario, idcliente, tipo_cliente,
-                  total, metodopago, pagorecibido, cambio, fecha)
-                  VALUES (:idbano, :idusuario, :idcliente, :tipo_cliente,
-                  :total, :metodopago, :pagorecibido, :cambio, :fecha)";
-
-            $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':idbano', $datos['idbano'], PDO::PARAM_INT);
-            $stmt->bindParam(':idusuario', $datos['idusuario'], PDO::PARAM_INT);
-
-            // Manejar idcliente que puede ser NULL
-            if (!empty($datos['idcliente'])) {
-                $stmt->bindParam(':idcliente', $datos['idcliente'], PDO::PARAM_INT);
-            } else {
-                $stmt->bindValue(':idcliente', null, PDO::PARAM_NULL);
+            if ($transaccionPropia) {
+                $this->conexion->beginTransaction();
             }
 
-            $stmt->bindParam(':tipo_cliente', $datos['tipo_cliente'], PDO::PARAM_STR);
-            $stmt->bindParam(':total', $datos['total'], PDO::PARAM_STR);
-            $stmt->bindParam(':metodopago', $datos['metodopago'], PDO::PARAM_STR);
-            $stmt->bindParam(':pagorecibido', $datos['pagorecibido'], PDO::PARAM_STR);
-            $stmt->bindParam(':cambio', $datos['cambio'], PDO::PARAM_STR);
+            $stmt = $this->conexion->prepare("SELECT nombre, precio, estado FROM bano WHERE idbano = :idbano FOR UPDATE");
+            $stmt->bindValue(':idbano', (int)$datos['idbano'], PDO::PARAM_INT);
+            $stmt->execute();
+            $bano = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Fecha actual si no se proporciona una específica
-            $fecha = !empty($datos['fecha']) ? $datos['fecha'] : date('Y-m-d H:i:s');
-            $stmt->bindParam(':fecha', $fecha, PDO::PARAM_STR);
+            if ($bano === false) {
+                return $this->abortarRegistro($transaccionPropia, 'El baño seleccionado no existe.');
+            }
+            if ($bano['estado'] !== 'disponible') {
+                return $this->abortarRegistro($transaccionPropia, 'El baño seleccionado no está disponible.');
+            }
 
-            return $stmt->execute();
+            $total = $this->calcularMonto($bano);
+            $metodopago = $datos['metodopago'];
+            // Solo en efectivo el monto recibido puede ser mayor al total
+            $pagorecibido = $metodopago === 'Efectivo' && isset($datos['pagorecibido']) ? (float)$datos['pagorecibido'] : $total;
+            if ($pagorecibido < $total) {
+                return $this->abortarRegistro($transaccionPropia, 'El pago recibido no cubre el total del servicio');
+            }
+            $cambio = $pagorecibido - $total;
+
+            require_once __DIR__ . '/Producto.php';
+            $productoModelo = new Producto();
+            $producto = $productoModelo->getByNombre($nombreInsumo);
+            if (!$producto) {
+                return $this->abortarRegistro($transaccionPropia, "El producto \"$nombreInsumo\" no existe o está inactivo en el sistema. Contacte al administrador.");
+            }
+
+            $reduccion = $productoModelo->reducirStock($producto['idproducto']);
+            if ($reduccion === false) {
+                return $this->abortarRegistro($transaccionPropia, 'No se puede crear el servicio: ' . $productoModelo->getLastError());
+            }
+
+            $stmt = $this->conexion->prepare("INSERT INTO {$this->tabla}
+                (idbano, idusuario, idcliente, tipo_cliente, modalidad_cobro, total, metodopago,
+                 pagorecibido, cambio, fecha, observaciones)
+                VALUES (:idbano, :idusuario, :idcliente, :tipo_cliente, 'contado', :total, :metodopago,
+                 :pagorecibido, :cambio, :fecha, :observaciones)");
+            $stmt->bindValue(':idbano', (int)$datos['idbano'], PDO::PARAM_INT);
+            $stmt->bindValue(':idusuario', (int)$idusuario, PDO::PARAM_INT);
+            $stmt->bindValue(':idcliente', !empty($datos['idcliente']) ? (int)$datos['idcliente'] : null, PDO::PARAM_INT);
+            $stmt->bindValue(':tipo_cliente', $datos['tipo_cliente'], PDO::PARAM_STR);
+            $stmt->bindValue(':total', $total);
+            $stmt->bindValue(':metodopago', $metodopago, PDO::PARAM_STR);
+            $stmt->bindValue(':pagorecibido', $pagorecibido);
+            $stmt->bindValue(':cambio', $cambio);
+            $stmt->bindValue(':fecha', date('Y-m-d H:i:s'), PDO::PARAM_STR);
+            $stmt->bindValue(':observaciones', ($datos['observaciones'] ?? '') !== '' ? $datos['observaciones'] : null, PDO::PARAM_STR);
+            $stmt->execute();
+            $idservicio = (int)$this->conexion->lastInsertId();
+
+            require_once __DIR__ . '/Pago.php';
+            $pagoModelo = new Pago();
+            $concepto = 'Servicio de baño - ' . $bano['nombre'] . ' (#' . $idservicio . ')';
+            // Un baño de precio cero no genera movimiento de dinero en el ledger
+            if (
+                $total > 0 && (
+                    !$pagoModelo->registrarLineaServicio($idservicio, 'cargo', $concepto, $total, 'OTROS', $idusuario)
+                    || !$pagoModelo->registrarLineaServicio($idservicio, 'pago', $concepto, $total, $metodopago, $idusuario)
+                )
+            ) {
+                return $this->abortarRegistro($transaccionPropia, $pagoModelo->getLastError());
+            }
+
+            if ($transaccionPropia) {
+                $this->conexion->commit();
+            }
+
+            return [
+                'idservicio' => $idservicio,
+                'total' => $total,
+                'alertaStockBajo' => !empty($reduccion['alertaStockBajo']),
+                'stock_restante' => (int)$producto['stock'] - 1,
+                'stock_minimo' => (int)($producto['stock_minimo'] ?? 0)
+            ];
         } catch (PDOException $e) {
+            if ($transaccionPropia && $this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
         }
+    }
+
+    /**
+     * Monto a cobrar por un baño; único punto de cambio si la tarifa pasa a depender de la duración.
+     *
+     * @param array $bano Fila de `bano` ya bloqueada
+     * @return float
+     */
+    private function calcularMonto(array $bano)
+    {
+        return (float)$bano['precio'];
+    }
+
+    private function abortarRegistro($transaccionPropia, $mensaje)
+    {
+        if ($transaccionPropia && $this->conexion->inTransaction()) {
+            $this->conexion->rollBack();
+        }
+        $this->lastError = $mensaje;
+        return false;
     }
 
     /**
@@ -413,8 +494,13 @@ class ServicioBano
             $stmt->execute();
             $estadisticas['inactivos'] = $stmt->fetchColumn();
 
-            // Ingresos del día: excluye los servicios cancelados
-            $query = "SELECT SUM(total) FROM {$this->tabla} WHERE estado != 'cancelado' AND DATE(fecha) = :fecha_hoy";
+            // Cobrado hoy: pago neto del ledger (los reversos restan del pago que anulan)
+            $query = "SELECT COALESCE(SUM(CASE WHEN p.tipo = 'pago' THEN p.montototal
+                                               WHEN p.tipo = 'reverso' AND o.tipo = 'pago' THEN -p.montototal
+                                               ELSE 0 END), 0)
+                      FROM pagos p
+                      LEFT JOIN pagos o ON o.id_pago = p.id_pago_reversado
+                      WHERE p.idservicio_bano IS NOT NULL AND DATE(p.fechacreacion) = :fecha_hoy";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
             $stmt->execute();
@@ -488,63 +574,6 @@ class ServicioBano
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return null;
-        }
-    }
-
-    /**
-     * Crea un servicio de baño básico con precio predeterminado desde el baño
-     * 
-     * @param int $idbano ID del baño
-     * @param int $idusuario ID del usuario que registra
-     * @return bool|array Resultado de la operación con ID del servicio o false en caso de error
-     */
-    public function crearServicioRapido($idbano, $idusuario)
-    {
-        try {
-            // Obtener el precio del baño
-            $query = "SELECT precio, estado FROM bano WHERE idbano = :idbano";
-            $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':idbano', $idbano, PDO::PARAM_INT);
-            $stmt->execute();
-            $bano = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($bano === false) {
-                $this->lastError = "No se encontró el baño con ID $idbano";
-                return false;
-            }
-            if ($bano['estado'] !== 'disponible') {
-                $this->lastError = 'El baño seleccionado no está disponible.';
-                return false;
-            }
-            $precio = $bano['precio'];
-
-            // Crear los datos del servicio
-            $datos = [
-                'idbano' => $idbano,
-                'idusuario' => $idusuario,
-                'idcliente' => null,
-                'tipo_cliente' => 'Publico',
-                'total' => $precio,
-                'metodopago' => 'Efectivo',
-                'pagorecibido' => $precio,
-                'cambio' => 0,
-                'fecha' => date('Y-m-d H:i:s')
-            ];
-
-            // Crear el servicio
-            if ($this->crear($datos)) {
-                $idservicio = $this->getLastInsertId();
-                return [
-                    'idservicio' => $idservicio,
-                    'total' => $precio
-                ];
-            } else {
-                return false;
-            }
-        } catch (PDOException $e) {
-            error_log('[' . static::class . '] ' . $e->getMessage());
-            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            return false;
         }
     }
 }

@@ -194,6 +194,7 @@ CREATE TABLE `pagos` (
   `id_pago` int(11) NOT NULL,
   `idrecepcion` int(11) DEFAULT NULL,
   `idequipaje` int(11) DEFAULT NULL,
+  `idservicio_bano` int(11) DEFAULT NULL,
   `tipo` enum('cargo','pago','reverso') NOT NULL DEFAULT 'pago',
   `concepto` varchar(120) NOT NULL DEFAULT '',
   `idusuario` int(11) DEFAULT NULL,
@@ -388,6 +389,7 @@ CREATE TABLE `servicio_bano` (
   `idusuario` int(11) NOT NULL,
   `idcliente` int(11) DEFAULT NULL,
   `tipo_cliente` enum('Huesped','Publico') DEFAULT 'Publico',
+  `modalidad_cobro` enum('contado','folio') NOT NULL DEFAULT 'contado',
   `total` decimal(10,2) NOT NULL,
   `metodopago` enum('Efectivo','QR','OTROS') NOT NULL,
   `pagorecibido` decimal(10,2) NOT NULL,
@@ -395,6 +397,7 @@ CREATE TABLE `servicio_bano` (
   `fecha` datetime NOT NULL DEFAULT current_timestamp(),
   `duracion_minutos` int(11) DEFAULT NULL,
   `estado` enum('iniciado','finalizado','cancelado') DEFAULT 'iniciado',
+  `observaciones` varchar(255) DEFAULT NULL,
   `fechacreacion` datetime DEFAULT current_timestamp(),
   `fechaactualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -560,6 +563,7 @@ ALTER TABLE `pagos`
   ADD PRIMARY KEY (`id_pago`),
   ADD KEY `idrecepcion` (`idrecepcion`),
   ADD KEY `idequipaje` (`idequipaje`),
+  ADD KEY `idservicio_bano` (`idservicio_bano`),
   ADD KEY `idx_pagos_recepcion_fecha` (`idrecepcion`,`fechacreacion`),
   ADD KEY `idusuario` (`idusuario`),
   ADD KEY `id_pago_reversado` (`id_pago_reversado`);
@@ -641,7 +645,8 @@ ALTER TABLE `servicio_bano`
   ADD PRIMARY KEY (`idservicio`),
   ADD KEY `idbano` (`idbano`),
   ADD KEY `idusuario` (`idusuario`),
-  ADD KEY `idcliente` (`idcliente`);
+  ADD KEY `idcliente` (`idcliente`),
+  ADD KEY `idx_sb_fecha_estado` (`fecha`,`estado`);
 
 --
 -- Indices de la tabla `tarifas`
@@ -874,7 +879,9 @@ ALTER TABLE `pagos`
   ADD CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`idrecepcion`) REFERENCES `recepcion` (`idrecepcion`),
   ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`idequipaje`) REFERENCES `almacenamiento_equipaje` (`idalmacen`),
   ADD CONSTRAINT `pagos_ibfk_3` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuario`),
-  ADD CONSTRAINT `pagos_ibfk_4` FOREIGN KEY (`id_pago_reversado`) REFERENCES `pagos` (`id_pago`);
+  ADD CONSTRAINT `pagos_ibfk_4` FOREIGN KEY (`id_pago_reversado`) REFERENCES `pagos` (`id_pago`),
+  ADD CONSTRAINT `pagos_ibfk_5` FOREIGN KEY (`idservicio_bano`) REFERENCES `servicio_bano` (`idservicio`),
+  ADD CONSTRAINT `chk_pagos_origen` CHECK (`idequipaje` IS NULL OR (`idrecepcion` IS NULL AND `idservicio_bano` IS NULL));
 
 --
 -- Filtros para la tabla `pagoventa`
@@ -918,7 +925,9 @@ ALTER TABLE `recepcion_movimientos`
 ALTER TABLE `servicio_bano`
   ADD CONSTRAINT `servicio_bano_ibfk_1` FOREIGN KEY (`idbano`) REFERENCES `bano` (`idbano`),
   ADD CONSTRAINT `servicio_bano_ibfk_2` FOREIGN KEY (`idusuario`) REFERENCES `usuarios` (`idusuario`),
-  ADD CONSTRAINT `servicio_bano_ibfk_3` FOREIGN KEY (`idcliente`) REFERENCES `persona` (`idpersona`) ON DELETE SET NULL;
+  ADD CONSTRAINT `servicio_bano_ibfk_3` FOREIGN KEY (`idcliente`) REFERENCES `persona` (`idpersona`) ON DELETE SET NULL,
+  ADD CONSTRAINT `chk_sb_montos` CHECK (`total` >= 0 AND `pagorecibido` >= 0 AND `cambio` >= 0),
+  ADD CONSTRAINT `chk_sb_contado` CHECK (`modalidad_cobro` <> 'contado' OR `pagorecibido` >= `total`);
 
 --
 -- Filtros para la tabla `tarifas`

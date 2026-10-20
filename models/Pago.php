@@ -131,6 +131,81 @@ class Pago
     }
 
     /**
+     * Líneas del ledger de un servicio de baño, en orden cronológico.
+     *
+     * @param int $idservicio
+     * @return array
+     */
+    public function getByServicioBano($idservicio)
+    {
+        try {
+            $query = "SELECT p.*, u.nombre as nombre_usuario
+                      FROM {$this->tabla} p
+                      LEFT JOIN usuarios u ON p.idusuario = u.idusuario
+                      WHERE p.idservicio_bano = :idservicio
+                      ORDER BY p.fechacreacion ASC, p.id_pago ASC";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->bindParam(':idservicio', $idservicio, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return [];
+        }
+    }
+
+    /**
+     * Registra una línea del ledger de un servicio de baño cobrado al contado.
+     * Se llama desde ServicioBano::registrar() dentro de su transacción; no toca `recepcion`.
+     *
+     * @param int $idservicio
+     * @param string $tipo 'cargo'|'pago'
+     * @param string $concepto
+     * @param float $monto Siempre positivo
+     * @param string $metodopago 'Efectivo'|'QR'|'OTROS'
+     * @param int $idusuario
+     * @return bool|int ID de la línea creada o false si falló
+     */
+    public function registrarLineaServicio($idservicio, $tipo, $concepto, $monto, $metodopago, $idusuario)
+    {
+        if (!in_array($tipo, ['cargo', 'pago'], true)) {
+            $this->lastError = 'Tipo de línea de folio no válido.';
+            return false;
+        }
+
+        if ($monto <= 0) {
+            $this->lastError = 'El monto debe ser mayor que cero.';
+            return false;
+        }
+
+        try {
+            $query = "INSERT INTO {$this->tabla}
+                      (idservicio_bano, tipo, concepto, montototal, metodopago, idusuario)
+                      VALUES (:idservicio, :tipo, :concepto, :monto, :metodopago, :idusuario)";
+            $stmt = $this->conexion->prepare($query);
+            $stmt->bindParam(':idservicio', $idservicio, PDO::PARAM_INT);
+            $stmt->bindParam(':tipo', $tipo, PDO::PARAM_STR);
+            $stmt->bindParam(':concepto', $concepto, PDO::PARAM_STR);
+            $stmt->bindParam(':monto', $monto, PDO::PARAM_STR);
+            $stmt->bindParam(':metodopago', $metodopago, PDO::PARAM_STR);
+            $stmt->bindParam(':idusuario', $idusuario, PDO::PARAM_INT);
+
+            if (!$stmt->execute()) {
+                error_log('[' . static::class . '] ' . implode(' ', $stmt->errorInfo()));
+                $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+                return false;
+            }
+
+            return $this->conexion->lastInsertId();
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return false;
+        }
+    }
+
+    /**
      * Calcula cargos/pagos/saldo reales a partir de las líneas del folio.
      * Los reversos restan del tipo de línea que reversan (join contra sí misma).
      *

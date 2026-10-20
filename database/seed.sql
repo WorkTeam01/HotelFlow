@@ -108,7 +108,8 @@ INSERT INTO `productos` (`idcategoria`, `codigo`, `nombre`, `descripcion`, `stoc
 (1, 'BEB-001', 'Agua mineral 500ml', 'Botella de agua mineral', 50, 10, 5.00, 2.50),
 (1, 'BEB-002', 'Gaseosa 500ml', 'Bebida gaseosa', 40, 10, 8.00, 4.00),
 (2, 'SNK-001', 'Papas fritas', 'Bolsa de papas fritas', 30, 5, 6.00, 3.00),
-(3, 'HIG-001', 'Kit de aseo', 'Cepillo, pasta y jabón desechable', 25, 5, 12.00, 6.00);
+(3, 'HIG-001', 'Kit de aseo', 'Cepillo, pasta y jabón desechable', 25, 5, 12.00, 6.00),
+(3, 'HIG-002', 'Rollo de papel', 'Insumo que consume cada servicio de baño', 100, 10, 0.00, 0.00);
 
 -- --------------------------------------------------------
 -- Precios de equipaje
@@ -186,6 +187,11 @@ INSERT INTO `detallecompra` (`idcompra`, `idproducto`, `cantidad`, `preciocompra
 -- Servicio de baño para un huésped del día
 INSERT INTO `servicio_bano` (`idbano`, `idusuario`, `idcliente`, `tipo_cliente`, `total`, `metodopago`, `pagorecibido`, `cambio`, `fecha`, `duracion_minutos`, `estado`) VALUES
 (1, 2, 1, 'Huesped', 10.00, 'Efectivo', 10.00, 0.00, NOW(), 20, 'finalizado');
+
+-- Ledger del servicio de baño anterior (cargo + pago, ver ServicioBano::registrar)
+INSERT INTO `pagos` (`idservicio_bano`, `tipo`, `concepto`, `montototal`, `metodopago`, `idusuario`) VALUES
+(1, 'cargo', 'Servicio de baño - Baño 1 (#1)', 10.00, 'OTROS', 2),
+(1, 'pago', 'Servicio de baño - Baño 1 (#1)', 10.00, 'Efectivo', 2);
 
 -- Equipaje almacenado del día
 INSERT INTO `almacenamiento_equipaje` (`idcliente`, `idusuario`, `descripcion`, `cantidad_piezas`, `codigo_ticket`, `fechaentrada`, `idpequipaje`, `monto`, `estado`) VALUES
