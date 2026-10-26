@@ -24,15 +24,8 @@
     top: 1rem;
 }
 
-/* Estados visuales de las tarjetas de pago (pago único y métodos del pago mixto).
-   No reutilizan utilidades de Bootstrap, son clases propias del módulo. */
-.vent-pago-correcto {
-    border-left: 4px solid var(--color-success);
-}
-
-.vent-pago-incorrecto {
-    border-left: 4px solid var(--color-danger);
-    background-color: var(--color-danger-soft);
+.vent-cambio-ancho {
+    max-width: 250px;
 }
 
 /* Badge del método de pago mixto en el listado: Bootstrap 4 no trae badge-purple,
@@ -46,6 +39,12 @@
 /* Tabla de productos de create.php: bajo 767.98px se convierte de tabla a lista de
    tarjetas apiladas (una por fila) en vez de forzar scroll horizontal de 6 columnas. */
 @media (max-width: 767.98px) {
+    /* En tarjetas cada fila mide ~500px: con el tope de 420px se cortaban el
+       subtotal y el botón Eliminar del primer producto. */
+    .carrito-scroll {
+        max-height: none;
+    }
+
     #tabla-productos thead {
         display: none;
     }
@@ -79,4 +78,60 @@
         color: var(--color-secondary);
         margin-bottom: 0.15rem;
     }
+}
+
+/* Contraste AA (≥4.5:1) sobre fondo claro: los tonos base de Bootstrap
+   (#007bff 3.98:1, #28a745 3.13:1) no llegan; se usan sus variantes oscuras. */
+.ventas-pagina .btn-outline-primary {
+    color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+}
+
+.ventas-pagina .btn-outline-primary:hover,
+.ventas-pagina .btn-outline-primary:focus,
+.ventas-pagina .btn-outline-primary.active,
+.ventas-pagina .btn-outline-primary:not(:disabled):not(.disabled).active {
+    color: var(--color-white);
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+}
+
+.ventas-pagina .text-success {
+    color: var(--color-success-dark) !important;
+}
+
+/* Campos de formulario con altura táctil ≥44px (los inputs no admiten el
+   pseudo-elemento de .btn-touch). El carrito en tabla queda fuera para no
+   inflar cada fila. */
+.ventas-pagina form .form-control:not(.form-control-sm),
+.ventas-pagina form .input-group-text {
+    min-height: 44px;
+}
+
+/* Texto blanco sobre #007bff da 3.98:1; el fondo oscuro lo lleva a ≥7:1.
+   Los modales cuelgan fuera de .ventas-pagina, de ahí los ids. */
+#modal-productos .modal-header.bg-primary,
+#modal-clientes .modal-header.bg-primary {
+    background-color: var(--color-primary-dark) !important;
+}
+
+/* Badges de texto blanco: success (#28a745) e info (#17a2b8) dan 3.13:1 y 3.04:1;
+   sus variantes oscuras superan 5:1. */
+.ventas-pagina .badge-success {
+    background-color: var(--color-success-dark);
+}
+
+.ventas-pagina .badge-info {
+    background-color: var(--color-info-dark);
+}
+
+/* El gris de .text-muted da 4.48:1 sobre las filas rayadas de la tabla. */
+.ventas-pagina .text-muted {
+    color: var(--color-text-secondary) !important;
+}
+
+/* El rojo de .invalid-feedback (#dc3545) da 4.23:1 sobre el fondo rosado de la
+   tarjeta de pago incorrecta; el tono oscuro supera 5:1. */
+.ventas-pagina .invalid-feedback {
+    color: var(--color-danger-dark);
 }
