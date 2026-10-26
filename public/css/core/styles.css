@@ -148,6 +148,69 @@ a .info-btn {
     transform: translate(-50%, -50%);
 }
 
-.btn-group > .btn-touch {
+.btn-group>.btn-touch {
     min-width: 44px;
+}
+
+/* --- Contraste del breadcrumb (AdminLTE: enlace #007bff 3.68:1, activo #6c757d 4.33:1
+ * sobre el fondo del content-header) -------------------------------------- */
+.breadcrumb-item a {
+    color: var(--color-primary-dark);
+}
+
+.breadcrumb-item.active {
+    color: var(--color-text-secondary);
+}
+
+/* --- Área táctil ≥44px en los botones de herramienta de las tarjetas
+ * (colapsar/cerrar): misma técnica que .btn-touch, sin cambiar su tamaño visual. */
+.btn-tool {
+    position: relative;
+}
+
+.btn-tool::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+}
+
+/* --- Controles de DataTables (selector de filas, búsqueda, Reportes y paginador)
+ * con altura táctil ≥44px; Bootstrap los deja en 31-38px. */
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dt-buttons .btn {
+    min-height: 44px;
+}
+
+.dataTables_wrapper .page-link {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Página activa: texto blanco sobre #007bff da 3.98:1. */
+.dataTables_wrapper .page-item.active .page-link {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+}
+
+/* Botón primario: texto blanco sobre #007bff da 3.98:1; el tono oscuro lo lleva a ≥7:1. */
+.btn-primary {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-primary:not(:disabled):not(.disabled).active,
+.show>.btn-primary.dropdown-toggle {
+    background-color: var(--color-primary-darker);
+    border-color: var(--color-primary-darker);
 }
