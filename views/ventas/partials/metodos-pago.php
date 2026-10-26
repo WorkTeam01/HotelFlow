@@ -27,8 +27,8 @@
             [$iconoMetodo, $claseMetodo] = $controller->obtenerIconoMetodoPago($pago['metodopago']);
         ?>
             <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="badge <?= $pago['clase_badge']; ?>">
-                    <i class="<?= $pago['icono']; ?>"></i> <?= ucfirst($pago['metodopago']) ?>
+                <span class="badge <?= htmlspecialchars($pago['clase_badge'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <i class="<?= htmlspecialchars($pago['icono'], ENT_QUOTES, 'UTF-8'); ?>"></i> <?= htmlspecialchars(ucfirst($pago['metodopago']), ENT_QUOTES, 'UTF-8') ?>
                 </span>
                 <span><?= number_format($pago['monto'], 2); ?> Bs.</span>
             </div>
