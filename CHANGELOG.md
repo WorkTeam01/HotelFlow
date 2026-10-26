@@ -5,6 +5,27 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.8.1] - 2026-10-26
+
+Auditoría de frontend de `ventas` (13/20 → 20/20) y refactor de la pantalla de nueva venta. Sin cambios de esquema.
+
+### Added
+
+- La tarjeta «Forma de Pago» cambia de color según el cobro: verde si está completo (total cubierto y efectivo recibido suficiente), rojo si falta algo y azul sin total; vale igual para pago único y mixto.
+- `VentaController::estadoVenta()` (etiqueta, badge e icono del estado) y `datosParaCrear()` (productos con stock y clientes activos, solo con los campos que el formulario necesita).
+
+### Changed
+
+- `create.php` se divide en partials (`venta-carrito`, `venta-pago`, `venta-cliente`, `venta-resumen`, `modales-venta`, `plantilla-metodo-pago`) y `show.php` en cuatro (`info-general`, `metodos-pago`, `productos-vendidos`, `informacion-adicional`).
+- `create-venta.js` (870 líneas) pasa a un orquestador de 83 líneas sobre cuatro módulos: `venta-util`, `venta-selectores`, `venta-pagos` y `venta-detalle`. Importes en centavos enteros, búsqueda indexada con `debounce`, eventos delegados y bloqueo del doble envío.
+- Contraste, áreas táctiles de 44px y colores por tokens en el CSS del módulo; sin colores hexadecimales.
+- Globales: breadcrumb, `.btn-tool`, controles y paginación de DataTables y `.btn-primary` cumplen contraste AA y 44px.
+
+### Fixed
+
+- Con QR u Otros como método de pago único, «Pago recibido» seguía visible: Select2 dispara `change` por jQuery y el listener nativo no lo recibía.
+- El HTML de la pantalla de nueva venta exponía precios de compra y datos de contacto de clientes.
+
 ## [1.8.0] - 2026-10-20
 
 Refactor de `servicios-bano`: el cobro entra al libro de `pagos`, el servicio se registra y cancela de forma atómica, un huésped puede cargarlo a su folio y cada baño sabe si está en uso. Auditoría de frontend del módulo (16/20 → 18/20). Hay cambios de esquema (ver Migración).
@@ -695,6 +716,7 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.8.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.8.0...1.8.1
 [1.8.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.7.2...1.8.0
 [1.7.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.7.1...1.7.2
 [1.7.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.7.0...1.7.1

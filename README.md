@@ -4,7 +4,7 @@
 
 **Sistema integral para la administración de establecimientos hoteleros**
 
-[![Versión](https://img.shields.io/badge/Versión-1.8.0-blue?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/Versión-1.8.1-blue?style=flat-square)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.4+-003545?style=flat-square&logo=mariadb&logoColor=white)](https://mariadb.org)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-4-7952B3?style=flat-square&logo=bootstrap&logoColor=white)](https://getbootstrap.com)
@@ -61,7 +61,7 @@ Panel único con tabs Hoy / Mapa de habitaciones / Historial y KPIs del día.
 
 ### Ventas / Punto de venta
 
-Registro de ventas en dos columnas con catálogo por modales, pago único o mixto, control de stock y recibo térmico PDF.
+Registro de ventas en dos columnas con catálogo por modales, pago único o mixto (la tarjeta de pago pasa a verde o rojo según el cobro esté completo), control de stock y recibo térmico PDF.
 
 ![Ventas](public/img/screenshots/ventas.png)
 
@@ -71,7 +71,7 @@ Registro de ventas en dos columnas con catálogo por modales, pago único o mixt
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Habitaciones** | Gestión por tipo, piso y estado. Sistema de tarifas y galería de imágenes                                                                                                                                                 |
 | **Recepción**    | Panel único con tabs Hoy / Mapa de habitaciones / Historial, KPIs del día, folio de huésped con cargos/pagos múltiples, check-in/out, cambio de habitación auditable, validación de solape, recibos y tarjeta de registro |
-| **Servicios**    | Baños con cobro en pagos o cargo al folio del huésped, control de ocupación y duración, limpieza y almacenamiento de equipaje con folio de pagos, alerta de permanencia y recibos PDF                                                                                                                      |
+| **Servicios**    | Baños con cobro en pagos o cargo al folio del huésped, control de ocupación y duración, limpieza y almacenamiento de equipaje con folio de pagos, alerta de permanencia y recibos PDF                                     |
 | **Comercial**    | Punto de venta con pago único/mixto y recibo térmico, control de inventario, compras y reportes exportables (PDF/Excel)                                                                                                   |
 | **Dashboard**    | Métricas en tiempo real, estadísticas por rol y exportación de reportes                                                                                                                                                   |
 | **Usuarios**     | Sistema de roles (Admin, Recepcionista, Limpieza) con permisos granulares                                                                                                                                                 |
