@@ -48,7 +48,7 @@ $estadisticas = $controller->getEstadisticas($esAdmin ? null : $idusuario);
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content ventas-pagina">
     <div class="container-fluid">
         <!-- Info boxes -->
         <div class="row">
@@ -100,7 +100,7 @@ $estadisticas = $controller->getEstadisticas($esAdmin ? null : $idusuario);
                     <div class="card-header card-outline card-primary">
                         <h3 class="card-title">Historial de Ventas</h3>
                         <div class="card-tools">
-                            <a href="<?= $URL; ?>views/ventas/create.php" class="btn btn-primary btn-sm">
+                            <a href="<?= $URL; ?>views/ventas/create.php" class="btn btn-touch btn-primary btn-sm">
                                 <i class="fas fa-plus"></i> Nueva Venta
                             </a>
                             <button type="button" class="btn btn-tool" data-card-widget="collapse">
@@ -130,8 +130,7 @@ $estadisticas = $controller->getEstadisticas($esAdmin ? null : $idusuario);
                                     $metodoTooltip = $infoMetodo['tooltip'] ?? '';
                                     $codigoVenta = 'VENT-' . str_pad($venta['idventa'], 6, '0', STR_PAD_LEFT);
                                     $esActiva = (int)$venta['estado'] === 1;
-                                    $claseEstado = $esActiva ? 'badge-success' : 'badge-danger';
-                                    $textoEstado = $esActiva ? 'Activa' : 'Anulada';
+                                    $estadoUi = $venta['estado_ui'];
                                 ?>
                                     <tr>
                                         <td><?= $codigoVenta; ?></td>
@@ -148,7 +147,7 @@ $estadisticas = $controller->getEstadisticas($esAdmin ? null : $idusuario);
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge <?= $claseEstado; ?>" role="status"><?= $textoEstado; ?></span>
+                                            <span class="badge <?= $estadoUi['badge']; ?>" role="status"><?= $estadoUi['label']; ?></span>
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group">

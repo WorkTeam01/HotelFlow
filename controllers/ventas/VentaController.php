@@ -55,6 +55,7 @@ class VentaController
             $pagos = $pagosPorVenta[$venta['idventa']] ?? [];
             $venta['pagos'] = $pagos;
             $venta['info_metodo_pago'] = $this->calcularInfoMetodoPago($pagos);
+            $venta['estado_ui'] = self::estadoVenta($venta['estado']);
         }
         unset($venta);
 
@@ -106,6 +107,22 @@ class VentaController
         ));
 
         return count($metodosDistintos) > 1;
+    }
+
+    /**
+     * Presentación del estado de una venta (1 = activa, 0 = anulada). Único helper
+     * para listado y detalle: ninguna vista escribe su propio ternario de badge.
+     *
+     * @param int|string $estado Valor de venta.estado
+     * @return array ['label','badge','icono']
+     */
+    public static function estadoVenta($estado)
+    {
+        if ((int) $estado === 1) {
+            return ['label' => 'Activa', 'badge' => 'badge-success', 'icono' => 'fa-check-circle'];
+        }
+
+        return ['label' => 'Anulada', 'badge' => 'badge-danger', 'icono' => 'fa-ban'];
     }
 
     /**
@@ -237,6 +254,47 @@ class VentaController
     }
 
     /**
+     * Catálogos que consume el formulario de nueva venta. Se reducen a los campos
+     * que usa el JS para no exponer en el HTML precios de compra, márgenes ni datos
+     * de contacto: solo productos activos con stock y clientes activos.
+     *
+     * @return array ['productos' => [...], 'clientes' => [...]]
+     */
+    public function datosParaCrear()
+    {
+        require_once __DIR__ . '/../../models/Producto.php';
+        require_once __DIR__ . '/../../models/Persona.php';
+
+        $productos = [];
+        foreach ((new Producto())->getAll() as $p) {
+            if ((int) $p['estado'] === 1 && (int) $p['stock'] > 0) {
+                $productos[] = [
+                    'idproducto' => (int) $p['idproducto'],
+                    'nombre' => $p['nombre'],
+                    'codigo' => $p['codigo'],
+                    'precioventa' => $p['precioventa'],
+                    'stock' => (int) $p['stock'],
+                ];
+            }
+        }
+
+        $clientes = [];
+        foreach ((new Persona())->getAll() as $c) {
+            if ((int) $c['estado'] === 1) {
+                $clientes[] = [
+                    'idpersona' => (int) $c['idpersona'],
+                    'nombre' => $c['nombre'],
+                    'apellidopaterno' => $c['apellidopaterno'],
+                    'apellidomaterno' => $c['apellidomaterno'],
+                    'numdocumento' => $c['numdocumento'],
+                ];
+            }
+        }
+
+        return ['productos' => $productos, 'clientes' => $clientes];
+    }
+
+    /**
      * Prepara los datos de la venta desde $_POST
      * 
      * @param array $post_data Datos del formulario
@@ -363,6 +421,11 @@ class VentaController
 
         // Helpers F1: la vista consume estos arrays sin calcular nada
         $venta['info_metodo_pago'] = $this->calcularInfoMetodoPago($venta['pagos']);
+        $venta['estado_ui'] = self::estadoVenta($venta['estado']);
+        foreach ($venta['pagos'] as &$pago) {
+            [$pago['icono'], $pago['clase_badge']] = $this->obtenerIconoMetodoPago($pago['metodopago']);
+        }
+        unset($pago);
         $venta['totales'] = $this->calcularTotales($venta);
         $venta['resumen_pagos'] = $this->calcularResumenPagos($venta['pagos']);
         $venta['desglose_detalles'] = $this->calcularDesgloseDetalles($venta['detalles']);
