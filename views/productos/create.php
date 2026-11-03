@@ -49,7 +49,7 @@ include_once '../layouts/header.php';
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content productos-pagina">
     <div class="container-fluid">
         <div class="row">
             <!-- Columna del formulario (8/12) -->
@@ -169,7 +169,7 @@ include_once '../layouts/header.php';
                                                 step="0.01" min="0" placeholder="0.00" required>
                                         </div>
                                         <small class="form-text text-muted">Precio al que se vende el producto</small>
-                                        <div id="precio-feedback"></div>
+                                        <div id="precio-feedback" role="status" aria-live="polite"></div>
                                     </div>
                                 </div>
                             </div>
@@ -229,7 +229,7 @@ include_once '../layouts/header.php';
                                 </div>
                             </div>
 
-                            <div id="stock-validation-feedback"></div>
+                            <div id="stock-validation-feedback" role="status" aria-live="polite"></div>
                         </div>
                     </div>
 
@@ -279,13 +279,13 @@ include_once '../layouts/header.php';
                         <div class="card-footer">
                             <div class="row">
                                 <div class="col-12 col-sm-auto">
-                                    <button type="submit" class="btn btn-primary w-100 mb-2 mb-sm-0">
-                                        <i class="fas fa-save mr-2"></i> Guardar Producto
+                                    <button type="submit" class="btn btn-primary btn-touch w-100 mb-2 mb-sm-0">
+                                        <i class="fas fa-save mr-2" aria-hidden="true"></i> Guardar Producto
                                     </button>
                                 </div>
                                 <div class="col-12 col-sm-auto">
-                                    <a href="<?= $URL; ?>views/productos" class="btn btn-secondary w-100">
-                                        <i class="fas fa-times mr-2"></i> Cancelar
+                                    <a href="<?= $URL; ?>views/productos" class="btn btn-secondary btn-touch w-100">
+                                        <i class="fas fa-times mr-2" aria-hidden="true"></i> Cancelar
                                     </a>
                                 </div>
                             </div>
@@ -346,8 +346,8 @@ include_once '../layouts/header.php';
                         <h3 class="card-title"><i class="fas fa-image mr-2"></i>Vista previa</h3>
                     </div>
                     <div class="card-body text-center">
-                        <div id="preview-container" style="display: none;">
-                            <img id="preview-image" src="#" alt="Vista previa de la imagen del producto"
+                        <div id="preview-container" hidden>
+                            <img id="preview-image" alt="Vista previa de la imagen del producto"
                                 class="img-thumbnail prod-img-preview">
                         </div>
                         <p id="preview-placeholder" class="text-muted mb-0">

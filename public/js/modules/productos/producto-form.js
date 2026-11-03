@@ -21,19 +21,24 @@
         };
     }
 
+    // URL del blob de la imagen en previsualización; se revoca al reemplazarla
+    // para no acumular objetos en memoria (readAsDataURL duplicaba el archivo
+    // como base64 en el DOM).
+    var urlPreview = null;
+
     function inicializarEtiquetaImagen() {
         $('.custom-file-input').on('change', function () {
             var fileName = $(this).val().split('\\').pop();
             $(this).next('.custom-file-label').addClass('selected').html(fileName);
 
             if (this.files && this.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    $('#preview-image').attr('src', e.target.result);
-                    $('#preview-container').show();
-                    $('#preview-placeholder').hide();
-                };
-                reader.readAsDataURL(this.files[0]);
+                if (urlPreview) {
+                    URL.revokeObjectURL(urlPreview);
+                }
+                urlPreview = URL.createObjectURL(this.files[0]);
+                $('#preview-image').attr('src', urlPreview);
+                $('#preview-container').prop('hidden', false);
+                $('#preview-placeholder').prop('hidden', true);
             }
         });
     }
@@ -190,7 +195,7 @@
                     icon: 'error',
                     title: 'Error en Precios',
                     text: 'El precio de venta no puede ser menor al precio de compra',
-                    confirmButtonColor: themeColor('primary')
+                    confirmButtonColor: themeColor('danger')
                 });
                 return false;
             }
@@ -201,7 +206,7 @@
                     icon: 'error',
                     title: 'Error en Stock',
                     text: 'El stock máximo no puede ser menor al stock mínimo',
-                    confirmButtonColor: themeColor('primary')
+                    confirmButtonColor: themeColor('danger')
                 });
                 return false;
             }
@@ -212,7 +217,7 @@
                     icon: 'error',
                     title: 'Categoría Requerida',
                     text: 'Debe seleccionar una categoría para el producto',
-                    confirmButtonColor: themeColor('primary')
+                    confirmButtonColor: themeColor('danger')
                 });
                 return false;
             }

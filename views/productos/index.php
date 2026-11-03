@@ -45,7 +45,7 @@ $productos = $controller->index();
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content productos-pagina">
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
@@ -53,11 +53,11 @@ $productos = $controller->index();
                     <div class="card-header card-outline card-primary">
                         <h3 class="card-title">Listado de Productos</h3>
                         <div class="card-tools">
-                            <a href="<?= $URL; ?>views/productos/create.php" class="btn btn-primary btn-sm">
+                            <a href="<?= $URL; ?>views/productos/create.php" class="btn btn-primary btn-sm btn-touch">
                                 <i class="fas fa-plus"></i> Nuevo Producto
                             </a>
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer o expandir esta sección">
+                                <i class="fas fa-minus" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -93,7 +93,7 @@ $productos = $controller->index();
                                             <td class="text-center">
                                                 <?php
                                                 $clase_img = 'img-thumbnail prod-img-miniatura';
-                                                $alt = 'Imagen';
+                                                $alt = 'Imagen de ' . $producto['nombre'];
                                                 include __DIR__ . '/partials/imagen-producto.php';
                                                 ?>
                                             </td>
@@ -101,7 +101,8 @@ $productos = $controller->index();
                                             <td class="text-center <?= $producto['stock'] < $producto['stock_minimo'] ? 'text-danger font-weight-bold' : '' ?>">
                                                 <?= $producto['stock']; ?>
                                                 <?php if ($producto['stock'] < $producto['stock_minimo']): ?>
-                                                    <i class="fas fa-exclamation-triangle ml-1" title="Stock bajo"></i>
+                                                    <i class="fas fa-exclamation-triangle ml-1" title="Stock bajo" aria-hidden="true"></i>
+                                                    <span class="sr-only">Stock bajo</span>
                                                 <?php endif; ?>
                                             </td>
                                             <td class="text-center">
@@ -109,17 +110,20 @@ $productos = $controller->index();
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="<?= $URL; ?>views/productos/show.php?id=<?= $producto['idproducto']; ?>" class="btn btn-info btn-sm btn-touch">
-                                                        <i class="fas fa-eye"></i>
+                                                    <a href="<?= $URL; ?>views/productos/show.php?id=<?= $producto['idproducto']; ?>" class="btn btn-info btn-sm btn-touch"
+                                                        aria-label="Ver detalle de <?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>">
+                                                        <i class="fas fa-eye" aria-hidden="true"></i>
                                                     </a>
-                                                    <a href="<?= $URL; ?>views/productos/update.php?id=<?= $producto['idproducto']; ?>" class="btn btn-warning btn-sm btn-touch">
-                                                        <i class="fas fa-edit"></i>
+                                                    <a href="<?= $URL; ?>views/productos/update.php?id=<?= $producto['idproducto']; ?>" class="btn btn-warning btn-sm btn-touch"
+                                                        aria-label="Editar <?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>">
+                                                        <i class="fas fa-edit" aria-hidden="true"></i>
                                                     </a>
                                                     <button type="button" class="btn <?= $estado_ui['accion_clase']; ?> btn-sm btn-touch cambiar-estado-producto"
                                                         data-id="<?= $producto['idproducto']; ?>"
                                                         data-estado="<?= $estado_actual; ?>"
-                                                        data-nombre="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>">
-                                                        <i class="fas <?= $estado_ui['accion_icono']; ?>"></i>
+                                                        data-nombre="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>"
+                                                        aria-label="<?= htmlspecialchars($estado_ui['accion_label'], ENT_QUOTES); ?> <?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>">
+                                                        <i class="fas <?= $estado_ui['accion_icono']; ?>" aria-hidden="true"></i>
                                                     </button>
                                                 </div>
                                             </td>

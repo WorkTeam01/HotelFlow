@@ -72,7 +72,7 @@ include_once '../layouts/header.php';
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content productos-pagina">
     <div class="container-fluid">
         <div class="row">
             <!-- Columna izquierda - Imagen y datos básicos -->
@@ -83,7 +83,7 @@ include_once '../layouts/header.php';
                         <div class="text-center position-relative mb-4">
                             <?php
                             $clase_img = 'img-fluid rounded prod-img-perfil';
-                            $alt = 'Imagen del producto';
+                            $alt = 'Imagen de ' . $producto['nombre'];
                             include __DIR__ . '/partials/imagen-producto.php';
                             ?>
 
@@ -122,7 +122,8 @@ include_once '../layouts/header.php';
                                 <span class="float-right <?= $producto['stock'] < $producto['stock_minimo'] ? 'text-danger font-weight-bold' : ''; ?>">
                                     <?= $producto['stock']; ?> unidades
                                     <?php if ($producto['stock'] < $producto['stock_minimo']): ?>
-                                        <i class="fas fa-exclamation-triangle ml-1" title="Stock bajo"></i>
+                                        <i class="fas fa-exclamation-triangle ml-1" title="Stock bajo" aria-hidden="true"></i>
+                                        <span class="sr-only">Stock bajo</span>
                                     <?php endif; ?>
                                 </span>
                             </li>
@@ -135,11 +136,11 @@ include_once '../layouts/header.php';
                         </ul>
 
                         <div class="d-flex justify-content-between">
-                            <a href="<?= $URL; ?>views/productos/update.php?id=<?= $producto['idproducto']; ?>" class="btn btn-warning">
-                                <i class="fas fa-edit"></i> Editar
+                            <a href="<?= $URL; ?>views/productos/update.php?id=<?= $producto['idproducto']; ?>" class="btn btn-warning btn-touch">
+                                <i class="fas fa-edit" aria-hidden="true"></i> Editar
                             </a>
-                            <a href="<?= $URL; ?>views/productos/index.php" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Volver
+                            <a href="<?= $URL; ?>views/productos/index.php" class="btn btn-secondary btn-touch">
+                                <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
                             </a>
                         </div>
                     </div>
@@ -151,7 +152,7 @@ include_once '../layouts/header.php';
                         <h3 class="card-title"><i class="fas fa-cogs mr-2"></i>Acciones</h3>
                     </div>
                     <div class="card-body">
-                        <button type="button" class="btn btn-block <?= $estado_ui['accion_clase']; ?> cambiar-estado-producto" id="btnCambiarEstado"
+                        <button type="button" class="btn btn-block btn-touch <?= $estado_ui['accion_clase']; ?> cambiar-estado-producto" id="btnCambiarEstado"
                             data-id="<?= (int)$producto['idproducto']; ?>"
                             data-estado="<?= (int)$producto['estado']; ?>"
                             data-nombre="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES); ?>">

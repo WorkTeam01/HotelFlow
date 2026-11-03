@@ -57,10 +57,11 @@
         <h3 class="card-title">Estado de Inventario</h3>
     </div>
     <div class="card-body">
+        <?php $stock_barra = max(0, min(100, (int) $inventario['porcentaje'])); ?>
         <div class="progress">
-            <div class="progress-bar bg-<?= $inventario['barra']; ?>" role="progressbar"
-                aria-valuenow="<?= $inventario['porcentaje']; ?>" aria-valuemin="0" aria-valuemax="100"
-                style="width: <?= $inventario['porcentaje']; ?>%">
+            <div class="progress-bar prod-progress-bar bg-<?= $inventario['barra']; ?>" role="progressbar"
+                aria-valuenow="<?= $stock_barra; ?>" aria-valuemin="0" aria-valuemax="100"
+                style="--progress-width: <?= $stock_barra; ?>%">
                 <?= $inventario['porcentaje']; ?>%
             </div>
         </div>

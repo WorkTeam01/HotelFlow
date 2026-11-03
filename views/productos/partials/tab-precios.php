@@ -57,10 +57,11 @@
             </div>
         </div>
 
+        <?php $margen_barra = max(0, min(100, (int) $rentabilidad['margen'])); ?>
         <div class="progress">
-            <div class="progress-bar bg-success" role="progressbar"
-                aria-valuenow="<?= $rentabilidad['margen']; ?>" aria-valuemin="0" aria-valuemax="100"
-                style="width: <?= min(100, $rentabilidad['margen']); ?>%">
+            <div class="progress-bar prod-progress-bar bg-success" role="progressbar"
+                aria-valuenow="<?= $margen_barra; ?>" aria-valuemin="0" aria-valuemax="100"
+                style="--progress-width: <?= $margen_barra; ?>%">
                 <?= $rentabilidad['margen']; ?>%
             </div>
         </div>

@@ -44,3 +44,145 @@
     top: 0;
     right: 0;
 }
+
+/* --- Barras de progreso (tabs Inventario y Precios) ----------------------
+ * El ancho llega como custom property (--progress-width) desde cada partial,
+ * de modo que solo el valor dinámico queda en el HTML y la declaración
+ * width vive en CSS. El fallback 0% cubre un valor ausente.
+ */
+
+.prod-progress-bar {
+    width: var(--progress-width, 0%);
+}
+
+/* --- Contraste (AA) -------------------------------------------------------
+ * Todas las reglas quedan scopeadas a .productos-pagina (la <section class=
+ * "content"> de las cuatro vistas del módulo) para no filtrarse al layout.
+ * Patrón idéntico a servicios-bano.css/ventas.css.
+ */
+
+/* Badges de texto blanco: success (#28a745) da 3.13:1 y primary (#007bff)
+   3.98:1; sus variantes oscuras superan 5:1. El badge-info de la categoría
+   (update.php) va igual. */
+.productos-pagina .badge-success {
+    background-color: var(--color-success-dark);
+}
+
+.productos-pagina .badge-primary {
+    background-color: var(--color-primary-dark);
+}
+
+.productos-pagina .badge-info {
+    background-color: var(--color-info-dark);
+}
+
+/* Texto verde 3.13:1 y ámbar 1.63:1 sobre blanco (feedback JS de margen);
+   el gris de .text-muted da 4.48:1 sobre las filas rayadas de la tabla.
+   En la tabla de movimientos (filas rayadas) success-dark cae a 4.09:1 y
+   el rojo de BS5 a 4.04:1, por eso success/danger usan la variante darker,
+   que pasa 4.5:1 tanto sobre blanco como sobre la fila rayada.
+   BS5 marca estos con !important, por eso el override también lo lleva. */
+.productos-pagina .text-success {
+    color: var(--color-success-darker) !important;
+}
+
+.productos-pagina .text-danger {
+    color: var(--color-danger-dark) !important;
+}
+
+.productos-pagina .text-warning {
+    color: var(--color-warning-dark) !important;
+}
+
+.productos-pagina .text-muted {
+    color: var(--color-text-secondary) !important;
+}
+
+/* Acciones con texto blanco ≥4.5:1: success 3.13:1, info 3.04:1. */
+.productos-pagina .btn-success {
+    background-color: var(--color-success-dark);
+    border-color: var(--color-success-dark);
+}
+
+.productos-pagina .btn-info {
+    background-color: var(--color-info-dark);
+    border-color: var(--color-info-dark);
+}
+
+.productos-pagina .btn-success:hover,
+.productos-pagina .btn-success:focus {
+    background-color: var(--color-success-darker);
+    border-color: var(--color-success-darker);
+}
+
+.productos-pagina .btn-info:hover,
+.productos-pagina .btn-info:focus {
+    background-color: var(--color-info-darker);
+    border-color: var(--color-info-darker);
+}
+
+/* Cabecera de la tarjeta sólida "Acciones": título 16px blanco sobre
+   #17a2b8 da 3.04:1; el tono oscuro supera 5:1. */
+.productos-pagina .card-info:not(.card-outline) > .card-header {
+    background-color: var(--color-info-dark);
+    border-color: var(--color-info-dark);
+}
+
+/* Alerts sólidos de AdminLTE (blanco sobre success 3.13:1 e info 3.04:1).
+   warning (texto oscuro) y danger (4.53:1) pasan ya. */
+.productos-pagina .alert-success {
+    background-color: var(--color-success-dark);
+    border-color: var(--color-success-darker);
+}
+
+.productos-pagina .alert-info {
+    background-color: var(--color-info-dark);
+    border-color: var(--color-info-darker);
+}
+
+/* Cajas de statistic y barras de progreso con texto blanco a 16px o 12px:
+   los fondos success/info dan 3.13:1 y 3.04:1. Los fondos .bg-* llevan
+   !important en AdminLTE/BS5, por eso estos overrides también. El warning
+   de la barra se oscurece porque su texto es blanco (1.63:1 sobre #ffc107);
+   el danger (4.53:1) y el warning de las cajas (texto oscuro) pasan ya. */
+.productos-pagina .small-box.bg-success,
+.productos-pagina .info-box.bg-success,
+.productos-pagina .progress-bar.bg-success {
+    background-color: var(--color-success-dark) !important;
+}
+
+.productos-pagina .small-box.bg-info,
+.productos-pagina .info-box.bg-info,
+.productos-pagina .progress-bar.bg-info {
+    background-color: var(--color-info-dark) !important;
+}
+
+.productos-pagina .progress-bar.bg-warning {
+    background-color: var(--color-warning-dark) !important;
+}
+
+/* Icono del botón de herramienta: #adb5bd da 2.2:1 sobre blanco. */
+.productos-pagina .btn-tool {
+    color: var(--color-text-secondary);
+}
+
+/* --- Táctil / responsive -------------------------------------------------- */
+
+/* Campos de formulario con altura táctil ≥44px (los inputs no admiten el
+   pseudo-elemento de .btn-touch). El carrito en tabla queda fuera para no
+   inflar cada fila. Select2 y custom-file son los controles realmente
+   visibles (el <select> nativo queda oculto), de ahí que también. */
+.productos-pagina form .form-control:not(.form-control-sm),
+.productos-pagina form .input-group-text,
+.productos-pagina .select2-container .select2-selection--single,
+.productos-pagina .select2-container--default .select2-selection--single,
+.productos-pagina .custom-file-input,
+.productos-pagina .custom-file-label {
+    min-height: 44px;
+}
+
+/* El contorno de foco por teclado en los botones de herramienta */
+.productos-pagina .btn-tool:focus-visible {
+    outline: 2px solid var(--color-primary-dark);
+    outline-offset: 2px;
+}

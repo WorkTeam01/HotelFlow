@@ -75,7 +75,7 @@ include_once '../layouts/header.php';
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content productos-pagina">
     <div class="container-fluid">
         <div class="row">
             <!-- Columna del formulario (8/12) -->
@@ -199,7 +199,7 @@ include_once '../layouts/header.php';
                                                 value="<?= number_format($producto['precioventa'], 2, '.', ''); ?>" required>
                                         </div>
                                         <small class="form-text text-muted">Precio al que se vende el producto</small>
-                                        <div id="precio-feedback"></div>
+                                        <div id="precio-feedback" role="status" aria-live="polite"></div>
                                     </div>
                                 </div>
                             </div>
@@ -259,7 +259,7 @@ include_once '../layouts/header.php';
                                 </div>
                             </div>
 
-                            <div id="stock-validation-feedback"></div>
+                            <div id="stock-validation-feedback" role="status" aria-live="polite"></div>
                         </div>
                     </div>
 
@@ -310,18 +310,18 @@ include_once '../layouts/header.php';
                         <div class="card-footer">
                             <div class="row">
                                 <div class="col-12 col-sm-auto">
-                                    <button type="submit" class="btn btn-warning w-100 mb-2 mb-sm-0">
-                                        <i class="fas fa-save mr-2"></i> Actualizar Producto
+                                    <button type="submit" class="btn btn-warning btn-touch w-100 mb-2 mb-sm-0">
+                                        <i class="fas fa-save mr-2" aria-hidden="true"></i> Actualizar Producto
                                     </button>
                                 </div>
                                 <div class="col-12 col-sm-auto">
-                                    <a href="<?= $URL; ?>views/productos/show.php?id=<?= $producto['idproducto']; ?>" class="btn btn-info w-100 mb-2 mb-sm-0">
-                                        <i class="fas fa-eye mr-2"></i> Ver Detalles
+                                    <a href="<?= $URL; ?>views/productos/show.php?id=<?= $producto['idproducto']; ?>" class="btn btn-info btn-touch w-100 mb-2 mb-sm-0">
+                                        <i class="fas fa-eye mr-2" aria-hidden="true"></i> Ver Detalles
                                     </a>
                                 </div>
                                 <div class="col-12 col-sm-auto">
-                                    <a href="<?= $URL; ?>views/productos" class="btn btn-secondary w-100">
-                                        <i class="fas fa-times mr-2"></i> Cancelar
+                                    <a href="<?= $URL; ?>views/productos" class="btn btn-secondary btn-touch w-100">
+                                        <i class="fas fa-times mr-2" aria-hidden="true"></i> Cancelar
                                     </a>
                                 </div>
                             </div>
@@ -340,13 +340,13 @@ include_once '../layouts/header.php';
                     <div class="card-body text-center">
                         <?php
                         $clase_img = 'img-thumbnail prod-img-sm';
-                        $alt = 'Imagen actual del producto';
+                        $alt = 'Imagen actual de ' . $producto['nombre'];
                         include __DIR__ . '/partials/imagen-producto.php';
                         ?>
 
-                        <div id="preview-container" class="mt-3" style="display: none;">
+                        <div id="preview-container" class="mt-3" hidden>
                             <div class="small text-muted mb-1">Nueva imagen seleccionada</div>
-                            <img id="preview-image" src="#" alt="Vista previa de la nueva imagen"
+                            <img id="preview-image" alt="Vista previa de la nueva imagen"
                                 class="img-thumbnail prod-img-sm">
                         </div>
                     </div>

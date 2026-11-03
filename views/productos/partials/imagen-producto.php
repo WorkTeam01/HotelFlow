@@ -14,4 +14,4 @@ $src_imagen = !empty($producto['imagen'])
     ? $URL . 'public/uploads/productos/' . $producto['imagen']
     : $URL . 'public/uploads/productos/producto_default.png';
 ?>
-<img src="<?= $src_imagen; ?>" alt="<?= htmlspecialchars($alt); ?>" class="<?= $clase_img; ?>" loading="lazy">
+<img src="<?= $src_imagen; ?>" alt="<?= htmlspecialchars($alt); ?>" class="<?= $clase_img; ?>" loading="lazy" decoding="async">
