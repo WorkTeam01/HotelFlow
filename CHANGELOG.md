@@ -5,6 +5,29 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.8.2] - 2026-11-02
+
+Auditoría de frontend de `productos` (17/20 → 20/20): accesibilidad, contraste AA, áreas táctiles y performance. Sin cambios de esquema.
+
+### Changed
+
+- El contraste AA del módulo se aplica con overrides scopeados a `.productos-pagina` (la `<section class="content">` de las cuatro vistas), solo con tokens de `tokens.css`, siguiendo el patrón de `ventas`/`servicios-bano`.
+- La previsualización de la imagen usa `URL.createObjectURL` (y `revokeObjectURL` al reemplazarla) en vez de `FileReader`/base64.
+- Restaurar la pestaña activa del detalle valida el id contra las pestañas reales antes de usarlo como selector.
+- Las imágenes del producto se sirven con `decoding="async"` y `alt` descriptivo con el nombre del producto.
+- Áreas táctiles ≥44px: `btn-touch` en las acciones de las cuatro vistas y `min-height: 44px` en campos de formulario, Select2 y `custom-file`.
+
+### Fixed
+
+- Pares texto/fondo por debajo de 4.5:1 o 3:1 en badges, botones success/info, alerts sólidos, `small-box`/`info-box`/barras de progreso, textos success/danger/warning/muted, cabecera «Acciones» e icono `.btn-tool`.
+- Botones de solo icono del listado sin nombre accesible y botón de colapso de la tarjeta sin etiqueta.
+- El aviso de «Stock bajo» era solo un icono con `title`; ahora lleva `aria-hidden` y texto para lectores de pantalla.
+- Los mensajes de validación de precio y stock no se anunciaban a lectores de pantalla (`role="status"`).
+- El contenedor de la previsualización usaba `style="display: none"` en vez de `hidden`, y la imagen tenía `src="#"`.
+- Los errores de validación (precio, stock, categoría) mostraban el botón de confirmación en azul en lugar de rojo.
+- `aria-valuenow` de las barras de progreso podía quedar fuera del rango 0–100; el ancho pasó de inline a la custom property `--progress-width`.
+- `show-producto.js` inicializaba tooltips que ninguna vista del módulo declaraba.
+
 ## [1.8.1] - 2026-10-26
 
 Auditoría de frontend de `ventas` (13/20 → 20/20) y refactor de la pantalla de nueva venta. Sin cambios de esquema.
@@ -716,6 +739,7 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.8.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.8.1...1.8.2
 [1.8.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.8.0...1.8.1
 [1.8.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.7.2...1.8.0
 [1.7.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.7.1...1.7.2
