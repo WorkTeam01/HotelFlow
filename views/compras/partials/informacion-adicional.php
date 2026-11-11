@@ -12,7 +12,7 @@ $tieneObservaciones = !empty($compra['observaciones']);
 ?>
 <div class="card card-primary card-outline">
     <div class="card-header">
-        <h3 class="card-title">Información adicional</h3>
+        <h2 class="card-title">Información adicional</h2>
     </div>
     <div class="card-body">
         <?php if ($tieneObservaciones) : ?>

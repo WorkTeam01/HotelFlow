@@ -16,7 +16,9 @@
             <div class="info-box-content">
                 <span class="info-box-text">Pendientes por recibir</span>
                 <span class="info-box-number"><?= (int) $estadisticas['pendientes']; ?></span>
-                <small class="text-muted"><?= number_format($estadisticas['monto_pendiente'], 2); ?> Bs.</small>
+                <?php if ((float) $estadisticas['monto_pendiente'] > 0) : ?>
+                    <small class="text-muted"><?= number_format($estadisticas['monto_pendiente'], 2); ?> Bs.</small>
+                <?php endif; ?>
             </div>
         </div>
     </div>

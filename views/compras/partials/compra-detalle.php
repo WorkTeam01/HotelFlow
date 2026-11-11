@@ -10,7 +10,7 @@
 ?>
 <div class="card card-outline card-primary">
     <div class="card-header">
-        <h3 class="card-title mb-0">Detalle de productos</h3>
+        <h2 class="card-title mb-0">Detalle de productos</h2>
         <div class="card-tools">
             <button type="button" class="btn btn-touch btn-sm btn-primary" id="btn-abrir-modal-productos" data-toggle="modal" data-target="#modal-productos">
                 <i class="fas fa-plus" aria-hidden="true"></i> Agregar producto

@@ -13,7 +13,7 @@
 ?>
 <div class="card card-outline card-primary">
     <div class="card-header">
-        <h3 class="card-title mb-0">Datos de la compra</h3>
+        <h2 class="card-title mb-0">Datos de la compra</h2>
     </div>
     <div class="card-body">
         <div class="form-group">

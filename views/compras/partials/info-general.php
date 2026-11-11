@@ -14,13 +14,13 @@ $estadoUi = $compra['estado_ui'];
 ?>
 <div class="card card-primary card-outline">
     <div class="card-header">
-        <h3 class="card-title">Información general</h3>
+        <h2 class="card-title">Información general</h2>
     </div>
     <div class="card-body box-profile">
         <div class="text-center mb-3">
-            <h3 class="mb-0 comp-total font-weight-bold">
+            <div class="h3 mb-0 comp-total font-weight-bold">
                 <?= number_format($compra['totalcompra'], 2); ?> Bs.
-            </h3>
+            </div>
             <p class="text-muted mb-0">Total de la compra</p>
         </div>
 

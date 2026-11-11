@@ -57,7 +57,7 @@ $estadisticas = $controller->getEstadisticas($idFiltro);
             <div class="col-12">
                 <div class="card">
                     <div class="card-header card-outline card-primary">
-                        <h3 class="card-title">Historial de Compras</h3>
+                        <h2 class="card-title">Historial de Compras</h2>
                         <div class="card-tools">
                             <a href="<?= $URL; ?>views/compras/create.php" class="btn btn-touch btn-primary btn-sm">
                                 <i class="fas fa-plus" aria-hidden="true"></i> Nueva Compra

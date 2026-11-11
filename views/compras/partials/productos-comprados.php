@@ -10,7 +10,7 @@
 ?>
 <div class="card card-primary card-outline">
     <div class="card-header">
-        <h3 class="card-title">Productos comprados</h3>
+        <h2 class="card-title">Productos comprados</h2>
         <div class="card-tools">
             <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer productos comprados">
                 <i class="fas fa-minus" aria-hidden="true"></i>
