@@ -5,6 +5,48 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.8.3] - 2026-11-11
+
+Refactor del frontend de `compras` tomando como referencia `ventas`. Sin cambios de esquema.
+
+### Added
+
+- Indicadores en el listado: pendientes por recibir (con su monto), invertido en el mes, compras del mes y producto más repuesto. Un no-administrador solo cuenta sus compras.
+- Selector de productos en un modal con búsqueda por nombre o código y aviso de «Bajo mínimo»; Enter con un código exacto agrega el producto directo.
+- El enlace «Comprar» del dashboard precarga el producto en el formulario (`?producto=ID`).
+- `CompraController::estadoCompra()`/`estadosCompra()`/`decorarEstados()`/`accionesEstado()`/`codigoCompra()`/`datosParaCrear()`/`calcularDesglose()`/`getEstadisticas()`, y `Compra::TRANSICIONES`/`transicionPermitida()`.
+- Un administrador puede cancelar una compra ya completada desde la interfaz (el stock se resta si alcanza).
+- Captura de compras en el README.
+
+### Changed
+
+- El estado de la compra sale de un helper único en lugar de un `switch` repetido en el listado y el detalle; los badges de texto blanco usan tonos oscuros con contraste ≥4.5:1.
+- El formulario de nueva compra se divide en partials (`compra-cabecera`, `compra-detalle`, `compra-resumen`, `modal-productos`) y tres módulos JS (`compra-selector`, `compra-detalle`, `create-compras`) con eventos delegados, filas desde `<template>` e importes en centavos enteros; en móvil las líneas se apilan como tarjetas.
+- El detalle se divide en `info-general`, `productos-comprados` e `informacion-adicional`; el subtotal y el total salen del controlador.
+- El catálogo del formulario solo incluye productos activos con `idproducto`, `nombre`, `codigo`, `preciocompra`, `stock` y `stock_minimo`; ya no expone el precio de venta ni se filtra por stock.
+- El servidor calcula el total de la compra desde las líneas y redondea el precio unitario a 2 decimales; ya no lo exige ni lo lee del formulario.
+- `completar()` y `cancelar()` bloquean la compra y luego los productos en orden ascendente; `completar()` verifica que cada producto exista.
+- El listado ordena por fecha descendente, quita la columna «Nro» y corrige el formato del Total en la exportación a Excel.
+- Los controles de DataTables (selector de filas, búsqueda y Reportes) vuelven a la altura estándar de Bootstrap en todos los listados; el paginador conserva el área táctil de 44px.
+- Los movimientos de stock de un producto solo cuentan las compras completadas.
+- Los enlaces de las migas de pan tienen área táctil de 44px de alto en todos los módulos, sin cambiar su tamaño visual.
+- Los títulos de tarjeta de `compras` son `h2` (antes `h3`) para no saltar niveles de encabezado, y el total del detalle deja de ser un encabezado.
+- El indicador «Pendientes por recibir» oculta el monto cuando es cero.
+
+### Fixed
+
+- El cambio de estado de una compra viajaba por GET con el `csrf_token` en la URL; ahora es POST con el token en el cuerpo.
+- El aviso de cancelar una compra pendiente decía que se revertía el stock, y una pendiente nunca lo había sumado.
+- Los botones de completar y cancelar del listado quedaban ocultos tras el `+` del DataTable a 390px.
+- Botones de solo icono sin nombre accesible, badges por debajo de 4.5:1 y una hoja de estilos que redefinía `.is-invalid`/`.invalid-feedback` de Bootstrap.
+- Una compra se rechazaba si el total enviado por el cliente llegaba vacío aunque las líneas fueran válidas.
+- Un producto inactivo, inexistente o repetido en el detalle ya no se acepta al registrar la compra.
+- Un doble envío del formulario podía registrar la compra dos veces.
+
+### Removed
+
+- `show-compras.js`, `create-compras.css` y los métodos de filtro sin uso de `CompraController`/`Compra` (`obtenerPorRangoFechas`, `obtenerPorEstado`, `getPorRangoFechas`, `getPorEstado`).
+
 ## [1.8.2] - 2026-11-02
 
 Auditoría de frontend de `productos` (17/20 → 20/20): accesibilidad, contraste AA, áreas táctiles y performance. Sin cambios de esquema.
@@ -739,6 +781,7 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.8.3]: https://github.com/WorkTeam01/HotelFlow/compare/1.8.2...1.8.3
 [1.8.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.8.1...1.8.2
 [1.8.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.8.0...1.8.1
 [1.8.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.7.2...1.8.0

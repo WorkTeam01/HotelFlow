@@ -4,7 +4,7 @@
 
 **Sistema integral para la administración de establecimientos hoteleros**
 
-[![Versión](https://img.shields.io/badge/Versión-1.8.2-blue?style=flat-square)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/Versión-1.8.3-blue?style=flat-square)](CHANGELOG.md)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.4+-003545?style=flat-square&logo=mariadb&logoColor=white)](https://mariadb.org)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-4-7952B3?style=flat-square&logo=bootstrap&logoColor=white)](https://getbootstrap.com)
@@ -64,6 +64,14 @@ Panel único con tabs Hoy / Mapa de habitaciones / Historial y KPIs del día.
 Registro de ventas en dos columnas con catálogo por modales, pago único o mixto (la tarjeta de pago pasa a verde o rojo según el cobro esté completo), control de stock y recibo térmico PDF.
 
 ![Ventas](public/img/screenshots/ventas.png)
+
+---
+
+### Compras
+
+Historial con indicadores (pendientes por recibir, invertido y compras del mes, producto más repuesto), cambio de estado desde el listado y el detalle, y nueva compra con selector de productos por nombre o código.
+
+![Compras](public/img/screenshots/compras.png)
 
 ## Características
 
@@ -209,7 +217,7 @@ HotelFlow/
 - Punto de venta en dos columnas (carrito + sidebar de cliente/totales/acciones) con catálogo de productos y clientes por modales
 - Pago único o mixto (Efectivo / QR / Otros) con folio de cobro auditable y recibo térmico PDF
 - Control de stock automático (se revierte al anular)
-- Gestión de compras: el stock entra al inventario al completarlas (una compra pendiente no lo modifica)
+- Gestión de compras con indicadores en el listado, selector de productos por nombre o código (o lector de código de barras) y cambio de estado desde el listado y el detalle: el stock entra al inventario al completarlas y solo el Administrador completa o cancela (una compra pendiente no lo modifica)
 - Reportes exportables desde el listado (PDF, Excel, CSV, imprimir)
 
 ### Roles y Permisos

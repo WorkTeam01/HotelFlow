@@ -75,6 +75,7 @@ _______________
 - Recepcion: transiciones de estado solo via Recepcion::cambiarEstado() y checkout() atomico; existeSolape() en alta y cambio de habitacion; PDO sin emulacion: nunca repetir un parametro nombrado en la misma consulta (HY093)
 - Servicio de baño = ledger `pagos.idservicio_bano` (cache inmutable en `servicio_bano`, solo `observaciones` editable); alta/cancelacion/finalizacion solo por ServicioBano::registrar/cancelar/finalizar con orden de lock recepcion → bano → servicio_bano → productos; contado o folio (el Dashboard cuenta solo contado); estado de ServicioBanoController::estadoServicio / estadoDerivado (`excedido` derivado, BANO_MINUTOS_ALERTA; 0 = sin alerta); ocupacion por `bano_en_uso` + UNIQUE; cambio de estado por POST dual con cambiar-estado-servicios-bano.js; nunca incluir `bano_en_uso` en INSERT/UPDATE
 - Compras/baño/equipaje: idusuario de la sesion, montos desde precios reales en BD, estados validados contra el valor actual (Compra::completar/cancelar con FOR UPDATE); stock de producto solo por movimientos; el stock de una compra entra en completar(), no en crear() (cancelar solo revierte una completada)
+- Compras: el estado sale de CompraController::estadoCompra / estadosCompra / decorarEstados / accionesEstado y Compra::TRANSICIONES (ninguna vista escribe un switch ni un badge de estado); completar/cancelar es un flujo unico (cambiar-estado-compras.js, .cambiar-estado-compra) por POST + CSRF en el body, solo Administrador, a cambiar_estado_compra.php; orden de bloqueo compra → productos por idproducto ascendente; el total de una compra lo calcula Compra::crear() en centavos desde las lineas (el POST no manda totalcompra) y el catalogo de create sale de CompraController::datosParaCrear() (sin precio de venta, sin filtrar por stock); create usa partials compra-* y los modulos compra-selector/compra-detalle/create-compras sobre ventas/venta-util, con el estado inicial en un select2
 - Reportes de DataTables: helper initDataTable() de public/js/core/datatable-utils.js (orientacion del PDF en el boton pdf, no en la collection); no copiar el bloque de botones/idioma en un modulo nuevo
 - Resaltado de sidebar en subpaginas de una seccion: sidebarEnSeccion() (match por prefijo), no sidebarEsActivo() (match exacto)
 
@@ -291,5 +292,5 @@ Preparar el proyecto para publicacion open source:
 
 ---
 
-_Ultima actualizacion: 2026-10-20_
+_Ultima actualizacion: 2026-11-11_
 _Mantener sincronizado con CLAUDE.md cuando cambie arquitectura o flujo._
