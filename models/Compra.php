@@ -256,8 +256,26 @@ class Compra
     }
 
     /**
+     * Líneas de una compra ordenadas por producto. Bloquear los productos siempre en el
+     * mismo orden evita el deadlock entre dos compras concurrentes que comparten productos.
+     *
+     * @param int $id ID de la compra
+     * @return array
+     */
+    private function detallesOrdenados($id)
+    {
+        $stmt = $this->conexion->prepare(
+            "SELECT idproducto, cantidad FROM {$this->tablaDetalle} WHERE idcompra = :id ORDER BY idproducto ASC"
+        );
+        $stmt->bindValue(':id', (int) $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Marca una compra como completada, solo si sigue pendiente (bloquea la fila para
-     * que una cancelación concurrente no sea sobrescrita).
+     * que una cancelación concurrente no sea sobrescrita). Orden de bloqueo:
+     * compra → productos (por id ascendente).
      *
      * @param int $id ID de la compra
      * @return bool
@@ -272,21 +290,27 @@ class Compra
             $stmtLock->execute();
             $estadoActual = $stmtLock->fetchColumn();
 
-            if ($estadoActual !== 'pendiente') {
+            if ($estadoActual === false || !self::transicionPermitida($estadoActual, 'completada')) {
                 $this->conexion->rollBack();
                 $this->lastError = 'Solo se puede completar una compra pendiente.';
                 return false;
             }
 
             // Recepción de la mercadería: aquí entra al inventario
-            $compra = $this->getById($id);
-            foreach ($compra['detalles'] as $detalle) {
+            $stmtProducto = $this->conexion->prepare("SELECT idproducto FROM productos WHERE idproducto = :id FOR UPDATE");
+            foreach ($this->detallesOrdenados($id) as $detalle) {
+                $stmtProducto->bindValue(':id', (int) $detalle['idproducto'], PDO::PARAM_INT);
+                $stmtProducto->execute();
+                if ($stmtProducto->fetchColumn() === false) {
+                    $this->conexion->rollBack();
+                    $this->lastError = 'No se puede completar: uno de los productos de la compra ya no existe.';
+                    return false;
+                }
                 $this->actualizarStockProducto($detalle['idproducto'], $detalle['cantidad']);
             }
 
             if (!$this->actualizarEstado($id, 'completada')) {
-                $this->conexion->rollBack();
-                return false;
+                throw new PDOException("Error al actualizar el estado de la compra");
             }
 
             $this->conexion->commit();
@@ -302,8 +326,9 @@ class Compra
     }
 
     /**
-     * Cancela una compra; si estaba completada, revierte el stock de productos
-     * 
+     * Cancela una compra; si estaba completada, revierte el stock de productos.
+     * Orden de bloqueo: compra → productos (por id ascendente).
+     *
      * @param int $id ID de la compra
      * @return bool True si se canceló correctamente, False en caso contrario
      */
@@ -318,19 +343,16 @@ class Compra
             $stmtLock->execute();
             $estadoActual = $stmtLock->fetchColumn();
 
-            if ($estadoActual === false || $estadoActual == 'cancelada') {
+            if ($estadoActual === false || !self::transicionPermitida($estadoActual, 'cancelada')) {
                 $this->conexion->rollBack();
                 $this->lastError = 'La compra no existe o ya está cancelada.';
                 return false;
             }
 
-            // Obtener los detalles de la compra
-            $compra = $this->getById($id);
-
             // Solo una compra completada movió el inventario; cancelar una pendiente no lo toca.
             // Se bloquea la fila del producto para no dejarlo negativo si esas unidades ya se vendieron
             $stmtStock = $this->conexion->prepare("SELECT nombre, stock FROM productos WHERE idproducto = :id FOR UPDATE");
-            $detallesRevertir = $estadoActual === 'completada' ? $compra['detalles'] : [];
+            $detallesRevertir = $estadoActual === 'completada' ? $this->detallesOrdenados($id) : [];
             foreach ($detallesRevertir as $detalle) {
                 $stmtStock->bindValue(':id', (int)$detalle['idproducto'], PDO::PARAM_INT);
                 $stmtStock->execute();
@@ -351,7 +373,9 @@ class Compra
             $this->conexion->commit();
             return true;
         } catch (PDOException $e) {
-            $this->conexion->rollBack();
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;

@@ -21,7 +21,7 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
 $skip_select2 = true;
 $skip_chartjs = true;
 $module_styles = ['compras/compras'];
-$module_scripts = ['compras/index-compras'];
+$module_scripts = ['compras/index-compras', 'compras/cambiar-estado-compras'];
 include_once '../layouts/header.php';
 
 $controller = new CompraController();
@@ -97,25 +97,16 @@ $compras = $controller->index($esAdmin ? null : $idusuario);
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="<?= $URL; ?>views/compras/show.php?id=<?= $compra['idcompra']; ?>" class="btn btn-touch btn-info btn-sm">
+                                                    <a href="<?= $URL; ?>views/compras/show.php?id=<?= (int) $compra['idcompra']; ?>" class="btn btn-touch btn-info btn-sm"
+                                                        aria-label="Ver detalle de <?= $codigoCompra; ?>" title="Ver detalle" data-toggle="tooltip">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
 
-                                                    <?php if ($estado_actual == 'pendiente' && $esAdmin): ?>
-                                                        <button type="button" class="btn btn-touch btn-success btn-sm btn-cambiar-estado"
-                                                            data-id="<?= $compra['idcompra']; ?>"
-                                                            data-accion="completar"
-                                                            data-titulo="<?= $codigoCompra; ?>">
-                                                            <i class="fas fa-check"></i>
-                                                        </button>
-
-                                                        <button type="button" class="btn btn-touch btn-danger btn-sm btn-cambiar-estado"
-                                                            data-id="<?= $compra['idcompra']; ?>"
-                                                            data-accion="cancelar"
-                                                            data-titulo="<?= $codigoCompra; ?>">
-                                                            <i class="fas fa-times"></i>
-                                                        </button>
-                                                    <?php endif; ?>
+                                                    <?php
+                                                    $acciones = CompraController::accionesEstado($estado_actual, $esAdmin);
+                                                    $variante = 'fila';
+                                                    include __DIR__ . '/partials/acciones-estado.php';
+                                                    ?>
                                                 </div>
                                             </td>
                                         </tr>

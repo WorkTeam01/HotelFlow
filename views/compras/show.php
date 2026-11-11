@@ -49,7 +49,7 @@ if (!$authService->esAdministrador($idusuario) && $compra['idusuario'] != $idusu
 $skip_select2 = true;
 $skip_chartjs = true;
 $module_styles = ['compras/compras'];
-$module_scripts = ['compras/show-compras'];
+$module_scripts = ['compras/cambiar-estado-compras'];
 include_once '../layouts/header.php';
 
 $estadoUi = $compra['estado_ui'];
@@ -116,19 +116,14 @@ $estadoUi = $compra['estado_ui'];
                             </li>
                         </ul>
 
-                        <div class="d-flex justify-content-between">
-                            <?php if ($compra['estado'] == 'pendiente' && $authService->esAdministrador($idusuario)): ?>
-                                <button class="btn btn-success btn-completar" data-id="<?= $compra['idcompra']; ?>">
-                                    <i class="fas fa-check"></i> Completar
-                                </button>
-                                <button class="btn btn-danger btn-cancelar" data-id="<?= $compra['idcompra']; ?>">
-                                    <i class="fas fa-times"></i> Cancelar
-                                </button>
-                            <?php endif; ?>
-                            <a href="<?= $URL; ?>views/compras/index.php" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Volver
-                            </a>
-                        </div>
+                        <?php
+                        $acciones = CompraController::accionesEstado($compra['estado'], $authService->esAdministrador($idusuario));
+                        $variante = 'detalle';
+                        include __DIR__ . '/partials/acciones-estado.php';
+                        ?>
+                        <a href="<?= $URL; ?>views/compras/index.php" class="btn btn-touch btn-secondary btn-block">
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
+                        </a>
                     </div>
                 </div>
 

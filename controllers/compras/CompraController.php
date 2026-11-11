@@ -245,12 +245,33 @@ class CompraController
     }
 
     /**
+     * Cambia el estado de una compra. El destino se valida contra una lista blanca y la
+     * transición contra el estado bloqueado en BD (dentro del modelo), nunca contra un
+     * estado enviado por el cliente.
+     *
+     * @param int    $id          ID de la compra
+     * @param string $nuevoEstado completada | cancelada
+     * @return array ['success','message','icon']
+     */
+    public function cambiarEstado(int $id, string $nuevoEstado): array
+    {
+        switch ($nuevoEstado) {
+            case 'completada':
+                return $this->completar($id);
+            case 'cancelada':
+                return $this->cancelar($id);
+            default:
+                return ['success' => false, 'message' => 'Estado de destino no válido.', 'icon' => 'error'];
+        }
+    }
+
+    /**
      * Cancela una compra
      * 
      * @param int $id ID de la compra
      * @return array Resultado de la operación
      */
-    public function cancelar($id = null)
+    private function cancelar($id = null)
     {
         if (!$id) {
             return ['success' => false, 'message' => 'ID de compra no válido', 'icon' => 'error'];
@@ -269,7 +290,7 @@ class CompraController
      * @param int $id ID de la compra
      * @return array Resultado de la operación
      */
-    public function completar($id = null)
+    private function completar($id = null)
     {
         if (!$id) {
             return ['success' => false, 'message' => 'ID de compra no válido', 'icon' => 'error'];

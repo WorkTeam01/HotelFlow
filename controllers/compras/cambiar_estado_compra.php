@@ -3,56 +3,59 @@ require_once __DIR__ . '/../../views/layouts/session.php';
 require_once __DIR__ . '/CompraController.php';
 require_once __DIR__ . '/../../services/AuthorizationService.php';
 
-// Verificar si el usuario está autenticado
 requireLogin();
 
-// Verificar permisos
-$idusuario_sesion = $_SESSION['usuario_id'];
-$auth = new AuthorizationService();
+// Contrato dual: JSON si llega con X-Requested-With, redirect + mensaje de sesión si no.
+$esAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
-if (!$auth->esAdministrador($idusuario_sesion)) {
-    $_SESSION['mensaje'] = 'Solo un administrador puede completar o cancelar una compra.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL . 'views/compras/index.php');
-    exit;
-}
-
-// Instanciar el controlador de compras
-$controller = new CompraController();
-
-$id_compra = null;
-$accion = null;
-
-// Validar método GET, parámetros y token CSRF
-if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id']) && isset($_GET['accion']) && isset($_GET['csrf_token']) && verifyCSRFToken($_GET['csrf_token'])) {
-    // Filtrar y validar los parámetros
-    $id_compra = filter_var($_GET['id'], FILTER_VALIDATE_INT);
-    $accion = (string) $_GET['accion'];
-
-    // Verificar si los parámetros son válidos
-    if ($id_compra === false || !in_array($accion, ['completar', 'cancelar'])) {
-        $_SESSION['mensaje'] = 'Parámetros inválidos.';
-        $_SESSION['icono'] = 'error';
-        header('Location: ' . $URL . 'views/compras/index.php');
+$responder = function (bool $success, string $mensaje, string $icono = 'error', ?int $id = null) use ($esAjax, $URL) {
+    if ($esAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $success, 'message' => $mensaje]);
         exit;
     }
 
-    // Ejecutar la acción correspondiente
-    if ($accion === 'completar') {
-        $resultado = $controller->completar($id_compra);
+    $_SESSION['mensaje'] = $mensaje;
+    $_SESSION['icono'] = $icono;
+
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    if ($referer !== '' && str_starts_with($referer, $URL)) {
+        header('Location: ' . $referer);
+    } elseif ($id) {
+        header('Location: ' . $URL . 'views/compras/show.php?id=' . $id);
     } else {
-        $resultado = $controller->cancelar($id_compra);
+        header('Location: ' . $URL . 'views/compras/index.php');
     }
-    
-    // Guardar mensaje en sesión
-    $_SESSION['mensaje'] = $resultado['message'];
-    $_SESSION['icono'] = $resultado['icon'];
-} else {
-    // Acceso no permitido
-    $_SESSION['mensaje'] = 'Acción no permitida.';
-    $_SESSION['icono'] = 'warning';
+    exit;
+};
+
+$idusuario_sesion = $_SESSION['usuario_id'];
+$auth = new AuthorizationService();
+
+if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($idusuario_sesion, 'compras')) {
+    $responder(false, 'No tiene permisos para realizar esta acción.');
 }
 
-// Redirigir al listado de compras
-header('Location: ' . $URL . 'views/compras/index.php');
-exit;
+// Completar o cancelar mueve inventario: solo el Administrador
+if (!$auth->esAdministrador($idusuario_sesion)) {
+    $responder(false, 'Solo un administrador puede completar o cancelar una compra.');
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $responder(false, 'Método no permitido.');
+}
+
+if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+    $responder(false, 'Token de seguridad inválido. Recargue la página e intente nuevamente.');
+}
+
+$id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
+$nuevo_estado = isset($_POST['nuevo_estado']) ? trim($_POST['nuevo_estado']) : '';
+
+if (!$id || !in_array($nuevo_estado, ['completada', 'cancelada'], true)) {
+    $responder(false, 'Datos inválidos para cambiar el estado de la compra.');
+}
+
+$resultado = (new CompraController())->cambiarEstado($id, $nuevo_estado);
+
+$responder($resultado['success'], $resultado['message'], $resultado['icon'], $id);
