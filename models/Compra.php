@@ -14,6 +14,25 @@ require_once __DIR__ . '/../config/conexion.php';
 class Compra
 {
     /**
+     * Cambios de estado permitidos. Fuente única que leen el controlador (acciones
+     * ofrecidas) y el endpoint de cambio de estado.
+     */
+    public const TRANSICIONES = [
+        'pendiente'  => ['completada', 'cancelada'],
+        'completada' => ['cancelada'],
+        'cancelada'  => [],
+    ];
+
+    /**
+     * @param string $actual Estado leído de la compra
+     * @param string $nuevo  Estado al que se quiere pasar
+     */
+    public static function transicionPermitida(string $actual, string $nuevo): bool
+    {
+        return in_array($nuevo, self::TRANSICIONES[$actual] ?? [], true);
+    }
+
+    /**
      * Conexión a la base de datos
      * @var PDO
      */
@@ -85,7 +104,7 @@ class Compra
             $query = "SELECT c.*, u.nombre as usuario_nombre 
                       FROM {$this->tabla} c
                       JOIN usuarios u ON c.idusuario = u.idusuario
-                      ORDER BY c.idcompra";
+                      ORDER BY c.fechacompra DESC, c.idcompra DESC";
             $stmt = $this->conexion->prepare($query);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -361,58 +380,6 @@ class Compra
     }
 
     /**
-     * Obtiene las compras por rango de fechas
-     * 
-     * @param string $fechaInicio Fecha de inicio (formato YYYY-MM-DD)
-     * @param string $fechaFin Fecha de fin (formato YYYY-MM-DD)
-     * @return array Lista de compras en el rango de fechas
-     */
-    public function getPorRangoFechas($fechaInicio, $fechaFin)
-    {
-        try {
-            $query = "SELECT c.*, u.nombre as usuario_nombre 
-                      FROM {$this->tabla} c
-                      JOIN usuarios u ON c.idusuario = u.idusuario
-                      WHERE c.fechacompra BETWEEN :fechaInicio AND :fechaFin
-                      ORDER BY c.fechacompra DESC";
-            $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':fechaInicio', $fechaInicio, PDO::PARAM_STR);
-            $stmt->bindParam(':fechaFin', $fechaFin, PDO::PARAM_STR);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log('[' . static::class . '] ' . $e->getMessage());
-            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            return [];
-        }
-    }
-
-    /**
-     * Obtiene las compras por estado
-     * 
-     * @param string $estado Estado de las compras a buscar
-     * @return array Lista de compras con el estado especificado
-     */
-    public function getPorEstado($estado)
-    {
-        try {
-            $query = "SELECT c.*, u.nombre as usuario_nombre 
-                      FROM {$this->tabla} c
-                      JOIN usuarios u ON c.idusuario = u.idusuario
-                      WHERE c.estado = :estado
-                      ORDER BY c.fechacompra DESC";
-            $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':estado', $estado, PDO::PARAM_STR);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log('[' . static::class . '] ' . $e->getMessage());
-            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
-            return [];
-        }
-    }
-
-    /**
      * Obtiene las compras de un usuario específico
      * 
      * @param int $idUsuario ID del usuario
@@ -425,7 +392,7 @@ class Compra
                       FROM {$this->tabla} c
                       JOIN usuarios u ON c.idusuario = u.idusuario
                       WHERE c.idusuario = :idUsuario
-                      ORDER BY c.fechacompra DESC";
+                      ORDER BY c.fechacompra DESC, c.idcompra DESC";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':idUsuario', $idUsuario, PDO::PARAM_INT);
             $stmt->execute();

@@ -48,31 +48,19 @@ if (!$authService->esAdministrador($idusuario) && $compra['idusuario'] != $idusu
 // Incluir el encabezado
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_styles = ['compras/compras'];
 $module_scripts = ['compras/show-compras'];
 include_once '../layouts/header.php';
 
-// Determinar clase CSS según estado
-switch ($compra['estado']) {
-    case 'pendiente':
-        $estado_clase = 'warning';
-        break;
-    case 'completada':
-        $estado_clase = 'success';
-        break;
-    case 'cancelada':
-        $estado_clase = 'danger';
-        break;
-    default:
-        $estado_clase = 'secondary';
-}
+$estadoUi = $compra['estado_ui'];
 ?>
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-sm-6">
-                <h1>Detalle de Compra #<?= str_pad($compra['idcompra'], 6, '0', STR_PAD_LEFT); ?></h1>
+                <h1>Detalle de Compra <?= $compra['codigo']; ?></h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
@@ -86,26 +74,26 @@ switch ($compra['estado']) {
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content compras-pagina">
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-4">
                 <!-- Tarjeta de información básica -->
                 <div class="card card-primary card-outline">
                     <div class="card-body box-profile">
-                        <div class="text-center mb-3">
-                            <i class="fas fa-shopping-cart fa-5x text-<?= $estado_clase; ?>"></i>
-                        </div>
-
                         <h3 class="profile-username text-center">
-                            Compra #<?= str_pad($compra['idcompra'], 6, '0', STR_PAD_LEFT); ?>
+                            Compra <?= $compra['codigo']; ?>
                         </h3>
 
-                        <p class="text-muted text-center">
-                            <span class="badge badge-<?= $estado_clase; ?>">
-                                <?= ucfirst($compra['estado']); ?>
+                        <p class="text-center">
+                            <span class="badge <?= $estadoUi['badge']; ?>" role="status">
+                                <i class="fas <?= $estadoUi['icono']; ?>" aria-hidden="true"></i>
+                                <?= $estadoUi['label']; ?>
                             </span>
                         </p>
+                        <?php if ($estadoUi['alerta'] !== '') : ?>
+                            <p class="text-muted text-center small"><?= htmlspecialchars($estadoUi['alerta']); ?></p>
+                        <?php endif; ?>
 
                         <ul class="list-group list-group-unbordered mb-3">
                             <li class="list-group-item">
@@ -184,7 +172,7 @@ switch ($compra['estado']) {
                                             <td><?= htmlspecialchars($detalle['producto_codigo'] ?? 'N/A'); ?></td>
                                             <td class="text-right"><?= $detalle['cantidad']; ?></td>
                                             <td class="text-right"><?= number_format($detalle['preciocompra'], 2); ?></td>
-                                            <td class="text-right"><?= number_format($detalle['cantidad'] * $detalle['preciocompra'], 2); ?></td>
+                                            <td class="text-right"><?= number_format($detalle['subtotal'], 2); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                     <tr class="table-active">

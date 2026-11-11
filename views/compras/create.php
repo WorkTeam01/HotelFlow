@@ -25,7 +25,7 @@ if (!isset($_SESSION['usuario_nombre'])) {
 
 // Incluir encabezado
 $skip_chartjs = true;
-$module_styles = ['compras/create-compras'];
+$module_styles = ['compras/compras'];
 $module_scripts = ['compras/create-compras'];
 include_once '../layouts/header.php';
 
@@ -36,7 +36,7 @@ $productos = $productoController->index();
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-sm-6">
                 <h1>Registrar Nueva Compra</h1>
             </div>
@@ -52,7 +52,7 @@ $productos = $productoController->index();
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content compras-pagina">
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
@@ -69,7 +69,7 @@ $productos = $productoController->index();
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="nombre_usuario">Responsable <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="nombre_usuario"
+                                        <input type="text" class="form-control comp-campo-fijo" id="nombre_usuario"
                                             value="<?= htmlspecialchars($_SESSION['usuario_nombre']); ?>" readonly>
                                         <input type="hidden" id="idusuario" name="idusuario" value="<?= $idusuario; ?>">
                                     </div>
@@ -91,7 +91,7 @@ $productos = $productoController->index();
                                         <select class="form-control select2" id="estado" name="estado" required>
                                             <option value="pendiente" selected>Pendiente</option>
                                             <?php if ($authService->esAdministrador($idusuario)) : ?>
-                                            <option value="completada">Completada</option>
+                                                <option value="completada">Completada</option>
                                             <?php endif; ?>
                                         </select>
                                     </div>

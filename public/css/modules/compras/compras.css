@@ -1,0 +1,24 @@
+/* Estilos del módulo compras (listado, detalle y formulario).
+   No se redefinen utilidades de Bootstrap (.is-invalid, .invalid-feedback, .d-none...):
+   lo que necesita presentación propia usa clases .comp-* */
+
+/* Contraste AA (≥4.5:1) del texto blanco de los badges: los tonos base de
+   Bootstrap (#28a745 3.13:1, #dc3545 4.53:1) se sustituyen por sus variantes
+   oscuras. badge-warning lleva texto oscuro y ya supera 9:1. */
+.compras-pagina .badge-success {
+    background-color: var(--color-success-dark);
+}
+
+.compras-pagina .badge-danger {
+    background-color: var(--color-danger-dark);
+}
+
+.compras-pagina .text-muted {
+    color: var(--color-text-secondary) !important;
+}
+
+/* Campo de solo lectura del formulario (responsable) */
+.comp-campo-fijo[readonly] {
+    background-color: var(--color-surface-hover);
+    opacity: 1;
+}

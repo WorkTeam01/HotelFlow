@@ -20,18 +20,19 @@ if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederMod
 // Incluir el encabezado DESPUÉS de verificar permisos
 $skip_select2 = true;
 $skip_chartjs = true;
+$module_styles = ['compras/compras'];
 $module_scripts = ['compras/index-compras'];
 include_once '../layouts/header.php';
 
 $controller = new CompraController();
 $esAdmin = $authService->esAdministrador($idusuario);
-$compras = $esAdmin ? $controller->index() : $controller->obtenerPorUsuario($idusuario);
+$compras = $controller->index($esAdmin ? null : $idusuario);
 ?>
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-sm-6">
                 <h1>Gestión de Compras</h1>
             </div>
@@ -46,7 +47,7 @@ $compras = $esAdmin ? $controller->index() : $controller->obtenerPorUsuario($idu
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content compras-pagina">
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
@@ -82,35 +83,17 @@ $compras = $esAdmin ? $controller->index() : $controller->obtenerPorUsuario($idu
                                     $contador = 1;
                                     foreach ($compras as $compra) :
                                         $estado_actual = $compra['estado'];
-                                        $clase_badge = '';
-                                        $texto_estado = '';
-
-                                        switch ($estado_actual) {
-                                            case 'pendiente':
-                                                $clase_badge = 'badge-warning';
-                                                $texto_estado = 'Pendiente';
-                                                break;
-                                            case 'completada':
-                                                $clase_badge = 'badge-success';
-                                                $texto_estado = 'Completada';
-                                                break;
-                                            case 'cancelada':
-                                                $clase_badge = 'badge-danger';
-                                                $texto_estado = 'Cancelada';
-                                                break;
-                                            default:
-                                                $clase_badge = 'badge-secondary';
-                                                $texto_estado = 'Desconocido';
-                                        }
+                                        $estadoUi = $compra['estado_ui'];
+                                        $codigoCompra = $compra['codigo'];
                                     ?>
                                         <tr>
                                             <td class="text-center"><?= $contador++; ?></td>
-                                            <td>COMP-<?= str_pad($compra['idcompra'], 6, '0', STR_PAD_LEFT); ?></td>
+                                            <td><?= $codigoCompra; ?></td>
                                             <td><?= date('d/m/Y', strtotime($compra['fechacompra'])); ?></td>
                                             <td><?= htmlspecialchars($compra['usuario_nombre'] ?? 'N/A'); ?></td>
                                             <td class="text-right"><?= number_format($compra['totalcompra'], 2); ?></td>
                                             <td class="text-center">
-                                                <span class="badge <?= $clase_badge; ?>"><?= $texto_estado; ?></span>
+                                                <span class="badge <?= $estadoUi['badge']; ?>" role="status"><?= $estadoUi['label']; ?></span>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
@@ -122,14 +105,14 @@ $compras = $esAdmin ? $controller->index() : $controller->obtenerPorUsuario($idu
                                                         <button type="button" class="btn btn-touch btn-success btn-sm btn-cambiar-estado"
                                                             data-id="<?= $compra['idcompra']; ?>"
                                                             data-accion="completar"
-                                                            data-titulo="COMP-<?= str_pad($compra['idcompra'], 6, '0', STR_PAD_LEFT); ?>">
+                                                            data-titulo="<?= $codigoCompra; ?>">
                                                             <i class="fas fa-check"></i>
                                                         </button>
 
                                                         <button type="button" class="btn btn-touch btn-danger btn-sm btn-cambiar-estado"
                                                             data-id="<?= $compra['idcompra']; ?>"
                                                             data-accion="cancelar"
-                                                            data-titulo="COMP-<?= str_pad($compra['idcompra'], 6, '0', STR_PAD_LEFT); ?>">
+                                                            data-titulo="<?= $codigoCompra; ?>">
                                                             <i class="fas fa-times"></i>
                                                         </button>
                                                     <?php endif; ?>

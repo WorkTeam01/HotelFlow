@@ -28,33 +28,119 @@ class CompraController
     }
 
     /**
-     * Muestra la lista de compras
+     * Lista de compras con su presentación de estado ya resuelta. Un no-administrador
+     * solo ve las suyas.
+     *
+     * @param int|null $idUsuario Dueño de las compras, o null para todas
+     * @return array
      */
-    public function index()
+    public function index(?int $idUsuario = null)
     {
-        // Obtener todas las compras
-        return $this->modelo->getAll();
+        $compras = $idUsuario === null
+            ? $this->modelo->getAll()
+            : $this->modelo->getPorUsuario($idUsuario);
+
+        return $this->decorarEstados($compras);
     }
 
     /**
-     * Muestra el formulario para crear una nueva compra
+     * Código visible de una compra (COMP-000001).
      */
-    public function crear()
+    public static function codigoCompra($id): string
     {
-        // Incluir modelos necesarios
-        require_once __DIR__ . '/../../models/Producto.php';
-        require_once __DIR__ . '/../../models/Usuario.php';
-        
-        // Obtener productos y usuarios para los selects
-        $productoModel = new Producto();
-        $usuarioModel = new Usuario();
-        
-        $datos = [
-            'productos' => $productoModel->getAll(),
-            'usuarios' => $usuarioModel->getAll()
-        ];
-        
-        return $datos;
+        return 'COMP-' . str_pad((string) (int) $id, 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Presentación de un estado de compra: etiqueta, clase de color (sufijo AdminLTE),
+     * badge, icono, orden y aviso del efecto sobre el inventario. Única fuente: ninguna
+     * vista escribe un switch ni un badge-* de estado.
+     *
+     * @param string $estado pendiente | completada | cancelada
+     * @return array ['label','clase','badge','icono','orden','alerta']
+     */
+    public static function estadoCompra($estado): array
+    {
+        switch ((string) $estado) {
+            case 'pendiente':
+                return [
+                    'label' => 'Pendiente',
+                    'clase' => 'warning',
+                    'badge' => 'badge-warning',
+                    'icono' => 'fa-clock',
+                    'orden' => 1,
+                    'alerta' => 'El stock se sumará al inventario cuando un administrador complete la compra.',
+                ];
+            case 'completada':
+                return [
+                    'label' => 'Completada',
+                    'clase' => 'success',
+                    'badge' => 'badge-success',
+                    'icono' => 'fa-check-circle',
+                    'orden' => 2,
+                    'alerta' => 'La mercadería ingresó al inventario.',
+                ];
+            case 'cancelada':
+                return [
+                    'label' => 'Cancelada',
+                    'clase' => 'danger',
+                    'badge' => 'badge-danger',
+                    'icono' => 'fa-ban',
+                    'orden' => 3,
+                    'alerta' => 'Compra cancelada: no suma stock.',
+                ];
+            default:
+                return [
+                    'label' => 'Desconocido',
+                    'clase' => 'secondary',
+                    'badge' => 'badge-secondary',
+                    'icono' => 'fa-question-circle',
+                    'orden' => 9,
+                    'alerta' => '',
+                ];
+        }
+    }
+
+    /**
+     * Mapa completo de estados, en orden, para filtros e indicadores.
+     */
+    public static function estadosCompra(): array
+    {
+        $mapa = [];
+        foreach (['pendiente', 'completada', 'cancelada'] as $estado) {
+            $mapa[$estado] = self::estadoCompra($estado);
+        }
+        return $mapa;
+    }
+
+    /**
+     * Estados a los que puede pasar una compra y que el usuario puede ejecutar: solo un
+     * Administrador completa o cancela.
+     *
+     * @return string[] Subconjunto de ['completada','cancelada']
+     */
+    public static function accionesEstado($estado, bool $esAdmin): array
+    {
+        if (!$esAdmin) {
+            return [];
+        }
+
+        require_once __DIR__ . '/../../models/Compra.php';
+        return Compra::TRANSICIONES[(string) $estado] ?? [];
+    }
+
+    /**
+     * Agrega a cada fila su estado de presentación (estado_ui) y su código visible.
+     */
+    public function decorarEstados(array $compras): array
+    {
+        foreach ($compras as &$compra) {
+            $compra['estado_ui'] = self::estadoCompra($compra['estado'] ?? '');
+            $compra['codigo'] = self::codigoCompra($compra['idcompra']);
+        }
+        unset($compra);
+
+        return $compras;
     }
 
     /**
@@ -88,7 +174,7 @@ class CompraController
         // Procesar detalles de la compra
         if (isset($post_data['productos']) && is_array($post_data['productos'])) {
             foreach ($post_data['productos'] as $key => $idProducto) {
-                if (!empty($idProducto) ){
+                if (!empty($idProducto)) {
                     $datos['detalles'][] = [
                         'idproducto' => (int)$idProducto,
                         'cantidad' => isset($post_data['cantidades'][$key]) ? (int)$post_data['cantidades'][$key] : 1,
@@ -123,7 +209,7 @@ class CompraController
 
         // Guardar compra usando el modelo
         $idCompra = $this->modelo->crear($datos);
-        
+
         if ($idCompra) {
             return ['success' => true, 'message' => 'Compra registrada correctamente', 'icon' => 'success', 'redirect' => 'index.php'];
         } else {
@@ -131,34 +217,30 @@ class CompraController
         }
     }
     /**
-     * Muestra los detalles de una compra
-     * 
-     * @param int $id ID de la compra
-     * @return array|null Datos de la compra o redirige en caso de error
+     * Detalle de una compra con su estado de presentación, código y el subtotal de
+     * cada línea calculado aquí (la vista solo pinta).
+     *
+     * @param int|null $id ID de la compra
+     * @return array|null null si el ID no es válido o la compra no existe
      */
     public function ver($id = null)
     {
-        // Verificar si se proporcionó un ID
         if (!$id) {
-            global $URL;
-            $_SESSION['mensaje'] = 'ID de compra no válido';
-            $_SESSION['icono'] = 'error';
-            header('Location: ' . $URL . 'views/compras');
-            exit;
+            return null;
         }
 
-        // Obtener datos de la compra con detalles
         $compra = $this->modelo->getById($id);
-
         if (!$compra) {
-            global $URL;
-            $_SESSION['mensaje'] = 'Compra no encontrada';
-            $_SESSION['icono'] = 'error';
-            header('Location: ' . $URL . 'views/compras');
-            exit;
+            return null;
         }
 
-        // Devolver los datos de la compra
+        $compra['estado_ui'] = self::estadoCompra($compra['estado']);
+        $compra['codigo'] = self::codigoCompra($compra['idcompra']);
+        foreach ($compra['detalles'] as &$detalle) {
+            $detalle['subtotal'] = $detalle['cantidad'] * $detalle['preciocompra'];
+        }
+        unset($detalle);
+
         return $compra;
     }
 
@@ -198,39 +280,5 @@ class CompraController
         } else {
             return ['success' => false, 'message' => 'Error al completar la compra: ' . $this->modelo->getLastError(), 'icon' => 'error'];
         }
-    }
-
-    /**
-     * Obtiene compras por rango de fechas
-     * 
-     * @param string $fechaInicio Fecha de inicio (YYYY-MM-DD)
-     * @param string $fechaFin Fecha de fin (YYYY-MM-DD)
-     * @return array Lista de compras en el rango
-     */
-    public function obtenerPorRangoFechas($fechaInicio, $fechaFin)
-    {
-        return $this->modelo->getPorRangoFechas($fechaInicio, $fechaFin);
-    }
-
-    /**
-     * Obtiene compras por estado
-     * 
-     * @param string $estado Estado de las compras (pendiente, completada, cancelada)
-     * @return array Lista de compras con el estado especificado
-     */
-    public function obtenerPorEstado($estado)
-    {
-        return $this->modelo->getPorEstado($estado);
-    }
-
-    /**
-     * Obtiene compras por usuario
-     * 
-     * @param int $idUsuario ID del usuario
-     * @return array Lista de compras del usuario
-     */
-    public function obtenerPorUsuario($idUsuario)
-    {
-        return $this->modelo->getPorUsuario($idUsuario);
     }
 }
