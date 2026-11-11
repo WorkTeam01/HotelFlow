@@ -178,14 +178,8 @@ a .info-btn {
     transform: translate(-50%, -50%);
 }
 
-/* --- Controles de DataTables (selector de filas, búsqueda, Reportes y paginador)
- * con altura táctil ≥44px; Bootstrap los deja en 31-38px. */
-.dataTables_wrapper .dataTables_length select,
-.dataTables_wrapper .dataTables_filter input,
-.dataTables_wrapper .dt-buttons .btn {
-    min-height: 44px;
-}
-
+/* --- Paginador de DataTables con área táctil ≥44px. El selector de filas, el
+ * buscador y Reportes conservan la altura estándar de Bootstrap. */
 .dataTables_wrapper .page-link {
     min-width: 44px;
     min-height: 44px;
