@@ -26,7 +26,9 @@ include_once '../layouts/header.php';
 
 $controller = new CompraController();
 $esAdmin = $authService->esAdministrador($idusuario);
-$compras = $controller->index($esAdmin ? null : $idusuario);
+$idFiltro = $esAdmin ? null : (int) $idusuario;
+$compras = $controller->index($idFiltro);
+$estadisticas = $controller->getEstadisticas($idFiltro);
 ?>
 
 <!-- Content Header (Page header) -->
@@ -49,17 +51,19 @@ $compras = $controller->index($esAdmin ? null : $idusuario);
 <!-- Main content -->
 <section class="content compras-pagina">
     <div class="container-fluid">
+        <?php include __DIR__ . '/partials/kpi-compras.php'; ?>
+
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header card-outline card-primary">
                         <h3 class="card-title">Historial de Compras</h3>
                         <div class="card-tools">
-                            <a href="<?= $URL; ?>views/compras/create.php" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus"></i> Nueva Compra
+                            <a href="<?= $URL; ?>views/compras/create.php" class="btn btn-touch btn-primary btn-sm">
+                                <i class="fas fa-plus" aria-hidden="true"></i> Nueva Compra
                             </a>
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse" aria-label="Contraer historial">
+                                <i class="fas fa-minus" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -69,29 +73,26 @@ $compras = $controller->index($esAdmin ? null : $idusuario);
                             <table id="tablaCompras" class="table table-sm table-bordered table-hover table-striped">
                                 <thead>
                                     <tr>
-                                        <th>Nro</th>
                                         <th>Código</th>
                                         <th>Fecha</th>
                                         <th>Usuario</th>
                                         <th>Total</th>
                                         <th>Estado</th>
-                                        <th>Acciones</th>
+                                        <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
-                                    $contador = 1;
                                     foreach ($compras as $compra) :
                                         $estado_actual = $compra['estado'];
                                         $estadoUi = $compra['estado_ui'];
                                         $codigoCompra = $compra['codigo'];
                                     ?>
                                         <tr>
-                                            <td class="text-center"><?= $contador++; ?></td>
                                             <td><?= $codigoCompra; ?></td>
-                                            <td><?= date('d/m/Y', strtotime($compra['fechacompra'])); ?></td>
+                                            <td data-order="<?= htmlspecialchars($compra['fechacompra']); ?>"><?= date('d/m/Y', strtotime($compra['fechacompra'])); ?></td>
                                             <td><?= htmlspecialchars($compra['usuario_nombre'] ?? 'N/A'); ?></td>
-                                            <td class="text-right"><?= number_format($compra['totalcompra'], 2); ?></td>
+                                            <td class="text-right" data-order="<?= (float) $compra['totalcompra']; ?>"><?= number_format($compra['totalcompra'], 2); ?></td>
                                             <td class="text-center">
                                                 <span class="badge <?= $estadoUi['badge']; ?>" role="status"><?= $estadoUi['label']; ?></span>
                                             </td>
@@ -99,7 +100,7 @@ $compras = $controller->index($esAdmin ? null : $idusuario);
                                                 <div class="btn-group">
                                                     <a href="<?= $URL; ?>views/compras/show.php?id=<?= (int) $compra['idcompra']; ?>" class="btn btn-touch btn-info btn-sm"
                                                         aria-label="Ver detalle de <?= $codigoCompra; ?>" title="Ver detalle" data-toggle="tooltip">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="fas fa-eye" aria-hidden="true"></i>
                                                     </a>
 
                                                     <?php

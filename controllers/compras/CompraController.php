@@ -44,6 +44,16 @@ class CompraController
     }
 
     /**
+     * Indicadores del listado (pendientes, invertido y compras del mes, producto más repuesto).
+     *
+     * @param int|null $idUsuario Dueño de las compras, o null para todas
+     */
+    public function getEstadisticas(?int $idUsuario = null): array
+    {
+        return $this->modelo->getEstadisticas($idUsuario);
+    }
+
+    /**
      * Código visible de una compra (COMP-000001).
      */
     public static function codigoCompra($id): string

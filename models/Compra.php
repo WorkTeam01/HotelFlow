@@ -404,6 +404,80 @@ class Compra
     }
 
     /**
+     * Indicadores del listado: trabajo pendiente y compras del mes en curso. Un
+     * no-administrador solo cuenta las suyas. Todo sale de compra/detallecompra/productos.
+     *
+     * @param int|null $idUsuario Dueño de las compras, o null para todas
+     * @return array ['pendientes','monto_pendiente','invertido_mes','compras_mes','producto_top']
+     */
+    public function getEstadisticas(?int $idUsuario = null): array
+    {
+        $vacio = [
+            'pendientes' => 0,
+            'monto_pendiente' => 0.0,
+            'invertido_mes' => 0.0,
+            'compras_mes' => 0,
+            'producto_top' => null,
+        ];
+
+        try {
+            $filtro = $idUsuario === null ? '' : ' AND c.idusuario = :idusuario';
+            // Rango en PHP, no MONTH(): así un índice sobre fechacompra seguiría sirviendo
+            $desde = date('Y-m-01');
+            $hasta = date('Y-m-t');
+
+            $ejecutar = function (string $sql, array $params = []) use ($idUsuario) {
+                $stmt = $this->conexion->prepare($sql);
+                foreach ($params as $nombre => $valor) {
+                    $stmt->bindValue($nombre, $valor, PDO::PARAM_STR);
+                }
+                if ($idUsuario !== null) {
+                    $stmt->bindValue(':idusuario', $idUsuario, PDO::PARAM_INT);
+                }
+                $stmt->execute();
+                return $stmt;
+            };
+
+            $pend = $ejecutar(
+                "SELECT COUNT(*) AS n, COALESCE(SUM(c.totalcompra), 0) AS monto
+                 FROM {$this->tabla} c WHERE c.estado = 'pendiente'{$filtro}"
+            )->fetch(PDO::FETCH_ASSOC);
+
+            $mes = $ejecutar(
+                "SELECT COALESCE(SUM(CASE WHEN c.estado = 'completada' THEN c.totalcompra END), 0) AS invertido,
+                        COALESCE(SUM(CASE WHEN c.estado <> 'cancelada' THEN 1 ELSE 0 END), 0) AS cantidad
+                 FROM {$this->tabla} c
+                 WHERE c.fechacompra BETWEEN :desde AND :hasta{$filtro}",
+                [':desde' => $desde, ':hasta' => $hasta]
+            )->fetch(PDO::FETCH_ASSOC);
+
+            $top = $ejecutar(
+                "SELECT p.nombre, SUM(dc.cantidad) AS unidades
+                 FROM {$this->tabla} c
+                 JOIN {$this->tablaDetalle} dc ON dc.idcompra = c.idcompra
+                 JOIN productos p ON p.idproducto = dc.idproducto
+                 WHERE c.estado = 'completada' AND c.fechacompra BETWEEN :desde AND :hasta{$filtro}
+                 GROUP BY p.idproducto, p.nombre
+                 ORDER BY unidades DESC, p.nombre ASC
+                 LIMIT 1",
+                [':desde' => $desde, ':hasta' => $hasta]
+            )->fetch(PDO::FETCH_ASSOC);
+
+            return [
+                'pendientes' => (int) $pend['n'],
+                'monto_pendiente' => (float) $pend['monto'],
+                'invertido_mes' => (float) $mes['invertido'],
+                'compras_mes' => (int) $mes['cantidad'],
+                'producto_top' => $top ?: null,
+            ];
+        } catch (PDOException $e) {
+            error_log('[' . static::class . '] ' . $e->getMessage());
+            $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
+            return $vacio;
+        }
+    }
+
+    /**
      * Obtiene las compras de un usuario específico
      * 
      * @param int $idUsuario ID del usuario

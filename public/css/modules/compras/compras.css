@@ -22,3 +22,17 @@
     background-color: var(--color-surface-hover);
     opacity: 1;
 }
+
+/* Iconos de los indicadores: los fondos base de AdminLTE dan menos de 4.5:1 con el
+   icono blanco; bg-warning lleva icono oscuro y no necesita override. */
+.compras-pagina .info-box-icon.bg-success {
+    background-color: var(--color-success-dark) !important;
+}
+
+.compras-pagina .info-box-icon.bg-info {
+    background-color: var(--color-info-dark) !important;
+}
+
+.compras-pagina .info-box-icon.bg-primary {
+    background-color: var(--color-primary-dark) !important;
+}
