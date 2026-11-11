@@ -154,6 +154,43 @@ class CompraController
     }
 
     /**
+     * Datos que consume el formulario de nueva compra. El catálogo se reduce a lo que usa
+     * el JS (solo productos activos, sin precio de venta, descripción ni imagen) y NO se
+     * filtra por stock: un producto agotado es justo el que hay que reponer.
+     *
+     * @return array ['productos' => [...], 'responsable' => string, 'esAdmin' => bool]
+     */
+    public function datosParaCrear(): array
+    {
+        require_once __DIR__ . '/../../models/Producto.php';
+        require_once __DIR__ . '/../../models/Usuario.php';
+        require_once __DIR__ . '/../../services/AuthorizationService.php';
+
+        $productos = [];
+        foreach ((new Producto())->getAll() as $p) {
+            if ((int) $p['estado'] === 1) {
+                $productos[] = [
+                    'idproducto' => (int) $p['idproducto'],
+                    'nombre' => $p['nombre'],
+                    'codigo' => $p['codigo'],
+                    'preciocompra' => $p['preciocompra'],
+                    'stock' => (int) $p['stock'],
+                    'stock_minimo' => (int) ($p['stock_minimo'] ?? 0),
+                ];
+            }
+        }
+
+        $idusuario = (int) ($_SESSION['usuario_id'] ?? 0);
+        $usuario = (new Usuario())->getById($idusuario);
+
+        return [
+            'productos' => $productos,
+            'responsable' => $usuario['nombre'] ?? '',
+            'esAdmin' => (new AuthorizationService())->esAdministrador($idusuario),
+        ];
+    }
+
+    /**
      * Solo un administrador puede registrar la compra ya completada; cualquier otro
      * valor (incluida 'cancelada') se reduce a 'pendiente'.
      */
@@ -174,7 +211,8 @@ class CompraController
     {
         $datos = [
             'idusuario' => (int)($_SESSION['usuario_id'] ?? 0),
-            'totalcompra' => isset($post_data['totalcompra']) ? (float)$post_data['totalcompra'] : 0,
+            // El total lo calcula el modelo a partir de los detalles; nunca se lee del cliente
+            'totalcompra' => 0,
             'fechacompra' => isset($post_data['fechacompra']) ? trim($post_data['fechacompra']) : date('Y-m-d'),
             'estado' => $this->estadoInicialPermitido($post_data['estado'] ?? 'pendiente'),
             'observaciones' => isset($post_data['observaciones']) && !empty($post_data['observaciones']) ? trim($post_data['observaciones']) : null,
@@ -188,7 +226,7 @@ class CompraController
                     $datos['detalles'][] = [
                         'idproducto' => (int)$idProducto,
                         'cantidad' => isset($post_data['cantidades'][$key]) ? (int)$post_data['cantidades'][$key] : 1,
-                        'preciocompra' => isset($post_data['precios'][$key]) ? (float)$post_data['precios'][$key] : 0
+                        'preciocompra' => isset($post_data['precios'][$key]) ? round((float)$post_data['precios'][$key], 2) : 0
                     ];
                 }
             }

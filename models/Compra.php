@@ -189,26 +189,41 @@ class Compra
 
             $idCompra = $this->conexion->lastInsertId();
 
-            // Insertar los detalles de la compra
-            $totalCalculado = 0;
-            foreach ($datos['detalles'] as $detalle) {
-                $queryDetalle = "INSERT INTO {$this->tablaDetalle}
-                                (idcompra, idproducto, cantidad, preciocompra)
-                                VALUES
-                                (:idcompra, :idproducto, :cantidad, :preciocompra)";
+            // Los productos se recorren por id ascendente: mismo orden de bloqueo que
+            // completar()/cancelar(), para no deadlockear con una compra concurrente
+            $detalles = $datos['detalles'];
+            usort($detalles, function ($a, $b) {
+                return (int) $a['idproducto'] <=> (int) $b['idproducto'];
+            });
 
-                $stmtDetalle = $this->conexion->prepare($queryDetalle);
+            $stmtProducto = $this->conexion->prepare("SELECT estado FROM productos WHERE idproducto = :id FOR UPDATE");
+            $stmtDetalle = $this->conexion->prepare(
+                "INSERT INTO {$this->tablaDetalle} (idcompra, idproducto, cantidad, preciocompra)
+                 VALUES (:idcompra, :idproducto, :cantidad, :preciocompra)"
+            );
 
-                $stmtDetalle->bindParam(':idcompra', $idCompra, PDO::PARAM_INT);
-                $stmtDetalle->bindParam(':idproducto', $detalle['idproducto'], PDO::PARAM_INT);
-                $stmtDetalle->bindParam(':cantidad', $detalle['cantidad'], PDO::PARAM_INT);
-                $stmtDetalle->bindParam(':preciocompra', $detalle['preciocompra'], PDO::PARAM_STR);
+            // Total en centavos enteros: sumar decimales en coma flotante deriva (0.1 + 0.2)
+            $totalCentavos = 0;
+            foreach ($detalles as $detalle) {
+                $stmtProducto->bindValue(':id', (int) $detalle['idproducto'], PDO::PARAM_INT);
+                $stmtProducto->execute();
+                $estadoProducto = $stmtProducto->fetchColumn();
+                if ($estadoProducto === false || (int) $estadoProducto !== 1) {
+                    $this->conexion->rollBack();
+                    $this->lastError = 'Hay productos inactivos o inexistentes en la compra.';
+                    return false;
+                }
+
+                $stmtDetalle->bindValue(':idcompra', $idCompra, PDO::PARAM_INT);
+                $stmtDetalle->bindValue(':idproducto', (int) $detalle['idproducto'], PDO::PARAM_INT);
+                $stmtDetalle->bindValue(':cantidad', (int) $detalle['cantidad'], PDO::PARAM_INT);
+                $stmtDetalle->bindValue(':preciocompra', number_format((float) $detalle['preciocompra'], 2, '.', ''), PDO::PARAM_STR);
 
                 if (!$stmtDetalle->execute()) {
                     throw new PDOException("Error al crear el detalle de compra");
                 }
 
-                $totalCalculado += $detalle['preciocompra'] * $detalle['cantidad'];
+                $totalCentavos += (int) round((float) $detalle['preciocompra'] * 100) * (int) $detalle['cantidad'];
 
                 // La mercadería entra al inventario al recibirla (completada), no al emitir la orden
                 if ($datos['estado'] === 'completada') {
@@ -216,8 +231,8 @@ class Compra
                 }
             }
 
-            // Recalcular y persistir el total real a partir de los detalles insertados,
-            // en vez de confiar en el total enviado por el cliente
+            // Persistir el total real calculado desde los detalles, no el enviado por el cliente
+            $totalCalculado = number_format($totalCentavos / 100, 2, '.', '');
             $stmtTotal = $this->conexion->prepare("UPDATE {$this->tabla} SET totalcompra = :total WHERE idcompra = :id");
             $stmtTotal->bindParam(':total', $totalCalculado, PDO::PARAM_STR);
             $stmtTotal->bindParam(':id', $idCompra, PDO::PARAM_INT);
@@ -226,7 +241,9 @@ class Compra
             $this->conexion->commit();
             return $idCompra;
         } catch (PDOException $e) {
-            $this->conexion->rollBack();
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
             error_log('[' . static::class . '] ' . $e->getMessage());
             $this->lastError = 'Ocurrió un error inesperado. Intente nuevamente.';
             return false;
@@ -513,7 +530,8 @@ class Compra
         $errores = [];
 
         // Validar campos obligatorios
-        $campos_obligatorios = ['idusuario', 'totalcompra', 'fechacompra', 'estado'];
+        // totalcompra no se exige: se recalcula en crear() desde los detalles
+        $campos_obligatorios = ['idusuario', 'fechacompra', 'estado'];
         foreach ($campos_obligatorios as $campo) {
             if (empty($datos[$campo])) {
                 $errores[] = "El campo {$campo} es obligatorio";
@@ -524,7 +542,12 @@ class Compra
         if (empty($datos['detalles']) || !is_array($datos['detalles']) || count($datos['detalles']) == 0) {
             $errores[] = "La compra debe tener al menos un producto";
         } else {
+            $vistos = [];
             foreach ($datos['detalles'] as $detalle) {
+                if (isset($vistos[$detalle['idproducto'] ?? 0])) {
+                    $errores[] = "Un producto no puede repetirse en el detalle de la compra";
+                }
+                $vistos[$detalle['idproducto'] ?? 0] = true;
                 if (empty($detalle['idproducto'])) {
                     $errores[] = "Todos los productos deben ser válidos";
                 }

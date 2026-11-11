@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../../services/AuthorizationService.php';
-require_once __DIR__ . '/../../controllers/usuarios/UsuarioController.php';
-require_once __DIR__ . '/../../controllers/productos/ProductoController.php';
+require_once __DIR__ . '/../../controllers/compras/CompraController.php';
 require_once __DIR__ . '/../layouts/session.php';
 
 requireLogin();
@@ -11,29 +10,21 @@ $authService = new AuthorizationService();
 
 // Verificar permisos
 if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'compras')) {
-    $_SESSION['mensaje'] = 'No tiene permisos de administrador.';
+    $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
     header('Location: index.php');
     exit;
 }
 
-$usuarioController = new UsuarioController();
-if (!isset($_SESSION['usuario_nombre'])) {
-    $usuarioActual = $usuarioController->editar($idusuario);
-    $_SESSION['usuario_nombre'] = $usuarioActual['nombre'];
-}
-
-// Incluir encabezado
 $skip_chartjs = true;
+$skip_datatables = true;
 $module_styles = ['compras/compras'];
-$module_scripts = ['compras/create-compras'];
+$module_scripts = ['ventas/venta-util', 'compras/compra-selector', 'compras/compra-detalle', 'compras/create-compras'];
 include_once '../layouts/header.php';
 
-$productoController = new ProductoController();
-$productos = $productoController->index();
+$datos = (new CompraController())->datosParaCrear();
 ?>
 
-<!-- Content Header (Page header) -->
 <section class="content-header">
     <div class="container-fluid">
         <div class="row">
@@ -51,139 +42,41 @@ $productos = $productoController->index();
     </div>
 </section>
 
-<!-- Main content -->
 <section class="content compras-pagina">
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">Formulario de Compra</h3>
-                    </div>
-                    <form action="<?= $URL; ?>controllers/compras/crear_compra.php" method="POST" id="form-compra" novalidate
-                        data-productos="<?= htmlspecialchars(json_encode($productos), ENT_QUOTES) ?>">
-                        <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
+        <form action="<?= $URL; ?>controllers/compras/crear_compra.php" method="POST" id="form-compra" novalidate
+            data-productos="<?= htmlspecialchars(json_encode($datos['productos']), ENT_QUOTES) ?>">
+            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken(); ?>">
+
+            <div class="row">
+                <!-- Columna izquierda: detalle de productos y observaciones -->
+                <div class="col-lg-8">
+                    <?php include __DIR__ . '/partials/compra-detalle.php'; ?>
+
+                    <div class="card">
                         <div class="card-body">
-                            <div class="row">
-                                <!-- Usuario Responsable (no editable) -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="nombre_usuario">Responsable <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control comp-campo-fijo" id="nombre_usuario"
-                                            value="<?= htmlspecialchars($_SESSION['usuario_nombre']); ?>" readonly>
-                                        <input type="hidden" id="idusuario" name="idusuario" value="<?= $idusuario; ?>">
-                                    </div>
-                                </div>
-
-                                <!-- Fecha de Compra -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="fechacompra">Fecha de Compra <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" id="fechacompra" name="fechacompra"
-                                            value="<?= date('Y-m-d'); ?>" required>
-                                    </div>
-                                </div>
-
-                                <!-- Estado -->
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="estado">Estado <span class="text-danger">*</span></label>
-                                        <select class="form-control select2" id="estado" name="estado" required>
-                                            <option value="pendiente" selected>Pendiente</option>
-                                            <?php if ($authService->esAdministrador($idusuario)) : ?>
-                                                <option value="completada">Completada</option>
-                                            <?php endif; ?>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- Observaciones -->
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label for="observaciones">Observaciones</label>
-                                        <textarea class="form-control" id="observaciones" name="observaciones"
-                                            placeholder="Ingrese observaciones adicionales (opcional)" rows="2"></textarea>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr>
-                            <h5>Detalle de Productos</h5>
-
-                            <!-- Buscador de productos por código -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="buscar-producto">Buscar Producto por Código</label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="buscar-producto" placeholder="Ingrese código del producto">
-                                            <div class="input-group-append">
-                                                <button class="btn btn-primary" type="button" id="btn-buscar-producto">
-                                                    <i class="fas fa-search"></i> Buscar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tabla de productos -->
-                            <div class="table-responsive">
-                                <table class="table table-bordered" id="tabla-productos">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th width="40%">Producto</th>
-                                            <th width="15%">Cantidad</th>
-                                            <th width="20%">Precio Unitario</th>
-                                            <th width="20%">Subtotal</th>
-                                            <th width="5%"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Las filas de productos se agregarán dinámicamente -->
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="3" class="text-right"><strong>Total:</strong></td>
-                                            <td class="text-right"><strong><span id="total-compra">0.00</span></strong></td>
-                                            <td></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="5">
-                                                <input type="hidden" name="totalcompra" id="input-total-compra" value="0">
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+                            <div class="form-group mb-0">
+                                <label for="observaciones">Observaciones:</label>
+                                <textarea class="form-control" id="observaciones" name="observaciones" rows="2" placeholder="Observaciones adicionales sobre la compra (opcional)..."></textarea>
                             </div>
                         </div>
-                        <!-- /.card-body -->
-
-                        <div class="card-footer">
-                            <div class="row g-1">
-                                <div class="col-12 col-sm-auto">
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="fas fa-save"></i> Registrar Compra
-                                    </button>
-                                </div>
-                                <div class="col-12 col-sm-auto">
-                                    <a href="<?= $URL; ?>views/compras" class="btn btn-secondary w-100">
-                                        <i class="fas fa-times"></i> Cancelar
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-                <!-- /.card -->
+
+                <!-- Columna derecha: cabecera, total y acciones (fija) -->
+                <div class="col-lg-4">
+                    <div class="sidebar-sticky">
+                        <?php include __DIR__ . '/partials/compra-cabecera.php'; ?>
+
+                        <?php include __DIR__ . '/partials/compra-resumen.php'; ?>
+                    </div>
+                </div>
             </div>
-            <!-- /.col -->
-        </div>
-        <!-- /.row -->
+        </form>
     </div>
-    <!-- /.container-fluid -->
 </section>
-<!-- /.content -->
+
+<?php include __DIR__ . '/partials/modal-productos.php'; ?>
 
 <?php
 include_once '../layouts/mensajes.php';
