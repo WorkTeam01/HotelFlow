@@ -56,12 +56,6 @@
     top: 1rem;
 }
 
-/* Campos de formulario con altura táctil ≥44px (los inputs no admiten el
-   pseudo-elemento de .btn-touch). */
-.compras-pagina form .form-control {
-    min-height: 44px;
-}
-
 /* El detalle crece con cada producto: se limita la altura y el encabezado queda fijo
    para no perder referencia de columnas. */
 .comp-detalle-scroll {

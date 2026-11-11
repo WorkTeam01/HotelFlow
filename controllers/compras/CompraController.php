@@ -284,12 +284,30 @@ class CompraController
 
         $compra['estado_ui'] = self::estadoCompra($compra['estado']);
         $compra['codigo'] = self::codigoCompra($compra['idcompra']);
-        foreach ($compra['detalles'] as &$detalle) {
-            $detalle['subtotal'] = $detalle['cantidad'] * $detalle['preciocompra'];
-        }
-        unset($detalle);
+        $compra['desglose'] = $this->calcularDesglose($compra['detalles']);
 
         return $compra;
+    }
+
+    /**
+     * Subtotal de cada línea y total, en centavos enteros para que la suma coincida con
+     * el totalcompra que el modelo persistió (sin deriva de coma flotante).
+     *
+     * @param array $detalles Líneas de la compra (cantidad, preciocompra, producto_*)
+     * @return array ['lineas' => [... + 'subtotal'], 'total' => float]
+     */
+    public function calcularDesglose(array $detalles): array
+    {
+        $totalCentavos = 0;
+        $lineas = [];
+        foreach ($detalles as $detalle) {
+            $centavos = (int) round((float) $detalle['preciocompra'] * 100) * (int) $detalle['cantidad'];
+            $totalCentavos += $centavos;
+            $detalle['subtotal'] = $centavos / 100;
+            $lineas[] = $detalle;
+        }
+
+        return ['lineas' => $lineas, 'total' => $totalCentavos / 100];
     }
 
     /**

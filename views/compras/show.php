@@ -10,7 +10,7 @@ $authService = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
 if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'compras')) {
-    $_SESSION['mensaje'] = 'No tiene permisos de administrador.';
+    $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
     $_SESSION['icono'] = 'error';
     header('Location: index.php');
     exit;
@@ -45,14 +45,15 @@ if (!$authService->esAdministrador($idusuario) && $compra['idusuario'] != $idusu
     exit;
 }
 
-// Incluir el encabezado
+$esAdmin = $authService->esAdministrador($idusuario);
+$acciones = CompraController::accionesEstado($compra['estado'], $esAdmin);
+
+$skip_datatables = true;
 $skip_select2 = true;
 $skip_chartjs = true;
 $module_styles = ['compras/compras'];
 $module_scripts = ['compras/cambiar-estado-compras'];
 include_once '../layouts/header.php';
-
-$estadoUi = $compra['estado_ui'];
 ?>
 
 <!-- Content Header (Page header) -->
@@ -64,7 +65,7 @@ $estadoUi = $compra['estado_ui'];
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"> <i class="fas fa-home"></i> Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Inicio</a></li>
                     <li class="breadcrumb-item"><a href="<?= $URL; ?>views/compras"> <i class="fas fa-shopping-cart"></i> Compras</a></li>
                     <li class="breadcrumb-item active">Detalle de Compra</li>
                 </ol>
@@ -77,108 +78,18 @@ $estadoUi = $compra['estado_ui'];
 <section class="content compras-pagina">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-4">
-                <!-- Tarjeta de información básica -->
-                <div class="card card-primary card-outline">
-                    <div class="card-body box-profile">
-                        <h3 class="profile-username text-center">
-                            Compra <?= $compra['codigo']; ?>
-                        </h3>
-
-                        <p class="text-center">
-                            <span class="badge <?= $estadoUi['badge']; ?>" role="status">
-                                <i class="fas <?= $estadoUi['icono']; ?>" aria-hidden="true"></i>
-                                <?= $estadoUi['label']; ?>
-                            </span>
-                        </p>
-                        <?php if ($estadoUi['alerta'] !== '') : ?>
-                            <p class="text-muted text-center small"><?= htmlspecialchars($estadoUi['alerta']); ?></p>
-                        <?php endif; ?>
-
-                        <ul class="list-group list-group-unbordered mb-3">
-                            <li class="list-group-item">
-                                <b>Fecha</b>
-                                <span class="float-right">
-                                    <?= date('d/m/Y', strtotime($compra['fechacompra'])); ?>
-                                </span>
-                            </li>
-                            <li class="list-group-item">
-                                <b>Usuario</b>
-                                <span class="float-right">
-                                    <?= htmlspecialchars($compra['usuario_nombre'] ?? 'N/A'); ?>
-                                </span>
-                            </li>
-                            <li class="list-group-item">
-                                <b>Total</b>
-                                <span class="float-right">
-                                    <?= number_format($compra['totalcompra'], 2); ?>
-                                </span>
-                            </li>
-                        </ul>
-
-                        <?php
-                        $acciones = CompraController::accionesEstado($compra['estado'], $authService->esAdministrador($idusuario));
-                        $variante = 'detalle';
-                        include __DIR__ . '/partials/acciones-estado.php';
-                        ?>
-                        <a href="<?= $URL; ?>views/compras/index.php" class="btn btn-touch btn-secondary btn-block">
-                            <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
-                        </a>
-                    </div>
+            <!-- Columna izquierda: contexto de la compra (quién, cuándo, estado) y acciones -->
+            <div class="col-lg-4 mb-3">
+                <div class="sidebar-sticky">
+                    <?php include __DIR__ . '/partials/info-general.php'; ?>
                 </div>
-
-                <!-- Tarjeta de observaciones -->
-                <?php if (!empty($compra['observaciones'])): ?>
-                    <div class="card card-info card-outline">
-                        <div class="card-header">
-                            <h3 class="card-title">Observaciones</h3>
-                        </div>
-                        <div class="card-body">
-                            <p><?= htmlspecialchars($compra['observaciones']); ?></p>
-                        </div>
-                    </div>
-                <?php endif; ?>
             </div>
 
-            <div class="col-md-8">
-                <!-- Tarjeta de detalles de productos -->
-                <div class="card card-primary card-outline">
-                    <div class="card-header">
-                        <h3 class="card-title">Productos Comprados</h3>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Producto</th>
-                                        <th>Código</th>
-                                        <th class="text-right">Cantidad</th>
-                                        <th class="text-right">P. Unitario</th>
-                                        <th class="text-right">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($compra['detalles'] as $index => $detalle): ?>
-                                        <tr>
-                                            <td><?= $index + 1; ?></td>
-                                            <td><?= htmlspecialchars($detalle['producto_nombre']); ?></td>
-                                            <td><?= htmlspecialchars($detalle['producto_codigo'] ?? 'N/A'); ?></td>
-                                            <td class="text-right"><?= $detalle['cantidad']; ?></td>
-                                            <td class="text-right"><?= number_format($detalle['preciocompra'], 2); ?></td>
-                                            <td class="text-right"><?= number_format($detalle['subtotal'], 2); ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                    <tr class="table-active">
-                                        <td colspan="5" class="text-right"><strong>Total:</strong></td>
-                                        <td class="text-right"><strong><?= number_format($compra['totalcompra'], 2); ?></strong></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+            <!-- Columna derecha: qué se compró -->
+            <div class="col-lg-8">
+                <?php include __DIR__ . '/partials/productos-comprados.php'; ?>
+
+                <?php include __DIR__ . '/partials/informacion-adicional.php'; ?>
             </div>
         </div>
     </div>
