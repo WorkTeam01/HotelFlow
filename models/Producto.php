@@ -624,7 +624,7 @@ class Producto
                     FROM detallecompra dc
                     JOIN compra c ON dc.idcompra = c.idcompra
                     JOIN usuarios u ON c.idusuario = u.idusuario
-                    WHERE dc.idproducto = :idproducto
+                    WHERE dc.idproducto = :idproducto AND c.estado = 'completada'
                     ORDER BY c.fechacompra DESC, c.idcompra DESC
                     LIMIT :limite";
 
