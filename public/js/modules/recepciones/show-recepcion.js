@@ -105,22 +105,38 @@ $(document).ready(function () {
         });
     });
 
-    // Confirmación antes de navegar a una acción de estado (check-in / cancelar)
-    $(document).on('click', '.rec-confirm-nav', function (e) {
+    // Check-in o cancelación: confirmación y POST a transicion_ajax.php (el estado nuevo se valida en el servidor)
+    $(document).on('click', '.rec-transicion', function (e) {
         e.preventDefault();
-        const destino = this.href;
+        const datos = $(this).data();
         Swal.fire({
-            title: $(this).data('confirm') || '¿Confirmar la acción?',
-            icon: 'question',
+            title: datos.confirm || '¿Confirmar la acción?',
+            icon: datos.tono === 'danger' ? 'warning' : 'question',
             showCancelButton: true,
-            confirmButtonColor: themeColor('primary'),
+            confirmButtonColor: themeColor(datos.tono || 'primary'),
             cancelButtonColor: themeColor('secondary'),
             confirmButtonText: 'Sí, continuar',
             cancelButtonText: 'Cancelar'
         }).then(function (result) {
-            if (result.isConfirmed) {
-                window.location.href = destino;
+            if (!result.isConfirmed) {
+                return;
             }
+            mostrarCarga('Procesando...', 'Actualizando la recepción');
+            $.ajax({
+                url: datos.endpoint,
+                type: 'POST',
+                dataType: 'json',
+                data: { csrf_token: datos.csrf, idrecepcion: datos.id, nuevo_estado: datos.estado },
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).done(function (res) {
+                if (res.success) {
+                    window.location.reload();
+                    return;
+                }
+                Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'No se pudo', text: res.message });
+            }).fail(function () {
+                Swal.fire({ icon: 'error', confirmButtonColor: themeColor('danger'), title: 'Error', text: 'Ocurrió un error en la comunicación con el servidor' });
+            });
         });
     });
 

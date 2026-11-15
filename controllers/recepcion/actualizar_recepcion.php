@@ -36,7 +36,7 @@ if ($idrecepcion <= 0) {
 $controller = new RecepcionController();
 
 // Procesar el formulario: solo datos de estancia (el dinero se gestiona por el folio,
-// el estado por cambiar_estado.php/checkout_ajax.php, la habitación por cambiar_habitacion_ajax.php)
+// el estado por transicion_ajax.php/checkout_ajax.php, la habitación por cambiar_habitacion_ajax.php)
 $resultado = $controller->actualizarEstancia($idrecepcion, $_POST);
 
 // Guardar mensaje en la sesión

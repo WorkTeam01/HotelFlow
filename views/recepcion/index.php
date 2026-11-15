@@ -40,7 +40,7 @@ $historial = $panel['historial'];
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="<?= $URL; ?>views/dashboard/index.php"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="<?= $URL; ?>"><i class="fas fa-home"></i> Dashboard</a></li>
                     <li class="breadcrumb-item active">Recepción</li>
                 </ol>
             </div>

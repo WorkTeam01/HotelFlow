@@ -1,7 +1,7 @@
 /**
  * Edición de recepción — SOLO datos de estancia.
  * El dinero se gestiona en el folio (ver show.php) y las transiciones de estado
- * en cambiar_estado.php / checkout_ajax.php: este formulario ya no toca montos,
+ * en transicion_ajax.php / checkout_ajax.php: este formulario ya no toca montos,
  * método de pago, cambio ni estado.
  */
 $(document).ready(function () {

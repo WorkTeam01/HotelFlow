@@ -125,8 +125,12 @@ $nombreCompleto = trim($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido
                             </button>
                             <div class="dropdown-menu">
                                 <?php if ($puedeCheckin): ?>
-                                    <a class="dropdown-item text-primary font-weight-bold rec-confirm-nav"
-                                        href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= (int) $recepcion['idrecepcion']; ?>&nuevo_estado=en_curso&csrf_token=<?= generateCSRFToken(); ?>"
+                                    <a class="dropdown-item text-primary font-weight-bold rec-transicion" href="#"
+                                        data-id="<?= (int) $recepcion['idrecepcion']; ?>"
+                                        data-estado="en_curso"
+                                        data-tono="primary"
+                                        data-endpoint="<?= $URL; ?>controllers/recepcion/transicion_ajax.php"
+                                        data-csrf="<?= generateCSRFToken(); ?>"
                                         data-confirm="¿Confirmar el check-in de esta reserva?">
                                         <i class="fas fa-sign-in-alt mr-2"></i> Check-in
                                     </a>
@@ -161,8 +165,12 @@ $nombreCompleto = trim($recepcion['nombre_cliente'] . ' ' . $recepcion['apellido
                                 </a>
 
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item text-danger rec-confirm-nav"
-                                    href="<?= $URL; ?>controllers/recepcion/cambiar_estado.php?id=<?= (int) $recepcion['idrecepcion']; ?>&nuevo_estado=cancelado&csrf_token=<?= generateCSRFToken(); ?>"
+                                <a class="dropdown-item text-danger rec-transicion" href="#"
+                                    data-id="<?= (int) $recepcion['idrecepcion']; ?>"
+                                    data-estado="cancelado"
+                                    data-tono="danger"
+                                    data-endpoint="<?= $URL; ?>controllers/recepcion/transicion_ajax.php"
+                                    data-csrf="<?= generateCSRFToken(); ?>"
                                     data-confirm="¿Confirmar la cancelación de esta recepción?">
                                     <i class="fas fa-times-circle mr-2"></i> Cancelar
                                 </a>
