@@ -1,19 +1,26 @@
--- HotelFlow - Datos de ejemplo (seeder)
--- Ejecutar despues de importar database/db_hotel_flow.sql:
+-- HotelFlow - Datos de demostración (seeder)
+-- Ejecutar después de importar database/db_hotel_flow.sql (BD vacía):
 --   mysql -u root -p db_hotel_flow < database/seed.sql
 --
--- Incluye: permisos base, usuarios de cada rol, catalogos minimos
--- (pisos, tipos de habitacion, habitaciones, tarifas, categoria/productos,
--- precios de equipaje y bano) y operaciones de ejemplo (check-in, venta,
--- compra, servicio de bano, asignacion de limpieza, equipaje almacenado)
--- con fechas relativas a la fecha de ejecucion (NOW()/CURDATE()), para que
--- el dashboard y los reportes muestren datos del dia al hacer la demo.
+-- Simula ~30 días de operación de un hotel de 12 habitaciones: estancias (finalizadas, en casa, reservas
+-- y cancelaciones) con su folio, ventas con pago único y mixto (y anuladas), compras en los tres estados,
+-- servicios de baño (contado, a folio, cancelados, en uso y excedido), equipaje (retirado, almacenado,
+-- vencido, perdido y dañado) y limpieza del día. Todas las fechas son relativas a la fecha de ejecución
+-- (CURDATE()/NOW()), así que el dashboard y los reportes siempre muestran datos recientes.
+--
+-- Usuarios (uno por rol más un segundo recepcionista y limpiador):
+--   admin@hotelflow.local / admin123            Administrador
+--   recepcion@hotelflow.local / recepcion123    Recepcionista (Ana)
+--   carlos.mendoza@hotelflow.local / recepcion123
+--   limpieza@hotelflow.local / limpieza123      Limpieza (Luis)
+--   rosa.choque@hotelflow.local / limpieza123
+--
+-- El folio (`pagos`) es el libro mayor: recepcion.montototal/montopagado son su cache y coinciden.
 
 START TRANSACTION;
+SET NAMES utf8mb4;
 
--- --------------------------------------------------------
 -- Permisos
--- --------------------------------------------------------
 INSERT INTO `permiso` (`nombre`) VALUES
 ('habitaciones'),
 ('recepcion'),
@@ -36,173 +43,919 @@ INSERT INTO `permiso` (`nombre`) VALUES
 ('pisos'),
 ('tipohabitaciones');
 
--- --------------------------------------------------------
--- Usuarios (uno por rol, para poder probar los tres flujos)
--- Usuario: admin                          | Contraseña: admin123
--- Usuario: recepcion@hotelflow.local      | Contraseña: recepcion123
--- Usuario: limpieza@hotelflow.local       | Contraseña: limpieza123
---
--- ADVERTENCIA: credenciales de ejemplo para entornos de desarrollo.
--- NO USAR EN PRODUCCION. Cambiar la contraseña inmediatamente
--- despues del primer inicio de sesion.
--- --------------------------------------------------------
-INSERT INTO `usuarios`
-(`nombre`, `apellidop`, `apellidom`, `tipodocumento`, `numdocumento`, `direccion`, `telefono`, `correo`, `cargo`, `clave`, `estado`)
-VALUES
-('Admin', 'Sistema', NULL, 'CI', '00000001', NULL, NULL, 'admin@hotelflow.local', 'Administrador',
-'$2y$10$oOuyzOz0J896yI8dbnJeYOcO14fYJpX6ockCLMD.EwGWnzp1fYRLu', 1),
-('Ana', 'Torrez', 'Vega', 'CI', '00000002', NULL, '70000002', 'recepcion@hotelflow.local', 'Recepcionista',
-'$2y$10$Z5t1JIKhCK7WXrlkrh0QaewYSWgOwAWUlREkC6r.C.HIC39ZbWAHe', 1),
-('Luis', 'Quispe', 'Mamani', 'CI', '00000003', NULL, '70000003', 'limpieza@hotelflow.local', 'Limpieza',
-'$2y$10$b3HiuPqzCqxE5JWvrR7daOD0FvbVnMJWNPWiKyzAhCcScvsSfwvh2', 1);
+-- Usuarios
+INSERT INTO `usuarios` (`idusuario`, `nombre`, `apellidop`, `apellidom`, `tipodocumento`, `numdocumento`, `telefono`, `correo`, `cargo`, `clave`, `estado`, `fechacreacion`) VALUES
+(1, 'Admin', 'Sistema', NULL, 'CI', '00000001', NULL, 'admin@hotelflow.local', 'Administrador', '$2y$10$oOuyzOz0J896yI8dbnJeYOcO14fYJpX6ockCLMD.EwGWnzp1fYRLu', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 60 DAY), '09:00:00')),
+(2, 'Ana', 'Torrez', 'Vega', 'CI', '00000002', '70000002', 'recepcion@hotelflow.local', 'Recepcionista', '$2y$10$cG/hHmwIu5cUZ92izmDbUOpTpAh7P2Muv69ys7eJQkdQZlffLPD9C', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 60 DAY), '09:00:00')),
+(3, 'Luis', 'Quispe', 'Mamani', 'CI', '00000003', '70000003', 'limpieza@hotelflow.local', 'Limpieza', '$2y$10$ftUNz9.pD3SI//jqaUvopeJyt1LT8KvMd.GMxcf3MT2.dE2rJGgrS', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 60 DAY), '09:00:00')),
+(4, 'Carlos', 'Mendoza', 'Rivero', 'CI', '00000004', '70000004', 'carlos.mendoza@hotelflow.local', 'Recepcionista', '$2y$10$cG/hHmwIu5cUZ92izmDbUOpTpAh7P2Muv69ys7eJQkdQZlffLPD9C', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 60 DAY), '09:00:00')),
+(5, 'Rosa', 'Choque', 'Apaza', 'CI', '00000005', '70000005', 'rosa.choque@hotelflow.local', 'Limpieza', '$2y$10$ftUNz9.pD3SI//jqaUvopeJyt1LT8KvMd.GMxcf3MT2.dE2rJGgrS', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 60 DAY), '09:00:00'));
 
+-- El Administrador tiene todos los permisos asignados; los demás roles los obtienen por cargo (AuthorizationService)
 INSERT INTO `permiso_usuario` (`idpermiso`, `idusuario`)
 SELECT `idpermiso`, 1 FROM `permiso`;
 
--- --------------------------------------------------------
 -- Pisos
--- --------------------------------------------------------
-INSERT INTO `pisos` (`nombre`, `descripcion`) VALUES
-('Piso 1', 'Planta baja'),
-('Piso 2', 'Segundo nivel');
+INSERT INTO `pisos` (`idpiso`, `nombre`, `descripcion`) VALUES
+(1, 'Piso 1', 'Planta baja, junto a recepción'),
+(2, 'Piso 2', 'Segundo nivel'),
+(3, 'Piso 3', 'Tercer nivel con terraza');
 
--- --------------------------------------------------------
 -- Tipos de habitación
--- --------------------------------------------------------
-INSERT INTO `tipo_habitacion` (`nombre`, `descripcion`, `capacidad_maxima`) VALUES
-('Simple', 'Habitación individual', 1),
-('Doble', 'Habitación para dos personas', 2),
-('Matrimonial', 'Habitación con cama matrimonial', 2),
-('Suite', 'Habitación amplia con sala de estar', 4);
+INSERT INTO `tipo_habitacion` (`id_tipo`, `nombre`, `descripcion`, `capacidad_maxima`) VALUES
+(1, 'Simple', 'Habitación individual con baño privado', 1),
+(2, 'Doble', 'Dos camas individuales, ideal para colegas o amigos', 2),
+(3, 'Matrimonial', 'Cama matrimonial con escritorio', 2),
+(4, 'Suite', 'Amplia, con sala de estar y vista a la ciudad', 4);
 
--- --------------------------------------------------------
--- Habitaciones
--- --------------------------------------------------------
-INSERT INTO `habitaciones` (`numero`, `id_tipo`, `idpiso`, `precio_base`, `estado`) VALUES
-('101', 1, 1, 80.00, 'ocupada'),
-('102', 2, 1, 120.00, 'limpieza'),
-('103', 3, 1, 150.00, 'disponible'),
-('201', 4, 2, 250.00, 'disponible'),
-('202', 4, 2, 250.00, 'limpieza');
+-- Habitaciones (el estado coincide con las estancias y limpiezas de abajo)
+INSERT INTO `habitaciones` (`id_habitacion`, `numero`, `id_tipo`, `idpiso`, `capacidad_actual`, `precio_base`, `estado`) VALUES
+(1, '101', 1, 1, 1, 80.00, 'ocupada'),
+(2, '102', 2, 1, 1, 120.00, 'ocupada'),
+(3, '103', 3, 1, 0, 150.00, 'limpieza'),
+(4, '104', 1, 1, 0, 80.00, 'disponible'),
+(5, '201', 4, 2, 1, 250.00, 'ocupada'),
+(6, '202', 4, 2, 0, 250.00, 'disponible'),
+(7, '203', 2, 2, 0, 120.00, 'disponible'),
+(8, '204', 3, 2, 1, 150.00, 'ocupada'),
+(9, '205', 1, 2, 0, 80.00, 'limpieza'),
+(10, '301', 4, 3, 0, 250.00, 'disponible'),
+(11, '302', 2, 3, 1, 120.00, 'ocupada'),
+(12, '303', 3, 3, 0, 150.00, 'mantenimiento');
 
--- --------------------------------------------------------
 -- Tarifas
--- --------------------------------------------------------
-INSERT INTO `tarifas` (`id_tipo`, `tipo_estancia`, `duracion`, `precio`, `descripcion`) VALUES
-(1, 'horas', 3, 40.00, 'Simple - 3 horas'),
-(1, 'dias', 1, 80.00, 'Simple - noche completa'),
-(2, 'horas', 3, 60.00, 'Doble - 3 horas'),
-(2, 'dias', 1, 120.00, 'Doble - noche completa'),
-(3, 'dias', 1, 150.00, 'Matrimonial - noche completa'),
-(4, 'dias', 1, 250.00, 'Suite - noche completa');
+INSERT INTO `tarifas` (`idtarifa`, `id_tipo`, `tipo_estancia`, `duracion`, `precio`, `descripcion`) VALUES
+(1, 1, 'horas', 3, 40.00, 'Simple - 3 horas'),
+(2, 1, 'dias', 1, 80.00, 'Simple - noche completa'),
+(3, 1, 'dias', 2, 150.00, 'Simple - 2 noches'),
+(4, 2, 'horas', 3, 60.00, 'Doble - 3 horas'),
+(5, 2, 'dias', 1, 120.00, 'Doble - noche completa'),
+(6, 2, 'dias', 2, 220.00, 'Doble - 2 noches'),
+(7, 3, 'horas', 3, 80.00, 'Matrimonial - 3 horas'),
+(8, 3, 'dias', 1, 150.00, 'Matrimonial - noche completa'),
+(9, 3, 'dias', 2, 280.00, 'Matrimonial - 2 noches'),
+(10, 4, 'dias', 1, 250.00, 'Suite - noche completa'),
+(11, 4, 'dias', 2, 450.00, 'Suite - 2 noches');
 
--- --------------------------------------------------------
--- Categorías y productos
--- --------------------------------------------------------
-INSERT INTO `categoria` (`nombre`, `descripcion`) VALUES
-('Bebidas', 'Bebidas frías y calientes'),
-('Snacks', 'Aperitivos y bocadillos'),
-('Higiene', 'Artículos de aseo personal');
+-- Categorías
+INSERT INTO `categoria` (`idcategoria`, `nombre`, `descripcion`) VALUES
+(1, 'Bebidas', 'Bebidas frías y calientes'),
+(2, 'Snacks', 'Aperitivos y bocadillos'),
+(3, 'Higiene', 'Artículos de aseo personal'),
+(4, 'Minibar', 'Licores y vinos para la habitación');
 
-INSERT INTO `productos` (`idcategoria`, `codigo`, `nombre`, `descripcion`, `stock`, `stock_minimo`, `precioventa`, `preciocompra`) VALUES
-(1, 'BEB-001', 'Agua mineral 500ml', 'Botella de agua mineral', 50, 10, 5.00, 2.50),
-(1, 'BEB-002', 'Gaseosa 500ml', 'Bebida gaseosa', 40, 10, 8.00, 4.00),
-(2, 'SNK-001', 'Papas fritas', 'Bolsa de papas fritas', 30, 5, 6.00, 3.00),
-(3, 'HIG-001', 'Kit de aseo', 'Cepillo, pasta y jabón desechable', 25, 5, 12.00, 6.00),
-(3, 'HIG-002', 'Rollo de papel', 'Insumo que consume cada servicio de baño', 100, 10, 0.00, 0.00);
+-- Productos (con casos de stock bajo el mínimo y agotado para las alertas)
+INSERT INTO `productos` (`idproducto`, `idcategoria`, `codigo`, `nombre`, `descripcion`, `stock`, `stock_minimo`, `precioventa`, `preciocompra`) VALUES
+(1, 1, 'BEB-001', 'Agua mineral 500ml', 'Botella de agua mineral sin gas', 62, 20, 5.00, 2.50),
+(2, 1, 'BEB-002', 'Gaseosa 500ml', 'Bebida gaseosa surtida', 48, 20, 8.00, 4.00),
+(3, 1, 'BEB-003', 'Jugo de naranja 330ml', 'Jugo envasado', 6, 12, 9.00, 5.00),
+(4, 1, 'BEB-004', 'Cerveza Paceña 620ml', 'Cerveza nacional', 36, 24, 18.00, 11.00),
+(5, 1, 'BEB-005', 'Café instantáneo (sobre)', 'Sobre individual de café', 3, 10, 4.00, 1.50),
+(6, 2, 'SNK-001', 'Papas fritas', 'Bolsa de papas fritas 50g', 41, 10, 6.00, 3.00),
+(7, 2, 'SNK-002', 'Galletas surtidas', 'Paquete de galletas', 27, 10, 5.00, 2.50),
+(8, 2, 'SNK-003', 'Maní salado', 'Bolsa de maní 40g', 22, 8, 4.00, 2.00),
+(9, 2, 'SNK-004', 'Chocolate en barra', 'Barra de chocolate 40g', 0, 8, 8.00, 4.50),
+(10, 3, 'HIG-001', 'Kit de aseo', 'Cepillo, pasta y jabón desechable', 33, 10, 12.00, 6.00),
+(11, 3, 'HIG-002', 'Rollo de papel', 'Insumo que consume cada servicio de baño', 74, 20, 0.00, 0.00),
+(12, 3, 'HIG-003', 'Toalla desechable', 'Toalla de un solo uso', 29, 8, 7.00, 3.50),
+(13, 3, 'HIG-004', 'Jabón de tocador', 'Jabón individual', 14, 15, 3.00, 1.50),
+(14, 4, 'MIN-001', 'Vino tinto 750ml', 'Vino tinto de Tarija', 18, 6, 95.00, 60.00),
+(15, 4, 'MIN-002', 'Singani 750ml', 'Singani de altura', 12, 6, 80.00, 50.00),
+(16, 2, 'SNK-005', 'Sándwich de miga', 'Sándwich envasado del día', 15, 6, 10.00, 6.00);
 
--- --------------------------------------------------------
 -- Precios de equipaje
--- --------------------------------------------------------
-INSERT INTO `precio_equipaje` (`tamano`, `descripcion`, `precio`) VALUES
-('Pequeño', 'Mochila o bolso pequeño', 5.00),
-('Mediano', 'Maleta mediana', 8.00),
-('Grande', 'Maleta grande', 12.00),
-('Extra_Grande', 'Equipaje voluminoso', 15.00);
+INSERT INTO `precio_equipaje` (`idprecioe`, `tamano`, `descripcion`, `precio`) VALUES
+(1, 'Pequeño', 'Mochila o bolso pequeño', 5.00),
+(2, 'Mediano', 'Maleta mediana', 8.00),
+(3, 'Grande', 'Maleta grande', 12.00),
+(4, 'Extra_Grande', 'Equipaje voluminoso', 15.00);
 
--- --------------------------------------------------------
 -- Baños
--- --------------------------------------------------------
-INSERT INTO `bano` (`nombre`, `ubicacion`, `precio`) VALUES
-('Baño 1', 'Planta baja - pasillo principal', 10.00),
-('Baño 2', 'Segundo nivel - pasillo principal', 10.00);
+INSERT INTO `bano` (`idbano`, `nombre`, `ubicacion`, `precio`, `estado`) VALUES
+(1, 'Baño 1', 'Planta baja - pasillo principal', 10.00, 'disponible'),
+(2, 'Baño 2', 'Segundo nivel - pasillo principal', 10.00, 'disponible'),
+(3, 'Baño 3', 'Tercer nivel - terraza', 15.00, 'mantenimiento'),
+(4, 'Baño 4', 'Planta baja - junto a recepción', 10.00, 'disponible');
 
--- --------------------------------------------------------
--- Clientes (persona)
--- --------------------------------------------------------
-INSERT INTO `persona` (`nombre`, `apellidopaterno`, `apellidomaterno`, `tipodocumento`, `numdocumento`, `direccion`, `telefono`, `email`, `estado`) VALUES
-('Juan', 'Perez', 'Rojas', 'CI', '10000001', 'Av. Siempre Viva 123', '71111111', 'juan.perez@example.com', 1),
-('Maria', 'Gonzales', 'Flores', 'CI', '10000002', 'Calle Sucre 456', '72222222', 'maria.gonzales@example.com', 1);
+-- Clientes (con teléfonos, correos y direcciones faltantes a propósito)
+INSERT INTO `persona` (`idpersona`, `nombre`, `apellidopaterno`, `apellidomaterno`, `tipodocumento`, `numdocumento`, `direccion`, `telefono`, `email`, `genero`, `estado`, `fechacreacion`) VALUES
+(1, 'Juan', 'Perez', 'Rojas', 'CI', '10000001', 'Av. Siempre Viva 123', '71111111', 'juan.perez@example.com', 'Masculino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 46 DAY), '10:00:00')),
+(2, 'Maria', 'Gonzales', 'Flores', 'CI', '10000002', 'Calle Sucre 456', '72222222', 'maria.gonzales@example.com', 'Femenino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 78 DAY), '10:00:00')),
+(3, 'Pedro', 'Vargas', 'Salvatierra', 'CI', '10000003', 'Barrio Equipetrol, calle 4', '73333333', 'pedro.vargas@example.com', 'Masculino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 72 DAY), '10:00:00')),
+(4, 'Lucía', 'Fernández', 'Roca', 'CI', '10000004', NULL, '74444444', NULL, 'Femenino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 40 DAY), '10:00:00')),
+(5, 'Marcelo', 'Suárez', 'Justiniano', 'CI', '10000005', 'Av. Cristo Redentor 890', '75555555', 'marcelo.suarez@example.com', 'Masculino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 64 DAY), '10:00:00')),
+(6, 'Carla', 'Antelo', 'Peña', 'CI', '10000006', 'Calle Libertad 210', NULL, 'carla.antelo@example.com', 'Femenino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 41 DAY), '10:00:00')),
+(7, 'Diego', 'Montaño', 'Ribera', 'CI', '10000007', NULL, '76666666', NULL, 'Masculino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 44 DAY), '10:00:00')),
+(8, 'Thomas', 'Weber', NULL, 'PASAPORTE', 'C01X00T47', 'Berlín, Alemania', '+4915112345678', 'thomas.weber@example.com', 'Masculino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 48 DAY), '10:00:00')),
+(9, 'Camila', 'Duarte', 'Benítez', 'DNI', '34567890', 'Córdoba, Argentina', '+5493515550101', 'camila.duarte@example.com', 'Femenino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 51 DAY), '10:00:00')),
+(10, 'Hugo', 'Cuéllar', 'Parada', 'CI', '10000010', 'Av. Banzer km 5', '77777777', NULL, 'Masculino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 75 DAY), '10:00:00')),
+(11, 'Valeria', 'Mamani', 'Quispe', 'CI', '10000011', 'Calle Beni 77', '78888888', 'valeria.mamani@example.com', 'Femenino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 52 DAY), '10:00:00')),
+(12, 'Ricardo', 'Terceros', 'Chávez', 'CI', '10000012', NULL, NULL, NULL, 'Masculino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 42 DAY), '10:00:00')),
+(13, 'Sofía', 'Landívar', 'Moreno', 'CI', '10000013', 'Urbanización Las Palmas', '79999999', 'sofia.landivar@example.com', 'Femenino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 89 DAY), '10:00:00')),
+(14, 'Andrés', 'Rivero', 'Cabrera', 'CI', '10000014', 'Av. Mutualista 1520', '70101010', 'andres.rivero@example.com', 'Masculino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '10:00:00')),
+(15, 'Isabel', 'Soliz', 'Arteaga', 'CI', '10000015', 'Calle Warnes 330', '70202020', NULL, 'Femenino', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '10:00:00')),
+(16, 'Constructora Oriente SRL', '', NULL, 'RUC', '1020304050', 'Parque Industrial, mz 8', '33557788', 'compras@constructoraoriente.example.com', NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '10:00:00'));
 
--- --------------------------------------------------------
--- Operaciones de ejemplo (fechas relativas a la fecha actual,
--- para que el dashboard y los reportes muestren datos del dia)
--- --------------------------------------------------------
+-- Recepciones
+INSERT INTO `recepcion` (`idrecepcion`, `idcliente`, `idhabitacion`, `idtarifa`, `idusuario`, `metodopago`, `fechaentrada`, `fechasalida`, `fechasalida_prevista`, `montototal`, `montopagado`, `cambio`, `estado`, `observaciones`, `fechacreacion`) VALUES
+(1, 5, 7, 5, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '14:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '10:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '10:15:00'), 120.00, 120.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '14:45:00')),
+(2, 11, 10, 10, 4, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '16:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '09:55:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '10:15:00'), 250.00, 250.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '16:30:00')),
+(3, 6, 3, 9, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '17:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '10:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '10:00:00'), 280.00, 280.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '17:10:00')),
+(4, 6, 5, 10, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '17:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '11:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '11:00:00'), 250.00, 250.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '17:10:00')),
+(5, 4, 2, 5, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '20:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '12:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '12:15:00'), 120.00, 120.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '20:15:00')),
+(6, 7, 11, 5, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '13:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '11:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '11:30:00'), 120.00, 120.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '13:15:00')),
+(7, 15, 1, 3, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '15:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '10:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '10:30:00'), 150.00, 150.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '15:15:00')),
+(8, 3, 8, 8, 4, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '14:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '11:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '11:15:00'), 150.00, 150.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '14:00:00')),
+(9, 12, 6, 10, 4, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '17:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '10:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '10:30:00'), 280.00, 280.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '17:45:00')),
+(10, 11, 9, 1, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '19:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '22:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '22:00:00'), 75.00, 75.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '19:00:00')),
+(11, 4, 4, 2, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '19:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '11:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '11:00:00'), 80.00, 80.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '19:00:00')),
+(12, 9, 2, 5, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '15:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '10:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '10:00:00'), 120.00, 120.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '15:10:00')),
+(13, 7, 10, 10, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '16:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '11:55:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '12:15:00'), 250.00, 250.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '16:45:00')),
+(14, 1, 5, 10, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '19:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '10:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '11:00:00'), 250.00, 250.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '19:30:00')),
+(15, 2, 7, 5, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '19:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '12:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '12:00:00'), 120.00, 120.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '19:45:00')),
+(16, 16, 3, 7, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '13:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '17:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '16:45:00'), 80.00, 80.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '13:45:00')),
+(17, 7, 11, 5, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '16:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '11:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '11:15:00'), 120.00, 120.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '16:00:00')),
+(18, 16, 9, 1, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '17:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '20:20:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '20:10:00'), 40.00, 40.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '17:10:00')),
+(19, 4, 8, 9, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '18:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '12:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '12:15:00'), 280.00, 280.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '18:10:00')),
+(20, 2, 6, 10, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '20:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '10:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '10:00:00'), 250.00, 250.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '20:45:00')),
+(21, 2, 9, 2, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '14:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '11:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '11:15:00'), 80.00, 80.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '14:00:00')),
+(22, 11, 1, 3, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '15:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '12:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '12:15:00'), 150.00, 150.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '15:00:00')),
+(23, 9, 5, 11, 2, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '16:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '12:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '12:00:00'), 450.00, 450.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '16:45:00')),
+(24, 14, 4, 3, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '18:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '10:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '10:00:00'), 150.00, 150.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '18:00:00')),
+(25, 4, 7, 6, 4, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '18:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '09:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '10:00:00'), 220.00, 220.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '18:45:00')),
+(26, 2, 11, 5, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '18:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '10:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '10:00:00'), 120.00, 120.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '18:45:00')),
+(27, 8, 6, 11, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '14:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '10:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '10:00:00'), 510.00, 510.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '14:30:00')),
+(28, 1, 2, 4, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '17:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '19:50:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '20:10:00'), 78.00, 78.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '17:10:00')),
+(29, 2, 3, 8, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '18:30:00'), NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '12:15:00'), 0.00, 0.00, NULL, 'cancelado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '18:30:00')),
+(30, 14, 10, 11, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '19:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '11:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '11:15:00'), 450.00, 450.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '19:15:00')),
+(31, 4, 8, 9, 2, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '14:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '11:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '11:30:00'), 280.00, 280.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '14:45:00')),
+(32, 8, 5, 10, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '17:00:00'), NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '12:00:00'), 0.00, 0.00, 0.00, 'cancelado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '17:00:00')),
+(33, 10, 1, 2, 4, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '13:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '11:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '11:00:00'), 80.00, 80.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '13:45:00')),
+(34, 9, 11, 4, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '14:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '17:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '17:10:00'), 60.00, 60.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '14:10:00')),
+(35, 10, 7, 5, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '18:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '10:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '10:00:00'), 140.00, 140.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '18:15:00')),
+(36, 5, 4, 3, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '15:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '12:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '12:30:00'), 150.00, 150.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '15:15:00')),
+(37, 16, 9, 2, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '15:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '10:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '10:00:00'), 80.00, 80.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '15:15:00')),
+(38, 5, 2, 4, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '16:45:00'), NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '19:45:00'), 0.00, 0.00, NULL, 'cancelado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '16:45:00')),
+(39, 15, 3, 9, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '17:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '09:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '10:00:00'), 280.00, 280.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '17:15:00')),
+(40, 6, 6, 10, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '17:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '10:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '10:00:00'), 250.00, 250.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '17:30:00')),
+(41, 9, 5, 10, 2, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '13:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '12:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '12:30:00'), 250.00, 250.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '13:45:00')),
+(42, 16, 11, 5, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '15:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '11:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '11:00:00'), 120.00, 120.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '15:15:00')),
+(43, 4, 1, 1, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '18:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '20:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '21:00:00'), 90.00, 90.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '18:00:00')),
+(44, 8, 2, 6, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '15:30:00'), NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '12:15:00'), 0.00, 0.00, NULL, 'cancelado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '15:30:00')),
+(45, 1, 7, 5, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '17:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '12:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '12:00:00'), 140.00, 140.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '17:10:00')),
+(46, 15, 8, 8, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '18:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '11:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '11:15:00'), 180.00, 180.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '18:15:00')),
+(47, 6, 10, 11, 2, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '20:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '12:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '12:00:00'), 460.00, 460.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '20:10:00')),
+(48, 12, 9, 3, 4, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '15:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '10:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '11:00:00'), 150.00, 150.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '15:15:00')),
+(49, 16, 11, 5, 2, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '15:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '12:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '12:00:00'), 120.00, 120.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '15:30:00')),
+(50, 13, 3, 9, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '12:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '12:00:00'), 310.00, 310.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:10:00')),
+(51, 1, 6, 10, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '11:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '11:00:00'), 250.00, 250.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:10:00')),
+(52, 4, 1, 3, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '18:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '10:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '10:00:00'), 150.00, 150.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '18:45:00')),
+(53, 5, 4, 3, 4, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '17:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:00:00'), 160.00, 160.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '17:00:00')),
+(54, 15, 5, 11, 4, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '18:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '10:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '10:15:00'), 450.00, 450.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '18:45:00')),
+(55, 5, 7, 5, 4, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:30:00'), 165.00, 165.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:45:00')),
+(56, 12, 11, 5, 2, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '18:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:15:00'), 165.00, 165.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '18:10:00')),
+(57, 12, 8, 8, 2, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '18:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:30:00'), 150.00, 150.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '18:15:00')),
+(58, 16, 10, 10, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '19:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '10:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '10:30:00'), 250.00, 250.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '19:00:00')),
+(59, 13, 6, 11, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '14:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:30:00'), 485.00, 485.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '14:00:00')),
+(60, 8, 9, 3, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '14:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '10:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '10:30:00'), 150.00, 150.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '14:45:00')),
+(61, 2, 3, 8, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '12:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '12:30:00'), 168.00, 168.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:10:00')),
+(62, 8, 5, 11, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:00:00'), 480.00, 480.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:45:00')),
+(63, 12, 2, 6, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '20:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '12:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '12:00:00'), 250.00, 250.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '20:15:00')),
+(64, 4, 10, 10, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '13:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '12:55:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '12:30:00'), 278.00, 278.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '13:10:00')),
+(65, 2, 11, 4, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '15:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '18:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '18:45:00'), 60.00, 60.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '15:45:00')),
+(66, 9, 3, 8, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '16:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '11:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '11:00:00'), 150.00, 150.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '16:45:00')),
+(67, 3, 7, 5, 4, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '16:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '11:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '11:15:00'), 145.00, 145.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '16:45:00')),
+(68, 6, 10, 10, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '13:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '10:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '10:30:00'), 290.00, 290.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '13:00:00')),
+(69, 5, 1, 2, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '11:55:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '11:30:00'), 80.00, 80.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:10:00')),
+(70, 14, 9, 3, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '14:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '12:30:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '12:30:00'), 195.00, 195.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '14:00:00')),
+(71, 10, 8, 9, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '14:00:00'), NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '12:00:00'), 350.00, 200.00, 0.00, 'en_curso', 'Quedó pendiente el pago del saldo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '14:00:00')),
+(72, 1, 6, 10, 4, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '15:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '11:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '12:00:00'), 250.00, 250.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '15:10:00')),
+(73, 8, 3, 8, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '16:45:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '12:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '12:15:00'), 150.00, 150.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '16:45:00')),
+(74, 12, 7, 4, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '16:10:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '19:35:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '19:10:00'), 60.00, 60.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '16:10:00')),
+(75, 8, 5, 11, 2, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '15:00:00'), NULL, TIMESTAMP(CURDATE(), '23:30:00'), 508.00, 450.00, NULL, 'en_curso', 'Turista alemán, desayuno temprano', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '15:00:00')),
+(76, 15, 2, 5, 2, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '17:00:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '11:15:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '11:15:00'), 130.00, 130.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '17:00:00')),
+(77, 3, 6, 10, 4, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '14:10:00'), (NOW() - INTERVAL 380 MINUTE), (NOW() - INTERVAL 420 MINUTE), 250.00, 250.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '14:10:00')),
+(78, 7, 4, 2, 2, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '15:40:00'), (NOW() - INTERVAL 240 MINUTE), (NOW() - INTERVAL 300 MINUTE), 115.00, 115.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '15:40:00')),
+(79, 5, 3, 8, 2, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '16:20:00'), (NOW() - INTERVAL 150 MINUTE), (NOW() - INTERVAL 200 MINUTE), 150.00, 150.00, 0.00, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '16:20:00')),
+(80, 1, 1, 2, 2, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '17:30:00'), NULL, TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '11:00:00'), 80.00, 80.00, NULL, 'en_curso', 'Viaje de trabajo, pide factura', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '17:30:00')),
+(81, 12, 9, 2, 4, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '18:05:00'), (NOW() - INTERVAL 95 MINUTE), (NOW() - INTERVAL 130 MINUTE), 80.00, 80.00, NULL, 'finalizado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '18:05:00')),
+(82, 16, 11, 6, 2, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '19:15:00'), NULL, TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '12:00:00'), 250.00, 110.00, NULL, 'en_curso', 'Personal de la constructora', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '19:15:00')),
+(83, 14, 2, 5, 4, 'Efectivo', (NOW() - INTERVAL 360 MINUTE), NULL, TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '11:30:00'), 130.00, 60.00, 0.00, 'en_curso', NULL, (NOW() - INTERVAL 360 MINUTE)),
+(84, 9, 10, 10, 2, 'QR', (NOW() - INTERVAL -30 MINUTE), NULL, TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '11:00:00'), 250.00, 100.00, NULL, 'reservado', 'Llega hoy en la tarde, vuelo desde Córdoba', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:45:00')),
+(85, 11, 7, 5, 4, 'Efectivo', TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '14:00:00'), NULL, TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 2 DAY), '11:00:00'), 120.00, 60.00, 0.00, 'reservado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '13:15:00')),
+(86, 15, 1, 2, 4, 'OTROS', TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 3 DAY), '14:00:00'), NULL, TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 4 DAY), '11:00:00'), 80.00, 0.00, NULL, 'reservado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:15:00')),
+(87, 13, 6, 11, 2, 'QR', TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 3 DAY), '15:00:00'), NULL, TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 5 DAY), '11:00:00'), 450.00, 225.00, NULL, 'reservado', 'Aniversario, pide decoración', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '09:45:00')),
+(88, 6, 3, 9, 4, 'Efectivo', TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 5 DAY), '16:00:00'), NULL, TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 7 DAY), '11:00:00'), 280.00, 280.00, 0.00, 'reservado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:15:00')),
+(89, 2, 4, 3, 2, 'OTROS', TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 7 DAY), '14:30:00'), NULL, TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 9 DAY), '11:00:00'), 150.00, 150.00, NULL, 'reservado', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '15:15:00'));
 
--- Check-in en curso: Juan Perez en la habitación 101 (marcada 'ocupada' arriba)
-INSERT INTO `recepcion` (`idcliente`, `idhabitacion`, `idtarifa`, `idusuario`, `metodopago`, `fechaentrada`, `fechasalida_prevista`, `montototal`, `montopagado`, `cambio`, `estado`) VALUES
-(1, 1, 2, 2, 'Efectivo', NOW(), DATE_ADD(NOW(), INTERVAL 1 DAY), 80.00, 80.00, 0.00, 'en_curso');
+-- Movimientos de recepción
+INSERT INTO `recepcion_movimientos` (`idmovimiento`, `idrecepcion`, `tipo`, `valor_anterior`, `valor_nuevo`, `motivo`, `idusuario`, `fechacreacion`) VALUES
+(1, 71, 'cambio_habitacion', '4', '8', 'El huésped pidió una habitación más amplia', 4, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '18:20:00'));
 
--- Folio de la recepción anterior: `recepcion`.montototal/montopagado son un cache calculado
--- a partir de `pagos` (ver Pago::calcularSaldo/registrarLinea) — sembrar ambas líneas para
--- que el folio y el cache queden consistentes desde el primer arranque.
-INSERT INTO `pagos` (`idrecepcion`, `tipo`, `concepto`, `montototal`, `metodopago`, `idusuario`) VALUES
-(1, 'cargo', 'Estancia', 80.00, 'Efectivo', 2),
-(1, 'pago', 'Pago inicial (check-in)', 80.00, 'Efectivo', 2);
+-- Servicios de baño (antes que el folio: `pagos` los referencia)
+INSERT INTO `servicio_bano` (`idservicio`, `idbano`, `idusuario`, `idcliente`, `idrecepcion`, `tipo_cliente`, `modalidad_cobro`, `total`, `metodopago`, `pagorecibido`, `cambio`, `fecha`, `fecha_fin`, `duracion_minutos`, `estado`, `observaciones`, `motivo_cancelacion`, `idusuario_cancelacion`, `fecha_cancelacion`, `stock_repuesto`, `fechacreacion`) VALUES
+(1, 2, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '14:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '14:49:00'), 9, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '14:40:00')),
+(2, 4, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 20.00, 10.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '16:12:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '16:27:00'), 15, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '16:12:00')),
+(3, 1, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'QR', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '17:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '18:15:00'), 35, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '17:40:00')),
+(4, 2, 4, 1, 45, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '19:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '19:53:00'), 28, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '19:25:00')),
+(5, 1, 4, 1, 45, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '11:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '12:02:00'), 22, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '11:40:00')),
+(6, 4, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '20:05:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '20:40:00'), 35, 'cancelado', NULL, 'Cobro duplicado, se corrigió en caja', 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '21:35:00'), 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '20:05:00')),
+(7, 1, 4, 6, 47, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '10:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '10:34:00'), 9, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '10:25:00')),
+(8, 4, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '13:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '13:52:00'), 12, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '13:40:00')),
+(9, 4, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'QR', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '19:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '19:49:00'), 9, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '19:40:00')),
+(10, 2, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '08:12:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '08:40:00'), 28, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '08:12:00')),
+(11, 1, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '10:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '10:34:00'), 9, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '10:25:00')),
+(12, 2, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'QR', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '13:12:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '13:34:00'), 22, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '13:12:00')),
+(13, 1, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'QR', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:34:00'), 9, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:25:00')),
+(14, 2, 2, 5, 53, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '17:02:00'), 22, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:40:00')),
+(15, 2, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:55:00'), NULL, NULL, 'cancelado', NULL, 'Registrado en el baño equivocado', 2, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:01:00'), 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:55:00')),
+(16, 1, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '18:55:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '19:13:00'), 18, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '18:55:00')),
+(17, 4, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 20.00, 10.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '08:12:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '08:40:00'), 28, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '08:12:00')),
+(18, 4, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'QR', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '13:05:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '13:40:00'), 35, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '13:05:00')),
+(19, 2, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'QR', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '15:12:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '15:34:00'), 22, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '15:12:00')),
+(20, 4, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'QR', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '19:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '19:49:00'), 9, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '19:40:00')),
+(21, 1, 4, 13, 59, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '21:05:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '21:40:00'), 35, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '21:05:00')),
+(22, 1, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'QR', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '12:08:00'), 28, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:40:00')),
+(23, 4, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '13:55:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '14:10:00'), 15, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '13:55:00')),
+(24, 1, 2, 4, 64, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '11:12:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '11:34:00'), 22, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '11:12:00')),
+(25, 1, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '14:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '14:58:00'), 18, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '14:40:00')),
+(26, 1, 4, 6, 68, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '18:05:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '18:20:00'), 15, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '18:05:00')),
+(27, 4, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:05:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:14:00'), 9, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:05:00')),
+(28, 2, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:58:00'), 18, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:40:00')),
+(29, 4, 4, 14, 70, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '18:25:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '18:43:00'), 18, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '18:25:00')),
+(30, 2, 2, 14, 70, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '11:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '11:49:00'), 9, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '11:40:00')),
+(31, 2, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '11:55:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '12:30:00'), 35, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '11:55:00')),
+(32, 4, 2, 15, 76, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '19:55:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '20:10:00'), 15, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '19:55:00')),
+(33, 2, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 20.00, 10.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '08:55:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '09:23:00'), 28, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '08:55:00')),
+(34, 2, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'QR', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '10:12:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '10:27:00'), 15, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '10:12:00')),
+(35, 1, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '10:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '10:49:00'), 9, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '10:40:00')),
+(36, 4, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 20.00, 10.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '12:55:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '13:23:00'), 28, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '12:55:00')),
+(37, 2, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'QR', 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '14:40:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '15:15:00'), 35, 'finalizado', NULL, NULL, NULL, NULL, 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '14:40:00')),
+(38, 1, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 10.00, 0.00, (NOW() - INTERVAL 310 MINUTE), (NOW() - INTERVAL 296 MINUTE), 14, 'finalizado', NULL, NULL, NULL, NULL, 0, (NOW() - INTERVAL 310 MINUTE)),
+(39, 2, 4, NULL, NULL, 'Publico', 'contado', 10.00, 'QR', 10.00, 0.00, (NOW() - INTERVAL 140 MINUTE), (NOW() - INTERVAL 129 MINUTE), 11, 'finalizado', NULL, NULL, NULL, NULL, 0, (NOW() - INTERVAL 140 MINUTE)),
+(40, 1, 4, 14, 83, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, (NOW() - INTERVAL 75 MINUTE), (NOW() - INTERVAL 58 MINUTE), 17, 'finalizado', NULL, NULL, NULL, NULL, 0, (NOW() - INTERVAL 75 MINUTE)),
+(41, 2, 4, 8, 75, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, (NOW() - INTERVAL 52 MINUTE), NULL, NULL, 'iniciado', 'Huésped pidió toalla extra', NULL, NULL, NULL, 0, (NOW() - INTERVAL 52 MINUTE)),
+(42, 1, 2, NULL, NULL, 'Publico', 'contado', 10.00, 'Efectivo', 20.00, 10.00, (NOW() - INTERVAL 12 MINUTE), NULL, NULL, 'iniciado', NULL, NULL, NULL, NULL, 0, (NOW() - INTERVAL 12 MINUTE));
 
--- Dos reservas FUTURAS que se solapan en la habitación 103 (recepciones 2 y 3):
--- material de prueba para Recepcion::existeSolape() (el seed inserta directo, sin pasar
--- por el modelo) y para el badge derivado de no-show. Reservado no toca habitaciones.estado.
-INSERT INTO `recepcion` (`idcliente`, `idhabitacion`, `idtarifa`, `idusuario`, `metodopago`, `fechaentrada`, `fechasalida_prevista`, `montototal`, `montopagado`, `cambio`, `estado`) VALUES
-(1, 3, 5, 2, 'OTROS', DATE_ADD(CURDATE(), INTERVAL 3 DAY), DATE_ADD(CURDATE(), INTERVAL 6 DAY), 150.00, 0.00, NULL, 'reservado'),
-(2, 3, 5, 2, 'OTROS', DATE_ADD(CURDATE(), INTERVAL 5 DAY), DATE_ADD(CURDATE(), INTERVAL 8 DAY), 150.00, 0.00, NULL, 'reservado');
+-- Equipaje
+INSERT INTO `almacenamiento_equipaje` (`idalmacen`, `idcliente`, `idusuario`, `descripcion`, `cantidad_piezas`, `codigo_ticket`, `fechaentrada`, `fechasalida`, `idpequipaje`, `monto`, `estado`, `fechacreacion`) VALUES
+(1, 8, 2, 'Maleta grande negra con candado', 1, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '10:50:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '12:20:00'), 3, 12.00, 'retirado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '10:50:00')),
+(2, 14, 4, 'Dos maletas medianas, una roja', 2, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '09:20:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '10:50:00'), 2, 16.00, 'retirado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '09:20:00')),
+(3, 10, 2, 'Mochila de trekking verde', 1, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '15:05:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '16:35:00'), 1, 5.00, 'retirado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '15:05:00')),
+(4, 12, 4, 'Maleta grande azul, etiqueta rota', 1, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '11:05:00'), NULL, 3, 12.00, 'perdido', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '11:05:00')),
+(5, 5, 2, 'Equipaje voluminoso: caja de herramientas', 1, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '08:05:00'), NULL, 4, 15.00, 'almacenado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '08:05:00')),
+(6, 7, 4, 'Maleta mediana gris', 1, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:20:00'), NULL, 2, 8.00, 'almacenado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:20:00')),
+(7, 13, 2, 'Dos bolsos de mano', 2, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '13:35:00'), NULL, 1, 10.00, 'dañado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '13:35:00')),
+(8, 3, 4, 'Maleta grande con ruedas', 1, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '10:05:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '11:35:00'), 3, 12.00, 'retirado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '10:05:00')),
+(9, 9, 2, 'Maleta mediana con sticker de Córdoba', 1, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:50:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '19:20:00'), 2, 8.00, 'retirado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:50:00')),
+(10, 15, 4, 'Bolso deportivo', 1, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '09:50:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '11:20:00'), 1, 5.00, 'retirado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '09:50:00')),
+(11, 6, 2, 'Maleta mediana azul', 1, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:05:00'), NULL, 2, 8.00, 'almacenado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:05:00')),
+(12, 1, 4, 'Maleta grande roja', 1, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '12:05:00'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '13:35:00'), 3, 12.00, 'retirado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '12:05:00')),
+(13, 11, 2, 'Mochila escolar', 1, CONCAT('EQ-', DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y%m%d'), '-01'), TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '18:20:00'), NULL, 1, 5.00, 'almacenado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '18:20:00')),
+(14, 2, 4, 'Maleta mediana azul', 1, CONCAT('EQ-', DATE_FORMAT(CURDATE(), '%Y%m%d'), '-01'), (NOW() - INTERVAL 45 MINUTE), NULL, 2, 8.00, 'almacenado', (NOW() - INTERVAL 45 MINUTE));
 
-INSERT INTO `pagos` (`idrecepcion`, `tipo`, `concepto`, `montototal`, `metodopago`, `idusuario`) VALUES
-(2, 'cargo', 'Estancia', 150.00, 'OTROS', 2),
-(3, 'cargo', 'Estancia', 150.00, 'OTROS', 2);
+-- Folio y caja: cargos, pagos y reversos de recepción, baño y equipaje (libro mayor)
+INSERT INTO `pagos` (`id_pago`, `idrecepcion`, `idequipaje`, `idservicio_bano`, `tipo`, `concepto`, `idusuario`, `id_pago_reversado`, `montototal`, `metodopago`, `fechacreacion`) VALUES
+(1, 1, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '14:45:00')),
+(2, 1, NULL, NULL, 'pago', 'Abono', 2, NULL, 60.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '00:45:00')),
+(3, 1, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 60.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '10:25:00')),
+(4, 2, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '16:30:00')),
+(5, 2, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 250.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '16:30:00')),
+(6, 3, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 280.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '17:10:00')),
+(7, 3, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 280.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '17:10:00')),
+(8, 4, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '17:10:00')),
+(9, 4, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '17:10:00')),
+(10, 5, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '20:15:00')),
+(11, 5, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 60.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '20:15:00')),
+(12, 5, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 60.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '12:40:00')),
+(13, 6, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '13:15:00')),
+(14, 6, NULL, NULL, 'pago', 'Abono', 2, NULL, 60.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '23:15:00')),
+(15, 6, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 60.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '11:30:00')),
+(16, 7, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '15:15:00')),
+(17, 7, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 150.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '15:15:00')),
+(18, 8, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '14:00:00')),
+(19, 8, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 150.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '14:00:00')),
+(20, 9, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '17:45:00')),
+(21, 9, NULL, NULL, 'cargo', 'Late check-out', 4, NULL, 30.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '06:23:00')),
+(22, 9, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 250.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '17:45:00')),
+(23, 9, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 30.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '10:10:00')),
+(24, 10, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 40.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '19:00:00')),
+(25, 10, NULL, NULL, 'cargo', 'Desayuno', 2, NULL, 35.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '01:37:00')),
+(26, 10, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 40.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '19:00:00')),
+(27, 10, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 35.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '22:00:00')),
+(28, 11, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 80.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '19:00:00')),
+(29, 11, NULL, NULL, 'pago', 'Abono', 4, NULL, 40.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '05:00:00')),
+(30, 11, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 40.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '11:10:00')),
+(31, 12, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '15:10:00')),
+(32, 12, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 120.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '10:10:00')),
+(33, 13, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '16:45:00')),
+(34, 13, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 125.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '16:45:00')),
+(35, 13, NULL, NULL, 'pago', 'Abono', 4, NULL, 62.50, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '02:45:00')),
+(36, 13, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 62.50, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '11:55:00')),
+(37, 14, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '19:30:00')),
+(38, 14, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 125.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '19:30:00')),
+(39, 14, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 125.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '10:40:00')),
+(40, 15, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '19:45:00')),
+(41, 15, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 120.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '19:45:00')),
+(42, 16, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 80.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '13:45:00')),
+(43, 16, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 40.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '13:45:00')),
+(44, 16, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 40.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '17:10:00')),
+(45, 17, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '16:00:00')),
+(46, 17, NULL, NULL, 'pago', 'Abono', 4, NULL, 60.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '02:00:00')),
+(47, 17, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 60.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '11:15:00')),
+(48, 18, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 40.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '17:10:00')),
+(49, 18, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 20.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '17:10:00')),
+(50, 18, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 20.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '20:20:00')),
+(51, 19, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 280.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '18:10:00')),
+(52, 19, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 280.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '18:10:00')),
+(53, 20, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '20:45:00')),
+(54, 20, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 125.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '20:45:00')),
+(55, 20, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 125.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '10:00:00')),
+(56, 21, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 80.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '14:00:00')),
+(57, 21, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 80.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '11:15:00')),
+(58, 22, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '15:00:00')),
+(59, 22, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 75.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '15:00:00')),
+(60, 22, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 75.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '12:15:00')),
+(61, 23, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 450.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '16:45:00')),
+(62, 23, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 450.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '16:45:00')),
+(63, 24, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '18:00:00')),
+(64, 24, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 75.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '18:00:00')),
+(65, 24, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 75.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '10:10:00')),
+(66, 25, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 220.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '18:45:00')),
+(67, 25, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 220.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '18:45:00')),
+(68, 26, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '18:45:00')),
+(69, 26, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '10:25:00')),
+(70, 27, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 450.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '14:30:00')),
+(71, 27, NULL, NULL, 'cargo', 'Consumo de minibar', 4, NULL, 60.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '02:55:00')),
+(72, 27, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 510.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '10:10:00')),
+(73, 28, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 60.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '17:10:00')),
+(74, 28, NULL, NULL, 'cargo', 'Consumo de minibar', 2, NULL, 18.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '01:10:00')),
+(75, 28, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 78.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '19:50:00')),
+(76, 29, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '18:30:00')),
+(77, 29, NULL, NULL, 'reverso', 'Anulación del cargo por cancelación', 1, 76, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '14:30:00')),
+(78, 30, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 450.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '19:15:00')),
+(79, 30, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 450.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '11:25:00')),
+(80, 31, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 280.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '14:45:00')),
+(81, 31, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 140.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '14:45:00')),
+(82, 31, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 140.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '11:30:00')),
+(83, 32, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '17:00:00')),
+(84, 32, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 250.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '17:00:00')),
+(85, 32, NULL, NULL, 'reverso', 'Devolución por cancelación', 1, 84, 250.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '13:00:00')),
+(86, 32, NULL, NULL, 'reverso', 'Anulación del cargo por cancelación', 1, 83, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '13:00:00')),
+(87, 33, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 80.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '13:45:00')),
+(88, 33, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 40.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '13:45:00')),
+(89, 33, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 40.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '11:00:00')),
+(90, 34, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 60.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '14:10:00')),
+(91, 34, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 60.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '14:10:00')),
+(92, 35, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '18:15:00')),
+(93, 35, NULL, NULL, 'cargo', 'Lavandería', 4, NULL, 20.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '07:39:00')),
+(94, 35, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 120.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '18:15:00')),
+(95, 35, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 20.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '10:10:00')),
+(96, 36, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '15:15:00')),
+(97, 36, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 150.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '15:15:00')),
+(98, 37, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 80.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '15:15:00')),
+(99, 37, NULL, NULL, 'pago', 'Abono', 2, NULL, 40.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '01:15:00')),
+(100, 37, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 40.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '10:00:00')),
+(101, 38, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 60.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '16:45:00')),
+(102, 38, NULL, NULL, 'reverso', 'Anulación del cargo por cancelación', 1, 101, 60.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '12:45:00')),
+(103, 39, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 280.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '17:15:00')),
+(104, 39, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 280.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '17:15:00')),
+(105, 40, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '17:30:00')),
+(106, 40, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 125.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '17:30:00')),
+(107, 40, NULL, NULL, 'pago', 'Abono', 2, NULL, 62.50, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '03:30:00')),
+(108, 40, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 62.50, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '10:10:00')),
+(109, 41, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '13:45:00')),
+(110, 41, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 250.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '13:45:00')),
+(111, 42, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '15:15:00')),
+(112, 42, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 60.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '15:15:00')),
+(113, 42, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 60.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '11:25:00')),
+(114, 43, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 40.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '18:00:00')),
+(115, 43, NULL, NULL, 'cargo', 'Late check-out', 4, NULL, 50.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '00:15:00')),
+(116, 43, NULL, NULL, 'pago', 'Abono', 4, NULL, 45.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '04:00:00')),
+(117, 43, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 45.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '20:40:00')),
+(118, 44, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 220.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '15:30:00')),
+(119, 44, NULL, NULL, 'reverso', 'Anulación del cargo por cancelación', 1, 118, 220.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '11:30:00')),
+(120, 45, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '17:10:00')),
+(121, 45, NULL, 4, 'cargo', 'Servicio de baño - Baño 2 (#4)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '19:25:00')),
+(122, 45, NULL, 5, 'cargo', 'Servicio de baño - Baño 1 (#5)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '11:40:00')),
+(123, 45, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 60.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '17:10:00')),
+(124, 45, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 80.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '12:10:00')),
+(125, 46, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '18:15:00')),
+(126, 46, NULL, NULL, 'cargo', 'Late check-out', 4, NULL, 30.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '03:17:00')),
+(127, 46, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '18:15:00')),
+(128, 46, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 30.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '11:40:00')),
+(129, 47, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 450.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '20:10:00')),
+(130, 47, NULL, 7, 'cargo', 'Servicio de baño - Baño 1 (#7)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '10:25:00')),
+(131, 47, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 450.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '20:10:00')),
+(132, 47, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 10.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '12:10:00')),
+(133, 48, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '15:15:00')),
+(134, 48, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 150.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '15:15:00')),
+(135, 49, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '15:30:00')),
+(136, 49, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 60.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '15:30:00')),
+(137, 49, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 60.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '12:25:00')),
+(138, 50, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 280.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:10:00')),
+(139, 50, NULL, NULL, 'cargo', 'Late check-out', 2, NULL, 30.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '08:01:00')),
+(140, 50, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 310.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '12:00:00')),
+(141, 51, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:10:00')),
+(142, 51, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 250.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:10:00')),
+(143, 52, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '18:45:00')),
+(144, 52, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 150.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '18:45:00')),
+(145, 53, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '17:00:00')),
+(146, 53, NULL, 14, 'cargo', 'Servicio de baño - Baño 2 (#14)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:40:00')),
+(147, 53, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 150.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '17:00:00')),
+(148, 53, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:40:00')),
+(149, 54, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 450.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '18:45:00')),
+(150, 54, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 450.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '18:45:00')),
+(151, 55, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:45:00')),
+(152, 55, NULL, NULL, 'cargo', 'Lavandería', 4, NULL, 45.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '21:56:00')),
+(153, 55, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 120.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:45:00')),
+(154, 55, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 45.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:10:00')),
+(155, 56, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '18:10:00')),
+(156, 56, NULL, NULL, 'cargo', 'Lavandería', 2, NULL, 45.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '04:47:00')),
+(157, 56, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 60.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '18:10:00')),
+(158, 56, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 105.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:25:00')),
+(159, 57, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '18:15:00')),
+(160, 57, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 150.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '18:15:00')),
+(161, 58, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '19:00:00')),
+(162, 58, NULL, NULL, 'pago', 'Abono', 4, NULL, 125.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '05:00:00')),
+(163, 58, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 125.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '10:10:00')),
+(164, 59, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 450.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '14:00:00')),
+(165, 59, NULL, NULL, 'cargo', 'Consumo de minibar', 2, NULL, 25.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '21:03:00')),
+(166, 59, NULL, 21, 'cargo', 'Servicio de baño - Baño 1 (#21)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '21:05:00')),
+(167, 59, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 485.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:10:00')),
+(168, 60, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '14:45:00')),
+(169, 60, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 75.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '14:45:00')),
+(170, 60, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 75.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '10:10:00')),
+(171, 61, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:10:00')),
+(172, 61, NULL, NULL, 'cargo', 'Consumo de minibar', 2, NULL, 18.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '02:32:00')),
+(173, 61, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 150.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:10:00')),
+(174, 61, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 18.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '12:30:00')),
+(175, 62, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 450.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:45:00')),
+(176, 62, NULL, NULL, 'cargo', 'Lavandería', 4, NULL, 30.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '04:46:00')),
+(177, 62, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 450.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:45:00')),
+(178, 62, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 30.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:00:00')),
+(179, 63, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 220.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '20:15:00')),
+(180, 63, NULL, NULL, 'cargo', 'Lavandería', 2, NULL, 30.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '09:07:00')),
+(181, 63, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 110.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '20:15:00')),
+(182, 63, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 140.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '12:10:00')),
+(183, 64, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '13:10:00')),
+(184, 64, NULL, NULL, 'cargo', 'Consumo de minibar', 2, NULL, 18.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '01:47:00')),
+(185, 64, NULL, 24, 'cargo', 'Servicio de baño - Baño 1 (#24)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '11:12:00')),
+(186, 64, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 250.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '13:10:00')),
+(187, 64, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 28.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '12:55:00')),
+(188, 65, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 60.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '15:45:00')),
+(189, 65, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 30.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '15:45:00')),
+(190, 65, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 30.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '18:25:00')),
+(191, 66, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '16:45:00')),
+(192, 66, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 150.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '16:45:00')),
+(193, 67, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '16:45:00')),
+(194, 67, NULL, NULL, 'cargo', 'Desayuno', 4, NULL, 25.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '01:13:00')),
+(195, 67, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 120.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '16:45:00')),
+(196, 67, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 25.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '11:15:00')),
+(197, 68, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '13:00:00')),
+(198, 68, NULL, NULL, 'cargo', 'Late check-out', 2, NULL, 30.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '19:49:00')),
+(199, 68, NULL, 26, 'cargo', 'Servicio de baño - Baño 1 (#26)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '18:05:00')),
+(200, 68, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 125.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '13:00:00')),
+(201, 68, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 165.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '10:40:00')),
+(202, 69, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 80.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:10:00')),
+(203, 69, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 80.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:10:00')),
+(204, 70, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '14:00:00')),
+(205, 70, NULL, NULL, 'cargo', 'Desayuno', 2, NULL, 25.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '23:49:00')),
+(206, 70, NULL, 29, 'cargo', 'Servicio de baño - Baño 4 (#29)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '18:25:00')),
+(207, 70, NULL, 30, 'cargo', 'Servicio de baño - Baño 2 (#30)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '11:40:00')),
+(208, 70, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 75.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '14:00:00')),
+(209, 70, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 120.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '12:30:00')),
+(210, 71, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 280.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '14:00:00')),
+(211, 71, NULL, NULL, 'cargo', 'Cambio de habitación (diferencia de tarifa)', 4, NULL, 70.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '18:20:00')),
+(212, 71, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 200.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '14:00:00')),
+(213, 72, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '15:10:00')),
+(214, 72, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 250.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '15:10:00')),
+(215, 73, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '16:45:00')),
+(216, 73, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 150.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '12:25:00')),
+(217, 74, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 60.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '16:10:00')),
+(218, 74, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 60.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '16:10:00')),
+(219, 75, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 450.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '15:00:00')),
+(220, 75, NULL, 41, 'cargo', 'Servicio de baño - Baño 2 (#41)', 4, NULL, 10.00, 'OTROS', (NOW() - INTERVAL 52 MINUTE)),
+(221, 75, NULL, NULL, 'cargo', 'Consumo de minibar', 2, NULL, 48.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '22:10:00')),
+(222, 75, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 300.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '15:00:00')),
+(223, 75, NULL, NULL, 'pago', 'Abono', 2, NULL, 150.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '21:40:00')),
+(224, 76, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '17:00:00')),
+(225, 76, NULL, 32, 'cargo', 'Servicio de baño - Baño 4 (#32)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '19:55:00')),
+(226, 76, NULL, NULL, 'pago', 'Abono', 2, NULL, 65.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '03:00:00')),
+(227, 76, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 65.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '11:15:00')),
+(228, 77, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 250.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '14:10:00')),
+(229, 77, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 125.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '14:10:00')),
+(230, 77, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 125.00, 'QR', (NOW() - INTERVAL 380 MINUTE)),
+(231, 78, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 80.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '15:40:00')),
+(232, 78, NULL, NULL, 'cargo', 'Desayuno', 2, NULL, 35.00, 'OTROS', TIMESTAMP(CURDATE(), '01:41:00')),
+(233, 78, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 40.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '15:40:00')),
+(234, 78, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 2, NULL, 75.00, 'OTROS', (NOW() - INTERVAL 240 MINUTE)),
+(235, 79, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '16:20:00')),
+(236, 79, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 150.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '16:20:00')),
+(237, 80, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 80.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '17:30:00')),
+(238, 80, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 80.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '17:30:00')),
+(239, 81, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 80.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '18:05:00')),
+(240, 81, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 40.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '18:05:00')),
+(241, 81, NULL, NULL, 'pago', 'Pago de saldo (check-out)', 4, NULL, 40.00, 'QR', (NOW() - INTERVAL 95 MINUTE)),
+(242, 82, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 220.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '19:15:00')),
+(243, 82, NULL, NULL, 'cargo', 'Lavandería', 2, NULL, 30.00, 'OTROS', (NOW() - INTERVAL 200 MINUTE)),
+(244, 82, NULL, NULL, 'pago', 'Pago inicial (check-in)', 2, NULL, 110.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '19:15:00')),
+(245, 83, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 120.00, 'OTROS', (NOW() - INTERVAL 360 MINUTE)),
+(246, 83, NULL, 40, 'cargo', 'Servicio de baño - Baño 1 (#40)', 4, NULL, 10.00, 'OTROS', (NOW() - INTERVAL 75 MINUTE)),
+(247, 83, NULL, NULL, 'pago', 'Pago inicial (check-in)', 4, NULL, 60.00, 'Efectivo', (NOW() - INTERVAL 360 MINUTE)),
+(248, 84, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 250.00, 'OTROS', (NOW() - INTERVAL -30 MINUTE)),
+(249, 84, NULL, NULL, 'pago', 'Adelanto de reserva', 2, NULL, 100.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:45:00')),
+(250, 85, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 120.00, 'OTROS', TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '14:00:00')),
+(251, 85, NULL, NULL, 'pago', 'Adelanto de reserva', 4, NULL, 60.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '13:15:00')),
+(252, 86, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 80.00, 'OTROS', TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 3 DAY), '14:00:00')),
+(253, 87, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 450.00, 'OTROS', TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 3 DAY), '15:00:00')),
+(254, 87, NULL, NULL, 'pago', 'Adelanto de reserva', 2, NULL, 225.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '09:45:00')),
+(255, 88, NULL, NULL, 'cargo', 'Estancia', 4, NULL, 280.00, 'OTROS', TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 5 DAY), '16:00:00')),
+(256, 88, NULL, NULL, 'pago', 'Adelanto de reserva', 4, NULL, 280.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:15:00')),
+(257, 89, NULL, NULL, 'cargo', 'Estancia', 2, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 7 DAY), '14:30:00')),
+(258, 89, NULL, NULL, 'pago', 'Adelanto de reserva', 2, NULL, 150.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '15:15:00')),
+(259, NULL, NULL, 1, 'cargo', 'Servicio de baño - Baño 2 (#1)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '14:40:00')),
+(260, NULL, NULL, 1, 'pago', 'Servicio de baño - Baño 2 (#1)', 4, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '14:40:00')),
+(261, NULL, NULL, 2, 'cargo', 'Servicio de baño - Baño 4 (#2)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '16:12:00')),
+(262, NULL, NULL, 2, 'pago', 'Servicio de baño - Baño 4 (#2)', 2, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '16:12:00')),
+(263, NULL, NULL, 3, 'cargo', 'Servicio de baño - Baño 1 (#3)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '17:40:00')),
+(264, NULL, NULL, 3, 'pago', 'Servicio de baño - Baño 1 (#3)', 4, NULL, 10.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 13 DAY), '17:40:00')),
+(265, NULL, NULL, 6, 'cargo', 'Servicio de baño - Baño 4 (#6)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '20:05:00')),
+(266, NULL, NULL, 6, 'pago', 'Servicio de baño - Baño 4 (#6)', 4, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '20:05:00')),
+(267, NULL, NULL, 6, 'reverso', 'Cancelación de servicio de baño #6', 1, 266, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '21:35:00')),
+(268, NULL, NULL, 6, 'reverso', 'Cancelación de servicio de baño #6', 1, 265, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '21:35:00')),
+(269, NULL, NULL, 8, 'cargo', 'Servicio de baño - Baño 4 (#8)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '13:40:00')),
+(270, NULL, NULL, 8, 'pago', 'Servicio de baño - Baño 4 (#8)', 4, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '13:40:00')),
+(271, NULL, NULL, 9, 'cargo', 'Servicio de baño - Baño 4 (#9)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '19:40:00')),
+(272, NULL, NULL, 9, 'pago', 'Servicio de baño - Baño 4 (#9)', 2, NULL, 10.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '19:40:00')),
+(273, NULL, NULL, 10, 'cargo', 'Servicio de baño - Baño 2 (#10)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '08:12:00')),
+(274, NULL, NULL, 10, 'pago', 'Servicio de baño - Baño 2 (#10)', 4, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '08:12:00')),
+(275, NULL, NULL, 11, 'cargo', 'Servicio de baño - Baño 1 (#11)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '10:25:00')),
+(276, NULL, NULL, 11, 'pago', 'Servicio de baño - Baño 1 (#11)', 4, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '10:25:00')),
+(277, NULL, NULL, 12, 'cargo', 'Servicio de baño - Baño 2 (#12)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '13:12:00')),
+(278, NULL, NULL, 12, 'pago', 'Servicio de baño - Baño 2 (#12)', 2, NULL, 10.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '13:12:00')),
+(279, NULL, NULL, 13, 'cargo', 'Servicio de baño - Baño 1 (#13)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:25:00')),
+(280, NULL, NULL, 13, 'pago', 'Servicio de baño - Baño 1 (#13)', 2, NULL, 10.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:25:00')),
+(281, NULL, NULL, 15, 'cargo', 'Servicio de baño - Baño 2 (#15)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:55:00')),
+(282, NULL, NULL, 15, 'pago', 'Servicio de baño - Baño 2 (#15)', 2, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:55:00')),
+(283, NULL, NULL, 15, 'reverso', 'Cancelación de servicio de baño #15', 2, 282, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:01:00')),
+(284, NULL, NULL, 15, 'reverso', 'Cancelación de servicio de baño #15', 2, 281, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:01:00')),
+(285, NULL, NULL, 16, 'cargo', 'Servicio de baño - Baño 1 (#16)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '18:55:00')),
+(286, NULL, NULL, 16, 'pago', 'Servicio de baño - Baño 1 (#16)', 2, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '18:55:00')),
+(287, NULL, NULL, 17, 'cargo', 'Servicio de baño - Baño 4 (#17)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '08:12:00')),
+(288, NULL, NULL, 17, 'pago', 'Servicio de baño - Baño 4 (#17)', 2, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '08:12:00')),
+(289, NULL, NULL, 18, 'cargo', 'Servicio de baño - Baño 4 (#18)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '13:05:00')),
+(290, NULL, NULL, 18, 'pago', 'Servicio de baño - Baño 4 (#18)', 4, NULL, 10.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '13:05:00')),
+(291, NULL, NULL, 19, 'cargo', 'Servicio de baño - Baño 2 (#19)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '15:12:00')),
+(292, NULL, NULL, 19, 'pago', 'Servicio de baño - Baño 2 (#19)', 4, NULL, 10.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '15:12:00')),
+(293, NULL, NULL, 20, 'cargo', 'Servicio de baño - Baño 4 (#20)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '19:40:00')),
+(294, NULL, NULL, 20, 'pago', 'Servicio de baño - Baño 4 (#20)', 4, NULL, 10.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '19:40:00')),
+(295, NULL, NULL, 22, 'cargo', 'Servicio de baño - Baño 1 (#22)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:40:00')),
+(296, NULL, NULL, 22, 'pago', 'Servicio de baño - Baño 1 (#22)', 2, NULL, 10.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:40:00')),
+(297, NULL, NULL, 23, 'cargo', 'Servicio de baño - Baño 4 (#23)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '13:55:00')),
+(298, NULL, NULL, 23, 'pago', 'Servicio de baño - Baño 4 (#23)', 2, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '13:55:00')),
+(299, NULL, NULL, 25, 'cargo', 'Servicio de baño - Baño 1 (#25)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '14:40:00')),
+(300, NULL, NULL, 25, 'pago', 'Servicio de baño - Baño 1 (#25)', 2, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '14:40:00')),
+(301, NULL, NULL, 27, 'cargo', 'Servicio de baño - Baño 4 (#27)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:05:00')),
+(302, NULL, NULL, 27, 'pago', 'Servicio de baño - Baño 4 (#27)', 4, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:05:00')),
+(303, NULL, NULL, 28, 'cargo', 'Servicio de baño - Baño 2 (#28)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:40:00')),
+(304, NULL, NULL, 28, 'pago', 'Servicio de baño - Baño 2 (#28)', 4, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:40:00')),
+(305, NULL, NULL, 31, 'cargo', 'Servicio de baño - Baño 2 (#31)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '11:55:00')),
+(306, NULL, NULL, 31, 'pago', 'Servicio de baño - Baño 2 (#31)', 4, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '11:55:00')),
+(307, NULL, NULL, 33, 'cargo', 'Servicio de baño - Baño 2 (#33)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '08:55:00')),
+(308, NULL, NULL, 33, 'pago', 'Servicio de baño - Baño 2 (#33)', 2, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '08:55:00')),
+(309, NULL, NULL, 34, 'cargo', 'Servicio de baño - Baño 2 (#34)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '10:12:00')),
+(310, NULL, NULL, 34, 'pago', 'Servicio de baño - Baño 2 (#34)', 2, NULL, 10.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '10:12:00')),
+(311, NULL, NULL, 35, 'cargo', 'Servicio de baño - Baño 1 (#35)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '10:40:00')),
+(312, NULL, NULL, 35, 'pago', 'Servicio de baño - Baño 1 (#35)', 2, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '10:40:00')),
+(313, NULL, NULL, 36, 'cargo', 'Servicio de baño - Baño 4 (#36)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '12:55:00')),
+(314, NULL, NULL, 36, 'pago', 'Servicio de baño - Baño 4 (#36)', 2, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '12:55:00')),
+(315, NULL, NULL, 37, 'cargo', 'Servicio de baño - Baño 2 (#37)', 4, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '14:40:00')),
+(316, NULL, NULL, 37, 'pago', 'Servicio de baño - Baño 2 (#37)', 4, NULL, 10.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '14:40:00')),
+(317, NULL, NULL, 38, 'cargo', 'Servicio de baño - Baño 1 (#38)', 2, NULL, 10.00, 'OTROS', (NOW() - INTERVAL 310 MINUTE)),
+(318, NULL, NULL, 38, 'pago', 'Servicio de baño - Baño 1 (#38)', 2, NULL, 10.00, 'Efectivo', (NOW() - INTERVAL 310 MINUTE)),
+(319, NULL, NULL, 39, 'cargo', 'Servicio de baño - Baño 2 (#39)', 4, NULL, 10.00, 'OTROS', (NOW() - INTERVAL 140 MINUTE)),
+(320, NULL, NULL, 39, 'pago', 'Servicio de baño - Baño 2 (#39)', 4, NULL, 10.00, 'QR', (NOW() - INTERVAL 140 MINUTE)),
+(321, NULL, NULL, 42, 'cargo', 'Servicio de baño - Baño 1 (#42)', 2, NULL, 10.00, 'OTROS', (NOW() - INTERVAL 12 MINUTE)),
+(322, NULL, NULL, 42, 'pago', 'Servicio de baño - Baño 1 (#42)', 2, NULL, 10.00, 'Efectivo', (NOW() - INTERVAL 12 MINUTE)),
+(323, NULL, 1, NULL, 'cargo', 'Almacenamiento de equipaje - Grande (1 pieza)', 2, NULL, 12.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '10:50:00')),
+(324, NULL, 1, NULL, 'pago', 'Pago almacenamiento - EQ-01', 2, NULL, 12.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '10:50:00')),
+(325, NULL, 2, NULL, 'cargo', 'Almacenamiento de equipaje - Mediano (2 piezas)', 4, NULL, 16.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '09:20:00')),
+(326, NULL, 2, NULL, 'pago', 'Pago almacenamiento - EQ-01', 4, NULL, 16.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '09:20:00')),
+(327, NULL, 3, NULL, 'cargo', 'Almacenamiento de equipaje - Pequeño (1 pieza)', 2, NULL, 5.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '15:05:00')),
+(328, NULL, 3, NULL, 'pago', 'Pago almacenamiento - EQ-01', 2, NULL, 5.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '15:05:00')),
+(329, NULL, 4, NULL, 'cargo', 'Almacenamiento de equipaje - Grande (1 pieza)', 4, NULL, 12.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '11:05:00')),
+(330, NULL, 4, NULL, 'pago', 'Pago almacenamiento - EQ-01', 4, NULL, 12.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '11:05:00')),
+(331, NULL, 5, NULL, 'cargo', 'Almacenamiento de equipaje - Extra_Grande (1 pieza)', 2, NULL, 15.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '08:05:00')),
+(332, NULL, 5, NULL, 'pago', 'Pago almacenamiento - EQ-01', 2, NULL, 15.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '08:05:00')),
+(333, NULL, 6, NULL, 'cargo', 'Almacenamiento de equipaje - Mediano (1 pieza)', 4, NULL, 8.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:20:00')),
+(334, NULL, 6, NULL, 'pago', 'Pago almacenamiento - EQ-01', 4, NULL, 8.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '16:20:00')),
+(335, NULL, 7, NULL, 'cargo', 'Almacenamiento de equipaje - Pequeño (2 piezas)', 2, NULL, 10.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '13:35:00')),
+(336, NULL, 7, NULL, 'pago', 'Pago almacenamiento - EQ-01', 2, NULL, 10.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '13:35:00')),
+(337, NULL, 8, NULL, 'cargo', 'Almacenamiento de equipaje - Grande (1 pieza)', 4, NULL, 12.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '10:05:00')),
+(338, NULL, 8, NULL, 'pago', 'Pago almacenamiento - EQ-01', 4, NULL, 12.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '10:05:00')),
+(339, NULL, 9, NULL, 'cargo', 'Almacenamiento de equipaje - Mediano (1 pieza)', 2, NULL, 8.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:50:00')),
+(340, NULL, 9, NULL, 'pago', 'Pago almacenamiento - EQ-01', 2, NULL, 8.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:50:00')),
+(341, NULL, 10, NULL, 'cargo', 'Almacenamiento de equipaje - Pequeño (1 pieza)', 4, NULL, 5.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '09:50:00')),
+(342, NULL, 10, NULL, 'pago', 'Pago almacenamiento - EQ-01', 4, NULL, 5.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '09:50:00')),
+(343, NULL, 11, NULL, 'cargo', 'Almacenamiento de equipaje - Mediano (1 pieza)', 2, NULL, 8.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:05:00')),
+(344, NULL, 11, NULL, 'pago', 'Pago almacenamiento - EQ-01', 2, NULL, 8.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:05:00')),
+(345, NULL, 12, NULL, 'cargo', 'Almacenamiento de equipaje - Grande (1 pieza)', 4, NULL, 12.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '12:05:00')),
+(346, NULL, 12, NULL, 'pago', 'Pago almacenamiento - EQ-01', 4, NULL, 12.00, 'QR', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '12:05:00')),
+(347, NULL, 13, NULL, 'cargo', 'Almacenamiento de equipaje - Pequeño (1 pieza)', 2, NULL, 5.00, 'OTROS', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '18:20:00')),
+(348, NULL, 13, NULL, 'pago', 'Pago almacenamiento - EQ-01', 2, NULL, 5.00, 'Efectivo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '18:20:00')),
+(349, NULL, 14, NULL, 'cargo', 'Almacenamiento de equipaje - Mediano (1 pieza)', 4, NULL, 8.00, 'OTROS', (NOW() - INTERVAL 45 MINUTE)),
+(350, NULL, 14, NULL, 'pago', 'Pago almacenamiento - EQ-01', 4, NULL, 8.00, 'Efectivo', (NOW() - INTERVAL 45 MINUTE));
 
--- Asignación de limpieza pendiente para la habitación 102 (marcada 'limpieza' arriba)
-INSERT INTO `asignaciones_limpieza` (`idusuario`, `idhabitacion`, `fecha`, `hora`, `estado`) VALUES
-(3, 2, CURDATE(), CURTIME(), 'pendiente');
+-- Ventas
+INSERT INTO `venta` (`idventa`, `idcliente`, `idusuario`, `totalventa`, `fechaventa`, `metodopago`, `pagorecibido`, `cambio`, `observacion`, `estado`, `fechacreacion`) VALUES
+(1, 16, 2, 131.00, DATE_SUB(CURDATE(), INTERVAL 29 DAY), 'Mixto', 131.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 29 DAY), '11:05:00')),
+(2, 6, 4, 12.00, DATE_SUB(CURDATE(), INTERVAL 29 DAY), 'Efectivo', 20.00, 8.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 29 DAY), '18:05:00')),
+(3, 1, 2, 14.00, DATE_SUB(CURDATE(), INTERVAL 28 DAY), 'Mixto', 19.00, 5.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '18:05:00')),
+(4, NULL, 4, 20.00, DATE_SUB(CURDATE(), INTERVAL 28 DAY), 'Otros', 20.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '17:30:00')),
+(5, NULL, 1, 49.00, DATE_SUB(CURDATE(), INTERVAL 28 DAY), 'Efectivo', 50.00, 1.00, 'Anulada: producto equivocado en caja', 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '16:15:00')),
+(6, 9, 4, 22.00, DATE_SUB(CURDATE(), INTERVAL 27 DAY), 'QR', 22.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '14:45:00')),
+(7, 2, 4, 14.00, DATE_SUB(CURDATE(), INTERVAL 26 DAY), 'Efectivo', 20.00, 6.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '15:30:00')),
+(8, 5, 4, 18.00, DATE_SUB(CURDATE(), INTERVAL 26 DAY), 'Efectivo', 20.00, 2.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '12:30:00')),
+(9, NULL, 4, 5.00, DATE_SUB(CURDATE(), INTERVAL 25 DAY), 'QR', 5.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '20:15:00')),
+(10, NULL, 2, 25.00, DATE_SUB(CURDATE(), INTERVAL 25 DAY), 'QR', 25.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '17:30:00')),
+(11, NULL, 4, 64.00, DATE_SUB(CURDATE(), INTERVAL 25 DAY), 'QR', 64.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '13:05:00')),
+(12, NULL, 4, 40.00, DATE_SUB(CURDATE(), INTERVAL 24 DAY), 'Efectivo', 40.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '17:15:00')),
+(13, NULL, 2, 44.00, DATE_SUB(CURDATE(), INTERVAL 24 DAY), 'QR', 44.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '12:30:00')),
+(14, NULL, 4, 29.00, DATE_SUB(CURDATE(), INTERVAL 23 DAY), 'Efectivo', 29.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '20:30:00')),
+(15, NULL, 2, 34.00, DATE_SUB(CURDATE(), INTERVAL 22 DAY), 'Efectivo', 40.00, 6.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '10:05:00')),
+(16, NULL, 2, 30.00, DATE_SUB(CURDATE(), INTERVAL 21 DAY), 'Efectivo', 30.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '13:45:00')),
+(17, NULL, 4, 27.00, DATE_SUB(CURDATE(), INTERVAL 21 DAY), 'QR', 27.00, 0.00, 'Anulada: producto equivocado en caja', 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '17:30:00')),
+(18, NULL, 4, 70.00, DATE_SUB(CURDATE(), INTERVAL 21 DAY), 'Efectivo', 70.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '22:05:00')),
+(19, 14, 4, 50.00, DATE_SUB(CURDATE(), INTERVAL 20 DAY), 'QR', 50.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '21:30:00')),
+(20, 15, 2, 8.00, DATE_SUB(CURDATE(), INTERVAL 20 DAY), 'QR', 8.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '20:45:00')),
+(21, 14, 2, 18.00, DATE_SUB(CURDATE(), INTERVAL 19 DAY), 'Efectivo', 20.00, 2.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '11:30:00')),
+(22, 16, 1, 16.00, DATE_SUB(CURDATE(), INTERVAL 18 DAY), 'Efectivo', 20.00, 4.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '11:45:00')),
+(23, 14, 4, 80.00, DATE_SUB(CURDATE(), INTERVAL 17 DAY), 'Efectivo', 80.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '22:45:00')),
+(24, NULL, 4, 250.00, DATE_SUB(CURDATE(), INTERVAL 17 DAY), 'QR', 250.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '11:15:00')),
+(25, NULL, 2, 50.00, DATE_SUB(CURDATE(), INTERVAL 16 DAY), 'Efectivo', 50.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '22:30:00')),
+(26, NULL, 2, 164.00, DATE_SUB(CURDATE(), INTERVAL 16 DAY), 'QR', 164.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '13:30:00')),
+(27, 4, 2, 5.00, DATE_SUB(CURDATE(), INTERVAL 16 DAY), 'Efectivo', 5.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '11:05:00')),
+(28, NULL, 4, 44.00, DATE_SUB(CURDATE(), INTERVAL 15 DAY), 'Efectivo', 44.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '16:05:00')),
+(29, NULL, 4, 18.00, DATE_SUB(CURDATE(), INTERVAL 14 DAY), 'Otros', 18.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '17:05:00')),
+(30, 2, 4, 6.00, DATE_SUB(CURDATE(), INTERVAL 14 DAY), 'QR', 6.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '16:45:00')),
+(31, NULL, 2, 24.00, DATE_SUB(CURDATE(), INTERVAL 14 DAY), 'Efectivo', 24.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '16:30:00')),
+(32, NULL, 2, 39.00, DATE_SUB(CURDATE(), INTERVAL 12 DAY), 'Efectivo', 40.00, 1.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '22:15:00')),
+(33, 3, 4, 8.00, DATE_SUB(CURDATE(), INTERVAL 12 DAY), 'Efectivo', 8.00, 0.00, 'Anulada: producto equivocado en caja', 0, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '16:30:00')),
+(34, 15, 4, 52.00, DATE_SUB(CURDATE(), INTERVAL 12 DAY), 'Otros', 52.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '12:05:00')),
+(35, NULL, 4, 5.00, DATE_SUB(CURDATE(), INTERVAL 11 DAY), 'Efectivo', 10.00, 5.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '22:30:00')),
+(36, 7, 2, 49.00, DATE_SUB(CURDATE(), INTERVAL 11 DAY), 'QR', 49.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:05:00')),
+(37, NULL, 4, 181.00, DATE_SUB(CURDATE(), INTERVAL 10 DAY), 'QR', 181.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '10:05:00')),
+(38, NULL, 2, 43.00, DATE_SUB(CURDATE(), INTERVAL 9 DAY), 'Otros', 43.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '12:05:00')),
+(39, NULL, 2, 8.00, DATE_SUB(CURDATE(), INTERVAL 8 DAY), 'Efectivo', 10.00, 2.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '18:30:00')),
+(40, NULL, 4, 8.00, DATE_SUB(CURDATE(), INTERVAL 8 DAY), 'Efectivo', 10.00, 2.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:45:00')),
+(41, NULL, 2, 14.00, DATE_SUB(CURDATE(), INTERVAL 8 DAY), 'Efectivo', 14.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:15:00')),
+(42, NULL, 4, 12.00, DATE_SUB(CURDATE(), INTERVAL 7 DAY), 'Efectivo', 12.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '13:15:00')),
+(43, NULL, 1, 78.00, DATE_SUB(CURDATE(), INTERVAL 7 DAY), 'QR', 78.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '19:45:00')),
+(44, 4, 2, 100.00, DATE_SUB(CURDATE(), INTERVAL 6 DAY), 'QR', 100.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '20:15:00')),
+(45, 7, 2, 20.00, DATE_SUB(CURDATE(), INTERVAL 6 DAY), 'QR', 20.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '14:15:00')),
+(46, NULL, 2, 11.00, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'Efectivo', 20.00, 9.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:15:00')),
+(47, 7, 2, 21.00, DATE_SUB(CURDATE(), INTERVAL 4 DAY), 'Efectivo', 30.00, 9.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '10:05:00')),
+(48, NULL, 2, 20.00, DATE_SUB(CURDATE(), INTERVAL 4 DAY), 'Efectivo', 20.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '18:15:00')),
+(49, 11, 2, 32.00, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 'Mixto', 32.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:05:00')),
+(50, 15, 4, 80.00, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 'Efectivo', 80.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '09:45:00')),
+(51, NULL, 1, 4.00, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 'Efectivo', 10.00, 6.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '12:30:00')),
+(52, NULL, 2, 31.00, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'Mixto', 31.00, 0.00, NULL, 1, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '16:15:00')),
+(53, NULL, 2, 16.00, CURDATE(), 'Efectivo', 20.00, 4.00, NULL, 1, (NOW() - INTERVAL 260 MINUTE)),
+(54, 11, 2, 13.00, CURDATE(), 'Efectivo', 13.00, 0.00, NULL, 1, (NOW() - INTERVAL 95 MINUTE));
+INSERT INTO `detalleventa` (`iddetalleventa`, `idventa`, `idproducto`, `cantidad`, `precioventa`, `descuento`, `fechacreacion`) VALUES
+(1, 1, 14, 1, 95.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 29 DAY), '11:05:00')),
+(2, 1, 4, 2, 18.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 29 DAY), '11:05:00')),
+(3, 2, 8, 3, 4.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 29 DAY), '18:05:00')),
+(4, 3, 1, 2, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '18:05:00')),
+(5, 3, 5, 1, 4.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '18:05:00')),
+(6, 4, 16, 2, 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '17:30:00')),
+(7, 5, 4, 1, 18.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '16:15:00')),
+(8, 5, 12, 1, 7.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '16:15:00')),
+(9, 5, 3, 2, 9.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '16:15:00')),
+(10, 5, 6, 1, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '16:15:00')),
+(11, 6, 7, 1, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '14:45:00')),
+(12, 6, 1, 1, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '14:45:00')),
+(13, 6, 10, 1, 12.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '14:45:00')),
+(14, 7, 12, 2, 7.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '15:30:00')),
+(15, 8, 6, 3, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '12:30:00')),
+(16, 9, 1, 1, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '20:15:00')),
+(17, 10, 5, 3, 4.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '17:30:00')),
+(18, 10, 1, 1, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '17:30:00')),
+(19, 10, 2, 1, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '17:30:00')),
+(20, 11, 4, 2, 18.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '13:05:00')),
+(21, 11, 2, 2, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '13:05:00')),
+(22, 11, 10, 1, 12.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '13:05:00')),
+(23, 12, 10, 3, 12.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '17:15:00')),
+(24, 12, 8, 1, 4.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '17:15:00')),
+(25, 13, 6, 3, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '12:30:00')),
+(26, 13, 2, 2, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '12:30:00')),
+(27, 13, 7, 2, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '12:30:00')),
+(28, 14, 10, 1, 12.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '20:30:00')),
+(29, 14, 13, 3, 3.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '20:30:00')),
+(30, 14, 2, 1, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '20:30:00')),
+(31, 15, 6, 3, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '10:05:00')),
+(32, 15, 9, 2, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '10:05:00')),
+(33, 16, 16, 3, 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '13:45:00')),
+(34, 17, 12, 3, 7.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '17:30:00')),
+(35, 17, 6, 1, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '17:30:00')),
+(36, 18, 16, 3, 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '22:05:00')),
+(37, 18, 6, 3, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '22:05:00')),
+(38, 18, 13, 2, 3.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '22:05:00')),
+(39, 18, 2, 2, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '22:05:00')),
+(40, 19, 6, 1, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '21:30:00')),
+(41, 19, 3, 4, 9.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '21:30:00')),
+(42, 19, 9, 1, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '21:30:00')),
+(43, 20, 8, 2, 4.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '20:45:00')),
+(44, 21, 6, 3, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '11:30:00')),
+(45, 22, 16, 1, 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '11:45:00')),
+(46, 22, 6, 1, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '11:45:00')),
+(47, 23, 15, 1, 80.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '22:45:00')),
+(48, 24, 15, 3, 80.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '11:15:00')),
+(49, 24, 1, 2, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '11:15:00')),
+(50, 25, 4, 1, 18.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '22:30:00')),
+(51, 25, 10, 2, 12.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '22:30:00')),
+(52, 25, 9, 1, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '22:30:00')),
+(53, 26, 8, 1, 4.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '13:30:00')),
+(54, 26, 15, 2, 80.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '13:30:00')),
+(55, 27, 1, 1, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '11:05:00')),
+(56, 28, 9, 5, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '16:05:00')),
+(57, 28, 5, 1, 4.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '16:05:00')),
+(58, 29, 1, 2, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '17:05:00')),
+(59, 29, 2, 1, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '17:05:00')),
+(60, 30, 6, 1, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '16:45:00')),
+(61, 31, 12, 2, 7.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '16:30:00')),
+(62, 31, 16, 1, 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '16:30:00')),
+(63, 32, 1, 3, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '22:15:00')),
+(64, 32, 2, 3, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '22:15:00')),
+(65, 33, 2, 1, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '16:30:00')),
+(66, 34, 7, 3, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '12:05:00')),
+(67, 34, 12, 3, 7.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '12:05:00')),
+(68, 34, 2, 2, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '12:05:00')),
+(69, 35, 1, 1, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '22:30:00')),
+(70, 36, 3, 1, 9.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:05:00')),
+(71, 36, 9, 1, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:05:00')),
+(72, 36, 10, 1, 12.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:05:00')),
+(73, 36, 16, 2, 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:05:00')),
+(74, 37, 14, 1, 95.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '10:05:00')),
+(75, 37, 6, 1, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '10:05:00')),
+(76, 37, 15, 1, 80.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '10:05:00')),
+(77, 38, 6, 3, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '12:05:00')),
+(78, 38, 12, 1, 7.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '12:05:00')),
+(79, 38, 3, 2, 9.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '12:05:00')),
+(80, 39, 9, 1, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '18:30:00')),
+(81, 40, 2, 1, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:45:00')),
+(82, 41, 3, 1, 9.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:15:00')),
+(83, 41, 1, 1, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:15:00')),
+(84, 42, 5, 3, 4.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '13:15:00')),
+(85, 43, 4, 3, 18.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '19:45:00')),
+(86, 43, 2, 3, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '19:45:00')),
+(87, 44, 14, 1, 95.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '20:15:00')),
+(88, 44, 7, 1, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '20:15:00')),
+(89, 45, 1, 4, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '14:15:00')),
+(90, 46, 2, 1, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:15:00')),
+(91, 46, 13, 1, 3.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:15:00')),
+(92, 47, 3, 1, 9.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '10:05:00')),
+(93, 47, 5, 3, 4.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '10:05:00')),
+(94, 48, 16, 2, 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '18:15:00')),
+(95, 49, 7, 4, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:05:00')),
+(96, 49, 8, 3, 4.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:05:00')),
+(97, 50, 15, 1, 80.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '09:45:00')),
+(98, 51, 8, 1, 4.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '12:30:00')),
+(99, 52, 1, 1, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '16:15:00')),
+(100, 52, 10, 1, 12.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '16:15:00')),
+(101, 52, 7, 1, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '16:15:00')),
+(102, 52, 3, 1, 9.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '16:15:00')),
+(103, 53, 10, 1, 12.00, 0.00, (NOW() - INTERVAL 260 MINUTE)),
+(104, 53, 8, 1, 4.00, 0.00, (NOW() - INTERVAL 260 MINUTE)),
+(105, 54, 2, 1, 8.00, 0.00, (NOW() - INTERVAL 95 MINUTE)),
+(106, 54, 7, 1, 5.00, 0.00, (NOW() - INTERVAL 95 MINUTE));
+INSERT INTO `pagoventa` (`idpagoventa`, `idventa`, `metodopago`, `monto`, `pagorecibido`, `cambio`, `fechacreacion`, `estado`) VALUES
+(1, 1, 'Efectivo', 50.00, 50.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 29 DAY), '11:05:00'), 1),
+(2, 1, 'QR', 81.00, 81.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 29 DAY), '11:05:00'), 1),
+(3, 2, 'Efectivo', 12.00, 20.00, 8.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 29 DAY), '18:05:00'), 1),
+(4, 3, 'Efectivo', 5.00, 10.00, 5.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '18:05:00'), 1),
+(5, 3, 'QR', 9.00, 9.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '18:05:00'), 1),
+(6, 4, 'Otros', 20.00, 20.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '17:30:00'), 1),
+(7, 5, 'Efectivo', 49.00, 50.00, 1.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '16:15:00'), 0),
+(8, 6, 'QR', 22.00, 22.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 27 DAY), '14:45:00'), 1),
+(9, 7, 'Efectivo', 14.00, 20.00, 6.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '15:30:00'), 1),
+(10, 8, 'Efectivo', 18.00, 20.00, 2.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 26 DAY), '12:30:00'), 1),
+(11, 9, 'QR', 5.00, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '20:15:00'), 1),
+(12, 10, 'QR', 25.00, 25.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '17:30:00'), 1),
+(13, 11, 'QR', 64.00, 64.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 25 DAY), '13:05:00'), 1),
+(14, 12, 'Efectivo', 40.00, 40.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '17:15:00'), 1),
+(15, 13, 'QR', 44.00, 44.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 24 DAY), '12:30:00'), 1),
+(16, 14, 'Efectivo', 29.00, 29.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 23 DAY), '20:30:00'), 1),
+(17, 15, 'Efectivo', 34.00, 40.00, 6.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 22 DAY), '10:05:00'), 1),
+(18, 16, 'Efectivo', 30.00, 30.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '13:45:00'), 1),
+(19, 17, 'QR', 27.00, 27.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '17:30:00'), 0),
+(20, 18, 'Efectivo', 70.00, 70.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '22:05:00'), 1),
+(21, 19, 'QR', 50.00, 50.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '21:30:00'), 1),
+(22, 20, 'QR', 8.00, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 20 DAY), '20:45:00'), 1),
+(23, 21, 'Efectivo', 18.00, 20.00, 2.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 19 DAY), '11:30:00'), 1),
+(24, 22, 'Efectivo', 16.00, 20.00, 4.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 18 DAY), '11:45:00'), 1),
+(25, 23, 'Efectivo', 80.00, 80.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '22:45:00'), 1),
+(26, 24, 'QR', 250.00, 250.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 17 DAY), '11:15:00'), 1),
+(27, 25, 'Efectivo', 50.00, 50.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '22:30:00'), 1),
+(28, 26, 'QR', 164.00, 164.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '13:30:00'), 1),
+(29, 27, 'Efectivo', 5.00, 5.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 16 DAY), '11:05:00'), 1),
+(30, 28, 'Efectivo', 44.00, 44.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 15 DAY), '16:05:00'), 1),
+(31, 29, 'Otros', 18.00, 18.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '17:05:00'), 1),
+(32, 30, 'QR', 6.00, 6.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '16:45:00'), 1),
+(33, 31, 'Efectivo', 24.00, 24.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '16:30:00'), 1),
+(34, 32, 'Efectivo', 39.00, 40.00, 1.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '22:15:00'), 1),
+(35, 33, 'Efectivo', 8.00, 8.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '16:30:00'), 0),
+(36, 34, 'Otros', 52.00, 52.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 12 DAY), '12:05:00'), 1),
+(37, 35, 'Efectivo', 5.00, 10.00, 5.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '22:30:00'), 1),
+(38, 36, 'QR', 49.00, 49.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 11 DAY), '17:05:00'), 1),
+(39, 37, 'QR', 181.00, 181.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 10 DAY), '10:05:00'), 1),
+(40, 38, 'Otros', 43.00, 43.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '12:05:00'), 1),
+(41, 39, 'Efectivo', 8.00, 10.00, 2.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '18:30:00'), 1),
+(42, 40, 'Efectivo', 8.00, 10.00, 2.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:45:00'), 1),
+(43, 41, 'Efectivo', 14.00, 14.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '16:15:00'), 1),
+(44, 42, 'Efectivo', 12.00, 12.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '13:15:00'), 1),
+(45, 43, 'QR', 78.00, 78.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '19:45:00'), 1),
+(46, 44, 'QR', 100.00, 100.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '20:15:00'), 1),
+(47, 45, 'QR', 20.00, 20.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '14:15:00'), 1),
+(48, 46, 'Efectivo', 11.00, 20.00, 9.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '17:15:00'), 1),
+(49, 47, 'Efectivo', 21.00, 30.00, 9.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '10:05:00'), 1),
+(50, 48, 'Efectivo', 20.00, 20.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '18:15:00'), 1),
+(51, 49, 'Efectivo', 10.00, 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:05:00'), 1),
+(52, 49, 'QR', 22.00, 22.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '14:05:00'), 1),
+(53, 50, 'Efectivo', 80.00, 80.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '09:45:00'), 1),
+(54, 51, 'Efectivo', 4.00, 10.00, 6.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '12:30:00'), 1),
+(55, 52, 'Efectivo', 10.00, 10.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '16:15:00'), 1),
+(56, 52, 'QR', 21.00, 21.00, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '16:15:00'), 1),
+(57, 53, 'Efectivo', 16.00, 20.00, 4.00, (NOW() - INTERVAL 260 MINUTE), 1),
+(58, 54, 'Efectivo', 13.00, 13.00, 0.00, (NOW() - INTERVAL 95 MINUTE), 1);
 
--- Venta de productos del día (mostrador)
-INSERT INTO `venta` (`idcliente`, `idusuario`, `totalventa`, `fechaventa`, `metodopago`, `pagorecibido`, `cambio`, `estado`) VALUES
-(2, 2, 13.00, CURDATE(), 'Efectivo', 15.00, 2.00, 1);
+-- Compras
+INSERT INTO `compra` (`idcompra`, `idusuario`, `totalcompra`, `fechacompra`, `estado`, `observaciones`, `fechacreacion`) VALUES
+(1, 1, 858.00, DATE_SUB(CURDATE(), INTERVAL 28 DAY), 'completada', 'Reposición mensual de bebidas', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '10:30:00')),
+(2, 1, 453.00, DATE_SUB(CURDATE(), INTERVAL 21 DAY), 'completada', 'Pedido de snacks', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '10:30:00')),
+(3, 1, 381.00, DATE_SUB(CURDATE(), INTERVAL 14 DAY), 'completada', 'Higiene y consumibles del baño', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '10:30:00')),
+(4, 1, 1320.00, DATE_SUB(CURDATE(), INTERVAL 9 DAY), 'completada', 'Minibar: vinos y singani', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '10:30:00')),
+(5, 1, 450.00, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'completada', 'Reposición de bebidas', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '10:30:00')),
+(6, 1, 195.00, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 'cancelada', 'Proveedor sin stock, se canceló el pedido', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '10:30:00')),
+(7, 2, 315.00, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 'pendiente', 'Faltan café y chocolate; pendiente de recibir', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '10:30:00')),
+(8, 4, 115.00, CURDATE(), 'pendiente', 'Pedido de jabones y toallas', (NOW() - INTERVAL 50 MINUTE));
+INSERT INTO `detallecompra` (`iddetallecompra`, `idcompra`, `idproducto`, `cantidad`, `preciocompra`, `fechacreacion`) VALUES
+(1, 1, 1, 60, 2.50, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '10:30:00')),
+(2, 1, 2, 48, 4.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '10:30:00')),
+(3, 1, 4, 36, 11.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '10:30:00')),
+(4, 1, 3, 24, 5.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 28 DAY), '10:30:00')),
+(5, 2, 6, 40, 3.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '10:30:00')),
+(6, 2, 7, 30, 2.50, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '10:30:00')),
+(7, 2, 8, 24, 2.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '10:30:00')),
+(8, 2, 9, 20, 4.50, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '10:30:00')),
+(9, 2, 16, 20, 6.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 21 DAY), '10:30:00')),
+(10, 3, 10, 40, 6.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '10:30:00')),
+(11, 3, 11, 100, 0.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '10:30:00')),
+(12, 3, 12, 30, 3.50, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '10:30:00')),
+(13, 3, 13, 24, 1.50, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 14 DAY), '10:30:00')),
+(14, 4, 14, 12, 60.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '10:30:00')),
+(15, 4, 15, 12, 50.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 9 DAY), '10:30:00')),
+(16, 5, 1, 36, 2.50, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '10:30:00')),
+(17, 5, 2, 24, 4.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '10:30:00')),
+(18, 5, 4, 24, 11.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '10:30:00')),
+(19, 6, 9, 30, 4.50, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '10:30:00')),
+(20, 6, 5, 40, 1.50, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '10:30:00')),
+(21, 7, 5, 40, 1.50, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '10:30:00')),
+(22, 7, 9, 30, 4.50, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '10:30:00')),
+(23, 7, 3, 24, 5.00, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '10:30:00')),
+(24, 8, 13, 30, 1.50, (NOW() - INTERVAL 50 MINUTE)),
+(25, 8, 12, 20, 3.50, (NOW() - INTERVAL 50 MINUTE));
 
-INSERT INTO `detalleventa` (`idventa`, `idproducto`, `cantidad`, `precioventa`) VALUES
-(1, 1, 1, 5.00),
-(1, 3, 1, 8.00);
+-- Limpieza
+INSERT INTO `asignaciones_limpieza` (`idasignacion`, `idusuario`, `idhabitacion`, `fecha`, `hora`, `estado`, `observaciones`, `fechacreacion`) VALUES
+(1, 3, 4, DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:30:00', 'verificada', 'Cambio de sábanas completo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:30:00')),
+(2, 3, 5, DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:10:00', 'verificada', 'Revisar el aire acondicionado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:10:00')),
+(3, 3, 7, DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:30:00', 'verificada', 'Cambio de sábanas completo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:30:00')),
+(4, 3, 11, DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:10:00', 'verificada', 'Reponer amenities', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '12:10:00')),
+(5, 3, 8, DATE_SUB(CURDATE(), INTERVAL 8 DAY), '13:20:00', 'verificada', 'Limpieza profunda de baño', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '13:20:00')),
+(6, 3, 10, DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:00:00', 'verificada', 'Reponer amenities', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 8 DAY), '11:00:00')),
+(7, 3, 6, DATE_SUB(CURDATE(), INTERVAL 6 DAY), '12:10:00', 'verificada', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '12:10:00')),
+(8, 5, 9, DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:10:00', 'verificada', 'Reponer amenities', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '11:10:00')),
+(9, 3, 3, DATE_SUB(CURDATE(), INTERVAL 7 DAY), '13:10:00', 'verificada', 'Limpieza profunda de baño', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 7 DAY), '13:10:00')),
+(10, 3, 5, DATE_SUB(CURDATE(), INTERVAL 6 DAY), '12:00:00', 'verificada', 'Revisar el aire acondicionado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '12:00:00')),
+(11, 5, 2, DATE_SUB(CURDATE(), INTERVAL 6 DAY), '13:10:00', 'verificada', 'Cambio de sábanas completo', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '13:10:00')),
+(12, 5, 10, DATE_SUB(CURDATE(), INTERVAL 5 DAY), '13:20:00', 'verificada', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '13:20:00')),
+(13, 5, 11, DATE_SUB(CURDATE(), INTERVAL 6 DAY), '19:40:00', 'verificada', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 6 DAY), '19:40:00')),
+(14, 5, 3, DATE_SUB(CURDATE(), INTERVAL 5 DAY), '12:20:00', 'verificada', 'Reponer amenities', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '12:20:00')),
+(15, 3, 7, DATE_SUB(CURDATE(), INTERVAL 5 DAY), '12:10:00', 'verificada', 'Revisar el aire acondicionado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 5 DAY), '12:10:00')),
+(16, 3, 10, DATE_SUB(CURDATE(), INTERVAL 4 DAY), '11:40:00', 'verificada', 'Revisar el aire acondicionado', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '11:40:00')),
+(17, 5, 1, DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:00:00', 'verificada', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 4 DAY), '12:00:00')),
+(18, 5, 9, DATE_SUB(CURDATE(), INTERVAL 2 DAY), '13:00:00', 'verificada', 'Limpieza profunda de baño', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 2 DAY), '13:00:00')),
+(19, 5, 6, DATE_SUB(CURDATE(), INTERVAL 3 DAY), '12:40:00', 'verificada', 'Limpieza profunda de baño', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '12:40:00')),
+(20, 3, 3, DATE_SUB(CURDATE(), INTERVAL 3 DAY), '13:10:00', 'verificada', NULL, TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '13:10:00')),
+(21, 5, 7, DATE_SUB(CURDATE(), INTERVAL 3 DAY), '20:00:00', 'verificada', 'Limpieza profunda de baño', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 3 DAY), '20:00:00')),
+(22, 3, 2, DATE_SUB(CURDATE(), INTERVAL 1 DAY), '12:20:00', 'completada', 'Limpieza profunda de baño', TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '12:20:00')),
+(23, 3, 3, CURDATE(), TIME(NOW() - INTERVAL 140 MINUTE), 'pendiente', 'Salida de la mañana, falta la limpieza', (NOW() - INTERVAL 140 MINUTE)),
+(24, 5, 9, CURDATE(), TIME(NOW() - INTERVAL 80 MINUTE), 'enprogreso', 'Cambio de sábanas en curso', (NOW() - INTERVAL 80 MINUTE)),
+(25, 3, 4, CURDATE(), TIME(NOW() - INTERVAL 200 MINUTE), 'completada', 'Reponer amenities', (NOW() - INTERVAL 200 MINUTE)),
+(26, 5, 6, CURDATE(), TIME(NOW() - INTERVAL 330 MINUTE), 'verificada', 'Revisada por recepción', (NOW() - INTERVAL 330 MINUTE));
 
-INSERT INTO `pagoventa` (`idventa`, `metodopago`, `monto`, `pagorecibido`, `cambio`, `estado`) VALUES
-(1, 'Efectivo', 13.00, 15.00, 2.00, 1);
-
--- Compra de reposición de stock del día
-INSERT INTO `compra` (`idusuario`, `totalcompra`, `fechacompra`, `estado`) VALUES
-(1, 40.00, CURDATE(), 'completada');
-
-INSERT INTO `detallecompra` (`idcompra`, `idproducto`, `cantidad`, `preciocompra`) VALUES
-(1, 1, 10, 2.50),
-(1, 2, 5, 3.00);
-
--- Servicio de baño para un huésped del día
-INSERT INTO `servicio_bano` (`idbano`, `idusuario`, `idcliente`, `idrecepcion`, `tipo_cliente`, `modalidad_cobro`, `total`, `metodopago`, `pagorecibido`, `cambio`, `fecha`, `fecha_fin`, `duracion_minutos`, `estado`) VALUES
-(1, 2, 1, 1, 'Huesped', 'folio', 10.00, NULL, 0.00, 0.00, NOW(), NOW(), 20, 'finalizado');
-
--- Cargo del servicio de baño anterior en el folio de la recepción 1 (ver ServicioBano::registrar);
--- `recepcion`.montototal se actualiza con el cache del folio
-INSERT INTO `pagos` (`idrecepcion`, `idservicio_bano`, `tipo`, `concepto`, `montototal`, `metodopago`, `idusuario`) VALUES
-(1, 1, 'cargo', 'Servicio de baño - Baño 1 (#1)', 10.00, 'OTROS', 2);
-UPDATE `recepcion` SET `montototal` = 90.00 WHERE `idrecepcion` = 1;
-
--- Equipaje almacenado del día
-INSERT INTO `almacenamiento_equipaje` (`idcliente`, `idusuario`, `descripcion`, `cantidad_piezas`, `codigo_ticket`, `fechaentrada`, `idpequipaje`, `monto`, `estado`) VALUES
-(2, 2, 'Maleta mediana azul', 1, CONCAT('EQ-', DATE_FORMAT(NOW(), '%Y%m%d'), '-01'), NOW(), 2, 8.00, 'almacenado');
-
--- --------------------------------------------------------
--- intentos_login
--- --------------------------------------------------------
--- Sin datos de ejemplo: la tabla es append-only y se llena en tiempo real
--- con cada intento de login (exitoso o fallido). No afecta las credenciales
--- admin/admin123 ni el resto del seed.
+-- intentos_login: sin datos; es append-only y se llena con cada intento de login.
 
 COMMIT;
