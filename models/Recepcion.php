@@ -1003,18 +1003,21 @@ class Recepcion
 
             // Check-ins de hoy
             $hoy = date('Y-m-d');
+            $manana = date('Y-m-d', strtotime('+1 day'));
             $query = "SELECT COUNT(*) as checkins_hoy FROM {$this->tabla} 
-                  WHERE DATE(fechaentrada) = :hoy";
+                  WHERE fechaentrada >= :hoy AND fechaentrada < :manana";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':hoy', $hoy);
+            $stmt->bindParam(':manana', $manana);
             $stmt->execute();
             $checkins_hoy = $stmt->fetch(PDO::FETCH_ASSOC)['checkins_hoy'];
 
             // Check-outs previstos para hoy
             $query = "SELECT COUNT(*) as checkouts_hoy FROM {$this->tabla} 
-                  WHERE DATE(fechasalida_prevista) = :hoy AND estado = 'en_curso'";
+                  WHERE fechasalida_prevista >= :hoy AND fechasalida_prevista < :manana AND estado = 'en_curso'";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':hoy', $hoy);
+            $stmt->bindParam(':manana', $manana);
             $stmt->execute();
             $checkouts_hoy = $stmt->fetch(PDO::FETCH_ASSOC)['checkouts_hoy'];
 
@@ -1034,9 +1037,10 @@ class Recepcion
             // Ingresos de hoy
 
             $query = "SELECT SUM(montototal) as ingresos_hoy FROM {$this->tabla} 
-                WHERE DATE(fechaentrada) = :hoy AND estado IN ('en_curso', 'finalizado')";
+                WHERE fechaentrada >= :hoy AND fechaentrada < :manana AND estado IN ('en_curso', 'finalizado')";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':hoy', $hoy);
+            $stmt->bindParam(':manana', $manana);
             $stmt->execute();
             $ingresos_hoy = $stmt->fetch(PDO::FETCH_ASSOC)['ingresos_hoy'] ?? 0;
 
@@ -1113,7 +1117,7 @@ class Recepcion
                       LEFT JOIN persona p ON r.idcliente = p.idpersona
                       LEFT JOIN habitaciones h ON r.idhabitacion = h.id_habitacion
                       LEFT JOIN pisos piso ON h.idpiso = piso.idpiso
-                      WHERE r.estado = 'en_curso' AND DATE(r.fechasalida_prevista) = CURDATE()
+                      WHERE r.estado = 'en_curso' AND r.fechasalida_prevista >= CURDATE() AND r.fechasalida_prevista < CURDATE() + INTERVAL 1 DAY
                       ORDER BY r.fechasalida_prevista ASC";
             $stmt = $this->conexion->prepare($query);
             $stmt->execute();
@@ -1188,7 +1192,7 @@ class Recepcion
                           SELECT r2.idrecepcion FROM {$this->tabla} r2
                           WHERE r2.idhabitacion = h.id_habitacion
                             AND (r2.estado = 'en_curso'
-                                 OR (r2.estado = 'reservado' AND DATE(r2.fechaentrada) = CURDATE()))
+                                 OR (r2.estado = 'reservado' AND r2.fechaentrada >= CURDATE() AND r2.fechaentrada < CURDATE() + INTERVAL 1 DAY))
                           ORDER BY FIELD(r2.estado, 'en_curso', 'reservado'), r2.fechaentrada ASC
                           LIMIT 1
                       )
@@ -1244,8 +1248,8 @@ class Recepcion
                  FROM {$this->tabla} r
                  LEFT JOIN tarifas t ON r.idtarifa = t.idtarifa
                  WHERE r.estado IN ('en_curso', 'finalizado')
-                   AND DATE(r.fechaentrada) <= CURDATE()
-                   AND (r.fechasalida_prevista IS NULL OR DATE(r.fechasalida_prevista) >= CURDATE())"
+                   AND r.fechaentrada < CURDATE() + INTERVAL 1 DAY
+                   AND (r.fechasalida_prevista IS NULL OR r.fechasalida_prevista >= CURDATE())"
             );
             $adr = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['alojamiento' => 0, 'vendidas' => 0];
             if ((int) $adr['vendidas'] > 0) {
@@ -1259,7 +1263,7 @@ class Recepcion
                     WHEN p.tipo = 'reverso' AND og.tipo = 'pago' THEN -p.montototal
                     ELSE 0 END), 0) AS ingresos
                  FROM pagos p LEFT JOIN pagos og ON og.id_pago = p.id_pago_reversado
-                 WHERE DATE(p.fechacreacion) = CURDATE() AND p.idrecepcion IS NOT NULL"
+                 WHERE p.fechacreacion >= CURDATE() AND p.fechacreacion < CURDATE() + INTERVAL 1 DAY AND p.idrecepcion IS NOT NULL"
             );
             $base['ingresos_dia'] = (float) ($stmt->fetch(PDO::FETCH_ASSOC)['ingresos'] ?? 0);
 
@@ -1267,9 +1271,9 @@ class Recepcion
             $stmt = $this->conexion->query(
                 "SELECT
                     (SELECT COUNT(*) FROM {$this->tabla}
-                     WHERE estado = 'reservado' AND DATE(fechaentrada) = CURDATE()) AS llegadas,
+                     WHERE estado = 'reservado' AND fechaentrada >= CURDATE() AND fechaentrada < CURDATE() + INTERVAL 1 DAY) AS llegadas,
                     (SELECT COUNT(*) FROM {$this->tabla}
-                     WHERE estado = 'en_curso' AND DATE(fechasalida_prevista) = CURDATE()) AS salidas"
+                     WHERE estado = 'en_curso' AND fechasalida_prevista >= CURDATE() AND fechasalida_prevista < CURDATE() + INTERVAL 1 DAY) AS salidas"
             );
             $pend = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['llegadas' => 0, 'salidas' => 0];
             $base['llegadas_pendientes'] = (int) $pend['llegadas'];
@@ -1388,7 +1392,7 @@ class Recepcion
                       LEFT JOIN persona p ON r.idcliente = p.idpersona
                       LEFT JOIN habitaciones h ON r.idhabitacion = h.id_habitacion
                       LEFT JOIN pisos piso ON h.idpiso = piso.idpiso
-                      WHERE r.estado = 'reservado' AND DATE(r.fechaentrada) = CURDATE()
+                      WHERE r.estado = 'reservado' AND r.fechaentrada >= CURDATE() AND r.fechaentrada < CURDATE() + INTERVAL 1 DAY
                       ORDER BY r.fechaentrada ASC";
             $stmt = $this->conexion->prepare($query);
             $stmt->execute();
@@ -1416,7 +1420,7 @@ class Recepcion
                       LEFT JOIN persona p ON r.idcliente = p.idpersona
                       LEFT JOIN habitaciones h ON r.idhabitacion = h.id_habitacion
                       LEFT JOIN pisos piso ON h.idpiso = piso.idpiso
-                      WHERE r.estado = 'reservado' AND DATE(r.fechaentrada) > CURDATE()
+                      WHERE r.estado = 'reservado' AND r.fechaentrada >= CURDATE() + INTERVAL 1 DAY
                       ORDER BY r.fechaentrada ASC";
             $stmt = $this->conexion->prepare($query);
             $stmt->execute();

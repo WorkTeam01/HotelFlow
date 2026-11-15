@@ -124,12 +124,14 @@ class Dashboard
 
             // Servicios de hoy
             $fecha_hoy = date('Y-m-d');
+            $fecha_manana = date('Y-m-d', strtotime('+1 day'));
             $stmt = $this->conexion->prepare("
                 SELECT COUNT(*) as total_hoy 
                 FROM servicio_bano 
-                WHERE DATE(fecha) = :fecha_hoy
+                WHERE fecha >= :fecha_hoy AND fecha < :fecha_manana
             ");
             $stmt->bindParam(':fecha_hoy', $fecha_hoy);
+            $stmt->bindParam(':fecha_manana', $fecha_manana);
             $stmt->execute();
             $total_hoy = $stmt->fetch(PDO::FETCH_ASSOC)['total_hoy'];
 
@@ -467,6 +469,8 @@ class Dashboard
         // Fecha actual
         $hoy = date('Y-m-d');
         $fecha_inicio = date('Y-m-d', strtotime('-6 days', strtotime($hoy)));
+        // Límite superior exclusivo: comparar la columna sin DATE() deja usar sus índices
+        $fin_exclusivo = date('Y-m-d', strtotime('+1 day', strtotime($hoy)));
 
         $labels = [];
         $fechas_completas = [];
@@ -493,11 +497,11 @@ class Dashboard
             $stmt = $this->conexion->prepare("
                 SELECT DATE(fecha) as dia, COUNT(*) as cantidad
                 FROM servicio_bano
-                WHERE DATE(fecha) BETWEEN :fecha_inicio AND :fecha_fin
+                WHERE fecha >= :fecha_inicio AND fecha < :fecha_fin
                 GROUP BY DATE(fecha)
             ");
             $stmt->bindParam(':fecha_inicio', $fecha_inicio);
-            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->bindParam(':fecha_fin', $fin_exclusivo);
             $stmt->execute();
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
                 if (isset($servicios_bano[$fila['dia']])) {
@@ -513,11 +517,11 @@ class Dashboard
             $stmt = $this->conexion->prepare("
                 SELECT DATE(fechaentrada) as dia, COUNT(*) as cantidad
                 FROM almacenamiento_equipaje
-                WHERE DATE(fechaentrada) BETWEEN :fecha_inicio AND :fecha_fin
+                WHERE fechaentrada >= :fecha_inicio AND fechaentrada < :fecha_fin
                 GROUP BY DATE(fechaentrada)
             ");
             $stmt->bindParam(':fecha_inicio', $fecha_inicio);
-            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->bindParam(':fecha_fin', $fin_exclusivo);
             $stmt->execute();
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
                 if (isset($equipajes[$fila['dia']])) {
@@ -537,11 +541,11 @@ class Dashboard
                        DATE(COALESCE(fechasalida, fechasalida_prevista)) as salida
                 FROM recepcion
                 WHERE estado IN ('en_curso', 'reservado')
-                AND DATE(fechaentrada) <= :fecha_fin
-                AND DATE(COALESCE(fechasalida, fechasalida_prevista)) >= :fecha_inicio
+                AND fechaentrada < :fecha_fin
+                AND COALESCE(fechasalida, fechasalida_prevista) >= :fecha_inicio
             ");
             $stmt->bindParam(':fecha_inicio', $fecha_inicio);
-            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->bindParam(':fecha_fin', $fin_exclusivo);
             $stmt->execute();
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
                 foreach ($fechas_rango as $fecha) {
@@ -559,12 +563,12 @@ class Dashboard
             $stmt = $this->conexion->prepare("
                 SELECT DATE(fechacreacion) as dia, COALESCE(SUM(montototal), 0) as total
                 FROM recepcion
-                WHERE DATE(fechacreacion) BETWEEN :fecha_inicio AND :fecha_fin
+                WHERE fechacreacion >= :fecha_inicio AND fechacreacion < :fecha_fin
                 AND estado IN ('en_curso', 'finalizado')
                 GROUP BY DATE(fechacreacion)
             ");
             $stmt->bindParam(':fecha_inicio', $fecha_inicio);
-            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->bindParam(':fecha_fin', $fin_exclusivo);
             $stmt->execute();
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
                 if (isset($ingresos[$fila['dia']])) {
@@ -580,12 +584,12 @@ class Dashboard
             $stmt = $this->conexion->prepare("
                 SELECT DATE(fecha) as dia, COALESCE(SUM(total), 0) as total
                 FROM servicio_bano
-                WHERE DATE(fecha) BETWEEN :fecha_inicio AND :fecha_fin
+                WHERE fecha >= :fecha_inicio AND fecha < :fecha_fin
                 AND estado <> 'cancelado' AND modalidad_cobro = 'contado'
                 GROUP BY DATE(fecha)
             ");
             $stmt->bindParam(':fecha_inicio', $fecha_inicio);
-            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->bindParam(':fecha_fin', $fin_exclusivo);
             $stmt->execute();
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
                 if (isset($ingresos[$fila['dia']])) {
@@ -601,11 +605,11 @@ class Dashboard
             $stmt = $this->conexion->prepare("
                 SELECT DATE(fechaentrada) as dia, COALESCE(SUM(monto), 0) as total
                 FROM almacenamiento_equipaje
-                WHERE DATE(fechaentrada) BETWEEN :fecha_inicio AND :fecha_fin
+                WHERE fechaentrada >= :fecha_inicio AND fechaentrada < :fecha_fin
                 GROUP BY DATE(fechaentrada)
             ");
             $stmt->bindParam(':fecha_inicio', $fecha_inicio);
-            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->bindParam(':fecha_fin', $fin_exclusivo);
             $stmt->execute();
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
                 if (isset($ingresos[$fila['dia']])) {
@@ -621,12 +625,12 @@ class Dashboard
             $stmt = $this->conexion->prepare("
                 SELECT DATE(fechaventa) as dia, COALESCE(SUM(totalventa), 0) as total
                 FROM venta
-                WHERE DATE(fechaventa) BETWEEN :fecha_inicio AND :fecha_fin
+                WHERE fechaventa >= :fecha_inicio AND fechaventa < :fecha_fin
                 AND estado = 1
                 GROUP BY DATE(fechaventa)
             ");
             $stmt->bindParam(':fecha_inicio', $fecha_inicio);
-            $stmt->bindParam(':fecha_fin', $hoy);
+            $stmt->bindParam(':fecha_fin', $fin_exclusivo);
             $stmt->execute();
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $fila) {
                 if (isset($ingresos[$fila['dia']])) {
@@ -710,7 +714,7 @@ class Dashboard
                 SUM(CASE WHEN estado = 'enprogreso' THEN 1 ELSE 0 END) as enprogreso,
                 SUM(CASE WHEN estado = 'completada' THEN 1 ELSE 0 END) as completadas,
                 SUM(CASE WHEN estado = 'verificada' THEN 1 ELSE 0 END) as verificadas,
-                SUM(CASE WHEN DATE(fecha) = CURDATE() THEN 1 ELSE 0 END) as hoy
+                SUM(CASE WHEN fecha = CURDATE() THEN 1 ELSE 0 END) as hoy
             FROM asignaciones_limpieza
             WHERE idusuario = :idusuario
         ");
@@ -773,7 +777,7 @@ class Dashboard
                 SUM(CASE WHEN estado = 'enprogreso' THEN 1 ELSE 0 END) as enprogreso,
                 SUM(CASE WHEN estado = 'completada' THEN 1 ELSE 0 END) as completadas,
                 SUM(CASE WHEN estado = 'verificada' THEN 1 ELSE 0 END) as verificadas,
-                SUM(CASE WHEN DATE(fecha) = CURDATE() THEN 1 ELSE 0 END) as hoy
+                SUM(CASE WHEN fecha = CURDATE() THEN 1 ELSE 0 END) as hoy
             FROM asignaciones_limpieza
         ");
             $stmt->execute();

@@ -610,7 +610,7 @@ class Venta
             // Ventas hoy (cantidad y monto total)
             $query = "SELECT COUNT(*) as cantidad, SUM(totalventa) as total 
                   FROM {$this->tabla} v
-                  WHERE DATE(v.fechaventa) = :hoy AND v.estado = 1{$filtroUsuario}";
+                  WHERE v.fechaventa = :hoy AND v.estado = 1{$filtroUsuario}";
             $stmt = $this->conexion->prepare($query);
             $stmt->bindParam(':hoy', $hoy, PDO::PARAM_STR);
             if ($idUsuario !== null) {
@@ -627,7 +627,7 @@ class Venta
                   COUNT(v.idventa) as compras, SUM(v.totalventa) as total_gastado
                   FROM {$this->tabla} v
                   LEFT JOIN persona p ON v.idcliente = p.idpersona
-                  WHERE DATE(v.fechaventa) = :hoy AND v.estado = 1{$filtroUsuario}
+                  WHERE v.fechaventa = :hoy AND v.estado = 1{$filtroUsuario}
                   GROUP BY v.idcliente
                   ORDER BY total_gastado DESC
                   LIMIT 1";
@@ -646,7 +646,7 @@ class Venta
                   FROM {$this->tablaDetalle} dv
                   JOIN {$this->tabla} v ON dv.idventa = v.idventa
                   JOIN productos pr ON dv.idproducto = pr.idproducto
-                  WHERE DATE(v.fechaventa) = :hoy AND v.estado = 1{$filtroUsuario}
+                  WHERE v.fechaventa = :hoy AND v.estado = 1{$filtroUsuario}
                   GROUP BY dv.idproducto
                   ORDER BY cantidad_vendida DESC
                   LIMIT 1";

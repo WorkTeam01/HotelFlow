@@ -606,44 +606,22 @@ class AsignacionLimpieza
     public function getEstadisticas()
     {
         try {
-            $stats = [];
             $fechaHoy = date('Y-m-d');
 
-            // Total de asignaciones de hoy
-            $stmt = $this->conexion->prepare("SELECT COUNT(*) as total FROM {$this->tabla} WHERE DATE(fecha) = :fecha_hoy");
+            // `fecha` es DATE: se compara directo (sin DATE()) para poder usar idx_asignaciones_fecha_estado
+            $stmt = $this->conexion->prepare(
+                "SELECT COUNT(*) AS total,
+                        COALESCE(SUM(estado = 'pendiente'), 0) AS pendientes,
+                        COALESCE(SUM(estado = 'enprogreso'), 0) AS enprogreso,
+                        COALESCE(SUM(estado = 'completada'), 0) AS completadas,
+                        COALESCE(SUM(estado = 'verificada'), 0) AS verificadas
+                 FROM {$this->tabla} WHERE fecha = :fecha_hoy"
+            );
             $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
             $stmt->execute();
-            $stats['total'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-
-            // Asignaciones pendientes de hoy
-            $stmt = $this->conexion->prepare("SELECT COUNT(*) as pendientes FROM {$this->tabla} WHERE estado = 'pendiente' AND DATE(fecha) = :fecha_hoy");
-            $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
-            $stmt->execute();
-            $stats['pendientes'] = $stmt->fetch(PDO::FETCH_ASSOC)['pendientes'];
-
-            // Asignaciones en progreso de hoy
-            $stmt = $this->conexion->prepare("SELECT COUNT(*) as enprogreso FROM {$this->tabla} WHERE estado = 'enprogreso' AND DATE(fecha) = :fecha_hoy");
-            $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
-            $stmt->execute();
-            $stats['enprogreso'] = $stmt->fetch(PDO::FETCH_ASSOC)['enprogreso'];
-
-            // Asignaciones completadas de hoy
-            $stmt = $this->conexion->prepare("SELECT COUNT(*) as completadas FROM {$this->tabla} WHERE estado = 'completada' AND DATE(fecha) = :fecha_hoy");
-            $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
-            $stmt->execute();
-            $stats['completadas'] = $stmt->fetch(PDO::FETCH_ASSOC)['completadas'];
-
-            // Asignaciones verificadas de hoy
-            $stmt = $this->conexion->prepare("SELECT COUNT(*) as verificadas FROM {$this->tabla} WHERE estado = 'verificada' AND DATE(fecha) = :fecha_hoy");
-            $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
-            $stmt->execute();
-            $stats['verificadas'] = $stmt->fetch(PDO::FETCH_ASSOC)['verificadas'];
-
-            // Asignaciones para hoy (ya estaba filtrado por fecha = hoy)
-            $stmt = $this->conexion->prepare("SELECT COUNT(*) as hoy FROM {$this->tabla} WHERE fecha = :hoy");
-            $stmt->bindParam(':hoy', $fechaHoy, PDO::PARAM_STR);
-            $stmt->execute();
-            $stats['hoy'] = $stmt->fetch(PDO::FETCH_ASSOC)['hoy'];
+            $stats = array_map('intval', $stmt->fetch(PDO::FETCH_ASSOC));
+            // Mismo conjunto que `total`: la fecha ya es un día exacto
+            $stats['hoy'] = $stats['total'];
 
             return $stats;
         } catch (PDOException $e) {

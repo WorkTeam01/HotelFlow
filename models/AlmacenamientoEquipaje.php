@@ -568,7 +568,7 @@ class AlmacenamientoEquipaje
             // Total de registros de hoy
             $queryTotalHoy = "SELECT COUNT(*) as total
                          FROM {$this->tabla}
-                         WHERE DATE(fechaentrada) = CURDATE()";
+                         WHERE fechaentrada >= CURDATE() AND fechaentrada < CURDATE() + INTERVAL 1 DAY";
             $stmtTotalHoy = $this->conexion->prepare($queryTotalHoy);
             $stmtTotalHoy->execute();
             $totalHoy = $stmtTotalHoy->fetch(PDO::FETCH_ASSOC)['total'];
@@ -576,7 +576,7 @@ class AlmacenamientoEquipaje
             // Registros por estado de hoy
             $queryPorEstadoHoy = "SELECT estado, COUNT(*) as cantidad
                              FROM {$this->tabla}
-                             WHERE DATE(fechaentrada) = CURDATE()
+                             WHERE fechaentrada >= CURDATE() AND fechaentrada < CURDATE() + INTERVAL 1 DAY
                              GROUP BY estado";
             $stmtPorEstadoHoy = $this->conexion->prepare($queryPorEstadoHoy);
             $stmtPorEstadoHoy->execute();
@@ -596,7 +596,7 @@ class AlmacenamientoEquipaje
             // Ingresos de hoy (del ledger pagos)
             $queryIngresosHoy = "SELECT SUM(monto) as ingresos_hoy
                            FROM {$this->tabla}
-                           WHERE DATE(fechaentrada) = CURDATE()";
+                           WHERE fechaentrada >= CURDATE() AND fechaentrada < CURDATE() + INTERVAL 1 DAY";
             $stmtIngresosHoy = $this->conexion->prepare($queryIngresosHoy);
             $stmtIngresosHoy->execute();
             $ingresosHoy = $stmtIngresosHoy->fetch(PDO::FETCH_ASSOC)['ingresos_hoy'] ?? 0;

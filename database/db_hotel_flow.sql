@@ -501,7 +501,8 @@ ALTER TABLE `almacenamiento_equipaje`
   ADD UNIQUE KEY `codigo_ticket` (`codigo_ticket`),
   ADD KEY `idcliente` (`idcliente`),
   ADD KEY `idusuario` (`idusuario`),
-  ADD KEY `idpequipaje` (`idpequipaje`);
+  ADD KEY `idpequipaje` (`idpequipaje`),
+  ADD KEY `idx_equipaje_fechaentrada` (`fechaentrada`);
 
 --
 -- Indices de la tabla `asignaciones_limpieza`
@@ -509,7 +510,8 @@ ALTER TABLE `almacenamiento_equipaje`
 ALTER TABLE `asignaciones_limpieza`
   ADD PRIMARY KEY (`idasignacion`),
   ADD KEY `idusuario` (`idusuario`),
-  ADD KEY `idhabitacion` (`idhabitacion`);
+  ADD KEY `idhabitacion` (`idhabitacion`),
+  ADD KEY `idx_asignaciones_fecha_estado` (`fecha`,`estado`);
 
 --
 -- Indices de la tabla `bano`
@@ -572,6 +574,7 @@ ALTER TABLE `pagos`
   ADD KEY `idequipaje` (`idequipaje`),
   ADD KEY `idservicio_bano` (`idservicio_bano`),
   ADD KEY `idx_pagos_recepcion_fecha` (`idrecepcion`,`fechacreacion`),
+  ADD KEY `idx_pagos_fecha` (`fechacreacion`),
   ADD KEY `idusuario` (`idusuario`),
   ADD UNIQUE KEY `uq_pagos_reversado` (`id_pago_reversado`);
 
@@ -686,7 +689,8 @@ ALTER TABLE `usuarios`
 ALTER TABLE `venta`
   ADD PRIMARY KEY (`idventa`),
   ADD KEY `idcliente` (`idcliente`),
-  ADD KEY `idusuario` (`idusuario`);
+  ADD KEY `idusuario` (`idusuario`),
+  ADD KEY `idx_venta_fecha_estado` (`fechaventa`,`estado`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas

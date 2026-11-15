@@ -736,29 +736,27 @@ class ServicioBano
                 'en_uso' => 0
             ];
 
-            // Fecha actual para filtrar
-            $fechaHoy = date('Y-m-d');
+            // Rango [hoy, mañana): sin DATE() sobre la columna para poder usar idx_sb_fecha_estado
+            $desde = date('Y-m-d');
+            $hasta = date('Y-m-d', strtotime('+1 day'));
 
-            // Total de servicios de hoy
-            $query = "SELECT COUNT(*) FROM {$this->tabla} WHERE DATE(fecha) = :fecha_hoy";
+            $query = "SELECT COUNT(*) AS total,
+                             COALESCE(SUM(estado != 'cancelado'), 0) AS activos,
+                             COALESCE(SUM(estado = 'cancelado'), 0) AS inactivos,
+                             COALESCE(SUM(CASE WHEN modalidad_cobro = 'folio' AND estado <> 'cancelado' THEN total ELSE 0 END), 0) AS folio_hoy
+                      FROM {$this->tabla} WHERE fecha >= :desde AND fecha < :hasta";
             $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
+            $stmt->bindParam(':desde', $desde, PDO::PARAM_STR);
+            $stmt->bindParam(':hasta', $hasta, PDO::PARAM_STR);
             $stmt->execute();
-            $estadisticas['total'] = $stmt->fetchColumn();
-
+            $dia = $stmt->fetch(PDO::FETCH_ASSOC);
+            $estadisticas['total'] = (int)$dia['total'];
             // "Activos" = servicios vigentes (no cancelados): iniciado o finalizado
-            $query = "SELECT COUNT(*) FROM {$this->tabla} WHERE estado != 'cancelado' AND DATE(fecha) = :fecha_hoy";
-            $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
-            $stmt->execute();
-            $estadisticas['activos'] = $stmt->fetchColumn();
-
+            $estadisticas['activos'] = (int)$dia['activos'];
             // "Inactivos" = servicios cancelados
-            $query = "SELECT COUNT(*) FROM {$this->tabla} WHERE estado = 'cancelado' AND DATE(fecha) = :fecha_hoy";
-            $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
-            $stmt->execute();
-            $estadisticas['inactivos'] = $stmt->fetchColumn();
+            $estadisticas['inactivos'] = (int)$dia['inactivos'];
+            // Cargado al folio de huéspedes hoy (cargo neto de servicios vigentes; se cobra en el check-out)
+            $estadisticas['folio_hoy'] = round((float)$dia['folio_hoy'], 2);
 
             // Cobrado hoy: pago neto del ledger (los reversos restan del pago que anulan)
             $query = "SELECT COALESCE(SUM(CASE WHEN p.tipo = 'pago' THEN p.montototal
@@ -766,23 +764,16 @@ class ServicioBano
                                                ELSE 0 END), 0)
                       FROM pagos p
                       LEFT JOIN pagos o ON o.id_pago = p.id_pago_reversado
-                      WHERE p.idservicio_bano IS NOT NULL AND DATE(p.fechacreacion) = :fecha_hoy";
+                      WHERE p.idservicio_bano IS NOT NULL AND p.fechacreacion >= :desde AND p.fechacreacion < :hasta";
             $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
+            $stmt->bindParam(':desde', $desde, PDO::PARAM_STR);
+            $stmt->bindParam(':hasta', $hasta, PDO::PARAM_STR);
             $stmt->execute();
             $ingresos = $stmt->fetchColumn();
             $estadisticas['ingresos_totales'] = $ingresos ? round($ingresos, 2) : 0;
 
             // Baños ocupados ahora (servicios iniciados, sin importar el día)
             $estadisticas['en_uso'] = (int)$this->conexion->query("SELECT COUNT(*) FROM {$this->tabla} WHERE estado = 'iniciado'")->fetchColumn();
-
-            // Cargado al folio de huéspedes hoy (cargo neto de servicios vigentes; se cobra en el check-out)
-            $query = "SELECT COALESCE(SUM(total), 0) FROM {$this->tabla}
-                      WHERE modalidad_cobro = 'folio' AND estado <> 'cancelado' AND DATE(fecha) = :fecha_hoy";
-            $stmt = $this->conexion->prepare($query);
-            $stmt->bindParam(':fecha_hoy', $fechaHoy, PDO::PARAM_STR);
-            $stmt->execute();
-            $estadisticas['folio_hoy'] = round((float)$stmt->fetchColumn(), 2);
 
             return $estadisticas;
         } catch (PDOException $e) {
