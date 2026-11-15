@@ -5,6 +5,52 @@ Todos los cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/) (sin prefijo `v`, ej. `1.0.0`).
 
+## [1.9.0] - 2026-11-15
+
+Calidad y mantenimiento del código: análisis estático, tests, CI, consultas por día con índices y guardas de permisos centralizadas.
+
+### Added
+
+- Análisis estático con PHPStan nivel 1 y un baseline (`phpstan.neon`, `phpstan-baseline.neon`) que congela los errores existentes; CI falla solo con errores nuevos. `composer.json` existe solo para herramientas de desarrollo (la aplicación sigue sin Composer en producción).
+- Workflow de GitHub Actions (`.github/workflows/ci.yml`) con dos jobs, PHPStan y tests contra MariaDB 10.11, y Dependabot semanal para `github-actions` y `composer` con minor y patch agrupados.
+- Tests de caracterización en `tests/` (scripts PHP sin dependencias, `php tests/preparar-bd.php` y `php tests/run.php`) contra una BD MariaDB real `db_hotel_flow_test`: folio de recepción (cargos, pagos, reversos y cache), check-out, transiciones de estado, cambio de habitación, compras (el stock entra al completar) y el enum de estados. El bootstrap aborta si la conexión no apunta a la BD de pruebas.
+- Enum `EstadoRecepcion` (`models/EstadoRecepcion.php`): única fuente de las transiciones válidas de una recepción, de los estados que cierran la estancia y de los destinos que se piden a mano.
+- Guardas de permisos `requireModuloAjax()` y `requireModuloVista()` en `views/layouts/session.php`, sobre `usuarioPuedeAccederModulo()`.
+- Índices `idx_asignaciones_fecha_estado`, `idx_venta_fecha_estado`, `idx_equipaje_fechaentrada` e `idx_pagos_fecha`.
+
+### Changed
+
+- 85 guardas `esAdministrador() && puedeAccederModulo()` repetidas en controladores y vistas pasan a una llamada a los helpers de `session.php`; quedan escritas a mano las 12 con respuesta propia (recibos con `die()`, endpoints de doble contrato JSON/redirect y JSON con otra forma). Los endpoints JSON envían siempre `Content-Type: application/json`.
+- Las consultas «de hoy» o por rango de fechas de `Recepcion`, `ServicioBano`, `AlmacenamientoEquipaje`, `Venta`, `AsignacionLimpieza` y `Dashboard` comparan la columna contra un rango (`col >= hoy AND col < mañana`) en vez de envolverla en `DATE()`, de modo que usan sus índices. Con 100.000 estancias, las llegadas y salidas del día revisan ~143 filas en lugar de ~50.000.
+- `AsignacionLimpieza::getEstadisticas()` pasa de 6 consultas a 1 y `ServicioBano::getEstadisticas()` de 5 a 2.
+- `Recepcion::cambiarEstado()`, `Pago::registrarLinea()`, `RecepcionController` y las vistas de recepción usan `EstadoRecepcion` en lugar de matrices y listas de estados repetidas.
+- `.htaccess` bloquea además `tests/`, `vendor/`, `.github/` y los archivos `*.neon`.
+
+- El seeder (`database/seed.sql`) pasa de unos pocos registros a ~30 días de operación de un hotel de 12 habitaciones: 89 estancias (finalizadas, en casa con saldo o con salida vencida, reservas y cancelaciones con reverso) con su folio, ventas con pago único, mixto y anuladas, compras en los tres estados, 42 servicios de baño (contado, a folio, cancelados, en uso y excedido), 14 registros de equipaje (retirados, almacenados, vencidos, perdido y dañado) y la limpieza del día, con 5 usuarios (`recepcion123` y `limpieza123` para los de esos roles). Todas las fechas son relativas a la ejecución y el folio coincide con el cache de `recepcion`.
+
+### Removed
+
+- `Dashboard::getDatosGraficosIngresos()` y `requireRole()`, sin ningún uso.
+- `controllers/recepcion/cambiar_estado.php`: el check-in y la cancelación desde el detalle de una recepción usan `transicion_ajax.php`, igual que el panel.
+
+### Fixed
+
+- `.gitignore` ignoraba `vendror/` (typo) en lugar de `vendor/`.
+- El check-in y la cancelación de una recepción desde su detalle viajaban por GET con el `csrf_token` en la URL; ahora son POST con el token en el cuerpo, con confirmación y spinner de carga.
+- El enlace «Dashboard» de las migas de pan de `recepcion/index.php` y `recepcion/create.php` apuntaba a `views/dashboard/index.php`, que no existe (404); ahora va a la raíz.
+- El `verificar()` de `tests/bootstrap.php` tipaba los argumentos como `?float` y rompía todos los tests que comparan cadenas.
+
+### Upgrade
+
+Las bases ya desplegadas no se actualizan con el dump; aplicar a mano:
+
+```sql
+ALTER TABLE asignaciones_limpieza ADD KEY idx_asignaciones_fecha_estado (fecha, estado);
+ALTER TABLE venta ADD KEY idx_venta_fecha_estado (fechaventa, estado);
+ALTER TABLE almacenamiento_equipaje ADD KEY idx_equipaje_fechaentrada (fechaentrada);
+ALTER TABLE pagos ADD KEY idx_pagos_fecha (fechacreacion);
+```
+
 ## [1.8.3] - 2026-11-11
 
 Refactor del frontend de `compras` tomando como referencia `ventas`. Sin cambios de esquema.
@@ -781,6 +827,7 @@ Primera versión pública de HotelFlow.
 - Verificado que no existan credenciales, datos personales ni información de negocio real en el código versionado.
 - `.env` excluido de control de versiones; `.env.example` documentado con valores de ejemplo.
 
+[1.9.0]: https://github.com/WorkTeam01/HotelFlow/compare/1.8.3...1.9.0
 [1.8.3]: https://github.com/WorkTeam01/HotelFlow/compare/1.8.2...1.8.3
 [1.8.2]: https://github.com/WorkTeam01/HotelFlow/compare/1.8.1...1.8.2
 [1.8.1]: https://github.com/WorkTeam01/HotelFlow/compare/1.8.0...1.8.1
