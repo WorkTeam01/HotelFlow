@@ -13,12 +13,7 @@ requireLogin();
 $idusuario = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
-if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'habitaciones')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para realizar esta acción.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL . 'views/habitaciones/index.php');
-    exit;
-}
+requireModuloVista('habitaciones', 'views/habitaciones/index.php', 'No tiene permisos para realizar esta acción.');
 
 // Verificar token CSRF
 if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {

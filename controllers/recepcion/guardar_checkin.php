@@ -13,12 +13,7 @@ requireLogin();
 $idusuario_sesion = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
-if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($idusuario_sesion, 'recepcion')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para realizar esta acción.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL . 'views/recepcion/index.php');
-    exit;
-}
+requireModuloVista('recepcion', 'views/recepcion/index.php', 'No tiene permisos para realizar esta acción.');
 
 // Verificar token CSRF (obligatorio, no opcional: ausencia de token = inválido)
 if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {

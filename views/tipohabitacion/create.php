@@ -8,12 +8,7 @@ $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
-if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'tipohabitaciones')) {
-    $_SESSION['mensaje'] = 'No tiene permisos de administrador.';
-    $_SESSION['icono'] = 'error';
-    header('Location: index.php');
-    exit;
-}
+requireModuloVista('tipohabitaciones', 'views/tipohabitacion/index.php', 'No tiene permisos de administrador.');
 
 // Definir scripts y estilos específicos para este módulo
 $module_scripts = ['tipohabitacion/create-tipo-habitacion'];

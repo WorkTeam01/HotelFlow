@@ -11,12 +11,7 @@ $idusuario = $_SESSION['usuario_id'];
 // Verificar si el usuario tiene permiso para crear servicios de baño
 $auth = new AuthorizationService();
 
-if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'servicios_bano')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para crear servicios de baños.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL);
-    exit;
-}
+requireModuloVista('servicios_bano', '', 'No tiene permisos para crear servicios de baños.');
 
 // Agregar los estilos específicos para este módulo
 $module_styles = ['servicios-bano/servicios-bano'];

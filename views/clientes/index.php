@@ -9,12 +9,7 @@ $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar permisos para el módulo de personas
-if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'clientes')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL);
-    exit;
-}
+requireModuloVista('clientes', '');
 
 $skip_select2 = true;
 $skip_chartjs = true;

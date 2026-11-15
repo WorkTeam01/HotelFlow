@@ -10,12 +10,7 @@ $idusuario = $_SESSION['usuario_id'] ?? '';
 $authService = new AuthorizationService();
 
 // Verificar permisos para el módulo de tipos de habitación
-if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'tipohabitaciones')) {
-    $_SESSION['mensaje'] = 'No tiene permisos de administrador.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL);
-    exit;
-}
+requireModuloVista('tipohabitaciones', '', 'No tiene permisos de administrador.');
 
 $skip_select2 = true;
 $skip_chartjs = true;

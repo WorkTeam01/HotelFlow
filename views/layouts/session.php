@@ -180,6 +180,69 @@ function requireLogin($redirect_url = null)
 }
 
 /**
+ * Comprueba que el usuario en sesión sea Administrador o tenga acceso al módulo.
+ * Única implementación de la guarda `esAdministrador || puedeAccederModulo`; los
+ * endpoints la invocan vía requireModuloAjax()/requireModuloVista().
+ *
+ * @param string $modulo Nombre del permiso (tabla `permiso`)
+ * @return bool
+ */
+function usuarioPuedeAccederModulo($modulo)
+{
+    require_once __DIR__ . '/../../services/AuthorizationService.php';
+
+    $idusuario = $_SESSION['usuario_id'] ?? 0;
+    $auth = new AuthorizationService();
+
+    return $auth->esAdministrador($idusuario) || $auth->puedeAccederModulo($idusuario, $modulo);
+}
+
+/**
+ * Guarda de permisos para endpoints que responden JSON. Sin permiso responde
+ * `{success:false, message}` y termina. Llamar después de requireLogin().
+ *
+ * @param string $modulo Nombre del permiso
+ * @param string $mensaje Mensaje para el usuario
+ * @param bool $http403 Si true, además envía el código HTTP 403
+ */
+function requireModuloAjax($modulo, $mensaje = 'No tiene permisos para realizar esta acción', $http403 = false)
+{
+    if (usuarioPuedeAccederModulo($modulo)) {
+        return;
+    }
+
+    if ($http403) {
+        http_response_code(403);
+    }
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => $mensaje]);
+    exit;
+}
+
+/**
+ * Guarda de permisos para vistas y acciones con redirección. Sin permiso deja el
+ * mensaje en sesión y redirige. Llamar después de requireLogin() y ANTES de incluir
+ * header.php (el redirect no funciona con salida ya emitida).
+ *
+ * @param string $modulo Nombre del permiso
+ * @param string $destino Ruta relativa a $URL a la que redirigir
+ * @param string $mensaje Mensaje para el usuario
+ */
+function requireModuloVista($modulo, $destino = 'index.php', $mensaje = 'No tiene permisos para acceder a esta sección.')
+{
+    global $URL;
+
+    if (usuarioPuedeAccederModulo($modulo)) {
+        return;
+    }
+
+    $_SESSION['mensaje'] = $mensaje;
+    $_SESSION['icono'] = 'error';
+    header('Location: ' . $URL . $destino);
+    exit;
+}
+
+/**
  * Obtener datos del usuario actual
  * 
  * @return array|null Datos del usuario o null si no hay sesión

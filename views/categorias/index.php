@@ -8,12 +8,7 @@ $idusuario = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo ANTES de incluir el header
-if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'categorias')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL . 'index.php');
-    exit;
-}
+requireModuloVista('categorias');
 
 // Incluir el encabezado después de verificar permisos
 $skip_select2 = true;

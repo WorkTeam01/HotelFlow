@@ -10,12 +10,7 @@ $idusuario = $_SESSION['usuario_id'] ?? '';
 $authService = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
-if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'compras')) {
-    $_SESSION['mensaje'] = 'No tiene permisos de administrador.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL);
-    exit;
-}
+requireModuloVista('compras', '', 'No tiene permisos de administrador.');
 
 // Incluir el encabezado DESPUÉS de verificar permisos
 $skip_select2 = true;

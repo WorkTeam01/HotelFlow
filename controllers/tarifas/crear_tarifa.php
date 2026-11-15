@@ -19,12 +19,7 @@ if (!isset($GLOBALS['URL'])) {
 $idusuario_sesion = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
-if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($idusuario_sesion, 'tarifas')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para realizar esta acción.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $GLOBALS['URL'] . 'views/tarifas/index.php');
-    exit;
-}
+requireModuloVista('tarifas', 'views/tarifas/index.php', 'No tiene permisos para realizar esta acción.');
 
 // Instanciar el controlador de Tarifas
 $controller = new TarifaController();

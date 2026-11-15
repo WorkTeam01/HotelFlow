@@ -7,12 +7,7 @@ $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar permisos para el módulo de personas
-if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'clientes')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
-    $_SESSION['icono'] = 'error';
-    header('Location: index.php');
-    exit;
-}
+requireModuloVista('clientes', 'views/clientes/index.php');
 
 // Definir scripts y estilos específicos para este módulo
 $module_scripts = ['clientes/create-persona'];

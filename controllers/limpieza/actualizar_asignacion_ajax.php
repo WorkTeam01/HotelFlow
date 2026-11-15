@@ -16,13 +16,7 @@ if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQ
 $idusuario = $_SESSION['usuario_id'] ?? 0;
 $auth = new AuthorizationService();
 
-if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'limpieza')) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'No tiene permisos para actualizar asignaciones de limpieza'
-    ]);
-    exit;
-}
+requireModuloAjax('limpieza', 'No tiene permisos para actualizar asignaciones de limpieza');
 
 // Configurar respuesta como JSON
 header('Content-Type: application/json');

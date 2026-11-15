@@ -9,14 +9,7 @@ $idusuario = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
-if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'habitaciones')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
-    $_SESSION['icono'] = 'error';
-
-    // Redirigir al inicio
-    header('Location: ' . $URL . 'index.php');
-    exit;
-}
+requireModuloVista('habitaciones');
 
 // Incluir el encabezado después de verificar permisos
 $skip_chartjs = true;

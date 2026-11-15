@@ -19,12 +19,7 @@ requireLogin();
 $idusuario_sesion = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
-if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($idusuario_sesion, 'compras')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para realizar esta acción.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $GLOBALS['URL'] . 'views/compras/index.php');
-    exit;
-}
+requireModuloVista('compras', 'views/compras/index.php', 'No tiene permisos para realizar esta acción.');
 
 // Instanciar el controlador de Compras
 $controller = new CompraController();

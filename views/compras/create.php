@@ -9,12 +9,7 @@ $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar permisos
-if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'compras')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
-    $_SESSION['icono'] = 'error';
-    header('Location: index.php');
-    exit;
-}
+requireModuloVista('compras', 'views/compras/index.php');
 
 $skip_chartjs = true;
 $skip_datatables = true;

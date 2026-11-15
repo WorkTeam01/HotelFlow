@@ -11,12 +11,7 @@ requireLogin();
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
-if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'recepcion')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL);
-    exit;
-}
+requireModuloVista('recepcion', '');
 
 if (!isset($_GET['id']) || $_GET['id'] === '') {
     $_SESSION['mensaje'] = 'ID de recepción no válido.';

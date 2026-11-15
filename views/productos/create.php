@@ -9,12 +9,7 @@ $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
 // Verificar si el usuario tiene acceso al módulo
-if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'productos')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
-    $_SESSION['icono'] = 'error';
-    header('Location: index.php');
-    exit;
-}
+requireModuloVista('productos', 'views/productos/index.php');
 
 // Obtener categorías desde el controlador
 $categoriaController = new CategoriaController();

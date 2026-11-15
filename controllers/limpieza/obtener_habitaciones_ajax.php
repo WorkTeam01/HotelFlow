@@ -16,14 +16,7 @@ if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQ
 $idusuario = $_SESSION['usuario_id'] ?? 0;
 $auth = new AuthorizationService();
 
-if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'limpieza')) {
-    header('Content-Type: application/json');
-    echo json_encode([
-        'success' => false,
-        'message' => 'No tiene permisos para acceder a esta funcionalidad'
-    ]);
-    exit;
-}
+requireModuloAjax('limpieza', 'No tiene permisos para acceder a esta funcionalidad');
 
 // Configurar respuesta como JSON
 header('Content-Type: application/json');

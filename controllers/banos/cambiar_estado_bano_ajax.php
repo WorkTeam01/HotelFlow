@@ -18,11 +18,7 @@ header('Content-Type: application/json');
 $idusuario_sesion = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
-if (!$auth->esAdministrador($idusuario_sesion) && !$auth->puedeAccederModulo($idusuario_sesion, 'banos')) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'No tiene permisos para realizar esta acción.']);
-    exit;
-}
+requireModuloAjax('banos', 'No tiene permisos para realizar esta acción.', true);
 
 // Verificar token CSRF
 if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {

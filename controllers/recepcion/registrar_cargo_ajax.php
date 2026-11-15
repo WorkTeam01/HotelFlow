@@ -16,10 +16,7 @@ header('Content-Type: application/json');
 $idusuario = $_SESSION['usuario_id'];
 $auth = new AuthorizationService();
 
-if (!$auth->esAdministrador($idusuario) && !$auth->puedeAccederModulo($idusuario, 'recepcion')) {
-    echo json_encode(['success' => false, 'message' => 'No tiene permisos para realizar esta acción']);
-    exit;
-}
+requireModuloAjax('recepcion');
 
 if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
     echo json_encode(['success' => false, 'message' => 'Token de seguridad inválido. Recargue la página e intente nuevamente.']);

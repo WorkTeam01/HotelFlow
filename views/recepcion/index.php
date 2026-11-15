@@ -10,12 +10,7 @@ requireLogin();
 $idusuario = $_SESSION['usuario_id'];
 $authService = new AuthorizationService();
 
-if (!$authService->esAdministrador($idusuario) && !$authService->puedeAccederModulo($idusuario, 'recepcion')) {
-    $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
-    $_SESSION['icono'] = 'error';
-    header('Location: ' . $URL);
-    exit;
-}
+requireModuloVista('recepcion', '');
 
 // Redirección legacy: la antigua lista-recepciones.php ahora es el tab Historial
 if (isset($_GET['redirect']) && $_GET['redirect'] === 'historial') {
