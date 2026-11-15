@@ -1,0 +1,13 @@
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    level: 1
+    phpVersion: 80200
+    paths:
+        - config
+        - controllers
+        - models
+        - services
+        - views
+        - index.php

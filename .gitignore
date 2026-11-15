@@ -3,7 +3,7 @@
 *.tmp
 
 # Archivos del sistema
-vendror/
+vendor/
 .DS_Store
 Thumbs.db
 bash.exe.stackdump

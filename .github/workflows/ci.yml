@@ -1,0 +1,50 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  phpstan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+      - run: composer install --no-interaction --no-progress
+      - run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      TEST_DB_HOST: 127.0.0.1
+      TEST_DB_USER: root
+      TEST_DB_PASS: test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - run: cp .env.example .env
+      - run: php tests/preparar-bd.php
+      - run: php tests/run.php

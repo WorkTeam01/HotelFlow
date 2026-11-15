@@ -1,0 +1,1093 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/almacenamiento-equipaje/actualizar_equipaje.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: controllers/almacenamiento-equipaje/cambiar_estado.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: controllers/almacenamiento-equipaje/crear_equipaje.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: controllers/compras/cambiar_estado_compra.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/habitaciones/actualizar_habitacion.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: controllers/habitaciones/cambiar_estado.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/habitaciones/crear_habitacion.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/personas/actualizar_persona.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/personas/crear_persona.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/personas/desactivar_persona.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/productos/actualizar_producto.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: controllers/productos/desactivar_producto.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: controllers/recepcion/actualizar_recepcion.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: controllers/recepcion/guardar_checkin.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/servicios-bano/actualizar_servicio.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: controllers/servicios-bano/cambiar_estado_servicio.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/servicios-bano/crear_servicio.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: controllers/tarifas/actualizar_tarifa.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: controllers/tarifas/desactivar_tarifa.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/tipohabitaciones/actualizar_tipo_habitacion.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/tipohabitaciones/crear_tipo_habitacion.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: controllers/tipohabitaciones/desactivar_tipo_habitacion.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: controllers/usuarios/actualizar_usuario.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: controllers/usuarios/crear_usuario.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: controllers/usuarios/desactivar_usuario.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: controllers/usuarios/procesar_actualizar_imagen.php
+
+		-
+			message: '#^Variable \$metodoPago on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: controllers/ventas/VentaController.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: controllers/ventas/anular_venta.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: controllers/ventas/crear_venta.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/almacenamiento-equipaje/create.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: views/almacenamiento-equipaje/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/almacenamiento-equipaje/partials/form-actualizar-equipaje.php
+
+		-
+			message: '#^Variable \$clientes might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/almacenamiento-equipaje/partials/form-actualizar-equipaje.php
+
+		-
+			message: '#^Variable \$equipaje might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: views/almacenamiento-equipaje/partials/form-actualizar-equipaje.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/almacenamiento-equipaje/partials/form-registro-equipaje.php
+
+		-
+			message: '#^Variable \$clientes might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/almacenamiento-equipaje/partials/form-registro-equipaje.php
+
+		-
+			message: '#^Variable \$precios_equipaje might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/almacenamiento-equipaje/partials/form-registro-equipaje.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/almacenamiento-equipaje/partials/resumen-actualizar-equipaje.php
+
+		-
+			message: '#^Variable \$equipaje might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/almacenamiento-equipaje/partials/resumen-actualizar-equipaje.php
+
+		-
+			message: '#^Variable \$estado_ui might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/almacenamiento-equipaje/partials/resumen-actualizar-equipaje.php
+
+		-
+			message: '#^Variable \$tiempo might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/almacenamiento-equipaje/partials/resumen-actualizar-equipaje.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/almacenamiento-equipaje/partials/resumen-registro-equipaje.php
+
+		-
+			message: '#^Variable \$timeline might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/almacenamiento-equipaje/partials/timeline-equipaje.php
+
+		-
+			message: '#^Constant PDF_CREATOR not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: views/almacenamiento-equipaje/recibo.php
+
+		-
+			message: '#^Instantiated class TCPDF not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: views/almacenamiento-equipaje/recibo.php
+
+		-
+			message: '#^Variable \$APP_NAME might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/almacenamiento-equipaje/recibo.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: views/almacenamiento-equipaje/show.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: views/almacenamiento-equipaje/update.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: views/banos/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/banos/index.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: views/categorias/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/categorias/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/clientes/create.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/clientes/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/clientes/show.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/clientes/update.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/compras/create.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/compras/index.php
+
+		-
+			message: '#^Variable \$acciones might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/compras/partials/acciones-estado.php
+
+		-
+			message: '#^Variable \$compra might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/compras/partials/acciones-estado.php
+
+		-
+			message: '#^Variable \$variante might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/compras/partials/acciones-estado.php
+
+		-
+			message: '#^Variable \$datos might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/compras/partials/compra-cabecera.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/compras/partials/compra-resumen.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/compras/partials/info-general.php
+
+		-
+			message: '#^Variable \$compra might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/compras/partials/info-general.php
+
+		-
+			message: '#^Variable \$compra might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/compras/partials/informacion-adicional.php
+
+		-
+			message: '#^Variable \$estadisticas might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: views/compras/partials/kpi-compras.php
+
+		-
+			message: '#^Variable \$compra might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/compras/partials/productos-comprados.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/compras/show.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 16
+			path: views/dashboard/administrador_dashboard.php
+
+		-
+			message: '#^Variable \$APP_NAME might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/dashboard/default_dashboard.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: views/dashboard/default_dashboard.php
+
+		-
+			message: '#^Variable \$stats might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/dashboard/limpieza_dashboard.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 13
+			path: views/dashboard/recepcionista_dashboard.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/habitaciones/create.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/habitaciones/index.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: views/habitaciones/show.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: views/habitaciones/show.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: views/habitaciones/update.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: views/habitaciones/update.php
+
+		-
+			message: '#^Variable \$APP_NAME might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/layouts/footer.php
+
+		-
+			message: '#^Variable \$APP_VERSION might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/layouts/footer.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 18
+			path: views/layouts/footer.php
+
+		-
+			message: '#^Variable \$APP_NAME might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/layouts/header.php
+
+		-
+			message: '#^Variable \$APP_NAME might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/layouts/sidebar.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 62
+			path: views/layouts/sidebar.php
+
+		-
+			message: '#^Variable \$authService might not be defined\.$#'
+			identifier: variable.undefined
+			count: 33
+			path: views/layouts/sidebar.php
+
+		-
+			message: '#^Variable \$idusuariosesion might not be defined\.$#'
+			identifier: variable.undefined
+			count: 33
+			path: views/layouts/sidebar.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/limpieza/index.php
+
+		-
+			message: '#^Variable \$APP_NAME might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/login/login.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 16
+			path: views/login/login.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: views/pisos/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/pisos/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/precios-equipaje/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/productos/create.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/productos/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/productos/partials/imagen-producto.php
+
+		-
+			message: '#^Variable \$alt might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/productos/partials/imagen-producto.php
+
+		-
+			message: '#^Variable \$clase_img might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/productos/partials/imagen-producto.php
+
+		-
+			message: '#^Variable \$estado_ui might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/productos/partials/tab-general.php
+
+		-
+			message: '#^Variable \$producto might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/productos/partials/tab-general.php
+
+		-
+			message: '#^Variable \$inventario might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: views/productos/partials/tab-inventario.php
+
+		-
+			message: '#^Variable \$producto might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/productos/partials/tab-inventario.php
+
+		-
+			message: '#^Variable \$producto might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/productos/partials/tab-precios.php
+
+		-
+			message: '#^Variable \$rentabilidad might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: views/productos/partials/tab-precios.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/productos/show.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: views/productos/update.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/recepcion/create.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/recepcion/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/recepcion/partials/buscador-global.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/recepcion/partials/cambio-habitacion.php
+
+		-
+			message: '#^Variable \$recepcion might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/recepcion/partials/cambio-habitacion.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/recepcion/partials/fila-movimiento.php
+
+		-
+			message: '#^Variable \$mov might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/recepcion/partials/fila-movimiento.php
+
+		-
+			message: '#^Variable \$tipo might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/recepcion/partials/fila-movimiento.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/recepcion/partials/folio.php
+
+		-
+			message: '#^Variable \$folio_saldo might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/recepcion/partials/folio.php
+
+		-
+			message: '#^Variable \$recepcion might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/recepcion/partials/folio.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/recepcion/partials/form-reserva.php
+
+		-
+			message: '#^Variable \$clientes might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/recepcion/partials/form-reserva.php
+
+		-
+			message: '#^Variable \$pisos_unicos might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/recepcion/partials/form-reserva.php
+
+		-
+			message: '#^Variable \$tarifas might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/recepcion/partials/form-reserva.php
+
+		-
+			message: '#^Variable \$kpis might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: views/recepcion/partials/kpi-bar.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/recepcion/partials/resumen-reserva.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/recepcion/partials/tab-historial.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/recepcion/partials/tab-hoy.php
+
+		-
+			message: '#^Variable \$hoy might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: views/recepcion/partials/tab-hoy.php
+
+		-
+			message: '#^Variable \$mapa might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/recepcion/partials/tab-mapa.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/recepcion/partials/tile-habitacion.php
+
+		-
+			message: '#^Variable \$t might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: views/recepcion/partials/tile-habitacion.php
+
+		-
+			message: '#^Anonymous function has invalid return type TCPDF\.$#'
+			identifier: class.notFound
+			count: 1
+			path: views/recepcion/recibo.php
+
+		-
+			message: '#^Constant PDF_CREATOR not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: views/recepcion/recibo.php
+
+		-
+			message: '#^Instantiated class TCPDF not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: views/recepcion/recibo.php
+
+		-
+			message: '#^Variable \$APP_NAME might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/recepcion/recibo.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 12
+			path: views/recepcion/show.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 11
+			path: views/recepcion/update.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: views/servicios-bano/create.php
+
+		-
+			message: '#^Variable \$stockActual might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/servicios-bano/create.php
+
+		-
+			message: '#^Variable \$stockMinimo might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/servicios-bano/create.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/servicios-bano/index.php
+
+		-
+			message: '#^Variable \$acciones might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/servicios-bano/partials/acciones-estado.php
+
+		-
+			message: '#^Variable \$servicio might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/servicios-bano/partials/acciones-estado.php
+
+		-
+			message: '#^Variable \$variante might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/servicios-bano/partials/acciones-estado.php
+
+		-
+			message: '#^Variable \$folio might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/servicios-bano/partials/folio-servicio.php
+
+		-
+			message: '#^Variable \$estadisticas might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/servicios-bano/partials/kpi-servicios.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/servicios-bano/partials/rack-banos.php
+
+		-
+			message: '#^Variable \$disponibilidad might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: views/servicios-bano/partials/rack-banos.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: views/servicios-bano/show.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: views/servicios-bano/update.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/tarifas/create.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/tarifas/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: views/tarifas/show.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/tarifas/update.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/tipohabitacion/create.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/tipohabitacion/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/tipohabitacion/show.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/tipohabitacion/update.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/usuarios/create.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 7
+			path: views/usuarios/index.php
+
+		-
+			message: '#^File ends with a trailing whitespace\. This may cause problems when running the code in the web browser\. Remove the closing \?\> mark or remove the whitespace\.$#'
+			identifier: whitespace.fileEnd
+			count: 1
+			path: views/usuarios/perfil.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: views/usuarios/perfil.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 6
+			path: views/usuarios/show.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 9
+			path: views/usuarios/update.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: views/ventas/create.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/ventas/index.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/ventas/partials/info-general.php
+
+		-
+			message: '#^Variable \$codigoVenta might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/ventas/partials/info-general.php
+
+		-
+			message: '#^Variable \$esActiva might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/ventas/partials/info-general.php
+
+		-
+			message: '#^Variable \$puedeAnular might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/ventas/partials/info-general.php
+
+		-
+			message: '#^Variable \$venta might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: views/ventas/partials/info-general.php
+
+		-
+			message: '#^Variable \$esActiva might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/ventas/partials/informacion-adicional.php
+
+		-
+			message: '#^Variable \$venta might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/ventas/partials/informacion-adicional.php
+
+		-
+			message: '#^Variable \$controller might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/ventas/partials/metodos-pago.php
+
+		-
+			message: '#^Variable \$esPagoMixto might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/ventas/partials/metodos-pago.php
+
+		-
+			message: '#^Variable \$venta might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/ventas/partials/metodos-pago.php
+
+		-
+			message: '#^Variable \$venta might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: views/ventas/partials/productos-vendidos.php
+
+		-
+			message: '#^Variable \$URL might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: views/ventas/partials/venta-resumen.php
+
+		-
+			message: '#^Anonymous function has invalid return type TCPDF\.$#'
+			identifier: class.notFound
+			count: 1
+			path: views/ventas/recibo.php
+
+		-
+			message: '#^Constant PDF_CREATOR not found\.$#'
+			identifier: constant.notFound
+			count: 1
+			path: views/ventas/recibo.php
+
+		-
+			message: '#^Instantiated class TCPDF not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: views/ventas/recibo.php
+
+		-
+			message: '#^Variable \$APP_NAME might not be defined\.$#'
+			identifier: variable.undefined
+			count: 2
+			path: views/ventas/recibo.php
