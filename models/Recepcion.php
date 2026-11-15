@@ -11,6 +11,7 @@
 
 // Incluir la clase Conexion
 require_once __DIR__ . '/../config/conexion.php';
+require_once __DIR__ . '/EstadoRecepcion.php';
 
 class Recepcion
 {
@@ -575,11 +576,7 @@ class Recepcion
 
             // Solo las transiciones del ciclo de vida son válidas; reactivar o retroceder
             // un registro dejaría la habitación en un estado incoherente
-            $transiciones = [
-                'reservado' => ['en_curso', 'cancelado'],
-                'en_curso' => ['finalizado', 'cancelado'],
-            ];
-            if (!in_array($estado, $transiciones[$recepcion['estado']] ?? [], true)) {
+            if (!EstadoRecepcion::transicionPermitida($recepcion['estado'], $estado)) {
                 if ($propia) {
                     $this->conexion->rollBack();
                 }
@@ -1579,8 +1576,8 @@ class Recepcion
         }
 
         // Validar estado
-        if (empty($datos['estado']) || !in_array($datos['estado'], ['reservado', 'en_curso', 'finalizado', 'cancelado'])) {
-            $errores[] = 'El estado debe ser válido (reservado, en_curso, finalizado, cancelado).';
+        if (empty($datos['estado']) || EstadoRecepcion::tryFrom((string) $datos['estado']) === null) {
+            $errores[] = 'El estado debe ser válido (' . implode(', ', EstadoRecepcion::valores()) . ').';
         }
 
         // Validar método de pago si se proporciona

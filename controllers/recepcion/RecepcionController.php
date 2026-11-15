@@ -8,6 +8,8 @@
  * @author Sistema de Alojamiento
  * @version 1.0
  */
+require_once __DIR__ . '/../../models/EstadoRecepcion.php';
+
 class RecepcionController
 {
     /**
@@ -646,7 +648,7 @@ class RecepcionController
         if (!$actual) {
             return ['success' => false, 'message' => 'Recepción no encontrada.', 'icon' => 'error'];
         }
-        if (in_array($actual['estado'], ['finalizado', 'cancelado'], true)) {
+        if (EstadoRecepcion::cerrada($actual['estado'])) {
             return ['success' => false, 'message' => 'No se puede editar una recepción finalizada o cancelada.', 'icon' => 'error'];
         }
         // El cargo "Estancia" del folio se fijó con la tarifa original; cambiarla aquí
@@ -710,7 +712,7 @@ class RecepcionController
      */
     public function cambiarEstado($id, $estado)
     {
-        if (!in_array($estado, ['en_curso', 'cancelado'], true)) {
+        if (!EstadoRecepcion::destinoManual($estado)) {
             return [
                 'success' => false,
                 'message' => 'Estado no válido. El check-out se realiza desde el folio.',

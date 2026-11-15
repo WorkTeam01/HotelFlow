@@ -53,7 +53,7 @@ $estado_ui = RecepcionController::estadoRecepcion(RecepcionController::estadoDer
 $clase_estado = $estado_ui['clase'];
 
 // Banderas de acción (presentación, no lógica de negocio)
-$esActiva = !in_array($recepcion['estado'], ['finalizado', 'cancelado'], true);
+$esActiva = !EstadoRecepcion::cerrada($recepcion['estado']);
 $puedeCheckin = $recepcion['estado'] === 'reservado';
 $puedeCheckout = $recepcion['estado'] === 'en_curso';
 $puedeCambiarHabitacion = $recepcion['estado'] === 'en_curso';

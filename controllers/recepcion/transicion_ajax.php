@@ -35,7 +35,7 @@ if ($idrecepcion <= 0) {
     echo json_encode(['success' => false, 'message' => 'Recepción no válida.']);
     exit;
 }
-if (!in_array($nuevoEstado, ['en_curso', 'cancelado'], true)) {
+if (!EstadoRecepcion::destinoManual($nuevoEstado)) {
     echo json_encode(['success' => false, 'message' => 'Transición no permitida.']);
     exit;
 }

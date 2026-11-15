@@ -10,7 +10,7 @@
  * - $URL ya definido por session.php/header.php; el token CSRF se genera aquí con generateCSRFToken()
  */
 
-$puedeRegistrarMovimientos = !in_array($recepcion['estado'], ['finalizado', 'cancelado'], true);
+$puedeRegistrarMovimientos = !EstadoRecepcion::cerrada($recepcion['estado']);
 ?>
 <div class="card card-outline card-info" id="folio-recepcion" data-module="folio-recepcion" data-idrecepcion="<?= (int)$recepcion['idrecepcion']; ?>">
     <div class="card-header">

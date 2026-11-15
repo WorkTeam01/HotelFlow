@@ -43,7 +43,7 @@ $tarifas = $datos['tarifas'];
 $habitaciones_disponibles = $datos['habitaciones_disponibles'];
 
 // Verificar si la recepción está en un estado que permite edición
-if ($recepcion['estado'] === 'finalizado' || $recepcion['estado'] === 'cancelado') {
+if (EstadoRecepcion::cerrada($recepcion['estado'])) {
     $_SESSION['mensaje'] = 'No se puede editar una recepción finalizada o cancelada.';
     $_SESSION['icono'] = 'warning';
     header('Location: ' . $URL . 'views/recepcion/show.php?id=' . $id);

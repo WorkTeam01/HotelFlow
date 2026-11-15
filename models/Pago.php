@@ -13,6 +13,7 @@
  */
 
 require_once __DIR__ . '/../config/conexion.php';
+require_once __DIR__ . '/EstadoRecepcion.php';
 
 class Pago
 {
@@ -342,7 +343,7 @@ class Pago
 
             // Una estancia cerrada solo admite reversos (p. ej. reembolsar lo cobrado en una
             // reserva cancelada); cargos y pagos nuevos no tienen sentido
-            if (in_array($recepcion['estado'], ['cancelado', 'finalizado'], true) && $tipo !== 'reverso') {
+            if (EstadoRecepcion::cerrada($recepcion['estado']) && $tipo !== 'reverso') {
                 if ($propia) {
                     $this->conexion->rollBack();
                 }
