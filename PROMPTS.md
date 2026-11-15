@@ -36,7 +36,7 @@ Actua como desarrollador PHP Senior especializado en MVC sin framework.
 
 [Contexto]
 Proyecto: HotelFlow (PHP 8.2+, MariaDB 10.4+).
-Arquitectura: MVC custom con require/include, sin Composer ni framework.
+Arquitectura: MVC custom con require/include, sin framework (Composer solo para PHPStan en desarrollo).
 Stack frontend: AdminLTE 3, Bootstrap 4, jQuery 3, DataTables, SweetAlert2, Select2.
 Modulo activo: _______________
 
@@ -46,9 +46,9 @@ _______________
 [Restricciones]
 - Respetar estructura existente: controllers/, models/, views/, public/js/modules/, public/css/modules/
 - Modelos con PDO + prepared statements y Conexion::getInstance()->getConnection()
-- Sesiones y auth segun views/layouts/session.php (requireLogin, requireRole, CSRF helpers)
+- Sesiones y auth segun views/layouts/session.php (requireLogin, CSRF helpers)
 - CSRF obligatorio (no opcional) en formularios y endpoints POST/acciones GET destructivas: generateCSRFToken(), verifyCSRFToken(), regenerateCSRFToken()
-- Verificacion de permisos por modulo en cada endpoint (AuthorizationService::esAdministrador / puedeAccederModulo), ademas de requireLogin()
+- Verificacion de permisos por modulo en cada endpoint con requireModuloAjax() (JSON) o requireModuloVista() (redirect) de views/layouts/session.php, despues de requireLogin()
 - Nunca confiar en valores del cliente para estado o dinero: recalcular estado/totales desde la BD antes de persistir
 - Sanitizar y validar entradas siguiendo el patron del modulo de referencia
 - Uploads con ImagenService (services/ImagenService.php), validando el tipo real del archivo (contenido), no el MIME/nombre enviado por el cliente
@@ -214,7 +214,7 @@ Opciones:
 
 [Restricciones]
 - No introducir framework (Laravel, Symfony, etc.)
-- No introducir herramientas de build o testing inexistentes salvo justificacion fuerte
+- No introducir herramientas de build ni frameworks de testing nuevos (los tests son scripts PHP en tests/ y el analisis estatico es PHPStan); salvo justificacion fuerte
 - Mantener flujo actual con require/include y estructura de carpetas existente
 - Solucion mantenible por equipo junior/intermedio
 

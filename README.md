@@ -92,6 +92,8 @@ Historial con indicadores (pendientes por recibir, invertido y compras del mes, 
 | MariaDB      | 10.4.28+                          |
 | Servidor Web | Apache o Nginx                    |
 
+Para desarrollar (opcional): Composer, para PHPStan, y el cliente `mysql`, para recrear la BD de los tests. La aplicación no necesita Composer en producción.
+
 ## Instalación
 
 ### 1. Clonar el repositorio
@@ -107,11 +109,13 @@ cd HotelFlow
 mysql -u root -p < database/db_hotel_flow.sql
 ```
 
-Opcionalmente, carga datos de ejemplo:
+Opcionalmente, carga los datos de demostración (solo sobre una base recién importada):
 
 ```bash
 mysql -u root -p db_hotel_flow < database/seed.sql
 ```
+
+El seeder simula ~30 días de un hotel de 12 habitaciones: estancias con su folio (finalizadas, en casa, con saldo, con salida vencida, reservas y cancelaciones), ventas con pago único, mixto y anuladas, compras en los tres estados, servicios de baño, equipaje (incluidos vencidos) y limpieza del día. Las fechas son relativas al día en que se carga, así que el dashboard siempre muestra actividad reciente.
 
 ### 3. Configurar variables de entorno
 
@@ -142,6 +146,8 @@ http://localhost/HotelFlow/
 
 **Credenciales por defecto:** `admin@hotelflow.local` / `admin123` (el campo de login pide correo o número de documento, no un nombre de usuario)
 
+Con los datos de demostración también hay usuarios de los otros roles: `recepcion@hotelflow.local` y `carlos.mendoza@hotelflow.local` (clave `recepcion123`), `limpieza@hotelflow.local` y `rosa.choque@hotelflow.local` (clave `limpieza123`).
+
 > **Importante:** Cambiar las credenciales inmediatamente después del primer acceso.
 >
 > **Servidor:** el `.htaccess` de la raíz protege `config/`, `models/`, `services/`, `database/` y archivos sensibles; Apache necesita `AllowOverride All`. Al actualizar desde una versión anterior, revisa los pasos de migración en el [CHANGELOG](CHANGELOG.md).
@@ -159,6 +165,8 @@ HotelFlow/
 ├── services/            # Servicios (Auth, Imágenes, Utilidades)
 ├── public/              # Assets (CSS, JS, uploads)
 ├── libs/                # Librerías (TCPDF)
+├── tests/               # Tests de caracterización (PHP sin dependencias)
+├── .github/             # CI (PHPStan + tests) y Dependabot
 └── index.php            # Punto de entrada
 ```
 
@@ -241,9 +249,21 @@ Las contribuciones son bienvenidas. Para colaborar:
 1. Haz un fork del repositorio
 2. Crea una rama descriptiva: `git checkout -b feature/nueva-funcionalidad`
 3. Realiza tus cambios siguiendo las convenciones del proyecto (ver [CLAUDE.md](CLAUDE.md))
-4. Commit: `git commit -m 'Añadir nueva funcionalidad'`
-5. Push: `git push origin feature/nueva-funcionalidad`
-6. Abre un Pull Request describiendo el cambio y su motivación
+4. Comprueba que pasan el análisis estático y los tests (ver abajo)
+5. Commit: `git commit -m 'Añadir nueva funcionalidad'`
+6. Push: `git push origin feature/nueva-funcionalidad`
+7. Abre un Pull Request describiendo el cambio y su motivación
+
+### Análisis estático y tests
+
+```bash
+composer install                                 # solo PHPStan
+vendor/bin/phpstan analyse --memory-limit=1G     # nivel 1; el baseline congela los errores existentes
+php tests/preparar-bd.php                        # recrea db_hotel_flow_test desde database/db_hotel_flow.sql
+php tests/run.php                                # tests de caracterización
+```
+
+Los tests usan las credenciales de `.env` (o `TEST_DB_HOST`, `TEST_DB_USER` y `TEST_DB_PASS`) y solo tocan `db_hotel_flow_test`, nunca la base de datos real. El CI ejecuta ambos pasos en cada push y pull request.
 
 Antes de reportar un bug o proponer una funcionalidad, revisa los [issues](https://github.com/WorkTeam01/HotelFlow/issues) existentes.
 
