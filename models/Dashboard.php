@@ -1052,68 +1052,6 @@ class Dashboard
     }
 
     /**
-     * Obtiene datos para gráficos de ingresos
-     * 
-     * @param int $dias Número de días para los datos
-     * @return array Datos para gráficos de ingresos
-     */
-    public function getDatosGraficosIngresos($dias = 30)
-    {
-        try {
-            $labels = [];
-            $servicios_bano = [];
-            $equipajes = [];
-            $total = [];
-
-            // Generar fechas para los últimos días
-            for ($i = $dias - 1; $i >= 0; $i--) {
-                $fecha = date('Y-m-d', strtotime("-$i days"));
-                $labels[] = date('d/m', strtotime($fecha));
-
-                // Ingresos de servicios de baño por día
-                $stmt = $this->conexion->prepare("
-                SELECT COALESCE(SUM(total), 0) as ingreso
-                FROM servicio_bano
-                WHERE DATE(fecha) = :fecha AND estado <> 'cancelado' AND modalidad_cobro = 'contado'
-            ");
-                $stmt->bindParam(':fecha', $fecha);
-                $stmt->execute();
-                $ingreso_bano = floatval($stmt->fetch(PDO::FETCH_ASSOC)['ingreso']);
-                $servicios_bano[] = $ingreso_bano;
-
-                // Ingresos de equipajes por día
-                $stmt = $this->conexion->prepare("
-                SELECT COALESCE(SUM(monto), 0) as ingreso
-                FROM almacenamiento_equipaje
-                WHERE DATE(fechaentrada) = :fecha
-            ");
-                $stmt->bindParam(':fecha', $fecha);
-                $stmt->execute();
-                $ingreso_equipaje = floatval($stmt->fetch(PDO::FETCH_ASSOC)['ingreso']);
-                $equipajes[] = $ingreso_equipaje;
-
-                // Total de ingresos diarios
-                $total[] = $ingreso_bano + $ingreso_equipaje;
-            }
-
-            return [
-                'labels' => $labels,
-                'servicios_bano' => $servicios_bano,
-                'equipajes' => $equipajes,
-                'total' => $total
-            ];
-        } catch (PDOException $e) {
-            $this->logError('Error al obtener datos para gráficos de ingresos', $e);
-            return [
-                'labels' => [],
-                'servicios_bano' => [],
-                'equipajes' => [],
-                'total' => []
-            ];
-        }
-    }
-
-    /**
      * Obtiene los ingresos totales del día actual (recepción + servicios + equipajes + ventas)
      * 
      * @return array Total de ingresos combinados del día y su desglose

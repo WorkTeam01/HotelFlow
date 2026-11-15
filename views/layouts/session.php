@@ -180,34 +180,6 @@ function requireLogin($redirect_url = null)
 }
 
 /**
- * Requerir un rol específico para acceder a una página
- * 
- * @param array $roles_permitidos Roles que pueden acceder
- * @param string $redirect_url URL a la que redirigir si no tiene permiso
- */
-function requireRole($roles_permitidos, $redirect_url = null)
-{
-    global $URL;
-
-    if (!$redirect_url) {
-        $redirect_url = $URL . 'index.php';
-    }
-
-    // Primero verificar que haya sesión
-    requireLogin();
-
-    // Verificar rol
-    $rol_usuario = $_SESSION['usuario_cargo'] ?? '';
-
-    if (!in_array($rol_usuario, $roles_permitidos)) {
-        $_SESSION['mensaje'] = 'No tiene permisos para acceder a esta sección.';
-        $_SESSION['icono'] = 'error';
-        header('Location: ' . $redirect_url);
-        exit;
-    }
-}
-
-/**
  * Obtener datos del usuario actual
  * 
  * @return array|null Datos del usuario o null si no hay sesión
